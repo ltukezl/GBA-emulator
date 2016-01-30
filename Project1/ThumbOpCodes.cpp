@@ -287,252 +287,315 @@ void(*logicalOps[16])(int&, int) = { TAND, TEOR, lslip, lsrip, asrip, adc, sbc, 
 void(*hlOps[4])(int&, int) = { addNoCond, cmpHL, movNoCond, bx };
 int(*conditions[16])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE };
 
+void moveShiftedRegister(int opcode){
+	int rd = opcode & 0x7; //register, destination
+	int rs = (opcode >> 3) & 0x7; //register, source
+	int instruction = (opcode >> 11) & 3;
+	int immediate = (opcode >> 6) & 0x1F;
+	shifts[instruction](r[rd], r[rs], immediate);
+}
 
+void addSubFunction(int opcode){
+	int rd = opcode & 0x7; //register, destination
+	int rs = (opcode >> 3) & 0x7; //register, source
+	int operation = (opcode >> 9) & 1;
+	int immediateFlag = (opcode >> 10) & 1;
+	int immediate = (opcode >> 6) & 7;
+	int value = (immediateFlag == 1) ? immediate : r[immediate];
+	arith[operation](r[rd], r[rs], value);
+}
+
+void movCompSubAddImm(int opcode){
+	int instruction = (opcode >> 11) & 3;
+	int rd = (opcode >> 8) & 7;
+	int immediate = (opcode & 0xFF);
+	movCompIpaddIpsub[instruction](r[rd], immediate);
+}
+
+void aluOps(int opcode){
+	int instruction = (opcode >> 6) & 0xF;
+	int rd = opcode & 0x07; //register, destination
+	int rs = (opcode >> 3) & 7; //register, source
+	logicalOps[instruction](r[rd], r[rs]);
+}
+
+void hiRegOperations(int opcode){
+	int instruction = (opcode >> 8) & 3;
+	int rd = opcode & 0x07; //register, destination
+	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
+	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
+	hlOps[instruction](r[rd | hi1], (rs == 15) ? (PC & ~1) + 4 : r[rs]);// PC as operand, broken?
+}
+
+void PCRelativeLoad(int opcode){
+	//check this out later, memory masking?, potentially broken.
+	//works after gamepak is in actual memory location. hopefully
+	int tmpPC = PC;
+	int rs = (opcode >> 8) & 7;
+	int immediate = (opcode & 0xFF) << 2; //8 bit value to 10 bit value, last bits are 00 to be word alinged
+	tmpPC += immediate - 2;
+	r[rs] = loadFromAddress(tmpPC);
+}
+
+void loadStoreRegOffset(int opcode){
+	int rd = opcode & 7;
+	int rb = (opcode >> 3) & 7; // base reg
+	int ro = (opcode >> 6) & 7; // offset reg
+	int byteFlag = (opcode >> 10) & 1;
+	int loadFlag = (opcode >> 11) & 1;
+	if (!loadFlag)
+		byteFlag ? writeToAddress(r[ro] + r[rb], r[rd]) : writeToAddress32(r[ro] + r[rb], r[rd]);
+	else
+		r[rd] = byteFlag ? loadFromAddress(r[rb] + r[ro]) : loadFromAddress32(r[rb] + r[ro]);
+}
+
+void loadStoreSignExtend(int opcode){
+	int rd = opcode & 7;
+	int rb = (opcode >> 3) & 7; // base reg
+	int ro = (opcode >> 6) & 7; // offset reg
+	int signFlag = (opcode >> 10) & 1;
+	int hFlag = ((opcode >> 11) & 1);
+	if (!hFlag && !signFlag) //strh
+		writeToAddress16(r[rb] + r[ro], r[rd]);
+	else if (!signFlag && hFlag) //ldrh
+		r[rd] = loadFromAddress16(r[rb] + r[ro]);
+	else if (signFlag && !hFlag) //ldsb NOTE: does not signextend
+		r[rd] = loadFromAddress(r[rb] + r[ro]);
+	else //ldsh
+		r[rd] = loadFromAddress16(r[ro] + r[rb]);
+}
+
+void loadStoreImm(int opcode){
+	int loadFlag = (opcode >> 11) & 1;
+	int byteFlag = (opcode >> 12) & 1;
+	int immediate = byteFlag ? (opcode >> 6) & 0x1F : (opcode >> 4) & 0x7C; //with word access, immediate must be word aligned. thus we move is 2 less and zero 2 lsb
+	int rs = (opcode >> 3) & 0x07;
+	int rd = opcode & 0x07;
+	if (loadFlag)
+		r[rd] = byteFlag ? loadFromAddress(r[rs] + immediate) : loadFromAddress32(r[rs] + immediate);
+	else
+		byteFlag ? writeToAddress(r[rs] + immediate, r[rd]) : writeToAddress32(r[rs] + immediate, r[rd]);
+}
+
+void loadStoreHalfword(int opcode){
+	int loadFlag = (opcode >> 11) & 1;
+	int immediate = (opcode >> 5) & 0x3E; //half word alignment, 5 bits to 6 bits last bit is 0
+	int rs = (opcode >> 3) & 0x07;
+	int rd = opcode & 0x07;
+	if (loadFlag)
+		r[rd] = loadFromAddress16(r[rs] + immediate);
+	else
+		writeToAddress16(r[rs] + immediate, r[rd]);
+}
+
+void loadSPRelative(int opcode){
+	int loadFlag = (opcode >> 11) & 1;
+	int rd = (opcode >> 8) & 0x07;
+	int immediate = (opcode & 0xFF) << 2;
+	if (loadFlag)
+		r[rd] = loadFromAddress32(SP + immediate);
+	else
+		writeToAddress32(SP + immediate, r[rd]);
+}
+
+void loadAddress(int opcode){
+	int rs = ((opcode >> 11) & 1) ? SP : PC & ~2;
+	int rd = (opcode >> 8) & 0x07;
+	int immediate = (opcode & 0xFF) << 2;
+	r[rd] = immediate + rs;
+}
+
+void addOffsetToSP(int opcode){
+	int loadFlag = (opcode >> 7) & 1;
+	int immediate = (opcode & 0x7F) << 2;
+	SP += loadFlag ? -immediate : immediate;
+}
+
+void pushpop(int opcode){
+	int immediate = opcode & 0xFF;
+	int popFlag = (opcode >> 11) & 1;
+	if (popFlag){
+		for (int i = 0; i < 8; i++){
+			if (immediate & 1){
+				r[i] = POP();
+				std::cout << "r" << i << "\n";
+			}
+			immediate = immediate >> 1;
+		}
+		PC = ((opcode >> 8) & 1) ? POP() : PC;
+		((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
+
+	}
+	else{
+		if ((opcode >> 8) & 1)
+			PUSH(LR);
+		for (int i = 0; i < 8; i++){
+			if (immediate & 1)
+				PUSH(r[i]);
+			immediate = immediate >> 1;
+		}
+
+	}
+}
+
+void multiLoad(int opcode){}
+
+void conditionalBranch(int opcode){
+	int immediate = opcode & 0xFF;
+	int condition = (opcode >> 8) & 0x0F;
+	PC += conditions[condition]() ? ((__int8)immediate << 1) + 2 : 0;
+}
+
+void unconditionalBranch(int opcode){
+	int immediate = (opcode & 0x7FF) << 1;
+	int m = 1U << (12 - 1); //bitextend hack
+	int r = (immediate ^ m) - m;
+	PC += 2 + r;
+}
+
+void branchLink(int opcode){
+	int HLOffset = (opcode >> 11) & 1;
+	int immediate = (opcode & 0x7FF);
+	if (!HLOffset){
+		immediate = (opcode & 0x7FF);
+		int m = 1U << (11 - 1); //bitextend hack
+		int r = (immediate ^ m) - m;
+		LR = (r << 12) + PC;
+	}
+	else{
+		int nextInstruction = PC + 1;
+		PC = LR + (immediate << 1) + 2;
+		LR = nextInstruction & ~1;
+	}
+}
 
 int thumbExecute(__int16 opcode){
+	int subType;
     int immediate;
-    int rd; //destination register
-    int rs; //source register
     int instruction;
-    int loadFlag;
     __int16 type = (opcode & 0xE000) >> 13;
 
     switch (type) {
-    case 0: //shifts or add or sub, maybe sign extended for immidiates?
-        rd = opcode & 0x7; //register, destination
-        rs = (opcode >> 3) & 0x7; //register, source
-        instruction = (opcode >> 11) & 3;
-        switch (instruction){
-        case 0x00: case 0x01: case 0x02: //shifts
-            immediate = (opcode >> 6 ) & 0x1F;
-            shifts[instruction](r[rd], r[rs], immediate);
-            break;
+		case 0: //shifts or add or sub, maybe sign extended for immidiates?
+			instruction = (opcode >> 11) & 3;
+			switch (instruction){
+				case 0x00: case 0x01: case 0x02: //shifts
+					moveShiftedRegister(opcode);
+					break;
 
-        case 0x03: //add / substract
-            int operation = (opcode >> 9) & 1;
-            int immediateFlag = (opcode >> 10) & 1;
-            immediate = (opcode >> 6) & 7;
-            int value = (immediateFlag == 1) ? immediate : r[immediate];
-            arith[operation](r[rd], r[rs], value);
-            break;
-        }
-        break;
-    case 1: // basic arithmetic, reg - reg
-        instruction = (opcode >> 11) & 3;
-        rd = (opcode >> 8) & 7;
-        immediate = (opcode & 0xFF);
-        movCompIpaddIpsub[instruction](r[rd], immediate);
-        break;
+				case 0x03: //add / substract
+					addSubFunction(opcode);
+					break;
+			}
+			break;
 
-    case 2: //logical ops / memory load / store
-    {
-        int subType = (opcode >> 10) & 7;
-        int hi1;
-        int tmpPC = PC;
-        switch (subType){
-        case 0: //logical ops reg - reg
-            instruction = (opcode >> 6) & 0xF;
-            rd = opcode & 0x07; //register, destination
-            rs = (opcode >> 3) & 7; //register, source
-            logicalOps[instruction](r[rd], r[rs]);
-            break;
+		case 1: // move|compare|substract|add immediate
+			movCompSubAddImm(opcode);
+			break;
 
-        case 1: //high low reg loading, branch
-            instruction = (opcode >> 8) & 3;
-            rd = opcode & 0x07; //register, destination
-            rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
-            hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
-            hlOps[instruction](r[rd | hi1], (rs == 15) ? (PC & ~1) + 4 : r[rs]);// PC as operand, broken?
-            break;
+		case 2: //logical ops / memory load / store
+			subType = (opcode >> 10) & 7;
+			switch (subType){
+				case 0: //logical ops reg - reg
+					aluOps(opcode);
+					break;
 
-        case 2: case 3: //PC relative load
-            //check this out later, memory masking?, potentially broken.
-            //works after gamepak is in actual memory location. hopefully
-            rs = (opcode >> 8) & 7  ;
-            immediate = (opcode & 0xFF) << 2; //8 bit value to 10 bit value, last bits are 00 to be word alinged
-            tmpPC += immediate - 2;
-            r[rs] = loadFromAddress(tmpPC);
-            break;
+				case 1: //high low reg loading, branch
+					hiRegOperations(opcode);
+					break;
 
-        default:
-            int subType2 = (opcode >> 9) & 1;
-            loadFlag = (opcode >> 11) & 1;
-            int byteFlag = (opcode >> 10) & 1;
-            int signFlag = (opcode >> 10) & 1;
-            int hFlag = ((opcode >> 11) & 1);
-            rd = opcode & 7;
-            int rb = (opcode >> 3) & 7; // base reg
-            int ro = (opcode >> 6) & 7; // offset reg
-            switch (subType2){
-            case 0: //load / store with reg offset
-                if (!loadFlag)
-                    byteFlag ? writeToAddress(r[ro] + r[rb], r[rd]) : writeToAddress32(r[ro] + r[rb], r[rd]);
-                else
-                    r[rd] = byteFlag ? loadFromAddress(r[rb] + r[ro]): loadFromAddress32(r[rb] + r[ro]);
-                break;
-            case 1: //load / store sign extended byte / word
-                if (!hFlag && !signFlag) //strh
-                    writeToAddress16(r[rb] + r[ro], r[rd]);
-                else if (!signFlag && hFlag) //ldrh
-                    r[rd] = loadFromAddress16(r[rb] + r[ro]);
-                else if (signFlag && !hFlag) //ldsb
-                    r[rd] = loadFromAddress(r[rb] + r[ro]);
-                else //ldsh
-                    r[rd] = loadFromAddress16(r[ro] + r[rb]);
-                break;
-            }
-        }
-        break;
-    }
-    case 3: //load / store reg - imm
-    {
+				case 2: case 3: //PC relative load
+					PCRelativeLoad(opcode);
+					break;
 
-        loadFlag = (opcode >> 11) & 1;
-        int byteFlag = (opcode >> 12) & 1;
-        immediate = byteFlag ? (opcode >> 6) & 0x1F : (opcode >> 4) & 0x7C;
-        rs = (opcode >> 3) & 0x07;
-        rd = opcode & 0x07;
-        if (loadFlag)
-            r[rd] = byteFlag ? loadFromAddress(r[rs] + immediate) : loadFromAddress32(r[rs] + immediate);
-        else
-            byteFlag ? writeToAddress(r[rs] + immediate, r[rd]) : writeToAddress32(r[rs] + immediate, r[rd]);
-        break;
-    }
+				default:
+					int subType2 = (opcode >> 9) & 1;
+					switch (subType2){
+						case 0: //load / store with reg offset
+							loadStoreRegOffset(opcode);
+							break;
 
-    case 4: // load store halfword reg - imm
-    {
+						case 1: //load / store sign extended byte / word
+							loadStoreSignExtend(opcode);
+							break;
+					}
+				break;
+			}
+			break;
+		
+		case 3: //load / store reg - imm
+			loadStoreImm(opcode);
+			break;
 
-        int subType = (opcode >> 12) & 1;
-        loadFlag = (opcode >> 11) & 1;
-        switch (subType){
-        case 0: //load half word reg - imm
-            immediate = (opcode >> 5) & 0x3E; //half word alignment, 5 bits to 6 bits last bit is 0
-            rs = (opcode >> 3) & 0x07;
-            rd = opcode & 0x07;
-            if (loadFlag)
-                r[rd] = loadFromAddress16(r[rs] + immediate);
-            else
-                writeToAddress16(r[rs] + immediate, r[rd]);
-            break;
+		case 4: // load store halfword reg - imm
+			subType = (opcode >> 12) & 1;
+			switch (subType){
+			case 0: //load half word reg - imm
+				loadStoreHalfword(opcode);
+				break;
 
-        case 1: //load SP relative
+			case 1: //load SP relative
+				loadSPRelative(opcode);
+				break;
+			}
+			break;
+		
+		case 5:
+			subType = (opcode >> 12) & 0x01;
+			switch (subType){
+				case 0x00: // load address to reg
+					loadAddress(opcode);
+					break;
 
-            rd = (opcode >> 8) & 0x07;
-            immediate = (opcode & 0xFF) << 2;
-            if (loadFlag)
-                r[rd] = loadFromAddress32(SP + immediate);
-            else
-                writeToAddress32(SP + immediate, r[rd]);
-            break;
+				case 0x01:
+					int subType2 = (opcode >> 10) & 1;
+					switch (subType2){
+						case 0: // add Stack pointer offset
+							addOffsetToSP(opcode);
+							break;
 
-        }
-        break;
-    }
-    case 5:
-    {
-        int subType = (opcode >> 12) & 0x01;
-        switch (subType){
-            case 0x00: // load address to reg
-                rs = ((opcode >> 11) & 1) ? SP : PC & ~2;
-                rd = (opcode >> 8) & 0x07;
-                immediate = (opcode & 0xFF) << 2;
-                r[rd] = immediate + rs;
-                break;
+						case 1: //push pop reg
+							pushpop(opcode);
+							break;
+					}
+					break;
+			}
+			break;
+		
+		case 6:
+			subType = (opcode >> 12) & 1;
+			switch (subType){
+				case 0: // multiple load / store
+					multiLoad(opcode);
+					break;
 
-            case 0x01:
-            {
-                int subType2 = (opcode >> 10) & 1;
-                switch (subType2){
-                case 0: // add Stack pointer offset
-                    loadFlag = (opcode >> 7) & 1;
-                    immediate = (opcode & 0x7F) << 2;
-                    SP += loadFlag ? -immediate : immediate;
-                    break;
+				case 1:
+					int condition = (opcode >> 8) & 0x0F;
+					switch (condition)
+					{
+					case 15: //software interrupt
+						break;
+					default:  //conditional branch
+						conditionalBranch(opcode);
+						break;
+					}
+					break;
+			}
+			break;
+		
 
-                case 1: //push pop reg
-                    immediate = opcode & 0xFF;
-                    int popFlag = (opcode >> 11) & 1;
-                    if (popFlag){
-                        for (int i = 0; i < 8; i++){
-                            if (immediate & 1){
-                                r[i] = POP();
-                                std::cout << "r"<<i<<"\n";
-                            }
-                            immediate = immediate >> 1;
-                        }
-                        PC = ((opcode >> 8) & 1) ? POP() : PC;
-                        ((opcode >> 8) & 1) ? std::cout <<"PC\n" : std::cout << "";
+		case 7:
+			subType = (opcode >> 12) & 1;
+			switch (subType){
+				case 0: //unconditional branch
+					unconditionalBranch(opcode);
+					break;
 
-                    }
-                    else{
-                       if ((opcode >> 8) & 1)
-                           PUSH(LR);
-                        for (int i = 0; i < 8; i++){
-                            if (immediate & 1)
-                                PUSH(r[i]);
-                            immediate = immediate >> 1;
-                        }
-
-                    }
-                    break;
-                }
-                break;
-            }
-        }
-        break;
-    }
-    case 6:
-    {
-        int subType = (opcode >> 12) & 1;
-        int condition = (opcode >> 8) & 0x0F;
-        immediate = opcode & 0xFF;
-        switch (subType){
-        case 0: // multiple load / store
-            break;
-        case 1:
-            switch (condition)
-            {
-            case 15: //software interrupt
-
-                break;
-            default:  //conditional branch
-                PC += conditions[condition]() ? ((__int8)immediate << 1) + 2 : 0;
-                break;
-            }
-            break;
-        }
-        break;
-    }
-
-    case 7:
-        int subType = (opcode >> 12) & 1;
-        switch (subType){
-        case 0: //unconditional branch
-        {
-            immediate = (opcode & 0x7FF) << 1;
-            int m = 1U << (12 - 1); //bitextend hack
-            int r = (immediate ^ m) - m;
-            PC += 2 + r;
-            break;
-        }
-        case 1: //branch and link
-            int HLOffset = (opcode >> 11) & 1;
-            immediate = (opcode & 0x7FF);
-            if(!HLOffset){
-                immediate = (opcode & 0x7FF);
-                int m = 1U << (11 - 1); //bitextend hack
-                int r = (immediate ^ m) - m;
-                LR = (r << 12) + PC;
-            }
-            else{
-                int nextInstruction = PC + 1;
-                PC = LR + (immediate << 1) + 2;
-                LR = nextInstruction & ~1;
-            }
-            break;
-        }
-
-        break;
+				case 1: //branch and link
+					branchLink(opcode);
+					break;
+			}
+			break;
     }
     return 0;
 }
