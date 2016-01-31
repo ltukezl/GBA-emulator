@@ -64,11 +64,12 @@ void singleDataTrasnferImmediatePre(int opCode){
     int baseReg = (opCode >> 16) & 15;
     int destinationReg = (opCode >> 12) & 15;
     int offset = opCode & 0xFFF;
+	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
     int oldReg = r[baseReg];
     switch(loadStore){
     case 0:
         r[baseReg] += upDownBit ? offset : -offset;
-        byteFlag ? writeToAddress32(r[baseReg], r[destinationReg]) : writeToAddress(r[baseReg], r[destinationReg]);
+		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
         r[baseReg] = writeBack ? r[baseReg] : oldReg;
         break;
     case 1:
@@ -87,9 +88,10 @@ void singleDataTrasnferImmediatePost(int opCode){
     int baseReg = (opCode >> 16) & 15;
     int destinationReg = (opCode >> 12) & 15;
     int offset = opCode & 0xFFF;
+	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
     switch(loadStore){
     case 0:
-        byteFlag ? writeToAddress32(r[baseReg], r[destinationReg]) : writeToAddress(r[baseReg], r[destinationReg]);
+		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
         r[baseReg] += upDownBit ? offset : -offset;
         break;
     case 1:
@@ -108,11 +110,12 @@ void singleDataTrasnferRegisterPre(int opCode){
     int destinationReg = (opCode >> 12) & 15;
     int shiftAmount = (opCode >> 4) & 0xFF;
     int offset = r[(opCode & 15) << shiftAmount];
+	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
     int oldReg = r[baseReg];
     switch(loadStore){
     case 0:
         r[baseReg] += upDownBit ? offset : -offset;
-        byteFlag ? writeToAddress32(r[baseReg], r[destinationReg]) : writeToAddress(r[baseReg], r[destinationReg]);
+		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
         r[baseReg] = writeBack ? r[baseReg] : oldReg;
         break;
     case 1:
@@ -131,10 +134,12 @@ void singleDataTrasnferRegisterPost(int opCode){
     int destinationReg = (opCode >> 12) & 15;
     int shiftAmount = (opCode >> 4) & 0xFF;
     int offset = r[(opCode & 15) << shiftAmount];
+	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
+
 
     switch(loadStore){
     case 0:
-        byteFlag ? writeToAddress32(r[baseReg], r[destinationReg]) : writeToAddress(r[baseReg], r[destinationReg]);
+		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
         r[baseReg] += upDownBit ? offset : -offset;
         break;
     case 1:
@@ -432,7 +437,6 @@ void ARMExecute(int opCode){
             singleDataTrasnferRegisterPost(opCode);
             break;
         case 5:// single data transfer, immediate pre offset
-			std::cout << "yolo2";
             singleDataTrasnferImmediatePre(opCode);
             break;
         case 4: // single data transfer, immediate post offset

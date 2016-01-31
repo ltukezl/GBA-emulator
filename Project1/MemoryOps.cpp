@@ -48,6 +48,7 @@ void writeToAddress32(int address, int value){
 __int32 loadFromAddress32(int address){
     int mask = (address >> 24) & 15;
 	int number = 0;
+	//std::cout << "loadfromaddress32 " << mask << " " << number << " " << address << std::endl;
 
 	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 3] << 24;
 	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 2] << 16;
