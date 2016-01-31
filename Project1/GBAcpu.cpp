@@ -42,8 +42,8 @@ int main(){
 
 	while (loadFromAddress32(PC)){
 		PC += 4;
-		cout << "opCode: " << hex << loadFromAddress32(PC-4) << " cprs " << cprs;
-		ARMExecute(loadFromAddress32(PC-4)); // swap endianess
+		cout << "opCode: " << hex << loadFromAddress32(PC - 4) << " ";
+		ARMExecute(loadFromAddress32(PC - 4));
 		std::cout << r[0] << " " << r[1] << " " << r[2] << " " << r[3] << " " << r[4] << " " << r[5] << " " << r[6] << " " << r[7] << " " << r[13] << " " << r[14] << " " << r[15]-4 << "\n";
 	}
 

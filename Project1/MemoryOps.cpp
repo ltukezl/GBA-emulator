@@ -39,10 +39,10 @@ int loadFromAddress(int address){
 void writeToAddress32(int address, int value){
     int mask = (address >> 24) & 15;
 
-	memoryLayout[mask][address - (mask << 24) + 3] = value & 0xFF;
-	memoryLayout[mask][address - (mask << 24) + 2] = (value >> 8) & 0xFF;
-	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 16) & 0xFF;
-	memoryLayout[mask][address - (mask << 24) + 0] = (value >> 24) & 0xFF;
+	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
+	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
+	memoryLayout[mask][address - (mask << 24) + 2] = (value >> 16) & 0xFF;
+	memoryLayout[mask][address - (mask << 24) + 3] = (value >> 24) & 0xFF;
 }
 
 __int32 loadFromAddress32(int address){
