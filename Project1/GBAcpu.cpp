@@ -17,6 +17,10 @@ __int32 &PC = r[15]; 	//program counter (r15)
 //N  Z  C  V  = sign,zero,carry,overflow
 __int32 cprs = 0;	//current program status register
 
+int swapEndianess32(int num){
+	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
+}
+
 int main(){
 
     FILE *file;
@@ -25,7 +29,7 @@ int main(){
     fread(GamePak, 200, 1, file);
 
     SP = StackStart;
-    PC = 0;
+	PC = 0x08000000;
 
 	/*
     while (GamePak[PC] != 0 || GamePak[PC + 1] != 0){
@@ -36,11 +40,10 @@ int main(){
     }
 	*/
 
-	while (GamePak[PC] != 0 || GamePak[PC + 1] != 0 || GamePak[PC + 2] != 0 || GamePak[PC + 3] != 0){
+	while (loadFromAddress32(PC)){
 		PC += 4;
-		cout << "function " << loadFromAddress32(0x08000000);
-		cout << "opCode: " << hex << ((GamePak[PC - 1] << 24) + (GamePak[PC - 2] << 16) + (GamePak[PC - 3] << 8) + GamePak[PC - 4]) << " ";
-		ARMExecute((GamePak[PC - 1] << 24) + (GamePak[PC - 2] << 16) + (GamePak[PC - 3] << 8) + GamePak[PC - 4]); // swap endianess
+		cout << "opCode: " << hex << swapEndianess32(loadFromAddress32(PC-4)) << " ";
+		ARMExecute(swapEndianess32(loadFromAddress32(PC-4))); // swap endianess
 		std::cout << r[0] << " " << r[1] << " " << r[2] << " " << r[3] << " " << r[4] << " " << r[5] << " " << r[6] << " " << r[7] << " " << r[13] << " " << r[14] << " " << r[15] << "\n";
 	}
 	/* testing some instructions
