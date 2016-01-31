@@ -353,8 +353,8 @@ void immediateRotate(int opCode){
 }
 
 void registerRotate(int opCode){
-    int rd = (opCode >> 12) & 0xFF; //destination
-    int rs = (opCode >> 16) & 0xFF; //first operand
+    int rd = (opCode >> 12) & 0xF; //destination
+    int rs = (opCode >> 16) & 0xF; //first operand
     int rn = opCode & 0xFF; //2nd operand
     int tmpRegister = r[rn];
     int immediate = (opCode >> 8) & 0xF;
@@ -366,8 +366,8 @@ void registerRotate(int opCode){
 }
 
 void dataProcessingImmediate(int opCode){
-    int rd = (opCode >> 12) & 0xFF; //destination
-    int rs = (opCode >> 16) & 0xFF; //first operand
+    int rd = (opCode >> 12) & 0xF; //destination
+    int rs = (opCode >> 16) & 0xF; //first operand
     int immediate = opCode  & 0xFF;
     int shift = (opCode >> 8) & 0xF;
     int operationID = (opCode >> 20) & 0x1F;
