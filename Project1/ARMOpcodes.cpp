@@ -372,7 +372,7 @@ void dataProcessingImmediate(int opCode){
     int immediate = opCode  & 0xFF;
     int shift = (opCode >> 8) & 0xF;
     int operationID = (opCode >> 20) & 0x1F;
-    dataOperations[operationID](r[rd], r[rs], immediate << shift);
+    dataOperations[operationID](r[rd], r[rs], immediate << (shift*2)); //shifts are taken by steps of 2 (undocumented?)
 
 }
 
