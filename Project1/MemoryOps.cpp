@@ -10,18 +10,21 @@ uint32_t IoRAMStart = 0x04000000;
 uint32_t PaletteRAMStart = 0x05000000;
 uint32_t VRAMStart = 0x06000000;
 uint32_t OAMStart = 0x07000000;
+uint32_t GamePakStart = 0x08000000;
 uint32_t StackStart = 0x03007F00;
 
-char systemROM[0x3FFF];
-char unused[0x3FFF];
-char ExternalWorkRAM[0xFFFF];
-char InternalWorkRAM[0x7FFF];
-char IoRAM[0x3FF];
-char PaletteRAM[0x3FF];
-char VRAM[0x17FFF];
-char OAM[0x3FF];
+unsigned char systemROM[0x3FFF];
+unsigned char unused[0x3FFF];
+unsigned char ExternalWorkRAM[0xFFFF];
+unsigned char InternalWorkRAM[0x7FFF];
+unsigned char IoRAM[0x3FF];
+unsigned char PaletteRAM[0x3FF];
+unsigned char VRAM[0x17FFF];
+unsigned char OAM[0x3FF];
+unsigned char GamePak[0xFFFFFF];
+
 //pop	{r7, pc}
-char *memoryLayout[8] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM };
+unsigned char *memoryLayout[9] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak };
 
 void writeToAddress(int address, int value){
     int mask = (address >> 24) & 7;

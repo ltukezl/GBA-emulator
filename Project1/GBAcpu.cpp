@@ -17,8 +17,6 @@ __int32 &PC = r[15]; 	//program counter (r15)
 //N  Z  C  V  = sign,zero,carry,overflow
 __int32 cprs = 0;	//current program status register
 
-unsigned char GamePak[0xFFFFFF];
-
 int main(){
 
     FILE *file;
@@ -29,14 +27,22 @@ int main(){
     SP = StackStart;
     PC = 0;
 
-	
+	/*
     while (GamePak[PC] != 0 || GamePak[PC + 1] != 0){
         PC += 2; //4 bytes at time on thumb instructions
         thumbExecute((GamePak[PC - 1] << 8) + GamePak[PC - 2]); // swap endianess
         cout << "opCode: " << hex << ((GamePak[PC - 1] << 8) + GamePak[PC - 2]) << " ";
         std::cout <<  r[0] << " " << r[1] << " " << r[2] << " " << r[3] << " " <<  r[4] << " " << r[5] << " " << r[6] << " " << r[7] << " " << r[13] <<" " << r[14] <<" " << r[15] <<  "\n";
     }
-	
+	*/
+
+	while (GamePak[PC] != 0 || GamePak[PC + 1] != 0 || GamePak[PC + 2] != 0 || GamePak[PC + 3] != 0){
+		PC += 4;
+		cout << "function " << loadFromAddress32(0x08000000);
+		cout << "opCode: " << hex << ((GamePak[PC - 1] << 24) + (GamePak[PC - 2] << 16) + (GamePak[PC - 3] << 8) + GamePak[PC - 4]) << " ";
+		ARMExecute((GamePak[PC - 1] << 24) + (GamePak[PC - 2] << 16) + (GamePak[PC - 3] << 8) + GamePak[PC - 4]); // swap endianess
+		std::cout << r[0] << " " << r[1] << " " << r[2] << " " << r[3] << " " << r[4] << " " << r[5] << " " << r[6] << " " << r[7] << " " << r[13] << " " << r[14] << " " << r[15] << "\n";
+	}
 	/* testing some instructions
     ARMExecute(0xE3A00012);
     ARMExecute(0xE129F000);
