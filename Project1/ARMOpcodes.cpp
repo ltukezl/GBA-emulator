@@ -14,9 +14,10 @@ int(*ARMconditions[16])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, 
 
 void ARMBranch(int opCode){
     int location = opCode & 0xFFFFFF; //24 bits
-    int m = 1U << (24 - 1); //bitextend hack
+	location = (location << 2) + 4;
+    int m = 1U << (26 - 1); //bitextend hack
     int r = (location ^ m) - m;
-    PC += r + 4;
+    PC += r;
 }
 
 void IncrementBase(int& baseRegister, int nullParameter = 0){
@@ -429,18 +430,15 @@ void ARMExecute(int opCode){
             }
             break;
         case 7:// single data transfer, register pre offset 
-			std::cout << "yolo1";
             singleDataTrasnferRegisterPre(opCode);
             break;
         case 6:// single data transfer, register, post offset
-			std::cout << "yolo0";
             singleDataTrasnferRegisterPost(opCode);
             break;
         case 5:// single data transfer, immediate pre offset
             singleDataTrasnferImmediatePre(opCode);
             break;
         case 4: // single data transfer, immediate post offset
-			std::cout << "yolo3";
             singleDataTrasnferImmediatePost(opCode);
             break;
         case 3: case 2: //data processing, immediate check msr?

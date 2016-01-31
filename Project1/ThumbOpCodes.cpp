@@ -471,7 +471,6 @@ void branchLink(int opcode){
 
 int thumbExecute(__int16 opcode){
 	int subType;
-    int immediate;
     int instruction;
     __int16 type = (opcode & 0xE000) >> 13;
 
@@ -583,7 +582,6 @@ int thumbExecute(__int16 opcode){
 			}
 			break;
 		
-
 		case 7:
 			subType = (opcode >> 12) & 1;
 			switch (subType){

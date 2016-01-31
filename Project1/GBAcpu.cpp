@@ -42,26 +42,11 @@ int main(){
 
 	while (loadFromAddress32(PC)){
 		PC += 4;
-		cout << "opCode: " << hex << loadFromAddress32(PC-4) << " ";
+		cout << "opCode: " << hex << loadFromAddress32(PC-4) << " cprs " << cprs;
 		ARMExecute(loadFromAddress32(PC-4)); // swap endianess
-		std::cout << r[0] << " " << r[1] << " " << r[2] << " " << r[3] << " " << r[4] << " " << r[5] << " " << r[6] << " " << r[7] << " " << r[13] << " " << r[14] << " " << r[15] << "\n";
+		std::cout << r[0] << " " << r[1] << " " << r[2] << " " << r[3] << " " << r[4] << " " << r[5] << " " << r[6] << " " << r[7] << " " << r[13] << " " << r[14] << " " << r[15]-4 << "\n";
 	}
-	/* testing some instructions
-    ARMExecute(0xE3A00012);
-    ARMExecute(0xE129F000);
-    ARMExecute(0xE59FD028);
-    ARMExecute(0xE3A0001F);
-    ARMExecute(0xE129F000);
-    ARMExecute(0xE59FD000);
-    ARMExecute(0xE59f114C);
-    ARMExecute(0xE28F0018);
-    ARMExecute(0xE5810000);
-    ARMExecute(0xE59f1144);
-    ARMExecute(0xE1A0E00F);
-    ARMExecute(0xE12FFF11);
-    ARMExecute(0xEAFFFFF2);
-    std::cout << r[1];
-	*/
+
 	std::cin >> r[0];
     return 0;
 }
