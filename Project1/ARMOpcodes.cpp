@@ -16,7 +16,7 @@ void ARMBranch(int opCode){
     int location = opCode & 0xFFFFFF; //24 bits
     int m = 1U << (24 - 1); //bitextend hack
     int r = (location ^ m) - m;
-    PC += r + 8;
+    PC += r + 4;
 }
 
 void IncrementBase(int& baseRegister, int nullParameter = 0){
@@ -73,7 +73,8 @@ void singleDataTrasnferImmediatePre(int opCode){
         break;
     case 1:
         r[baseReg] += upDownBit ? offset : -offset;
-        destinationReg = byteFlag ? loadFromAddress32(r[baseReg]) : loadFromAddress(r[baseReg]);
+		//std::cout << "reg " << baseReg << " " << r[baseReg];
+		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
         r[baseReg] = writeBack ? r[baseReg] : oldReg;
         break;
     }
@@ -92,7 +93,7 @@ void singleDataTrasnferImmediatePost(int opCode){
         r[baseReg] += upDownBit ? offset : -offset;
         break;
     case 1:
-        destinationReg = byteFlag ? loadFromAddress32(r[baseReg]) : loadFromAddress(r[baseReg]);
+		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
         r[baseReg] += upDownBit ? offset : -offset;
         break;
     }
@@ -116,7 +117,7 @@ void singleDataTrasnferRegisterPre(int opCode){
         break;
     case 1:
         r[baseReg] += upDownBit ? offset : -offset;
-        destinationReg = byteFlag ? loadFromAddress32(r[baseReg]) : loadFromAddress(r[baseReg]);
+		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
         r[baseReg] = writeBack ? r[baseReg] : oldReg;
         break;
     }
@@ -137,7 +138,7 @@ void singleDataTrasnferRegisterPost(int opCode){
         r[baseReg] += upDownBit ? offset : -offset;
         break;
     case 1:
-        destinationReg = byteFlag ? loadFromAddress32(r[baseReg]) : loadFromAddress(r[baseReg]);
+		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
         r[baseReg] += upDownBit ? offset : -offset;
         break;
     }
@@ -423,15 +424,19 @@ void ARMExecute(int opCode){
             }
             break;
         case 7:// single data transfer, register pre offset 
+			std::cout << "yolo1";
             singleDataTrasnferRegisterPre(opCode);
             break;
         case 6:// single data transfer, register, post offset
+			std::cout << "yolo0";
             singleDataTrasnferRegisterPost(opCode);
             break;
         case 5:// single data transfer, immediate pre offset
+			std::cout << "yolo2";
             singleDataTrasnferImmediatePre(opCode);
             break;
         case 4: // single data transfer, immediate post offset
+			std::cout << "yolo3";
             singleDataTrasnferImmediatePost(opCode);
             break;
         case 3: case 2: //data processing, immediate check msr?
