@@ -33,22 +33,27 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
     int baseReg = (opCode >> 16) & 15;
     int upDownBit = (opCode >> 23) & 1;
     int writeBack = (opCode >> 21) & 1;
+	int regList = opCode & 0xFFFF;
     int oldBase = r[baseReg];
     if(((opCode >> 15)&1) & ~upDownBit){
         a(r[baseReg], r[15] + 12);
         b(r[baseReg], r[15] + 12);
     }
     for(int i = 0; i <15; i++){
-        if(opCode & 1 && upDownBit){
-        a(r[baseReg], r[i]);
-        b(r[baseReg], r[i]);
-        opCode >>= 1;
-        }
-        else if((opCode & 0x4000) && ~upDownBit){
-            a(r[baseReg], r[14-i]);
-            b(r[baseReg], r[14-i]);
-            opCode <<= 1;
-        }
+		if (upDownBit){
+			if (regList & 1){
+				a(r[baseReg], r[i]);
+				b(r[baseReg], r[i]);
+			}
+			regList >>= 1;
+		}
+		else if (~upDownBit){
+			if (regList & 0x4000){
+				a(r[baseReg], r[i]);
+				b(r[baseReg], r[i]);
+			}
+			regList <<= 1;
+		}
     }
     if(((opCode >> 15)&1) & upDownBit){
         a(r[baseReg], r[15] + 12);
