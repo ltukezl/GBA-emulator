@@ -73,17 +73,17 @@ void singleDataTrasnferImmediatePre(int opCode){
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
     int oldReg = r[baseReg];
     switch(loadStore){
-    case 0:
-        r[baseReg] += upDownBit ? offset : -offset;
-		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
-        r[baseReg] = writeBack ? r[baseReg] : oldReg;
-        break;
-    case 1:
-        r[baseReg] += upDownBit ? offset : -offset;
-		//std::cout << "reg " << baseReg << " " << r[baseReg];
-		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
-        r[baseReg] = writeBack ? r[baseReg] : oldReg;
-        break;
+		case 0:
+			r[baseReg] += upDownBit ? offset : -offset;
+			byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
+			r[baseReg] = writeBack ? r[baseReg] : oldReg;
+			break;
+		case 1:
+			r[baseReg] += upDownBit ? offset : -offset;
+			//std::cout << "reg " << baseReg << " " << r[baseReg];
+			r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
+			r[baseReg] = writeBack ? r[baseReg] : oldReg;
+			break;
     }
 }
 
@@ -162,7 +162,7 @@ void singleDataSwap(int opCode){
 void branchAndExhange(int opCode){
     r[15] = r[opCode & 15];
     (r[15] & 1) ? SETBIT(cprs, 5) : ZEROBIT(cprs, 5);
-    r[15] = r[15] & ~-1;
+    r[15] = r[15] & ~1;
 
 }
 
@@ -377,7 +377,7 @@ void dataProcessingImmediate(int opCode){
     int immediate = opCode  & 0xFF;
     int shift = (opCode >> 8) & 0xF;
     int operationID = (opCode >> 20) & 0x1F;
-    dataOperations[operationID](r[rd], r[rs], immediate << (shift*2)); //shifts are taken by steps of 2 (undocumented?)
+    dataOperations[operationID](r[rd], r[rs], immediate << (shift*2)); //shifts are taken by steps of 2 (undocumented?) TODO still bugging
 
 }
 
@@ -415,12 +415,12 @@ void ARMExecute(int opCode){
         case 9: //block data transfer pre offset. maybe implement S bits
             subType = (opCode >> 20) & 15;
             switch(subType){
-            case 10: case 8: //writeback / no writeback, pre offset, add offset
-                BlockDataTransferSave(opCode, IncrementBase, writeToAddress32);
-                break;
-            case 2: case 0: //writeback / no writeback, pre offset, sub offset
-                BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
-                break;
+				case 10: case 8: //writeback / no writeback, pre offset, add offset
+					BlockDataTransferSave(opCode, IncrementBase, writeToAddress32);
+					break;
+				case 2: case 0: //writeback / no writeback, pre offset, sub offset
+					BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
+					break;
             }
             break;
         case 8: //block data transfer post offset

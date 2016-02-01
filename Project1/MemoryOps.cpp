@@ -38,6 +38,7 @@ int loadFromAddress(int address){
 
 void writeToAddress32(int address, int value){
     int mask = (address >> 24) & 15;
+	//std::cout << "writetoaddress32 " << address << " value " << value << std::endl;
 
 	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
