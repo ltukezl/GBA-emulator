@@ -17,7 +17,7 @@ void ARMBranch(int opCode){
 	location = (location << 2) + 4;
     int m = 1U << (26 - 1); //bitextend hack
     int r = (location ^ m) - m;
-    PC += r;
+    *PC += r;
 }
 
 void incrementBase(int& baseRegister, int nullParameter = 0){
@@ -34,32 +34,32 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
     int upDownBit = (opCode >> 23) & 1;
     int writeBack = (opCode >> 21) & 1;
 	int regList = opCode & 0xFFFF;
-    int oldBase = r[baseReg];
+    int oldBase = *r[baseReg];
     if(((opCode >> 15)&1) & ~upDownBit){
-        a(r[baseReg], r[15] + 12);
-        b(r[baseReg], r[15] + 12);
+        a(*r[baseReg], *r[15] + 12);
+        b(*r[baseReg], *r[15] + 12);
     }
     for(int i = 0; i <15; i++){
 		if (upDownBit){
 			if (regList & 1){
-				a(r[baseReg], r[i]);
-				b(r[baseReg], r[i]);
+				a(*r[baseReg], *r[i]);
+				b(*r[baseReg], *r[i]);
 			}
 			regList >>= 1;
 		}
 		else if (~upDownBit){
 			if (regList & 0x4000){
-				a(r[baseReg], r[i]);
-				b(r[baseReg], r[i]);
+				a(*r[baseReg], *r[i]);
+				b(*r[baseReg], *r[i]);
 			}
 			regList <<= 1;
 		}
     }
     if(((opCode >> 15)&1) & upDownBit){
-        a(r[baseReg], r[15] + 12);
-        b(r[baseReg], r[15] + 12);
+        a(*r[baseReg], *r[15] + 12);
+        b(*r[baseReg], *r[15] + 12);
     }
-    r[baseReg] = writeBack ? r[baseReg] : oldBase;
+    *r[baseReg] = writeBack ? *r[baseReg] : oldBase;
 }
 
 template <typename function1, typename function2>
@@ -68,26 +68,26 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
 	int regList = opCode & 0xFFFF;
-	int oldBase = r[baseReg];
+	int oldBase = *r[baseReg];
 	
 	for (int i = 0; i <15; i++){
 		if (upDownBit){
 			if (regList & 1){
-				r[i] = a(r[baseReg]);
-				b(r[baseReg],0);
+				*r[i] = a(*r[baseReg]);
+				b(*r[baseReg],0);
 			}
 			regList >>= 1;
 		}
 		else if (~upDownBit){
 			if (regList & 0x4000){
-				r[i] = a(r[baseReg]);
-				b(r[baseReg], 0);
+				*r[i] = a(*r[baseReg]);
+				b(*r[baseReg], 0);
 			}
 			regList <<= 1;
 		}
 	}
 
-	r[baseReg] = writeBack ? r[baseReg] : oldBase;
+	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
 }
 
 template <typename function1, typename function2>
@@ -96,26 +96,26 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
 	int regList = opCode & 0xFFFF;
-	int oldBase = r[baseReg];
+	int oldBase = *r[baseReg];
 
 	for (int i = 0; i <15; i++){
 		if (upDownBit){
 			if (regList & 1){
-				a(r[baseReg],0);
-				r[i] = b(r[baseReg]);
+				a(*r[baseReg],0);
+				*r[i] = b(*r[baseReg]);
 			}
 			regList >>= 1;
 		}
 		else if (~upDownBit){
 			if (regList & 0x4000){
-				a(r[baseReg],0);
-				r[i] = b(r[baseReg]);
+				a(*r[baseReg],0);
+				*r[i] = b(*r[baseReg]);
 			}
 			regList <<= 1;
 		}
 	}
 
-	r[baseReg] = writeBack ? r[baseReg] : oldBase;
+	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
 }
 
 void singleDataTrasnferImmediatePre(int opCode){
@@ -128,20 +128,20 @@ void singleDataTrasnferImmediatePre(int opCode){
     int destinationReg = (opCode >> 12) & 15;
     int offset = opCode & 0xFFF;
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind PS: maybe wrong anyway????
-    int oldReg = r[baseReg];
+    int oldReg = *r[baseReg];
     switch(loadStore){
 		case 0:
-			r[baseReg] += upDownBit ? offset : -offset;
-			calculated = r[baseReg];
-			r[baseReg] = writeBack ? r[baseReg] : oldReg;
-			byteFlag ? writeToAddress(calculated, r[destinationReg]) : writeToAddress32(calculated, r[destinationReg]);
+			*r[baseReg] += upDownBit ? offset : -offset;
+			calculated = *r[baseReg];
+			*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
+			byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
 			break;
 		case 1:
-			r[baseReg] += upDownBit ? offset : -offset;
+			*r[baseReg] += upDownBit ? offset : -offset;
 			//std::cout << "reg " << baseReg << " " << r[baseReg];
-			calculated = r[baseReg];
-			r[baseReg] = writeBack ? r[baseReg] : oldReg;
-			r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
+			calculated = *r[baseReg];
+			*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
+			*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 			break;
     }
 }
@@ -156,12 +156,12 @@ void singleDataTrasnferImmediatePost(int opCode){
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
     switch(loadStore){
     case 0:
-		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
+		byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
         r[baseReg] += upDownBit ? offset : -offset;
         break;
     case 1:
-		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
-        r[baseReg] += upDownBit ? offset : -offset;
+		*r[destinationReg] = byteFlag ? loadFromAddress(*r[baseReg]) : loadFromAddress32(*r[baseReg]);
+        *r[baseReg] += upDownBit ? offset : -offset;
         break;
     }
 }
@@ -174,19 +174,19 @@ void singleDataTrasnferRegisterPre(int opCode){
     int baseReg = (opCode >> 16) & 15;
     int destinationReg = (opCode >> 12) & 15;
     int shiftAmount = (opCode >> 4) & 0xFF;
-    int offset = r[(opCode & 15) << shiftAmount];
+    int offset = *r[(opCode & 15) << shiftAmount];
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
-    int oldReg = r[baseReg];
+    int oldReg = *r[baseReg];
     switch(loadStore){
 		case 0:
-			r[baseReg] += upDownBit ? offset : -offset;
-			byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
-			r[baseReg] = writeBack ? r[baseReg] : oldReg;
+			*r[baseReg] += upDownBit ? offset : -offset;
+			byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
+			*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
 			break;
 		case 1:
-			r[baseReg] += upDownBit ? offset : -offset;
-			r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
-			r[baseReg] = writeBack ? r[baseReg] : oldReg;
+			*r[baseReg] += upDownBit ? offset : -offset;
+			*r[destinationReg] = byteFlag ? loadFromAddress(*r[baseReg]) : loadFromAddress32(*r[baseReg]);
+			*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
 			break;
     }
 }
@@ -198,18 +198,18 @@ void singleDataTrasnferRegisterPost(int opCode){
     int baseReg = (opCode >> 16) & 15;
     int destinationReg = (opCode >> 12) & 15;
     int shiftAmount = (opCode >> 4) & 0xFF;
-    int offset = r[(opCode & 15) << shiftAmount];
+    int offset = *r[(opCode & 15) << shiftAmount];
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
 
 
     switch(loadStore){
 		case 0:
-			byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
-			r[baseReg] += upDownBit ? offset : -offset;
+			byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
+			*r[baseReg] += upDownBit ? offset : -offset;
 			break;
 		case 1:
-			r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
-			r[baseReg] += upDownBit ? offset : -offset;
+			*r[destinationReg] = byteFlag ? loadFromAddress(*r[baseReg]) : loadFromAddress32(*r[baseReg]);
+			*r[baseReg] += upDownBit ? offset : -offset;
 			break;
     }
 }
@@ -219,9 +219,9 @@ void singleDataSwap(int opCode){
 }
 
 void branchAndExhange(int opCode){
-    r[15] = r[opCode & 15];
-    (r[15] & 1) ? SETBIT(cprs, 5) : ZEROBIT(cprs, 5);
-    r[15] = (r[15] & ~1);
+    *r[15] = *r[opCode & 15];
+    (*r[15] & 1) ? SETBIT(cprs, 5) : ZEROBIT(cprs, 5);
+    *r[15] = (*r[15] & ~1);
 }
 
 void lslCond(int &saveTo, int from, int immidiate) {
@@ -407,8 +407,35 @@ void ARMMvns(int& saveTo, int operand1, int operand2){
 void ARMmsr(int reg1, int bit){
 	if (bit)
 		std::cout << "not implemented \n";
-	else
-		cprs = r[reg1];
+	else{
+		cprs = *r[reg1];
+		int mode = cprs & 0x1F;
+		//std::cout << "switched mode to " << mode << std::endl;
+		switch (mode){
+			case 16:
+				r = usrSys;
+				break;
+			case 17:
+				r = fiq;
+				break;
+			case 18:
+				r = irq;
+				break;
+			case 19:
+				r = sup;
+				break;
+			case 23:
+				r = abt;
+				break;
+			case 27:
+				r = undef;
+				break;
+			case 31:
+				r = usrSys;
+				break;
+		}
+	}
+		
 }
 
 int ROR(unsigned int immediate, unsigned int by){
@@ -423,40 +450,43 @@ void immediateRotate(int opCode){
     int rd = (opCode >> 12) & 15; //destination
     int rs = (opCode >> 16) & 15; //first operand
     int rn = opCode & 15; //2nd operand
-    int tmpRegister = r[rn];
+    int tmpRegister = *r[rn];
+	if (rn == 15 || rs == 15)
+		tmpRegister += 4;
     int immediate = (opCode >> 7) & 0x1F;
     int shiftId = (opCode >> 5) & 3;
 	int operationID = (opCode >> 20) & 0x1F;
 	int destBit = (opCode >> 22) & 1;
 	if (operationID == 18)
 		ARMmsr(rn, destBit);
-	else
+	else{
 		ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
-    dataOperations[operationID](r[rd], r[rs], tmpRegister);
+		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
+	}
 }
 
 void registerRotate(int opCode){
     int rd = (opCode >> 12) & 0xF; //destination
     int rs = (opCode >> 16) & 0xF; //first operand
     int rn = opCode & 0xFF; //2nd operand
-    int tmpRegister = r[rn];
+    int tmpRegister = *r[rn];
     int immediate = (opCode >> 8) & 0xF;
     int shiftId = (opCode >> 5) & 3;
-    ARMshifts[shiftId](tmpRegister, tmpRegister, r[immediate]);
+    ARMshifts[shiftId](tmpRegister, tmpRegister, *r[immediate]);
     int operationID = (opCode >> 20) & 0x1F;
-    dataOperations[operationID](r[rd], r[rs], tmpRegister);
+    dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
 }
 
 void dataProcessingImmediate(int opCode){
     int rd = (opCode >> 12) & 0xF; //destination
     int rs = (opCode >> 16) & 0xF; //first operand
-	int operand1 = (rs == 15) ? r[rs] + 4 : r[rs];
+	int operand1 = (rs == 15) ? *r[rs] + 4 : *r[rs];
     int immediate = opCode  & 0xFF;
     int shift = (opCode >> 8) & 0xF;
 	int shiftedImm = ROR(immediate, shift);
 	shiftedImm = ROR(shiftedImm, shift);
     int operationID = (opCode >> 20) & 0x1F;
-    dataOperations[operationID](r[rd], operand1, shiftedImm); //shifts are taken by steps of 2 (undocumented?) TODO still bugging
+    dataOperations[operationID](*r[rd], operand1, shiftedImm); //shifts are taken by steps of 2 (undocumented?) TODO still bugging
 }
 
 void halfDataTransfer(int opCode){
@@ -470,10 +500,10 @@ void multiply(int opCode){
 	int rn = (opCode >> 12) & 0xF;
 	int rs = (opCode >> 8) & 0xF;
 	int rm = opCode & 0xF;
-	r[rd] = accumulateBit ? r[rm] * r[rs] + r[rn] : r[rm] * r[rs];
+	*r[rd] = accumulateBit ? *r[rm] * *r[rs] + *r[rn] : *r[rm] * *r[rs];
 	if (setBit){
-		negative(r[rd]);
-		zero(r[rd]);
+		negative(*r[rd]);
+		zero(*r[rd]);
 	}
 }
 
@@ -488,83 +518,83 @@ void ARMExecute(int opCode){
         int opCodeType = (opCode >> 24) & 0xF;
         int subType;
         switch(opCodeType){
-        case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
-            break;
-        case 14: //coProcessor data ops / register transfer, not used in GBA
-            break;
-        case 13: case 12: //co processor data transfer, not used in GBA
-            break;
-        case 11: //branch with link 
-            LR = PC;
-            LR &= ~3; //bits 1-0 should always be cleared, but you never know
-        case 10://branch 
-            ARMBranch(opCode);
-            break;
-        case 9: //block data transfer pre offset. maybe implement S bits
-            subType = (opCode >> 20) & 15;
-            switch(subType){
-				case 10: case 8: //writeback / no writeback, pre offset, add offset
-					BlockDataTransferSave(opCode, incrementBase, writeToAddress32);
-					break;
-				case 2: case 0: //writeback / no writeback, pre offset, sub offset
-					BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
-					break;
-				case 11: case 9: //writeback / no writeback, post offset, add offset
-					BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
-					break;
-				case 3: case 1: //writeback / no writeback, post offset, sub offset
-					BlockDataTransferLoadPre(opCode, decrementBase, loadFromAddress32);
-					break;
-            }
-            break;
-        case 8: //block data transfer post offset
-            subType = (opCode >> 20) & 0xF;
-            switch(subType){
-				case 10: case 8: //writeback / no writeback, post offset, add offset
-					BlockDataTransferSave(opCode, writeToAddress32, incrementBase);
-					break;
-				case 2: case 0: //writeback / no writeback, post offset, sub offset
-					BlockDataTransferSave(opCode, writeToAddress32 , decrementBase);
-					break;
-				case 11: case 9: //writeback / no writeback, post offset, add offset
-					BlockDataTransferLoadPost(opCode, loadFromAddress32, incrementBase);
-					break;
-				case 3: case 1: //writeback / no writeback, post offset, sub offset
-					BlockDataTransferLoadPost(opCode, loadFromAddress32, decrementBase);
-					break;
-            }
-            break;
-        case 7:// single data transfer, register pre offset 
-            singleDataTrasnferRegisterPre(opCode);
-            break;
-        case 6:// single data transfer, register, post offset
-            singleDataTrasnferRegisterPost(opCode);
-            break;
-        case 5:// single data transfer, immediate pre offset
-            singleDataTrasnferImmediatePre(opCode);
-            break;
-        case 4: // single data transfer, immediate post offset
-            singleDataTrasnferImmediatePost(opCode);
-            break;
-        case 3: case 2: //data processing, immediate check msr?
-			dataProcessingImmediate(opCode);
-            break;
-        case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange, (hell on earth)
-            if(((opCode >> 4) & 0x12FFF1) == 0x12FFF1)
-                branchAndExhange(opCode);
-            else if(((opCode >> 4) & 1) == 0) //data processing
-                immediateRotate(opCode);
-            else if(((opCode >> 7) & 1) == 0) //data processing
-                registerRotate(opCode);
-            else if(((opCode >> 5) & 3) > 0)
-                halfDataTransfer(opCode);
-            else if(((opCode >> 23) & 3) == 0)
-                multiply(opCode);
-            else if(((opCode >> 23) & 3) == 1)
-                multiplyLong(opCode);
-            else if(((opCode >> 23) & 3) == 2)
-                singleDataSwap(opCode);
-            break;
-        }
-    }
+			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
+				break;
+			case 14: //coProcessor data ops / register transfer, not used in GBA
+				break;
+			case 13: case 12: //co processor data transfer, not used in GBA
+				break;
+			case 11: //branch with link 
+				*LR = *PC;
+				*LR &= ~3; //bits 1-0 should always be cleared, but you never know
+			case 10://branch 
+				ARMBranch(opCode);
+				break;
+			case 9: //block data transfer pre offset. maybe implement S bits
+				subType = (opCode >> 20) & 15;
+				switch(subType){
+					case 10: case 8: //writeback / no writeback, pre offset, add offset
+						BlockDataTransferSave(opCode, incrementBase, writeToAddress32);
+						break;
+					case 2: case 0: //writeback / no writeback, pre offset, sub offset
+						BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
+						break;
+					case 11: case 9: //writeback / no writeback, post offset, add offset
+						BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
+						break;
+					case 3: case 1: //writeback / no writeback, post offset, sub offset
+						BlockDataTransferLoadPre(opCode, decrementBase, loadFromAddress32);
+						break;
+				}
+				break;
+			case 8: //block data transfer post offset
+				subType = (opCode >> 20) & 0xF;
+				switch(subType){
+					case 10: case 8: //writeback / no writeback, post offset, add offset
+						BlockDataTransferSave(opCode, writeToAddress32, incrementBase);
+						break;
+					case 2: case 0: //writeback / no writeback, post offset, sub offset
+						BlockDataTransferSave(opCode, writeToAddress32 , decrementBase);
+						break;
+					case 11: case 9: //writeback / no writeback, post offset, add offset
+						BlockDataTransferLoadPost(opCode, loadFromAddress32, incrementBase);
+						break;
+					case 3: case 1: //writeback / no writeback, post offset, sub offset
+						BlockDataTransferLoadPost(opCode, loadFromAddress32, decrementBase);
+						break;
+				}
+				break;
+			case 7:// single data transfer, register pre offset 
+				singleDataTrasnferRegisterPre(opCode);
+				break;
+			case 6:// single data transfer, register, post offset
+				singleDataTrasnferRegisterPost(opCode);
+				break;
+			case 5:// single data transfer, immediate pre offset
+				singleDataTrasnferImmediatePre(opCode);
+				break;
+			case 4: // single data transfer, immediate post offset
+				singleDataTrasnferImmediatePost(opCode);
+				break;
+			case 3: case 2: //data processing, immediate check msr?
+				dataProcessingImmediate(opCode);
+				break;
+			case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange, (hell on earth)
+				if(((opCode >> 4) & 0x12FFF1) == 0x12FFF1)
+					branchAndExhange(opCode);
+				else if(((opCode >> 4) & 1) == 0) //data processing
+					immediateRotate(opCode);
+				else if(((opCode >> 7) & 1) == 0) //data processing
+					registerRotate(opCode);
+				else if(((opCode >> 5) & 3) > 0)
+					halfDataTransfer(opCode);
+				else if(((opCode >> 23) & 3) == 0)
+					multiply(opCode);
+				else if(((opCode >> 23) & 3) == 1)
+					multiplyLong(opCode);
+				else if(((opCode >> 23) & 3) == 2)
+					singleDataSwap(opCode);
+				break;
+		}
+	}
 }

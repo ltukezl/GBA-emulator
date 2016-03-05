@@ -418,12 +418,12 @@ void pushpop(int opcode){
 		for (int i = 0; i < 8; i++){
 			if (immediate & 1){
 				*r[i] = POP();
-				std::cout << "r" << i << "\n";
+				//std::cout << "r" << i << "\n";
 			}
 			immediate = immediate >> 1;
 		}
 		*PC = ((opcode >> 8) & 1) ? POP() : *PC;
-		((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
+		//((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
 
 	}
 	else{
@@ -438,12 +438,34 @@ void pushpop(int opcode){
 	}
 }
 
-void multiLoad(int opcode){}
+void multiLoad(int opcode){
+	int immediate = opcode & 0xFF;
+	int loadFlag = (opcode >> 11) & 1;
+	int baseReg = (opcode >> 8) & 7;
+	if (loadFlag){
+		for (int i = 0; i < 8; i++){
+			if (immediate & 1){
+				*r[i] = loadFromAddress32(*r[baseReg]);
+				*r[baseReg] += 4;
+			}
+			immediate >>= 1;
+		}
+	}
+	else{
+		for (int i = 0; i < 8; i++){
+			if (immediate & 1){
+				writeToAddress32(*r[baseReg], *r[i]);
+				*r[baseReg] += 4;
+			}
+			immediate >>= 1;
+		}
+	}
+}
 
 void conditionalBranch(int opcode){
 	int immediate = opcode & 0xFF;
 	int condition = (opcode >> 8) & 0x0F;
-	PC += conditions[condition]() ? ((__int8)immediate << 1) + 2 : 0;
+	*PC += conditions[condition]() ? ((__int8)immediate << 1) + 2 : 0;
 }
 
 void unconditionalBranch(int opcode){

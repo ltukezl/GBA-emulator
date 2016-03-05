@@ -77,14 +77,14 @@ __int16 loadFromAddress16(int address){
 
 void PUSH(int value){
     *SP -= 4;
-    std::cout << "Pushed " << value <<" to "<< *SP <<"\n";
+    //std::cout << "Pushed " << value <<" to "<< *SP <<"\n";
 	writeToAddress32(*SP, value);
 }
 
 int POP(){
 
     int value = loadFromAddress32(*SP);
-    std::cout << "Popped " << value <<" from "<< *SP <<" to ";
+    //std::cout << "Popped " << value <<" from "<< *SP <<" to ";
     *SP += 4;
     return value;
 }

@@ -61,7 +61,7 @@ int main(){
     FILE *file;
     fopen_s(&file, "program.bin", "rb");
 	cout << PC;
-    fread(GamePak, 50000, 1, file);
+	fread(GamePak, 0xFFFFFF, 1, file);
 
 
 
@@ -80,7 +80,7 @@ int main(){
 		int opCode = thumbBit ? loadFromAddress16(*PC - 2) & 0xFFFF : loadFromAddress32(*PC - 4);
 		cout << "opCode: " << hex << opCode << " ";
 		thumbBit ? thumbExecute(loadFromAddress16(*PC - 2)) : ARMExecute(loadFromAddress32(*PC - 4));
-		std::cout << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " FP: " << *r[11] << " IP: " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " PC: " << *r[15] - 4 << " CPRS: " << cprs << "\n";
+		std::cout << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " FP: " << *r[11] << " IP: " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " PC: " << (thumbBit ? *r[15] - 2 : *r[15] - 4 )<< " CPRS: " << cprs << "\n";
 	}
 
 	std::cin >> *r[0];
