@@ -217,7 +217,7 @@ void cmpHL(int& saveTo, int immidiate){
 }
 
 void bx(int& saveTo, int immidiate){
-	PC = immidiate;
+	PC = immidiate & ~1;
 	bool thumb = immidiate & 1;
 	thumb ? SETBIT(cprs, 5) : ZEROBIT(cprs, 5);
 }
@@ -324,17 +324,17 @@ void hiRegOperations(int opcode){
 	int rd = opcode & 0x07; //register, destination
 	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
 	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
-	hlOps[instruction](r[rd | hi1], (rs == 15) ? (PC & ~1) + 4 : r[rs]);// PC as operand, broken?
+	hlOps[instruction](r[rd | hi1], (rs == 15) ? (PC & ~1) + 2 : r[rs]);// PC as operand, broken?
 }
 
 void PCRelativeLoad(int opcode){
 	//check this out later, memory masking?, potentially broken.
 	//works after gamepak is in actual memory location. hopefully
-	int tmpPC = PC;
+	int tmpPC = (PC + 2) & ~2;
 	int rs = (opcode >> 8) & 7;
 	int immediate = (opcode & 0xFF) << 2; //8 bit value to 10 bit value, last bits are 00 to be word alinged
-	tmpPC += immediate - 2;
-	r[rs] = loadFromAddress(tmpPC);
+	tmpPC += immediate;
+	r[rs] = loadFromAddress32(tmpPC);
 }
 
 void loadStoreRegOffset(int opcode){
@@ -457,7 +457,6 @@ void branchLink(int opcode){
 	int HLOffset = (opcode >> 11) & 1;
 	int immediate = (opcode & 0x7FF);
 	if (!HLOffset){
-		immediate = (opcode & 0x7FF);
 		int m = 1U << (11 - 1); //bitextend hack
 		int r = (immediate ^ m) - m;
 		LR = (r << 12) + PC;
@@ -465,7 +464,7 @@ void branchLink(int opcode){
 	else{
 		int nextInstruction = PC + 1;
 		PC = LR + (immediate << 1) + 2;
-		LR = nextInstruction & ~1;
+		LR = nextInstruction | 1;
 	}
 }
 

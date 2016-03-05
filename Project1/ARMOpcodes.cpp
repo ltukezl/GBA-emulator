@@ -429,7 +429,7 @@ void immediateRotate(int opCode){
 	int operationID = (opCode >> 20) & 0x1F;
 	int destBit = (opCode >> 22) & 1;
 	if (operationID == 18)
-		ARMmsr(r[rn], destBit);
+		ARMmsr(rn, destBit);
 	else
 		ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
     dataOperations[operationID](r[rd], r[rs], tmpRegister);
