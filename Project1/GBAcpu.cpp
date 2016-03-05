@@ -26,7 +26,7 @@ int main(){
     FILE *file;
     fopen_s(&file, "program.bin", "rb");
 
-    fread(GamePak, 500, 1, file);
+    fread(GamePak, 50000, 1, file);
 
     SP = StackStart;
 	PC = 0x08000000;

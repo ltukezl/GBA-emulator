@@ -404,9 +404,19 @@ void ARMMvns(int& saveTo, int operand1, int operand2){
     negative(saveTo);
 }
 
+void ARMmsr(int reg1, int bit){
+	if (bit)
+		std::cout << "not implemented \n";
+	else
+		cprs = r[reg1];
+}
+
+int ROR(unsigned int immediate, unsigned int by){
+	return (immediate >> by) | (immediate << (32 - by));
+}
 
 void(*dataOperations[0x20])(int&, int, int) = {ARMAnd, ARMAnds, ARMEOR, ARMEORS, ARMSub, ARMSubs, ARMRsb, ARMRsbs,
-        ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMTST, ARMTEQ, ARMTEQ, ARMCMP,
+ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMTST, ARMTEQ, ARMTEQ, ARMCMP,
         ARMCMP, ARMCMN, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns};
 
 void immediateRotate(int opCode){
@@ -416,8 +426,12 @@ void immediateRotate(int opCode){
     int tmpRegister = r[rn];
     int immediate = (opCode >> 7) & 0x1F;
     int shiftId = (opCode >> 5) & 3;
-    ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
-    int operationID = (opCode >> 20) & 0x1F;
+	int operationID = (opCode >> 20) & 0x1F;
+	int destBit = (opCode >> 22) & 1;
+	if (operationID == 18)
+		ARMmsr(r[rn], destBit);
+	else
+		ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
     dataOperations[operationID](r[rd], r[rs], tmpRegister);
 }
 
@@ -436,10 +450,13 @@ void registerRotate(int opCode){
 void dataProcessingImmediate(int opCode){
     int rd = (opCode >> 12) & 0xF; //destination
     int rs = (opCode >> 16) & 0xF; //first operand
+	int operand1 = (rs == 15) ? r[rs] + 4 : r[rs];
     int immediate = opCode  & 0xFF;
     int shift = (opCode >> 8) & 0xF;
+	int shiftedImm = ROR(immediate, shift);
+	shiftedImm = ROR(shiftedImm, shift);
     int operationID = (opCode >> 20) & 0x1F;
-    dataOperations[operationID](r[rd], r[rs], immediate << (shift * 2)); //shifts are taken by steps of 2 (undocumented?) TODO still bugging
+    dataOperations[operationID](r[rd], operand1, shiftedImm); //shifts are taken by steps of 2 (undocumented?) TODO still bugging
 }
 
 void halfDataTransfer(int opCode){
@@ -530,7 +547,7 @@ void ARMExecute(int opCode){
             singleDataTrasnferImmediatePost(opCode);
             break;
         case 3: case 2: //data processing, immediate check msr?
-            dataProcessingImmediate(opCode);
+			dataProcessingImmediate(opCode);
             break;
         case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange, (hell on earth)
             if(((opCode >> 4) & 0x12FFF1) == 0x12FFF1)
