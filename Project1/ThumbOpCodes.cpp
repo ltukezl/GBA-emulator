@@ -418,12 +418,12 @@ void pushpop(int opcode){
 		for (int i = 0; i < 8; i++){
 			if (immediate & 1){
 				*r[i] = POP();
-				//std::cout << "r" << i << "\n";
+				std::cout << "r" << i << "\n";
 			}
 			immediate = immediate >> 1;
 		}
-		*PC = ((opcode >> 8) & 1) ? POP() : *PC;
-		//((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
+		*PC = ((opcode >> 8) & 1) ? (POP() & -2) : *PC;
+		((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
 
 	}
 	else{
@@ -594,6 +594,7 @@ int thumbExecute(__int16 opcode){
 					switch (condition)
 					{
 					case 15: //software interrupt
+						std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1" << std::endl;
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);
