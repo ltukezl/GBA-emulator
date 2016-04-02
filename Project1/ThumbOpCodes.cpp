@@ -345,12 +345,11 @@ void hiRegOperations(int opcode){
 	int rd = opcode & 0x07; //register, destination
 	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
 	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
-	hlOps[instruction](*r[rd | hi1], (rs == 15) ? (*PC & ~1) + 2 : *r[rs]);// PC as operand, broken?
+	hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*PC + 2) & ~1) : *r[rs]);// PC as operand, broken?
 }
 
 void PCRelativeLoad(int opcode){
 	//check this out later, memory masking?, potentially broken.
-	//works after gamepak is in actual memory location. hopefully
 	int tmpPC = (*PC + 2) & ~2;
 	int rs = (opcode >> 8) & 7;
 	int immediate = (opcode & 0xFF) << 2; //8 bit value to 10 bit value, last bits are 00 to be word alinged
@@ -439,12 +438,12 @@ void pushpop(int opcode){
 		for (int i = 0; i < 8; i++){
 			if (immediate & 1){
 				*r[i] = POP();
-				std::cout << "r" << i << "\n";
+				//std::cout << "r" << i << "\n";
 			}
 			immediate = immediate >> 1;
 		}
-		*PC = ((opcode >> 8) & 1) ? (POP() & -2) : *PC;
-		((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
+		*PC = ((opcode >> 8) & 1) ? (POP() & -2) : (*PC);
+		//((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
 
 	}
 	else{
@@ -486,22 +485,22 @@ void multiLoad(int opcode){
 void conditionalBranch(int opcode){
 	int immediate = opcode & 0xFF;
 	int condition = (opcode >> 8) & 0x0F;
-	*PC += conditions[condition]() ? ((__int8)immediate << 1) + 2 : 0;
+	*PC += conditions[condition]() ? ((__int8)immediate << 1) + 2: 0;
 }
 
 void unconditionalBranch(int opcode){
 	int immediate = (opcode & 0x7FF) << 1;
-	*PC += 2 + signExtend<12>(immediate);
+	*PC += signExtend<12>(immediate) + 2;
 }
 
 void branchLink(int opcode){
 	int HLOffset = (opcode >> 11) & 1;
 	int immediate = (opcode & 0x7FF);
 	if (!HLOffset)
-		*LR = (signExtend<11>(immediate) << 12) + *PC;
+		*LR = (signExtend<11>(immediate) << 12) + *PC + 2;
 	else{
 		int nextInstruction = *PC + 1;
-		*PC = *LR + (immediate << 1) + 2;
+		*PC = *LR + (immediate << 1); //maybe wrong check later
 		*LR = nextInstruction | 1;
 	}
 }
@@ -509,6 +508,7 @@ void branchLink(int opcode){
 int thumbExecute(__int16 opcode){
 	int subType;
     int instruction;
+	*PC += 2;
     __int16 type = (opcode & 0xE000) >> 13;
 
     switch (type) {

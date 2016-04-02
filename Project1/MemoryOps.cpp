@@ -1,3 +1,4 @@
+#include <math.h>
 #include "Constants.h"
 #include "MemoryOps.h"
 #include "GBAcpu.h"
@@ -23,7 +24,7 @@ unsigned char VRAM[0x17FFF];
 unsigned char OAM[0x3FF];
 unsigned char GamePak[0xFFFFFF];
 
-unsigned char *memoryLayout[9] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak };
+unsigned char *memoryLayout[15] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak };
 
 void writeToAddress(int address, int value){
     int mask = (address >> 24) & 15;
@@ -76,14 +77,14 @@ __int16 loadFromAddress16(int address){
 
 void PUSH(int value){
     *SP -= 4;
-    std::cout << "Pushed " << value <<" to "<< *SP <<"\n";
+    //std::cout << "Pushed " << value <<" to "<< *SP <<"\n";
 	writeToAddress32(*SP, value);
 }
 
 int POP(){
 
     int value = loadFromAddress32(*SP);
-    std::cout << "Popped " << value <<" from "<< *SP <<" to ";
+    //std::cout << "Popped " << value <<" from "<< *SP <<" to ";
     *SP += 4;
     return value;
 }
