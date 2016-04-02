@@ -54,26 +54,16 @@ int swapEndianess32(int num){
 	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
 }
 
+
+
 int main(){
 	r = usrSys;
 	*SP = StackStart; //sp
 	*PC = 0x08000000; //pc
     FILE *file;
     fopen_s(&file, "program.bin", "rb");
-	cout << PC;
 	fread(GamePak, 0xFFFFFF, 1, file);
 
-
-
-	/*
-    while (GamePak[PC] != 0 || GamePak[PC + 1] != 0){
-        PC += 2; //4 bytes at time on thumb instructions
-        thumbExecute((GamePak[PC - 1] << 8) + GamePak[PC - 2]); // swap endianess
-        cout << "opCode: " << hex << ((GamePak[PC - 1] << 8) + GamePak[PC - 2]) << " ";
-        std::cout <<  r[0] << " " << r[1] << " " << r[2] << " " << r[3] << " " <<  r[4] << " " << r[5] << " " << r[6] << " " << r[7] << " " << r[13] <<" " << r[14] <<" " << r[15] <<  "\n";
-    }
-	*/
-	//cout << hex <<  PC << " " << *PC << " " << &PC; 
 	while (loadFromAddress32(*PC)){
 		int thumbBit = (cprs >> 5) & 1;
 		*PC = thumbBit ? *PC + 2: *PC + 4;

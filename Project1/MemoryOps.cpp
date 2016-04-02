@@ -23,7 +23,6 @@ unsigned char VRAM[0x17FFF];
 unsigned char OAM[0x3FF];
 unsigned char GamePak[0xFFFFFF];
 
-//pop	{r7, pc}
 unsigned char *memoryLayout[9] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak };
 
 void writeToAddress(int address, int value){
@@ -77,14 +76,14 @@ __int16 loadFromAddress16(int address){
 
 void PUSH(int value){
     *SP -= 4;
-    //std::cout << "Pushed " << value <<" to "<< *SP <<"\n";
+    std::cout << "Pushed " << value <<" to "<< *SP <<"\n";
 	writeToAddress32(*SP, value);
 }
 
 int POP(){
 
     int value = loadFromAddress32(*SP);
-    //std::cout << "Popped " << value <<" from "<< *SP <<" to ";
+    std::cout << "Popped " << value <<" from "<< *SP <<" to ";
     *SP += 4;
     return value;
 }

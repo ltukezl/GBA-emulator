@@ -16,5 +16,12 @@ extern __int32* &LR;
 extern __int32* &PC;
 extern __int32* &SP;
 
+template<int start>
+int signExtend(int value){
+	int m = 1U << (start - 1); //bitextend hack
+	int r = (value ^ m) - m;
+	return r;
+}
+
 #endif // MAIN_H
 

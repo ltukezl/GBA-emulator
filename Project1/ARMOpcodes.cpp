@@ -15,9 +15,7 @@ int(*ARMconditions[16])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, 
 void ARMBranch(int opCode){
     int location = opCode & 0xFFFFFF; //24 bits
 	location = (location << 2) + 4;
-    int m = 1U << (26 - 1); //bitextend hack
-    int r = (location ^ m) - m;
-    *PC += r;
+    *PC += signExtend<26>(location);
 }
 
 void incrementBase(int& baseRegister, int nullParameter = 0){
@@ -149,21 +147,23 @@ void singleDataTrasnferImmediatePre(int opCode){
 void singleDataTrasnferImmediatePost(int opCode){
     int upDownBit = (opCode >> 23) & 1;
     int byteFlag = (opCode >> 22) & 1;
-    int loadStore = (opCode >> 20) & 1;
+	int loadStore = (opCode >> 20) & 1;
     int baseReg = (opCode >> 16) & 15;
     int destinationReg = (opCode >> 12) & 15;
     int offset = opCode & 0xFFF;
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
+	int calculated = *r[baseReg];
     switch(loadStore){
-    case 0:
-		byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
-        r[baseReg] += upDownBit ? offset : -offset;
-        break;
-    case 1:
-		*r[destinationReg] = byteFlag ? loadFromAddress(*r[baseReg]) : loadFromAddress32(*r[baseReg]);
-        *r[baseReg] += upDownBit ? offset : -offset;
-        break;
+		case 0:
+			byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
+			calculated += upDownBit ? offset : -offset;
+			break;
+		case 1:
+			*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
+			calculated += upDownBit ? offset : -offset;
+			break;
     }
+	*r[baseReg] = calculated;
 }
 
 void singleDataTrasnferRegisterPre(int opCode){
@@ -216,6 +216,7 @@ void singleDataTrasnferRegisterPost(int opCode){
 
 void singleDataSwap(int opCode){
     std::cout << "singleDataSwap\n";
+	std::cin >> *r[0];
 }
 
 void branchAndExhange(int opCode){
@@ -490,7 +491,75 @@ void dataProcessingImmediate(int opCode){
 }
 
 void halfDataTransfer(int opCode){
-    std::cout << "half data transfer";
+	int pFlag = (opCode >> 24) & 1;
+	int uFlag = (opCode >> 23) & 1;
+	int func = (opCode >> 22) & 1;
+	int wFlag = (opCode >> 21) & 1;
+	int lFlag = (opCode >> 20) & 1;
+	int shFlag = (opCode >> 5) & 3;
+	int rn = (opCode >> 16) & 0xF;
+	int rd = (opCode >> 12) & 0xF;
+	int offset = (opCode >> 4) & 0xF0 | opCode & 0xF;
+	offset += (rn == 15) ? 8 : 0;
+	int calculated = (rd == 15) ? (*r[rn] + 12) : *r[rn];
+
+	switch (func){
+		case 0:
+			if (lFlag){
+				if(pFlag) 
+					calculated += uFlag ? *r[offset] : -*r[offset];
+				if (shFlag == 1)
+					*r[rd] = loadFromAddress16(calculated);
+				else if (shFlag == 2)
+					*r[rd] = signExtend<8>(loadFromAddress(calculated));
+				else
+					*r[rd] = signExtend<16>(loadFromAddress16(calculated));
+				if (!pFlag)
+					calculated += uFlag ? *r[offset] : -*r[offset];
+			}
+			else{
+				if (pFlag)
+					calculated += uFlag ? *r[offset] : -*r[offset];
+				if (shFlag == 1)
+					writeToAddress16(calculated, *r[rd]);
+				else if (shFlag == 2)
+					writeToAddress(calculated, signExtend<8>(*r[rd]));
+				else
+					writeToAddress16(calculated, signExtend<16>(*r[rd]));
+				if (!pFlag)
+					calculated += uFlag ? *r[offset] : -*r[offset];
+			}
+			*r[rn] = wFlag ? calculated : *r[rn];
+			break;
+		case 1:
+			if (lFlag){
+				if (pFlag)
+					calculated += uFlag ? offset : -offset;
+				if (shFlag == 1)
+					*r[rd] = loadFromAddress16(calculated);
+				else if (shFlag == 2)
+					*r[rd] = signExtend<8>(loadFromAddress(calculated));
+				else
+					*r[rd] = signExtend<16>(loadFromAddress16(calculated));
+				if (!pFlag)
+					calculated += uFlag ? offset : offset;
+			}
+			else{
+				if (pFlag)
+					calculated += uFlag ? offset : -offset;
+				if (shFlag == 1)
+					writeToAddress16(calculated, *r[rd]);
+				else if (shFlag == 2)
+					writeToAddress(calculated, signExtend<8>(*r[rd]));
+				else
+					writeToAddress16(calculated, signExtend<16>(*r[rd]));
+				if (!pFlag)
+					calculated += uFlag ? offset : -offset;
+			}
+			*r[rn] = wFlag ? calculated : *r[rn];
+			break;
+	}
+	
 }
 
 void multiply(int opCode){
@@ -508,7 +577,8 @@ void multiply(int opCode){
 }
 
 void multiplyLong(int opCode){
-    std::cout << "multiply long";
+	std::cout << "mult long";
+	std::cin >> *r[0];
 }
 
 void ARMExecute(int opCode){
@@ -519,6 +589,7 @@ void ARMExecute(int opCode){
         int subType;
         switch(opCodeType){
 			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
+				std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1" << std::endl;
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA
 				break;
@@ -586,14 +657,14 @@ void ARMExecute(int opCode){
 					immediateRotate(opCode);
 				else if(((opCode >> 7) & 1) == 0) //data processing
 					registerRotate(opCode);
-				else if(((opCode >> 5) & 3) > 0)
-					halfDataTransfer(opCode);
-				else if(((opCode >> 23) & 3) == 0)
-					multiply(opCode);
-				else if(((opCode >> 23) & 3) == 1)
-					multiplyLong(opCode);
-				else if(((opCode >> 23) & 3) == 2)
+				else if ((((opCode >> 23) & 0x1F) == 2) && (((opCode >> 4) & 0xFF) == 9))
 					singleDataSwap(opCode);
+				else if (((opCode >> 23) & 0x1F) == 0 && (((opCode >> 4) & 0xF) == 9))
+					multiply(opCode);
+				else if (((opCode >> 23) & 0x1F) == 1 && (((opCode >> 4) & 0xF) == 9))
+					multiplyLong(opCode);
+				else
+				    halfDataTransfer(opCode);
 				break;
 		}
 	}

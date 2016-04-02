@@ -56,12 +56,33 @@ void asr(int &saveTo, int from, int immidiate) {
 }
 //--------------------------------------------------------
 void add(int &saveTo, int from, int immidiate) {
+	/*
+	int carry;
+	int overflow;
+	__asm{
+		mov eax, from
+	    mov ebx, immidiate
+		add eax, ebx
+		mov saveTo, eax
+		pushf
+		pop ax
+		mov bx, ax
+		push ax
+		popf
+		shl bx, 11
+		and bx, 1
+		mov overflow, ebx
+	}
+	std::cout << overflow;
+	*/
+	
 	saveTo = from + immidiate;
 	negative(saveTo);
 	zero(saveTo);
 	addCarry(from, immidiate, saveTo);
 	addOverflow(from, immidiate, saveTo);
-}
+	
+ }
 void sub(int &saveTo, int from, int immidiate) {
 	saveTo = from - immidiate;
 	negative(saveTo);
@@ -470,19 +491,14 @@ void conditionalBranch(int opcode){
 
 void unconditionalBranch(int opcode){
 	int immediate = (opcode & 0x7FF) << 1;
-	int m = 1U << (12 - 1); //bitextend hack
-	int r = (immediate ^ m) - m;
-	*PC += 2 + r;
+	*PC += 2 + signExtend<12>(immediate);
 }
 
 void branchLink(int opcode){
 	int HLOffset = (opcode >> 11) & 1;
 	int immediate = (opcode & 0x7FF);
-	if (!HLOffset){
-		int m = 1U << (11 - 1); //bitextend hack
-		int r = (immediate ^ m) - m;
-		*LR = (r << 12) + *PC;
-	}
+	if (!HLOffset)
+		*LR = (signExtend<11>(immediate) << 12) + *PC;
 	else{
 		int nextInstruction = *PC + 1;
 		*PC = *LR + (immediate << 1) + 2;
