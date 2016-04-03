@@ -12,14 +12,14 @@ extern unsigned char OAM[0x3FF];
 extern unsigned char GamePak[0xFFFFFF];
 
 int loadFromAddress(int);
-__int16 loadFromAddress16(int);
-__int32 loadFromAddress32(int);
+unsigned __int16 loadFromAddress16(int);
+unsigned __int32 loadFromAddress32(int);
 
 void writeToAddress(int, int);
 void writeToAddress16(int, int);
 void writeToAddress32(int, int);
 
 void PUSH(int);
-int POP();
+unsigned __int32 POP();
 
 #endif

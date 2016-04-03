@@ -379,10 +379,10 @@ void loadStoreSignExtend(int opcode){
 		writeToAddress16(*r[rb] + *r[ro], *r[rd]);
 	else if (!signFlag && hFlag) //ldrh
 		*r[rd] = loadFromAddress16(*r[rb] + *r[ro]);
-	else if (signFlag && !hFlag) //ldsb NOTE: does not signextend
-		*r[rd] = loadFromAddress(*r[rb] + *r[ro]);
+	else if (signFlag && !hFlag) //ldsb
+		*r[rd] = signExtend<8>(loadFromAddress(*r[rb] + *r[ro]));
 	else //ldsh
-		*r[rd] = loadFromAddress16(*r[ro] + *r[rb]);
+		*r[rd] = signExtend<16>(loadFromAddress16(*r[ro] + *r[rb]));
 }
 
 void loadStoreImm(int opcode){

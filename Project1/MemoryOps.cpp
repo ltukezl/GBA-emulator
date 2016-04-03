@@ -46,7 +46,7 @@ void writeToAddress32(int address, int value){
 	memoryLayout[mask][address - (mask << 24) + 3] = (value >> 24) & 0xFF;
 }
 
-__int32 loadFromAddress32(int address){
+unsigned __int32 loadFromAddress32(int address){
     int mask = (address >> 24) & 15;
 	int number = 0;
 	
@@ -62,16 +62,19 @@ __int32 loadFromAddress32(int address){
 void writeToAddress16(int address, int value){
     int mask = (address >> 24) & 15;
 
+
 	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
 }
 
-__int16 loadFromAddress16(int address){
+unsigned __int16 loadFromAddress16(int address){
     int mask = (address >> 24) & 15;
 	int number = 0;
 
+
 	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 1] << 8;
 	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
+	//std::cout << "loadfromaddress32 " << address << " " << number << " " << address << std::endl;
 	return number;
 }
 
@@ -81,7 +84,7 @@ void PUSH(int value){
 	writeToAddress32(*SP, value);
 }
 
-int POP(){
+unsigned __int32 POP(){
 
     int value = loadFromAddress32(*SP);
     //std::cout << "Popped " << value <<" from "<< *SP <<" to ";

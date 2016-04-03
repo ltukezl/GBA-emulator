@@ -66,11 +66,10 @@ int main(){
 
 	while (loadFromAddress32(*PC)){
 		int thumbBit = (cprs >> 5) & 1;
-		*PC = thumbBit ? *PC: *PC + 4;
-		int opCode = thumbBit ? loadFromAddress16(*PC) & 0xFFFF : loadFromAddress32(*PC - 4);
-		cout << "opCode: " << hex << opCode << " ";
-		thumbBit ? thumbExecute(loadFromAddress16(*PC)) : ARMExecute(loadFromAddress32(*PC - 4));
-		std::cout << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " FP: " << *r[11] << " IP: " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " PC: " << (thumbBit ? *r[15] : *r[15] - 4 )<< " CPRS: " << cprs << "\n";
+		unsigned int opCode = thumbBit ? loadFromAddress16(*PC) : loadFromAddress32(*PC);
+		cout << hex << *r[15] << " opCode: " << opCode << " ";
+		thumbBit ? thumbExecute(loadFromAddress16(*PC)) : ARMExecute(loadFromAddress32(*PC));
+		std::cout << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " FP: " << *r[11] << " IP: " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << "\n";
 	}
 
 	std::cin >> *r[0];

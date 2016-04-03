@@ -583,6 +583,7 @@ void multiplyLong(int opCode){
 
 void ARMExecute(int opCode){
     int condition = (opCode >> 28) & 0xF;
+	*PC += 4;
     if(ARMconditions[condition]()) //condition true
     {
         int opCodeType = (opCode >> 24) & 0xF;
