@@ -35,11 +35,10 @@ int loadFromAddress(int address){
     int mask = (address >> 24) & 15;
 	return memoryLayout[mask][address - (mask << 24)];
 }
-
+//could propably do faster with *(int*) but might not work in different endianess
 void writeToAddress32(int address, int value){
     int mask = (address >> 24) & 15;
 	//std::cout << "writetoaddress32 " << address << " value " << value << std::endl;
-
 	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 2] = (value >> 16) & 0xFF;

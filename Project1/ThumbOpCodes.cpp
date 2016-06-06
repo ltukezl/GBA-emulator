@@ -56,33 +56,13 @@ void asr(int &saveTo, int from, int immidiate) {
 }
 //--------------------------------------------------------
 void add(int &saveTo, int from, int immidiate) {
-	/*
-	int carry;
-	int overflow;
-	__asm{
-		mov eax, from
-	    mov ebx, immidiate
-		add eax, ebx
-		mov saveTo, eax
-		pushf
-		pop ax
-		mov bx, ax
-		push ax
-		popf
-		shl bx, 11
-		and bx, 1
-		mov overflow, ebx
-	}
-	std::cout << overflow;
-	*/
-	
 	saveTo = from + immidiate;
 	negative(saveTo);
 	zero(saveTo);
 	addCarry(from, immidiate, saveTo);
 	addOverflow(from, immidiate, saveTo);
-	
- }
+}
+
 void sub(int &saveTo, int from, int immidiate) {
 	saveTo = from - immidiate;
 	negative(saveTo);
@@ -458,6 +438,7 @@ void pushpop(int opcode){
 	}
 }
 
+//can be optimized with whiles when needed (or inlines or macro with msb find)
 void multiLoad(int opcode){
 	int immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
@@ -485,7 +466,7 @@ void multiLoad(int opcode){
 void conditionalBranch(int opcode){
 	int immediate = opcode & 0xFF;
 	int condition = (opcode >> 8) & 0x0F;
-	*PC += conditions[condition]() ? ((__int8)immediate << 1) + 2: 0;
+	*PC += conditions[condition]() ? ((__int8)immediate << 1) + 2 : 0;
 }
 
 void unconditionalBranch(int opcode){
