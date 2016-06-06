@@ -1,7 +1,7 @@
 #include "MemoryOps.h"
 #include "DMA.h"
 #include "iostream"
-//  32   32   32    32  == 128b DMA
+//  32   32   16    16  == 96b DMA
 //  B0   B4   B8    BA   
 //| --------------------- |
 //| SAD | DAD | CNT | CTR |
@@ -32,18 +32,31 @@
 #define DMA3CTR  (IoRAM[0xDE] | IoRAM[0xDF] << 8)
 
 void startDMA(){
-	std::cout << DMA3CTR << " ";
-	if (DMA3CTR & 0x8000){
-		int source = DMA3SAD;
-		int dest = DMA3DAD;
-		int type = (DMA3CTR >> 10) & 1;
-		std::cout << source << " " << dest << " " << type << std::endl;
-		for (int i = 0; i < DMA3CNT; i++){
-			int valueAt = type ? loadFromAddress32(source) : loadFromAddress16(source);
-			type ? writeToAddress32(dest, valueAt) : writeToAddress16(dest, valueAt);
-			source += type ? 4 : 2;
+
+	int DMARegisters[4][4] = {{ DMA0SAD, DMA0DAD, DMA0CNT, DMA0CTR },  
+							  { DMA1SAD, DMA1DAD, DMA1CNT, DMA1CTR },
+							  { DMA2SAD, DMA2DAD, DMA2CNT, DMA2CTR },
+							  { DMA3SAD, DMA3DAD, DMA3CNT, DMA3CTR }};
+	//prioritises 0 to 3 first
+	for (int i = 0; i < 4; i++){
+		int source		= DMARegisters[i][0];
+		int dest		= DMARegisters[i][1];
+		int byteCount	= DMARegisters[i][2];
+		int control		= DMARegisters[i][3];
+
+		if (control & 0x8000){
+			int type = (control >> 10) & 1;
+
+			for (int i = 0; i < byteCount; i++){
+				int valueAt = type ? loadFromAddress32(source) : loadFromAddress16(source);
+				type ? writeToAddress32(dest, valueAt) : writeToAddress16(dest, valueAt);
+				source += (type ? 4 : 2); //either 32 bit mode or 16 bit mode
+				dest += (type ? 4 : 2);
+			}
+			IoRAM[0xBB + i * 0xC] = ((control >> 9) & 1) ? IoRAM[0xBB + i * 0xC] : IoRAM[0xBB + i * 0xC] & ~0x80;
 		}
-		IoRAM[0xDF] &= ~0x80;
 	}
+	
+
 	
 }

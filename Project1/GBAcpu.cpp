@@ -63,7 +63,7 @@ int main(){
 	*PC = 0x08000000; //pc
     FILE *file;
     fopen_s(&file, "program.bin", "rb");
-	fread(GamePak, 0xFFFFFF, 1, file);
+	fread(GamePak, 0x990000, 1, file);
 
 	while (loadFromAddress32(*PC)){
 		int thumbBit = (cprs >> 5) & 1;
