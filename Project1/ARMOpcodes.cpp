@@ -407,7 +407,7 @@ void ARMMvns(int& saveTo, int operand1, int operand2){
 
 void ARMmsr(int reg1, int bit){
 	if (bit)
-		std::cout << "not implemented \n";
+		for (;;);
 	else{
 		cprs = *r[reg1];
 		int mode = cprs & 0x1F;
@@ -577,6 +577,7 @@ void multiply(int opCode){
 }
 
 void multiplyLong(int opCode){
+	for (;;);
 	std::cout << "mult long";
 	std::cin >> *r[0];
 }

@@ -47,7 +47,7 @@ void startDMA(){
 		if (control & 0x8000){
 			int type = (control >> 10) & 1;
 
-			for (int i = 0; i < byteCount; i++){
+			for (int k = 0; k < byteCount; k++){
 				int valueAt = type ? loadFromAddress32(source) : loadFromAddress16(source);
 				type ? writeToAddress32(dest, valueAt) : writeToAddress16(dest, valueAt);
 				source += (type ? 4 : 2); //either 32 bit mode or 16 bit mode

@@ -7,6 +7,7 @@
 #include "Constants.h"
 #include "GBAcpu.h"
 #include "DMA.h"
+#include "Display.h"
 
 using namespace std;
 
@@ -58,21 +59,24 @@ int swapEndianess32(int num){
 
 
 int main(){
+	//Display palettes(256, 496, "paletteWindow");
+	//Display mainDisplay(240, 160, "main window");
 	r = usrSys;
 	*SP = StackStart; //sp
 	*PC = 0x08000000; //pc
     FILE *file;
     fopen_s(&file, "program.bin", "rb");
 	fread(GamePak, 0x990000, 1, file);
-
 	while (loadFromAddress32(*PC)){
+		//mainDisplay.handleEvents();
 		int thumbBit = (cprs >> 5) & 1;
 		unsigned int opCode = thumbBit ? loadFromAddress16(*PC) : loadFromAddress32(*PC);
 		cout << hex << *r[15] << " opCode: " << opCode << " ";
-		if (opCode == 0x4b17)
+		if (opCode == 0x4a17)
 			cout << "break \n";
 		thumbBit ? thumbExecute(loadFromAddress16(*PC)) : ARMExecute(loadFromAddress32(*PC));
-		startDMA();
+		//startDMA();
+		//palettes.updatePalettes();
 		std::cout << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " FP: " << *r[11] << " IP: " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << "\n";
 	}
 

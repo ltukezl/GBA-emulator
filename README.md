@@ -3,13 +3,11 @@ hobby project trying to make working gba emulator.
 
 CPU is arm7-tdmi
 
-Thumb instruction set seems to be working.
+ARM instructions are still little incomplete. MUL LONG and SWP are not implemented, neither is any of the co processor operations since GBA does not have them.
 
-ARM instructions are still little incomplete. MUL and SWP are not implemented.
+Emulator is still missing software interrupts and periphials.
 
-Emulator is still missing software interrupts, ARM opcodes for switching between thumb mode
-and different register banks for different modes (supervisor, fig, irq, etc).
-
-This is still baremetal implementation. No IO is being emulated.
+This is still baremetal implementation. No IO is being emulated. Started to work with displays, but haven't found good documentation for them.
+I'm using SFML to implement displays
 
 compiled on VS2013
