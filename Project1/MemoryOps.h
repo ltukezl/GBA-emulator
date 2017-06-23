@@ -11,6 +11,8 @@ extern unsigned char VRAM[0x17FFF];
 extern unsigned char OAM[0x3FF];
 extern unsigned char GamePak[0xFFFFFF];
 
+extern unsigned char* memoryLayout[15];
+
 int loadFromAddress(int);
 unsigned __int16 loadFromAddress16(int);
 unsigned __int32 loadFromAddress32(int);

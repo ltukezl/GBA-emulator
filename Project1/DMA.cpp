@@ -38,14 +38,18 @@ void startDMA(){
 							  { DMA2SAD, DMA2DAD, DMA2CNT, DMA2CTR },
 							  { DMA3SAD, DMA3DAD, DMA3CNT, DMA3CTR }};
 	//prioritises 0 to 3 first
-	for (int i = 0; i < 4; i++){
+	for (int i = 0; i < 4; i++){ //i = dma number 0 having highest priority
 		int source		= DMARegisters[i][0];
 		int dest		= DMARegisters[i][1];
 		int byteCount	= DMARegisters[i][2];
-		int control		= DMARegisters[i][3];
+		__int16 control	= DMARegisters[i][3];
 
-		if (control & 0x8000){
+		if (control & (1<<15)){
 			int type = (control >> 10) & 1;
+
+			int repeat = (control >> 9) & 1;
+			int srcAddressing = (control >> 7) & 0x3;
+			int destAddressing = (control >> 5) & 0x3;
 
 			for (int k = 0; k < byteCount; k++){
 				int valueAt = type ? loadFromAddress32(source) : loadFromAddress16(source);
@@ -53,7 +57,7 @@ void startDMA(){
 				source += (type ? 4 : 2); //either 32 bit mode or 16 bit mode
 				dest += (type ? 4 : 2);
 			}
-			IoRAM[0xBB + i * 0xC] = ((control >> 9) & 1) ? IoRAM[0xBB + i * 0xC] : IoRAM[0xBB + i * 0xC] & ~0x80;
+			IoRAM[0xBB + i * 0xC] = (repeat) ? IoRAM[0xBB + i * 0xC] : (IoRAM[0xBB + i * 0xC] & ~(1<<7));
 		}
 	}
 	

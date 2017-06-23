@@ -1,6 +1,8 @@
+#include <SFML/Graphics.hpp>
 #include "Display.h"
 #include "MemoryOps.h"
-#include <SFML/Graphics.hpp>
+#include "GBAcpu.h"
+#include "Constants.h"
 
 using namespace sf;
 
@@ -70,3 +72,34 @@ void Display::scanPalettes(){
 	
 }
 
+void Display::updateStack(){
+
+
+	sf::Font font;
+	font.loadFromFile("arial.ttf");
+
+	sf::Text text;
+	text.setFont(font);
+	text.setColor(sf::Color::Red);
+	text.setCharacterSize(10);
+	text.setStyle(sf::Text::Bold);
+
+	display->clear(Color::Black);
+
+	for (int i = 0; i < 10; i++){
+		char txt[16];
+		_itoa_s((*r[SP])+i*4, txt, 16);
+		text.setString(txt);
+		text.setPosition(sf::Vector2f(0, 10 * i));
+		display->draw(text);
+
+
+		int value = loadFromAddress32((*r[SP]) + i * 4);
+		_itoa_s(value, txt, 16);
+		text.setString(txt);
+		text.setPosition(sf::Vector2f(60, 10 * i));
+		display->draw(text);
+	}
+
+	display->display();
+}

@@ -1,6 +1,8 @@
 #include <iostream>
 #include "GBAcpu.h"
 #include "MemoryOps.h"
+#include "interrupt.h"
+#include "Constants.h"
 
 #define SETBIT(REG, POS) (REG |= (1 << POS))
 #define ZEROBIT(REG, POS) (REG &= (~(1<< POS)))
@@ -218,7 +220,7 @@ void cmpHL(int& saveTo, int immidiate){
 }
 
 void bx(int& saveTo, int immidiate){
-	*PC = immidiate & ~ 1;
+	*r[PC] = immidiate & ~ 1;
 	bool thumb = immidiate & 1;
 	thumb ? SETBIT(cprs, 5) : ZEROBIT(cprs, 5);
 }
@@ -325,12 +327,12 @@ void hiRegOperations(int opcode){
 	int rd = opcode & 0x07; //register, destination
 	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
 	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
-	hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*PC + 2) & ~1) : *r[rs]);// PC as operand, broken?
+	hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs]);// PC as operand, broken?
 }
 
 void PCRelativeLoad(int opcode){
 	//check this out later, memory masking?, potentially broken.
-	int tmpPC = (*PC + 2) & ~2;
+	int tmpPC = (*r[PC] + 2) & ~2;
 	int rs = (opcode >> 8) & 7;
 	int immediate = (opcode & 0xFF) << 2; //8 bit value to 10 bit value, last bits are 00 to be word alinged
 	tmpPC += immediate;
@@ -393,13 +395,13 @@ void loadSPRelative(int opcode){
 	int rd = (opcode >> 8) & 0x07;
 	int immediate = (opcode & 0xFF) << 2;
 	if (loadFlag)
-		*r[rd] = loadFromAddress32(*SP + immediate);
+		*r[rd] = loadFromAddress32(*r[SP] + immediate);
 	else
-		writeToAddress32(*SP + immediate, *r[rd]);
+		writeToAddress32(*r[SP] + immediate, *r[rd]);
 }
 
 void loadAddress(int opcode){
-	int rs = ((opcode >> 11) & 1) ? *SP : *PC & ~2;
+	int rs = ((opcode >> 11) & 1) ? *r[SP] : *r[PC] & ~2;
 	int rd = (opcode >> 8) & 0x07;
 	int immediate = (opcode & 0xFF) << 2;
 	*r[rd] = immediate + rs;
@@ -408,7 +410,7 @@ void loadAddress(int opcode){
 void addOffsetToSP(int opcode){
 	int loadFlag = (opcode >> 7) & 1;
 	int immediate = (opcode & 0x7F) << 2;
-	*SP += loadFlag ? -immediate : immediate;
+	*r[SP] += loadFlag ? -immediate : immediate;
 }
 
 void pushpop(int opcode){
@@ -422,13 +424,13 @@ void pushpop(int opcode){
 			}
 			immediate = immediate >> 1;
 		}
-		*PC = ((opcode >> 8) & 1) ? (POP() & -2) : (*PC);
+		*r[PC] = ((opcode >> 8) & 1) ? (POP() & -2) : (*r[PC]);
 		//((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
 
 	}
 	else{
 		if ((opcode >> 8) & 1)
-			PUSH(*LR);
+			PUSH(*r[LR]);
 		for (int i = 0; i < 8; i++){
 			if (immediate & 1)
 				PUSH(*r[i]);
@@ -466,30 +468,30 @@ void multiLoad(int opcode){
 void conditionalBranch(int opcode){
 	int immediate = opcode & 0xFF;
 	int condition = (opcode >> 8) & 0x0F;
-	*PC += conditions[condition]() ? ((__int8)immediate << 1) + 2 : 0;
+	*r[PC] += conditions[condition]() ? (((__int8)immediate << 1) + 2) : 0;
 }
 
 void unconditionalBranch(int opcode){
 	int immediate = (opcode & 0x7FF) << 1;
-	*PC += signExtend<12>(immediate) + 2;
+	*r[PC] += signExtend<12>(immediate) + 2;
 }
 
 void branchLink(int opcode){
 	int HLOffset = (opcode >> 11) & 1;
 	int immediate = (opcode & 0x7FF);
 	if (!HLOffset)
-		*LR = (signExtend<11>(immediate) << 12) + *PC + 2;
+		*r[LR] = (signExtend<11>(immediate) << 12) + *r[PC] + 2;
 	else{
-		int nextInstruction = *PC + 1;
-		*PC = *LR + (immediate << 1); //maybe wrong check later
-		*LR = nextInstruction | 1;
+		int nextInstruction = *r[PC] + 1;
+		*r[PC] = *r[LR] + (immediate << 1); //maybe wrong check later
+		*r[LR] = nextInstruction | 1;
 	}
 }
 
 int thumbExecute(__int16 opcode){
 	int subType;
     int instruction;
-	*PC += 2;
+	*r[PC] += 2;
     __int16 type = (opcode & 0xE000) >> 13;
 
     switch (type) {
@@ -591,7 +593,7 @@ int thumbExecute(__int16 opcode){
 					switch (condition)
 					{
 					case 15: //software interrupt
-						std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1" << std::endl;
+						interruptController(opcode);					
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);

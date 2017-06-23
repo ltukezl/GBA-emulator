@@ -9,6 +9,8 @@
 #include "DMA.h"
 #include "Display.h"
 
+#define GPU
+
 using namespace std;
 
 /*Registers*/
@@ -31,7 +33,7 @@ __int32* usrSys[16] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedR
 __int32* fiq[16] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 &fiqBanked[0], &fiqBanked[1], &fiqBanked[2], &fiqBanked[3], &fiqBanked[4], &fiqBanked[5], &fiqBanked[6], &sharedRegs[8] };
 
-__int32* sup[16] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+__int32* svc[16] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 &extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &svcBanked[0], &svcBanked[1], &sharedRegs[8] };
 
 __int32* abt[16] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
@@ -43,40 +45,61 @@ __int32* irq[16] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs
 __int32* undef[16] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 &extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8] };
 
-__int32* &SP = usrSys[13];	//stack pointer register
-__int32* &LR = usrSys[14];	//link register
-__int32* &PC = usrSys[15]; 	//program counter (r15)
 __int32** r;	//used register
 
 //1  0  0  0
 //N  Z  C  V  = sign,zero,carry,overflow
 __int32 cprs = 0;	//current program status register
+__int32 sprs = 0;
 
 int swapEndianess32(int num){
 	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
 }
 
 
+/*
+NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in usr mode.
+otherwise gba starts from addrs 0 in svc mode
+*/
+int main(int argc, char *args[]){
+#ifdef GPU
+	Display palettes(256, 496, "paletteWindow");
+	Display mainDisplay(240, 160, "main window");
+#endif
+	std::cout << *(int*)argc << "\n";
 
-int main(){
-	//Display palettes(256, 496, "paletteWindow");
-	//Display mainDisplay(240, 160, "main window");
+	r = svc;
+	*r[13] = SP_svc;
+	r = irq;
+	*r[13] = SP_irq;
 	r = usrSys;
-	*SP = StackStart; //sp
-	*PC = 0x08000000; //pc
+	*r[13] = SP_usr;
+
+	*r[PC] = 0x8000000; //pc
+
     FILE *file;
-    fopen_s(&file, "program.bin", "rb");
+	FILE* bios;
+	fopen_s(&file, "program.bin", "rb");
+	fopen_s(&bios, "GBA.BIOS", "rb");
+    //fopen_s(&file, args[1], "rb");
 	fread(GamePak, 0x990000, 1, file);
-	while (loadFromAddress32(*PC)){
-		//mainDisplay.handleEvents();
+	fread(systemROM, 0x3fff, 1, bios);
+	while (true){
+#ifdef GPU
+		mainDisplay.handleEvents();
+#endif
 		int thumbBit = (cprs >> 5) & 1;
-		unsigned int opCode = thumbBit ? loadFromAddress16(*PC) : loadFromAddress32(*PC);
+		unsigned int opCode = thumbBit ? loadFromAddress16(*r[PC]) : loadFromAddress32(*r[PC]);
+		if (*r[PC] == 0x14c){
+			cout << "..";
+		}
 		cout << hex << *r[15] << " opCode: " << opCode << " ";
-		if (opCode == 0x4a17)
-			cout << "break \n";
-		thumbBit ? thumbExecute(loadFromAddress16(*PC)) : ARMExecute(loadFromAddress32(*PC));
-		//startDMA();
-		//palettes.updatePalettes();
+		thumbBit ? thumbExecute(loadFromAddress16(*r[PC])) : ARMExecute(loadFromAddress32(*r[PC]));
+#ifdef GPU
+		startDMA();
+		palettes.updatePalettes();
+		mainDisplay.updateStack();
+#endif
 		std::cout << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " FP: " << *r[11] << " IP: " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << "\n";
 	}
 

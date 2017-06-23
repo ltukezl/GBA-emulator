@@ -16,6 +16,8 @@ public:
 	void scanPalettes();
 
 	void handleEvents();
+
+	void updateStack();
 };
 
 

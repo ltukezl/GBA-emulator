@@ -9,6 +9,12 @@ extern uint32_t IoRAMStart;
 extern uint32_t PaletteRAMStart;
 extern uint32_t VRAMStart;
 extern uint32_t OAMStart;
-extern uint32_t StackStart;
+extern uint32_t SP_svc;
+extern uint32_t SP_irq;
+extern uint32_t SP_usr;
+
+#define SP 13
+#define LR 14
+#define PC 15
 
 #endif
