@@ -12,7 +12,7 @@ void interruptController(int opcode){
 	}
 
 	r = svc;
-	sprs = cprs;
+	*r[16] = cprs;
 
 	*r[14] = *r[PC];
 	//svc mode
@@ -20,9 +20,6 @@ void interruptController(int opcode){
 	cprs &= ~0x1f;
 	cprs |= 0x13;
 
-
-
 	*r[PC] = 0x8;
 
-	if (interuptNum == 0x0b){}
 }

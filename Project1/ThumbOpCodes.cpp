@@ -432,9 +432,9 @@ void pushpop(int opcode){
 		if ((opcode >> 8) & 1)
 			PUSH(*r[LR]);
 		for (int i = 0; i < 8; i++){
-			if (immediate & 1)
-				PUSH(*r[i]);
-			immediate = immediate >> 1;
+			if (immediate & 0x80)
+				PUSH(*r[7-i]);
+			immediate = immediate << 1;
 		}
 
 	}

@@ -3,16 +3,14 @@
 #include <stdint.h>
 
 
-extern __int32* usrSys[16];
-extern __int32* fiq[16];
-extern __int32* abt[16];
-extern __int32* undef[16];
-extern __int32* irq[16];
-extern __int32* svc[16];
+extern __int32* usrSys[17];
+extern __int32* abt[17];
+extern __int32* undef[17];
+extern __int32* irq[17];
+extern __int32* svc[17];
 
 extern __int32** r;
 extern __int32 cprs;
-extern __int32 sprs;
 
 template<int start>
 int signExtend(int value){

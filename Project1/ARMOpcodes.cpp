@@ -314,36 +314,28 @@ void ARMMvns(int& saveTo, int operand1, int operand2){
     negative(saveTo);
 }
 
-void ARMmsr(int reg1, int bit){
-	if (bit)
-		for (;;);
-	else{
-		cprs = *r[reg1];
-		int mode = cprs & 0x1F;
-		std::cout << "switched mode to " << mode << std::endl;
-		switch (mode){
-			case 16:
-				r = usrSys;
-				break;
-			case 17:
-				r = fiq;
-				break;
-			case 18:
-				r = irq;
-				break;
-			case 19:
-				r = svc;
-				break;
-			case 23:
-				r = abt;
-				break;
-			case 27:
-				r = undef;
-				break;
-			case 31:
-				r = usrSys;
-				break;
-		}
+void updateMode(){
+	int mode = cprs & 0x1F;
+	//std::cout << "switched mode to " << mode << std::endl;
+	switch (mode){
+		case 16:
+			r = usrSys;
+			break;
+		case 18:
+			r = irq;
+			break;
+		case 19:
+			r = svc;
+			break;
+		case 23:
+			r = abt;
+			break;
+		case 27:
+			r = undef;
+			break;
+		case 31:
+			r = usrSys;
+			break;
 	}
 		
 }
@@ -357,21 +349,50 @@ ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMT
         ARMCMP, ARMCMN, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns};
 
 void immediateRotate(int opCode){
-    int rd = (opCode >> 12) & 15; //destination
-    int rs = (opCode >> 16) & 15; //first operand
-    int rn = opCode & 15; //2nd operand
-    int tmpRegister = *r[rn];
-	if (rn == 15 || rs == 15)
-		tmpRegister += 4;
-    int immediate = (opCode >> 7) & 0x1F;
-    int shiftId = (opCode >> 5) & 3;
-	int operationID = (opCode >> 20) & 0x1F;
-	int destBit = (opCode >> 22) & 1;
-	if (operationID == 18)
-		ARMmsr(rn, destBit);
-	else{
+	if (((opCode >> 23) & 0x1F) == 2){
+		if ((opCode & 0xFFF) == 0 && (((opCode >> 16) & 0x3F) == 0xF)){
+			int sprs = (opCode >> 22) & 1;
+			int rm = (opCode >> 12) & 0xF;
+			if (sprs)
+				*r[rm] = *r[16];
+			else
+				*r[rm] = cprs;
+			updateMode();
+		}
+
+		else if ((opCode >> 4) & 0x29f00){
+			int sprs = (opCode >> 22) & 1;
+			int rm = opCode & 0xF;
+			if (sprs)
+				*r[16] = *r[rm];
+			else
+				cprs = *r[rm];
+			updateMode();
+		}
+
+		else if ((opCode>>12) & 0x28f)
+		{
+			std::cout << "TBD3";
+		}
+	}
+
+	else {
+		int rd = (opCode >> 12) & 15; //destination
+		int rs = (opCode >> 16) & 15; //first operand
+		int rn = opCode & 15; //2nd operand
+		int tmpRegister = *r[rn];
+
+		if (rn == 15 || rs == 15)
+			tmpRegister += 4;
+
+		int immediate = (opCode >> 7) & 0x1F;
+		int shiftId = (opCode >> 5) & 3;
+		int operationID = (opCode >> 20) & 0x1F;
+		int destBit = (opCode >> 22) & 1;
+
 		ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
+		
 	}
 }
 
@@ -543,31 +564,6 @@ void singleDataTrasnferImmediatePost(int opCode){
 }
 
 void singleDataTrasnferRegisterPre(int opCode){
-	/*
-	int upDownBit = (opCode >> 23) & 1;
-	int byteFlag = (opCode >> 22) & 1;
-	int writeBack = (opCode >> 21) & 1;
-	int loadStore = (opCode >> 20) & 1;
-	int baseReg = (opCode >> 16) & 15;
-	int destinationReg = (opCode >> 12) & 15;
-	int shiftAmount = (opCode >> 4) & 0xFF;
-	int offset = *r[(opCode & 15)] << shiftAmount;
-	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
-	int oldReg = *r[baseReg];
-	switch(loadStore){
-	case 0:
-	*r[baseReg] += upDownBit ? offset : -offset;
-	byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
-	*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
-	break;
-	case 1:
-	*r[baseReg] += upDownBit ? offset : -offset;
-	*r[destinationReg] = byteFlag ? loadFromAddress(*r[baseReg]) : loadFromAddress32(*r[baseReg]);
-	*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
-	break;
-	}
-	*/
-
 	int offset = 0;
 
 	int rn = (opCode >> 16) & 0xF;
@@ -585,6 +581,7 @@ void singleDataTrasnferRegisterPre(int opCode){
 	if ((opCode >> 4) & 1){
 		std::cout << "TBD";
 	}
+
 	else
 	{
 		offset = (opCode >> 7) & 0x1F;
@@ -593,14 +590,15 @@ void singleDataTrasnferRegisterPre(int opCode){
 
 	int oldReg = *r[rn];
 	switch (loadStore){
-	case 0:
+		case 0:
+			std::cout << "TBD2";
+			break;
 
-		break;
-	case 1:
-		*r[rn] += upDownBit ? offset : -offset;
-		*r[rd] = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
-		*r[rn] = writeBack ? *r[rn] : oldReg;
-		break;
+		case 1:
+			*r[rn] += upDownBit ? offset : -offset;
+			*r[rd] = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
+			*r[rn] = writeBack ? *r[rn] : oldReg;
+			break;
 	}
 
 
