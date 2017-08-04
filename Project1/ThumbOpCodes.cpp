@@ -401,7 +401,7 @@ void loadSPRelative(int opcode){
 }
 
 void loadAddress(int opcode){
-	int rs = ((opcode >> 11) & 1) ? *r[SP] : *r[PC] & ~2;
+	int rs = ((opcode >> 11) & 1) ? *r[SP] : ((*r[PC] & ~2) + 4);
 	int rd = (opcode >> 8) & 0x07;
 	int immediate = (opcode & 0xFF) << 2;
 	*r[rd] = immediate + rs;

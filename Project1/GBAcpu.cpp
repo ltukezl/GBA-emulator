@@ -9,7 +9,8 @@
 #include "DMA.h"
 #include "Display.h"
 
-#define GPU
+#define GPU 1
+#define BIOS_START 0
 
 using namespace std;
 
@@ -52,7 +53,11 @@ __int32** r;	//used register
 
 //1  0  0  0
 //N  Z  C  V  = sign,zero,carry,overflow
+#if BIOS_START
+__int32 cprs = 0x13;	//current program status register
+#else
 __int32 cprs = 0x1f;	//current program status register
+#endif
 
 int swapEndianess32(int num){
 	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
@@ -64,21 +69,35 @@ NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in us
 otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
-#ifdef GPU
+#if GPU
 	Display palettes(256, 496, "paletteWindow");
 	Display mainDisplay(240, 160, "main window");
 #endif
 	std::cout << *(int*)argc << "\n";
 
+#if BIOS_START
+	r = usrSys;
+	*r[13] = SP_usr;
+#else
 	r = svc;
 	*r[13] = SP_svc;
+#endif
 	r = irq;
 	*r[13] = SP_irq;
 	*r[16] = 0x10;
+#if BIOS_START
+	r = svc;
+	*r[13] = SP_svc;
+#else
 	r = usrSys;
 	*r[13] = SP_usr;
+#endif
 
-	*r[PC] = 0x8000000; //pc
+#if BIOS_START
+	*r[PC] = 0;
+#else
+	*r[PC] = 0x08000000;
+#endif
 
     FILE *file;
 	FILE* bios;
@@ -88,17 +107,17 @@ int main(int argc, char *args[]){
 	fread(GamePak, 0x990000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 	while (true){
-#ifdef GPU
+#if GPU
 		mainDisplay.handleEvents();
 #endif
 		int thumbBit = (cprs >> 5) & 1;
 		unsigned int opCode = thumbBit ? loadFromAddress16(*r[PC]) : loadFromAddress32(*r[PC]);
-		if (*r[PC] == 0xb4c){
-			cout << "..";
-		}
+		//if (*r[PC] == 0x80fa808){
+		//	cout << "..";
+		//}
 		cout << hex << *r[15] << " opCode: " << opCode << " ";
 		thumbBit ? thumbExecute(loadFromAddress16(*r[PC])) : ARMExecute(loadFromAddress32(*r[PC]));
-#ifdef GPU
+#if GPU
 		startDMA();
 		palettes.updatePalettes();
 		mainDisplay.updateStack();

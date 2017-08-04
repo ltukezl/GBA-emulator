@@ -67,7 +67,7 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 }
 
 template <typename function1, typename function2>
-void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){
+void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tested for r15
 	int baseReg = (opCode >> 16) & 15;
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
@@ -95,7 +95,7 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){
 }
 
 template <typename function1, typename function2>
-void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
+void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){ // not tested
 	int baseReg = (opCode >> 16) & 15;
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
@@ -392,6 +392,11 @@ void immediateRotate(int opCode){
 
 		ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
+
+		if (rd == 15 && (opCode >> 20) & 1){
+			cprs = *r[16];
+			updateMode();
+		}
 		
 	}
 }
@@ -405,8 +410,18 @@ void registerRotate(int opCode){
 	int shiftId = (opCode >> 5) & 3;
 	int shiftAmount = *r[rs] & 0xF;
 	int operationID = (opCode >> 20) & 0x1F;
+
+	if (rn == 15 || rs == 15) // not tested
+		shiftAmount += 4;
+
 	ARMshifts[shiftId](shiftAmount, *r[rm], shiftAmount);
 	dataOperations[operationID](*r[rd], *r[rn], shiftAmount);
+
+	if (rd == 15 && (opCode >> 20) & 1){ // not tested
+		cprs = *r[16];
+		updateMode();
+	}
+
 }
 
 void dataProcessingImmediate(int opCode){

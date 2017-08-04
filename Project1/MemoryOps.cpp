@@ -44,11 +44,14 @@ int loadFromAddress(int address){
 void writeToAddress32(int address, int value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
+	*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
 	//std::cout << "writetoaddress32 " << address << " value " << value << std::endl;
+	/*
 	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 2] = (value >> 16) & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 3] = (value >> 24) & 0xFF;
+	*/
 }
 
 unsigned __int32 loadFromAddress32(int address){
@@ -69,9 +72,11 @@ unsigned __int32 loadFromAddress32(int address){
 void writeToAddress16(int address, int value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
-
+	*(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
+	/*
 	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
+	*/
 }
 
 unsigned __int16 loadFromAddress16(int address){
