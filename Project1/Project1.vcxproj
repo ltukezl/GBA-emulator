@@ -74,6 +74,7 @@
       <EntryPointSymbol>main</EntryPointSymbol>
       <AdditionalLibraryDirectories>D:\Built libraries\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

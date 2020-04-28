@@ -31,36 +31,84 @@
 #define DMA2CTR  (IoRAM[0xD2] | IoRAM[0xD3] << 8)
 #define DMA3CTR  (IoRAM[0xDE] | IoRAM[0xDF] << 8)
 
+int InternalDestinationAddressRegisters[4] = { 0, 0, 0, 0 };
+bool savedDest[4] = { false, false, false, false };
+
 void startDMA(){
 
-	int DMARegisters[4][4] = {{ DMA0SAD, DMA0DAD, DMA0CNT, DMA0CTR },  
+	int DMARegisters[4][4] = {{ DMA0SAD, DMA0DAD, DMA0CNT, DMA0CTR },
 							  { DMA1SAD, DMA1DAD, DMA1CNT, DMA1CTR },
 							  { DMA2SAD, DMA2DAD, DMA2CNT, DMA2CTR },
 							  { DMA3SAD, DMA3DAD, DMA3CNT, DMA3CTR }};
+
 	//prioritises 0 to 3 first
 	for (int i = 0; i < 4; i++){ //i = dma number 0 having highest priority
-		int source		= DMARegisters[i][0];
-		int dest		= DMARegisters[i][1];
-		int byteCount	= DMARegisters[i][2];
+		
 		__int16 control	= DMARegisters[i][3];
 
 		if (control & (1<<15)){
-			int type = (control >> 10) & 1;
+			int source = DMARegisters[i][0];
+			if (source < 0x05000000)
+				source &= 0x7FFFFFF;
+			else
+				source &= 0xFFFFFFF;
 
-			int repeat = (control >> 9) & 1;
-			int srcAddressing = (control >> 7) & 0x3;
+			int byteCount = DMARegisters[i][2];
+			if (byteCount == 0 && i == 3)
+				byteCount = 0x10000;
+			else if (byteCount == 0)
+				byteCount = 0x4000;
+
 			int destAddressing = (control >> 5) & 0x3;
+			int srcAddressing = (control >> 7) & 0x3;
+			int repeat = (control >> 9) & 1;
+			int type = (control >> 10) & 1; //16 or 32 bit
+			int GamePakDRQ = (control >> 11) & 1;
+			int DMAStartTiming = (control >> 12) & 0x3; //0 = instant 1 = VBLANK 2 = HBLANK 3 = SPECIAL 
+			int IRQen = (control >> 14) & 0x1;
+
+			int dest = DMARegisters[i][1];
+			if (dest < 0x05000000)
+				dest &= 0x7FFFFFF;
+			else
+				dest &= 0xFFFFFFF;
+
+			if (destAddressing == 3 && savedDest[i]){
+				dest = InternalDestinationAddressRegisters[i];
+			}
 
 			for (int k = 0; k < byteCount; k++){
 				int valueAt = type ? loadFromAddress32(source) : loadFromAddress16(source);
 				type ? writeToAddress32(dest, valueAt) : writeToAddress16(dest, valueAt);
-				source += (type ? 4 : 2); //either 32 bit mode or 16 bit mode
-				dest += (type ? 4 : 2);
+				if (srcAddressing == 0)
+					source += (type ? 4 : 2);
+				else if (srcAddressing == 1)
+					source -= (type ? 4 : 2);
+				else if (srcAddressing == 2)
+					source = source;
+
+				if (destAddressing == 0)
+					dest += (type ? 4 : 2);
+				else if (destAddressing == 1)
+					dest -= (type ? 4 : 2);
+				else if (destAddressing == 2)
+					dest = dest;
+				else if (destAddressing = 3){
+					dest += (type ? 4 : 2);
+				}
 			}
-			IoRAM[0xBB + i * 0xC] = (repeat) ? IoRAM[0xBB + i * 0xC] : (IoRAM[0xBB + i * 0xC] & ~(1<<7));
+
+			if (repeat == 0){
+				DMARegisters[i][3] &= ~0x8000;
+				savedDest[i] = false;
+			}
+
+			if (repeat == 1 && !savedDest[i]){
+				savedDest[i] = true;
+				InternalDestinationAddressRegisters[i] = dest;
+			}
+
+			IoRAM[0xBB + i * 0xC] = (repeat) ? IoRAM[0xBB + i * 0xC] : (IoRAM[0xBB + i * 0xC] & ~(1<<7)); // set irq?
 		}
 	}
-	
-
-	
 }

@@ -1,17 +1,17 @@
 #ifndef MEMORYOPS_H
 #define MEMORYOPS_H
 
-extern unsigned char systemROM[0x3FFF];
-extern unsigned char unused[0x3FFF];
-extern unsigned char ExternalWorkRAM[0xFFFF];
-extern unsigned char InternalWorkRAM[0x7FFF];
-extern unsigned char IoRAM[0x3FF];
-extern unsigned char PaletteRAM[0x3FF];
-extern unsigned char VRAM[0x17FFF];
-extern unsigned char OAM[0x3FF];
-extern unsigned char GamePak[0xFFFFFF];
-
-extern unsigned char* memoryLayout[15];
+extern unsigned char systemROM[0x4000];
+extern unsigned char unused[0x4000];
+extern unsigned char ExternalWorkRAM[0x1000000];
+extern unsigned char InternalWorkRAM[0x1000000];
+extern unsigned char IoRAM[0x1000000];
+extern unsigned char PaletteRAM[0x1000000];
+extern unsigned char VRAM[0x1000000];
+extern unsigned char OAM[0x1000000];
+extern unsigned char GamePak[0x2000000];
+extern unsigned char GamePakSRAM[0x2000000];
+extern unsigned char* memoryLayout[16];
 
 int loadFromAddress(int);
 unsigned __int16 loadFromAddress16(int);

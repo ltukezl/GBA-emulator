@@ -12,6 +12,8 @@ extern __int32* svc[17];
 extern __int32** r;
 extern __int32 cprs;
 
+extern __int64 cycles;
+
 template<int start>
 int signExtend(int value){
 	int m = 1U << (start - 1); //bitextend hack

@@ -135,23 +135,32 @@ void branchAndExhange(int opCode){
 }
 
 void lslCond(int &saveTo, int from, int immidiate) {
-    if(!immidiate) (saveTo >> (32 - immidiate) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+	if (immidiate > 0)
+		(from >> (32 - immidiate) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
     saveTo = from << immidiate;
+	zero(saveTo);
+	negative(saveTo);
 }
 
 void lsrCond(int &saveTo, int from, int immidiate) {
-    (saveTo >> (immidiate - 1) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+    ((unsigned)from >> (immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
     saveTo = (unsigned)from >> immidiate;
+	zero(saveTo);
+	negative(saveTo);
 }
 
 void asrCond(int &saveTo, int from, int immidiate) {
-    (saveTo >> ((int)immidiate - 1) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+	(from >> ((int)immidiate + 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
     saveTo = from >> immidiate;
+	zero(saveTo);
+	negative(saveTo);
 }
 
 void rorCond(int &saveTo,int from, int immidiate){
-    (saveTo >> (immidiate - 1) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+    (from >> (immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
     saveTo = (from << immidiate) | (from >> (32 - immidiate));
+	zero(saveTo);
+	negative(saveTo);
 }
 
 void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
@@ -349,6 +358,7 @@ ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMT
         ARMCMP, ARMCMN, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns};
 
 void immediateRotate(int opCode){
+	bool codeExecuted = false;
 	if (((opCode >> 23) & 0x1F) == 2){
 		if ((opCode & 0xFFF) == 0 && (((opCode >> 16) & 0x3F) == 0xF)){
 			int sprs = (opCode >> 22) & 1;
@@ -358,9 +368,10 @@ void immediateRotate(int opCode){
 			else
 				*r[rm] = cprs;
 			updateMode();
+			codeExecuted = true;
 		}
 
-		else if ((opCode >> 4) & 0x29f00){
+		else if (((opCode >> 4) & 0x3FFFF) == 0x29f00){
 			int sprs = (opCode >> 22) & 1;
 			int rm = opCode & 0xF;
 			if (sprs)
@@ -368,15 +379,17 @@ void immediateRotate(int opCode){
 			else
 				cprs = *r[rm];
 			updateMode();
+			codeExecuted = true;
 		}
 
-		else if ((opCode>>12) & 0x28f)
+		else if (((opCode>>12) & 0x3FF) == 0x28f)
 		{
 			std::cout << "TBD3";
+			codeExecuted = true;
 		}
 	}
 
-	else {
+	if (!codeExecuted) {
 		int rd = (opCode >> 12) & 15; //destination
 		int rs = (opCode >> 16) & 15; //first operand
 		int rn = opCode & 15; //2nd operand
@@ -622,13 +635,15 @@ void singleDataTrasnferRegisterPre(int opCode){
 void singleDataTrasnferRegisterPost(int opCode){
 	int upDownBit = (opCode >> 23) & 1;
 	int byteFlag = (opCode >> 22) & 1;
+	int writeback = (opCode >> 21) & 1;
 	int loadStore = (opCode >> 20) & 1;
 	int baseReg = (opCode >> 16) & 15;
 	int destinationReg = (opCode >> 12) & 15;
 	int shiftAmount = (opCode >> 4) & 0xFF;
-	int offset = *r[(opCode & 15) << shiftAmount];
+	int offset = *r[(opCode & 0xF)] << shiftAmount;
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
 
+	int oldReg = *r[baseReg];
 
 	switch (loadStore){
 	case 0:

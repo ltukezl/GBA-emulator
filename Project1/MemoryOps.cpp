@@ -13,21 +13,23 @@ uint32_t PaletteRAMStart = 0x05000000;
 uint32_t VRAMStart = 0x06000000;
 uint32_t OAMStart = 0x07000000;
 uint32_t GamePakStart = 0x08000000;
-uint32_t SP_svc = 0x03007FE0;
+uint32_t SP_svc = 0x03007F00;
 uint32_t SP_irq = 0x03007FA0;
-uint32_t SP_usr = 0x03007F00;
+uint32_t SP_usr = 0x03007FEA;
 
-unsigned char systemROM[0x3FFF];
-unsigned char unused[0x3FFF];
-unsigned char ExternalWorkRAM[0xFFFF];
-unsigned char InternalWorkRAM[0x7FFF];
-unsigned char IoRAM[0x3FF];
-unsigned char PaletteRAM[0x3FF];
-unsigned char VRAM[0x17FFF];
-unsigned char OAM[0x3FF];
-unsigned char GamePak[0xFFFFFF];
+//recheck waht should be done on unused regions, breath of fire writes to "unused" area
+unsigned char systemROM[0x4000];
+unsigned char unused[0x4000];
+unsigned char ExternalWorkRAM[0x1000000];
+unsigned char InternalWorkRAM[0x1000000]; //0x8000 should be in use only
+unsigned char IoRAM[0x1000000];
+unsigned char PaletteRAM[0x1000000];
+unsigned char VRAM[0x1000000];
+unsigned char OAM[0x1000000];
+unsigned char GamePak[0x2000000];
+unsigned char GamePakSRAM[0x2000000];
 
-unsigned char *memoryLayout[15] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak };
+unsigned char *memoryLayout[16] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePakSRAM, GamePakSRAM };
 
 void writeToAddress(int address, int value){
 	address &= ~0xF0000000;
@@ -44,8 +46,9 @@ int loadFromAddress(int address){
 void writeToAddress32(int address, int value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
+	//std::cout << "writetoaddress32 " << address - (mask << 24) << " value " << value << std::endl;
 	*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
-	//std::cout << "writetoaddress32 " << address << " value " << value << std::endl;
+	
 	/*
 	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
 	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;

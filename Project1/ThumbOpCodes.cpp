@@ -44,17 +44,25 @@ void subOverflow(int operand1, int operand2, int result)
 //-------------------------------------------------------------------------------------------------------
 //last bit out is carry, set carry bits
 void lsl(int &saveTo, int from, int immidiate) {
-	(saveTo >> (32 - immidiate) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+	if (immidiate > 0)
+		((unsigned)from >> (32 - immidiate) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+
 	saveTo = from << immidiate;
+	zero(saveTo);
+	negative(saveTo);
 }
 void lsr(int &saveTo, int from, int immidiate) {
-	(saveTo >> (immidiate - 1) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+	((unsigned)from >> (immidiate + 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
 	saveTo = (unsigned)from >> immidiate;
+	zero(saveTo);
+	negative(saveTo);
 }
 
 void asr(int &saveTo, int from, int immidiate) {
-	(saveTo >> ((int)immidiate - 1) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+	(from >> ((int)immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
 	saveTo = from >> immidiate;
+	zero(saveTo);
+	negative(saveTo);
 }
 //--------------------------------------------------------
 void add(int &saveTo, int from, int immidiate) {
@@ -150,7 +158,7 @@ void sbc(int &saveTo, int immidiate){
 }
 
 void rorIP(int &saveTo, int immidiate){
-	(saveTo >> (immidiate - 1) & 1) ? SETBIT(cprs, 30) : ZEROBIT(cprs, 30);
+	(saveTo >> (immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
 	saveTo = (saveTo << immidiate) | (saveTo >> (32 - immidiate));
 	negative(saveTo);
 	zero(saveTo);
@@ -264,7 +272,7 @@ int BHI(){
 }
 
 int BLS(){
-	return BCC() & BEQ();
+	return BCC() | BEQ();
 }
 
 int BLT(){
@@ -346,7 +354,10 @@ void loadStoreRegOffset(int opcode){
 	int byteFlag = (opcode >> 10) & 1;
 	int loadFlag = (opcode >> 11) & 1;
 	if (!loadFlag)
-		byteFlag ? writeToAddress(*r[ro] + *r[rb], *r[rd]) : writeToAddress32(*r[ro] + *r[rb], *r[rd]);
+		if (byteFlag)
+			writeToAddress(*r[ro] + *r[rb], *r[rd]);
+		else
+			writeToAddress32(*r[ro] + *r[rb], *r[rd]);
 	else
 		*r[rd] = byteFlag ? loadFromAddress(*r[rb] + *r[ro]) : loadFromAddress32(*r[rb] + *r[ro]);
 }
@@ -593,7 +604,7 @@ int thumbExecute(__int16 opcode){
 					switch (condition)
 					{
 					case 15: //software interrupt
-						interruptController(opcode);					
+						//interruptController(opcode);					
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);

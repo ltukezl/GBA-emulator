@@ -4,6 +4,11 @@
 
 using namespace sf;
 
+struct Ring{
+	char state[512];
+	Ring* next;
+};
+
 class Display{
 	int res_x, res_y;
 	RenderWindow* display;
@@ -18,6 +23,11 @@ public:
 	void handleEvents();
 
 	void updateStack();
+
+	void updateRegisterView();
+private:
+	int cnt;
+	Ring* txtRing;
 };
 
 
