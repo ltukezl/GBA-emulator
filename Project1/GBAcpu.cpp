@@ -8,9 +8,10 @@
 #include "GBAcpu.h"
 #include "DMA.h"
 #include "Display.h"
+#include  <iomanip>
 
-#define GPU 0
-#define BIOS_START 1
+#define GPU 1
+#define BIOS_START 0
 
 using namespace std;
 
@@ -73,8 +74,11 @@ NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in us
 otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
+
+	IoRAM[0x130] = 0xFFFF; // input register, 0 = pressed down, 1 = released
+
 #if GPU
-	Display debugView(512, 496, "paletteWindow");
+	Display debugView(1024, 496, "paletteWindow");
 	//Display gameDisplay(240, 160, "game");
 #endif
 	std::cout << *(int*)argc << "\n";
@@ -121,27 +125,34 @@ int main(int argc, char *args[]){
 	fread(systemROM, 0x3fff, 1, bios);
 
 	int pixelDrawn = 0;
+	int refreshRate = 0;
 
 	while (true){
 #if GPU
-		debugView.handleEvents();
+		if (debug | refreshRate > 10000)
+			debugView.handleEvents();
 #endif
 		int thumbBit = (cprs >> 5) & 1;
 		unsigned int opCode = loadFromAddress32(*r[PC]);
 
-		if (*r[15] == 0x801b74c){
-			cout << "..";
+		if (*r[15] == 0x802081a){
+			//cout << "..";
+			//debug = true;
 		}
 
 		if (debug)
-			cout << hex << *r[15] << " opCode: " << (thumbBit ? opCode & 0xFFFF : opCode) << " ";
+			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (thumbBit ? opCode & 0xFFFF : opCode) << " ";
 
 		thumbBit ? thumbExecute(opCode) : ARMExecute(opCode);
 		startDMA();
 #if GPU
-		debugView.updatePalettes();
+		if (debug | refreshRate > 10000){
+			debugView.updatePalettes();
+			refreshRate = 0;
+		}
 #endif
 		pixelDrawn++;
+		refreshRate++;
 		if (pixelDrawn >= 240){
 			memoryLayout[4][6]++;
 			pixelDrawn -= 240;

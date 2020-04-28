@@ -150,7 +150,7 @@ void adc(int &saveTo, int immidiate){
 
 void sbc(int &saveTo, int immidiate){
 	int tmpOperand = saveTo;
-    saveTo = saveTo - immidiate - (~((cprs >> 29) & 1));
+	saveTo = (saveTo - immidiate) - ((~cprs >> 29) & 1);
 	zero(saveTo);
 	negative(saveTo);
 	subCarry(tmpOperand, immidiate, saveTo);
@@ -288,7 +288,7 @@ int BGT(){
 }
 
 int BLE(){
-	return BEQ() & BLT();
+	return BEQ() | BLT();
 }
 
 void(*shifts[3])(int&, int, int) = { lsl, lsr, asr };
@@ -325,7 +325,7 @@ void movCompSubAddImm(int opcode){
 
 void aluOps(int opcode){
 	int instruction = (opcode >> 6) & 0xF;
-	int rd = opcode & 0x07; //register, destination
+	int rd = opcode & 7; //register, destination
 	int rs = (opcode >> 3) & 7; //register, source
 	logicalOps[instruction](*r[rd], *r[rs]);
 }
@@ -604,7 +604,8 @@ int thumbExecute(__int16 opcode){
 					switch (condition)
 					{
 					case 15: //software interrupt
-						//interruptController(opcode);					
+						//interruptController(opcode);	
+
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);

@@ -5,10 +5,8 @@
 #include "GBAcpu.h"
 #include "Constants.h"
 
-using namespace sf;
-
 Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y), name(name){
-	display = new RenderWindow(VideoMode(res_x, res_y), name);
+	display = new sf::RenderWindow(sf::VideoMode(res_x, res_y), name);
 	txtRing = (Ring*)malloc(sizeof(Ring));
 	memset(txtRing, 0, sizeof(Ring));
 	Ring* tmp = txtRing;
@@ -21,8 +19,67 @@ Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y),
 }
 
 void Display::updatePalettes(){
-	display->clear(Color::Black);
+	display->clear(sf::Color::Black);
 	scanPalettes();
+
+
+	uint16_t bg1Control = IoRAM[8];
+
+
+	int startAddr = 0x06000000;
+
+	sf::Image tile;
+	tile.create(8, 8, sf::Color::Blue);
+	for (int tileY = 0; tileY < 32; tileY++)
+	for (int tileX = 0; tileX < 32; tileX++){
+		for (int y = 0; y < 8; y++){
+			int row = loadFromAddress32(startAddr);
+			for (int pixel = 0; pixel < 8; pixel++){
+				int color = (row & 0xf);
+				tile.setPixel(pixel, y, bgPaletteColors[color]);
+				row >>= 4;
+			}
+			startAddr += 4;
+		}
+		tileMap1[32 * tileY + tileX] = tile;
+	}
+
+
+	sf::Texture tileMap1Texture;
+	tileMap1Texture.create(256, 513);
+
+	for (int i = 0; i < 32; i++)
+		for (int k = 0; k < 32; k++){
+			sf::Image tile = tileMap1[32 * i + k];
+			tileMap1Texture.update(tile, 8 * k, 8 * i);
+		}
+
+	sf::Sprite tilemapSprite;
+	tilemapSprite.setTexture(tileMap1Texture, true);
+	tilemapSprite.setPosition(257, 0);
+
+	display->draw(tilemapSprite);
+
+
+	startAddr = 0x06000000;
+
+	sf::Texture BG1Texture;
+	BG1Texture.create(256, 256);
+	for (int i = 0; i < 32; i++)
+		for (int k = 0; k < 32; k++){
+			uint16_t reg = loadFromAddress16(startAddr);
+			uint16_t tilNum = reg & 0x1FF;
+			BG1Texture.update(tileMap1[0x200 + tilNum], 8 * k, 8 * i);
+			startAddr += 2;
+		}
+
+	sf::Sprite BG1Sprite;
+	BG1Sprite.setTexture(BG1Texture, true);
+	BG1Sprite.setPosition(514, 0);
+
+	display->draw(BG1Sprite);
+
+
 	/*
 	sf::Font font;
 	font.loadFromFile("arial.ttf");
@@ -85,17 +142,16 @@ void Display::scanPalettes(){
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
 			int setting = loadFromAddress16(startAddr);
-			if (setting == 0)
-				continue;
 			int red = setting & 0x1F;
 			int green = (setting >> 5) & 0x1F;
 			int blue = (setting >> 10) & 0x1F;
 			int redScaled = red * scalar;
 			int greenScaled = green * scalar;
 			int blueScaled = blue * scalar;
-			Color color(redScaled, greenScaled, blueScaled);
+			sf::Color color(redScaled, greenScaled, blueScaled);
+			bgPaletteColors[16* i + k] = color;
 			rectangle.setFillColor(color);
-			rectangle.setPosition(Vector2f(16*k, 16*i));
+			rectangle.setPosition(sf::Vector2f(16*k, 16*i));
 			display->draw(rectangle);
 			startAddr += 2;
 	}
@@ -104,17 +160,15 @@ void Display::scanPalettes(){
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
 			int setting = loadFromAddress16(startAddr);
-			if (setting == 0)
-				continue;
 			int red = setting & 0x1F;
 			int green = (setting >> 5) & 0x1F;
 			int blue = (setting >> 10) & 0x1F;
 			int redScaled = red * scalar;
 			int greenScaled = green * scalar;
 			int blueScaled = blue * scalar;
-			Color color(redScaled, greenScaled, blueScaled);
+			sf::Color color(redScaled, greenScaled, blueScaled);
 			rectangle.setFillColor(color);
-			rectangle.setPosition(Vector2f(16 * k, 272 + 16 * i));
+			rectangle.setPosition(sf::Vector2f(16 * k, 272 + 16 * i));
 			display->draw(rectangle);
 			startAddr += 2;
 	}

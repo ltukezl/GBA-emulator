@@ -2,7 +2,6 @@
 #define DISPLAY_H
 #include <SFML/Graphics.hpp>
 
-using namespace sf;
 
 struct Ring{
 	char state[512];
@@ -11,8 +10,12 @@ struct Ring{
 
 class Display{
 	int res_x, res_y;
-	RenderWindow* display;
+	sf::RenderWindow* display;
 	char* name;
+
+	sf::Color bgPaletteColors[256];
+	sf::Image tileMap1[32 * 32];
+
 public:
 	Display(int, int, char*);
 
