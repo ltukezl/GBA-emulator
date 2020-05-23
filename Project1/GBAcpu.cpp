@@ -28,7 +28,7 @@ __int32 abtBanked[2];
 __int32 irqBanked[2];
 __int32 undBanked[2];
 
-__int32 sprs_usr = 0x10;
+__int32 sprs_usr = 0;
 __int32 sprs_svc = 0;
 __int32 sprs_abt = 0;
 __int32 sprs_irq = 0;
@@ -63,6 +63,9 @@ __int32 cprs = 0x1f;	//current program status register
 #endif
 
 __int64 cycles = 0;
+__int8 Wait0_N_cycles = 5;
+__int8 Wait0_S_cycles = 3;
+
 
 int swapEndianess32(int num){
 	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
@@ -88,16 +91,17 @@ int main(int argc, char *args[]){
 	*r[13] = SP_usr;
 #else
 	r = svc;
-	*r[13] = SP_svc;
+	*r[13] = 0x3007FE0;
 #endif
 	r = irq;
 	*r[13] = SP_irq;
-	*r[16] = 0x10;
+	
 
 
 #if BIOS_START
 	r = svc;
 	*r[13] = SP_svc;
+	*r[16] = 0x10;
 #else
 	r = usrSys;
 	*r[13] = SP_usr;
@@ -124,7 +128,7 @@ int main(int argc, char *args[]){
 	fread(GamePak, 0x990000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 
-	int pixelDrawn = 0;
+	
 	int refreshRate = 0;
 
 	while (true){
@@ -135,9 +139,9 @@ int main(int argc, char *args[]){
 		int thumbBit = (cprs >> 5) & 1;
 		unsigned int opCode = loadFromAddress32(*r[PC]);
 
-		if (*r[15] == 0x802081a){
+		if (*r[15] == 0x3002890){
 			//cout << "..";
-			//debug = true;
+			debug = true;
 		}
 
 		if (debug)
@@ -151,11 +155,11 @@ int main(int argc, char *args[]){
 			refreshRate = 0;
 		}
 #endif
-		pixelDrawn++;
+		cycles++;
 		refreshRate++;
-		if (pixelDrawn >= 240){
+		if (cycles >= 240){
 			memoryLayout[4][6]++;
-			pixelDrawn -= 240;
+			cycles -= 240;
 		}
 		if (debug)
 			std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] <<  endl ;

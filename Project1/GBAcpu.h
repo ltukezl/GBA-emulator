@@ -13,6 +13,8 @@ extern __int32** r;
 extern __int32 cprs;
 
 extern __int64 cycles;
+extern __int8 Wait0_N_cycles;
+extern __int8 Wait0_S_cycles;
 
 template<int start>
 int signExtend(int value){

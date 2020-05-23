@@ -291,6 +291,8 @@ int BLE(){
 	return BEQ() | BLT();
 }
 
+//-----------------
+
 void(*shifts[3])(int&, int, int) = { lsl, lsr, asr };
 void(*arith[2])(int&, int, int) = { add, sub };
 void(*movCompIpaddIpsub[4])(int&, int) = { mov, cmp, add8imm, sub8imm };
@@ -304,6 +306,8 @@ void moveShiftedRegister(int opcode){
 	int instruction = (opcode >> 11) & 3;
 	int immediate = (opcode >> 6) & 0x1F;
 	shifts[instruction](*r[rd], *r[rs], immediate);
+
+	cycles += Wait0_S_cycles;
 }
 
 void addSubFunction(int opcode){
@@ -314,6 +318,8 @@ void addSubFunction(int opcode){
 	int immediate = (opcode >> 6) & 7;
 	int value = (immediateFlag == 1) ? immediate : *r[immediate];
 	arith[operation](*r[rd], *r[rs], value);
+
+	cycles += Wait0_S_cycles;
 }
 
 void movCompSubAddImm(int opcode){
@@ -321,6 +327,8 @@ void movCompSubAddImm(int opcode){
 	int rd = (opcode >> 8) & 7;
 	int immediate = (opcode & 0xFF);
 	movCompIpaddIpsub[instruction](*r[rd], immediate);
+
+	cycles += Wait0_S_cycles;
 }
 
 void aluOps(int opcode){
@@ -328,6 +336,10 @@ void aluOps(int opcode){
 	int rd = opcode & 7; //register, destination
 	int rs = (opcode >> 3) & 7; //register, source
 	logicalOps[instruction](*r[rd], *r[rs]);
+
+	cycles += Wait0_S_cycles;
+	if (instruction == 2 || instruction == 3 || instruction == 4 || instruction == 12)
+		cycles += 1;
 }
 
 void hiRegOperations(int opcode){
@@ -336,6 +348,11 @@ void hiRegOperations(int opcode){
 	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
 	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
 	hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs]);// PC as operand, broken?
+
+	cycles += Wait0_S_cycles;
+
+	if (rs == 15 | instruction == 3)
+		cycles += Wait0_N_cycles + 1;
 }
 
 void PCRelativeLoad(int opcode){
@@ -345,6 +362,8 @@ void PCRelativeLoad(int opcode){
 	int immediate = (opcode & 0xFF) << 2; //8 bit value to 10 bit value, last bits are 00 to be word alinged
 	tmpPC += immediate;
 	*r[rs] = loadFromAddress32(tmpPC);
+
+	cycles += 1;
 }
 
 void loadStoreRegOffset(int opcode){
@@ -360,6 +379,11 @@ void loadStoreRegOffset(int opcode){
 			writeToAddress32(*r[ro] + *r[rb], *r[rd]);
 	else
 		*r[rd] = byteFlag ? loadFromAddress(*r[rb] + *r[ro]) : loadFromAddress32(*r[rb] + *r[ro]);
+
+	cycles += 1;
+	if (!loadFlag)
+		cycles += Wait0_N_cycles + 1; 
+	
 }
 
 void loadStoreSignExtend(int opcode){
@@ -376,6 +400,10 @@ void loadStoreSignExtend(int opcode){
 		*r[rd] = signExtend<8>(loadFromAddress(*r[rb] + *r[ro]));
 	else //ldsh
 		*r[rd] = signExtend<16>(loadFromAddress16(*r[ro] + *r[rb]));
+
+	cycles += 1;
+	if (!hFlag && !signFlag)
+		cycles += Wait0_N_cycles + 1;
 }
 
 void loadStoreImm(int opcode){
@@ -388,6 +416,10 @@ void loadStoreImm(int opcode){
 		*r[rd] = byteFlag ? loadFromAddress(*r[rs] + immediate) : loadFromAddress32(*r[rs] + immediate);
 	else
 		byteFlag ? writeToAddress(*r[rs] + immediate, *r[rd]) : writeToAddress32(*r[rs] + immediate, *r[rd]);
+
+	cycles += 1;
+	if (!loadFlag)
+		cycles += Wait0_N_cycles + 1;
 }
 
 void loadStoreHalfword(int opcode){
@@ -399,6 +431,10 @@ void loadStoreHalfword(int opcode){
 		*r[rd] = loadFromAddress16(*r[rs] + immediate);
 	else
 		writeToAddress16(*r[rs] + immediate, *r[rd]);
+
+	cycles += 1;
+	if (!loadFlag)
+		cycles += Wait0_N_cycles + 1;
 }
 
 void loadSPRelative(int opcode){
@@ -409,6 +445,10 @@ void loadSPRelative(int opcode){
 		*r[rd] = loadFromAddress32(*r[SP] + immediate);
 	else
 		writeToAddress32(*r[SP] + immediate, *r[rd]);
+
+	cycles += 1;
+	if (!loadFlag)
+		cycles += Wait0_N_cycles + 1;
 }
 
 void loadAddress(int opcode){
@@ -416,29 +456,35 @@ void loadAddress(int opcode){
 	int rd = (opcode >> 8) & 0x07;
 	int immediate = (opcode & 0xFF) << 2;
 	*r[rd] = immediate + rs;
+
+	cycles += Wait0_S_cycles;
 }
 
 void addOffsetToSP(int opcode){
 	int loadFlag = (opcode >> 7) & 1;
 	int immediate = (opcode & 0x7F) << 2;
 	*r[SP] += loadFlag ? -immediate : immediate;
+
+	cycles += Wait0_S_cycles;
 }
 
 void pushpop(int opcode){
 	int immediate = opcode & 0xFF;
 	int popFlag = (opcode >> 11) & 1;
+
 	if (popFlag){
 		for (int i = 0; i < 8; i++){
 			if (immediate & 1){
 				*r[i] = POP();
-				//std::cout << "r" << i << "\n";
 			}
 			immediate = immediate >> 1;
 		}
 		*r[PC] = ((opcode >> 8) & 1) ? (POP() & -2) : (*r[PC]);
-		//((opcode >> 8) & 1) ? std::cout << "PC\n" : std::cout << "";
-
+		
+		if (immediate & 0x80)
+			cycles += 1;
 	}
+
 	else{
 		if ((opcode >> 8) & 1)
 			PUSH(*r[LR]);
@@ -449,6 +495,7 @@ void pushpop(int opcode){
 		}
 
 	}
+	cycles += 1;
 }
 
 //can be optimized with whiles when needed (or inlines or macro with msb find)
@@ -474,17 +521,25 @@ void multiLoad(int opcode){
 			immediate >>= 1;
 		}
 	}
+
+	cycles += 1;
 }
 
 void conditionalBranch(int opcode){
 	int immediate = opcode & 0xFF;
 	int condition = (opcode >> 8) & 0x0F;
 	*r[PC] += conditions[condition]() ? (((__int8)immediate << 1) + 2) : 0;
+
+	cycles += Wait0_S_cycles;
+	if (conditions[condition]())
+		cycles += 1 + Wait0_N_cycles;
 }
 
 void unconditionalBranch(int opcode){
 	int immediate = (opcode & 0x7FF) << 1;
 	*r[PC] += signExtend<12>(immediate) + 2;
+
+	cycles += 1 + Wait0_S_cycles + Wait0_N_cycles;
 }
 
 void branchLink(int opcode){
@@ -497,6 +552,10 @@ void branchLink(int opcode){
 		*r[PC] = *r[LR] + (immediate << 1); //maybe wrong check later
 		*r[LR] = nextInstruction | 1;
 	}
+	if (!HLOffset)
+		cycles += Wait0_S_cycles;
+	else
+		cycles += 1 + Wait0_S_cycles + Wait0_N_cycles;
 }
 
 int thumbExecute(__int16 opcode){
@@ -604,8 +663,8 @@ int thumbExecute(__int16 opcode){
 					switch (condition)
 					{
 					case 15: //software interrupt
-						//interruptController(opcode);	
-
+						interruptController(opcode);	
+						std::cout << std::hex << "interrpt " << *r[15] << " ";
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);

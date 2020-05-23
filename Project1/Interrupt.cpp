@@ -18,7 +18,7 @@ void interruptController(int opcode){
 	//svc mode
 	cprs &= ~(1 << 5);
 	cprs &= ~0x1f;
-	cprs |= 0x13;
+	cprs |= 0x93;
 
 	*r[PC] = 0x8;
 

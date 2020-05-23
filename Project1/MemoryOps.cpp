@@ -31,6 +31,8 @@ unsigned char GamePakSRAM[0x2000000];
 
 unsigned char *memoryLayout[16] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePakSRAM, GamePakSRAM };
 
+__int32 previousAddress = 0;
+
 void writeToAddress(int address, int value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
@@ -40,35 +42,39 @@ void writeToAddress(int address, int value){
 int loadFromAddress(int address){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
+
+	if (address == previousAddress + 1)
+		cycles += Wait0_S_cycles;
+	else
+		cycles += Wait0_N_cycles;
+
+	previousAddress = address;
+
 	return memoryLayout[mask][address - (mask << 24)];
 }
-//could propably do faster with *(int*) but might not work in different endianess
+
 void writeToAddress32(int address, int value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
-	//std::cout << "writetoaddress32 " << address - (mask << 24) << " value " << value << std::endl;
 	*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
-	
-	/*
-	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
-	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
-	memoryLayout[mask][address - (mask << 24) + 2] = (value >> 16) & 0xFF;
-	memoryLayout[mask][address - (mask << 24) + 3] = (value >> 24) & 0xFF;
-	*/
+	if (address == 0x4000208){ //waitstate reg
+
+	}
 }
 
 unsigned __int32 loadFromAddress32(int address){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 	int number = *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
-	/*
-	int number = 0;
-	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 3] << 24;
-	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 2] << 16;
-	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 1] << 8;
-	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
-	//std::cout << "loadfromaddress32 " << address << " " << number << " " << address << std::endl;
-	*/
+
+
+	if (address == previousAddress + 4)
+		cycles += Wait0_S_cycles;
+	else
+		cycles += Wait0_N_cycles;
+
+	previousAddress = address;
+
 	return number;
 }
 
@@ -76,34 +82,32 @@ void writeToAddress16(int address, int value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 	*(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
-	/*
-	memoryLayout[mask][address - (mask << 24) + 0] = value & 0xFF;
-	memoryLayout[mask][address - (mask << 24) + 1] = (value >> 8) & 0xFF;
-	*/
 }
 
 unsigned __int16 loadFromAddress16(int address){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 	int number = *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
-	/*
-	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 1] << 8;
-	number |= (unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
-	//std::cout << "loadfromaddress32 " << address << " " << number << " " << address << std::endl;
-	*/
+
+
+	if (address == previousAddress + 2)
+		cycles += Wait0_S_cycles;
+	else
+		cycles += Wait0_N_cycles;
+
+	previousAddress = address;
+
 	return number;
 }
 
 void PUSH(int value){
     *r[SP] -= 4;
-    //std::cout << "Pushed " << value <<" to "<< *r[SP] <<"\n";
 	writeToAddress32(*r[SP], value);
 }
 
 unsigned __int32 POP(){
 
     int value = loadFromAddress32(*r[SP]);
-    //std::cout << "Popped " << value <<" from "<< *r[SP] <<" to ";
     *r[SP] += 4;
     return value;
 }
