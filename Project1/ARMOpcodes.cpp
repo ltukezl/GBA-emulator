@@ -74,7 +74,7 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
 	
-	for (int i = 0; i <15; i++){
+	for (int i = 0; i < 15; i++){
 		if (upDownBit){
 			if (regList & 1){
 				*r[i] = a(*r[baseReg], false);
@@ -102,7 +102,7 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){ // not test
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
 
-	for (int i = 0; i <15; i++){
+	for (int i = 0; i < 15; i++){
 		if (upDownBit){
 			if (regList & 1){
 				a(*r[baseReg], false);
@@ -327,7 +327,7 @@ void updateMode(){
 	int mode = cprs & 0x1F;
 	//std::cout << "switched mode to " << mode << std::endl;
 	switch (mode){
-		case 16:
+		case 16: //use enums
 			r = usrSys;
 			break;
 		case 18:

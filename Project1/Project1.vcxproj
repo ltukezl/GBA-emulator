@@ -80,6 +80,7 @@
   <ItemGroup>
     <ClCompile Include="ARMOpcodes.cpp" />
     <ClCompile Include="GBAcpu.cpp" />
+    <ClCompile Include="memoryMappedIO.cpp" />
     <ClCompile Include="MemoryOps.cpp" />
     <ClCompile Include="DMA.cpp" />
     <ClCompile Include="Display.cpp" />
@@ -93,6 +94,7 @@
     <ClInclude Include="DMA.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="interrupt.h" />
+    <ClInclude Include="memoryMappedIO.h" />
     <ClInclude Include="MemoryOps.h" />
     <ClInclude Include="ThumbOpCodes.h" />
   </ItemGroup>

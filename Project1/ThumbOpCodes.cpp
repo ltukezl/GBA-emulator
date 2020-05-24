@@ -331,7 +331,7 @@ void addSubFunction(int opcode){
 
 	cycles += Wait0_S_cycles;
 	if (debug)
-		std::cout << arith_s[operation] << " r" << rd << " r" << rs << (immediateFlag ? "" : " r") << immediate << " ";
+		std::cout << arith_s[operation] << " r" << rd << " r" << rs << (immediateFlag ? " " : " r") << immediate << " ";
 }
 
 void movCompSubAddImm(int opcode){
@@ -342,7 +342,7 @@ void movCompSubAddImm(int opcode){
 
 	cycles += Wait0_S_cycles;
 	if (debug)
-		std::cout << movCompIpaddIpsub_s[instruction] << " r" << rd  << " " << immediate << " ";
+		std::cout << movCompIpaddIpsub_s[instruction] << " r" << rd  << " #" << immediate << " ";
 }
 
 void aluOps(int opcode){
@@ -403,6 +403,15 @@ void loadStoreRegOffset(int opcode){
 	cycles += 1;
 	if (!loadFlag)
 		cycles += Wait0_N_cycles + 1; 
+
+	if (debug && byteFlag && !loadFlag)
+		std::cout << "strb r" << rd << " [" << rb << ", " << ro << " ]";
+	else if (debug && !byteFlag && !loadFlag)
+		std::cout << "str r" << rd << " [" << rb << ", " << ro << " ]";
+	else if (debug && byteFlag && loadFlag)
+		std::cout << "ldrb r" << rd << " [" << rb << ", " << ro << " ]";
+	else if (debug && !byteFlag && loadFlag)
+		std::cout << "ldr r" << rd << " [" << rb << ", " << ro << " ]";
 	
 }
 
@@ -470,6 +479,7 @@ void loadSPRelative(int opcode){
 	if (!loadFlag)
 		cycles += Wait0_N_cycles + 1;
 }
+
 
 void loadAddress(int opcode){
 	int rs = ((opcode >> 11) & 1) ? *r[SP] : ((*r[PC] & ~2) + 4);
@@ -547,6 +557,8 @@ void multiLoad(int opcode){
 	}
 
 	cycles += 1;
+	if (debug)
+		std::cout << "stmia ";
 }
 
 void conditionalBranch(int opcode){
@@ -581,8 +593,11 @@ void branchLink(int opcode){
 	}
 	if (!HLOffset)
 		cycles += Wait0_S_cycles;
-	else
-		cycles += 1 + Wait0_S_cycles + Wait0_N_cycles;
+	else{
+		cycles += Wait0_S_cycles + Wait0_S_cycles + Wait0_N_cycles;
+		if (debug)
+			std::cout << "BL " << *r[PC] << " ";
+	}
 }
 
 int thumbExecute(__int16 opcode){

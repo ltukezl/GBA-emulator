@@ -4,6 +4,7 @@
 #include "MemoryOps.h"
 #include "GBAcpu.h"
 #include "Constants.h"
+#include "memoryMappedIO.h"
 
 Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y), name(name){
 	display = new sf::RenderWindow(sf::VideoMode(res_x, res_y), name);
@@ -139,17 +140,14 @@ void Display::scanPalettes(){
 	//for bg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			int setting = loadFromAddress16(startAddr, true);
-			int red = setting & 0x1F;
-			int green = (setting >> 5) & 0x1F;
-			int blue = (setting >> 10) & 0x1F;
-			int redScaled = red * scalar;
-			int greenScaled = green * scalar;
-			int blueScaled = blue * scalar;
+			ColorPaletteRam.addr = loadFromAddress16(startAddr, true);
+			int redScaled = ColorPaletteRam.red * scalar;
+			int greenScaled = ColorPaletteRam.green * scalar;
+			int blueScaled = ColorPaletteRam.blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
-			bgPaletteColors[16* i + k] = color;
+			bgPaletteColors[16 * i + k] = color;
 			rectangle.setFillColor(color);
-			rectangle.setPosition(sf::Vector2f(16*k, 16*i));
+			rectangle.setPosition(sf::Vector2f(16 * k, 16 * i));
 			display->draw(rectangle);
 			startAddr += 2;
 	}
@@ -157,13 +155,10 @@ void Display::scanPalettes(){
 	//for fg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			int setting = loadFromAddress16(startAddr, true);
-			int red = setting & 0x1F;
-			int green = (setting >> 5) & 0x1F;
-			int blue = (setting >> 10) & 0x1F;
-			int redScaled = red * scalar;
-			int greenScaled = green * scalar;
-			int blueScaled = blue * scalar;
+			ColorPaletteRam.addr = loadFromAddress16(startAddr, true);
+			int redScaled = ColorPaletteRam.red * scalar;
+			int greenScaled = ColorPaletteRam.green * scalar;
+			int blueScaled = ColorPaletteRam.blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			rectangle.setFillColor(color);
 			rectangle.setPosition(sf::Vector2f(16 * k, 272 + 16 * i));

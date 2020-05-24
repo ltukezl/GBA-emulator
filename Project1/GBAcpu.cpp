@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include  <iomanip>
 #include "MemoryOps.h"
 #include "ThumbOpCodes.h"
 #include "ARMOpCodes.h"
@@ -8,14 +9,14 @@
 #include "GBAcpu.h"
 #include "DMA.h"
 #include "Display.h"
-#include  <iomanip>
+#include "interrupt.h"
 
 #define GPU 1
 #define BIOS_START 0
 
 using namespace std;
 
-bool debug = true;
+bool debug = false;
 
 /*Registers*/
 /*prepare register ranges for banks*/
@@ -149,6 +150,7 @@ int main(int argc, char *args[]){
 
 		thumbBit ? thumbExecute(opCode) : ARMExecute(opCode);
 		startDMA();
+		HWInterrupts(cycles);
 #if GPU
 		if (debug | refreshRate > 10000){
 			debugView.updatePalettes();
@@ -156,16 +158,15 @@ int main(int argc, char *args[]){
 		}
 #endif
 		refreshRate++;
-		if (cycles >= 240){
-			memoryLayout[4][6]++;
-			cycles -= 240;
-		}
+		//if (cycles >= 240){
+		//	memoryLayout[4][6]++;
+		//	cycles -= 240;
+		//}
 		if (debug){
 			//std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] << endl;
-			std::cout << "cycles " << dec << cycles << std::endl;
-			
+			std::cout << "cycles " << dec << cycles << std::endl;	
 		}
-		cycles = 0;
+
 	}
 	std::cin >> *r[0];
     return 0;
