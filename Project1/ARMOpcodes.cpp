@@ -19,11 +19,11 @@ void ARMBranch(int opCode){
     *r[PC] += signExtend<26>(location);
 }
 
-void incrementBase(int& baseRegister, int nullParameter = 0){
+void incrementBase(int& baseRegister, bool nullParameter = false){
     baseRegister += 4;
 }
 
-void decrementBase(int& baseRegister, int nullParameter = 0){
+void decrementBase(int& baseRegister, bool nullParameter = false){
     baseRegister -= 4;
 }
 
@@ -77,15 +77,15 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	for (int i = 0; i <15; i++){
 		if (upDownBit){
 			if (regList & 1){
-				*r[i] = a(*r[baseReg]);
-				b(*r[baseReg],0);
+				*r[i] = a(*r[baseReg], false);
+				b(*r[baseReg], false);
 			}
 			regList >>= 1;
 		}
 		else if (~upDownBit){
 			if (regList & 0x4000){
-				*r[15-i] = a(*r[baseReg]);
-				b(*r[baseReg], 0);
+				*r[15-i] = a(*r[baseReg], false);
+				b(*r[baseReg], false);
 			}
 			regList <<= 1;
 		}
@@ -105,15 +105,15 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){ // not test
 	for (int i = 0; i <15; i++){
 		if (upDownBit){
 			if (regList & 1){
-				a(*r[baseReg],0);
-				*r[i] = b(*r[baseReg]);
+				a(*r[baseReg], false);
+				*r[i] = b(*r[baseReg], false);
 			}
 			regList >>= 1;
 		}
 		else if (~upDownBit){
 			if (regList & 0x4000){
-				a(*r[baseReg],0);
-				*r[15-i] = b(*r[baseReg]);
+				a(*r[baseReg], false);
+				*r[15-i] = b(*r[baseReg], false);
 			}
 			regList <<= 1;
 		}

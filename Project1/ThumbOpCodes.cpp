@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include "GBAcpu.h"
 #include "MemoryOps.h"
 #include "interrupt.h"
@@ -298,7 +299,14 @@ void(*arith[2])(int&, int, int) = { add, sub };
 void(*movCompIpaddIpsub[4])(int&, int) = { mov, cmp, add8imm, sub8imm };
 void(*logicalOps[16])(int&, int) = { TAND, TEOR, lslip, lsrip, asrip, adc, sbc, rorIP, tst, neg, cmpReg, cmnReg, ORR, mul, bic, mvn };
 void(*hlOps[4])(int&, int) = { addNoCond, cmpHL, movNoCond, bx };
-int(*conditions[16])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE };
+int(*conditions[14])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE };
+
+char* shifts_s[3] = { "lsl", "lsr", "asr" };
+char* arith_s[2] = { "add", "sub" };
+char* movCompIpaddIpsub_s[4] = { "mov", "cmp", "add", "sub" };
+char* logicalOps_s[16] = { "and", "xor", "lsl", "lsr", "asr", "adc", "sbc", "ror", "tst", "neg", "cmp", "cmn", "or", "mul", "bic", "mvn" };
+//void(*hlOps[4])(int&, int) = { addNoCond, cmpHL, movNoCond, bx };
+char* conditions_s[14] = { "beq", "bne", "bcs", "bcc", "bmi", "bpl", "bvs", "bvc", "bhi", "bls", "bge", "blt", "bgt", "ble" };
 
 void moveShiftedRegister(int opcode){
 	int rd = opcode & 0x7; //register, destination
@@ -308,6 +316,8 @@ void moveShiftedRegister(int opcode){
 	shifts[instruction](*r[rd], *r[rs], immediate);
 
 	cycles += Wait0_S_cycles;
+	if (debug)
+		std::cout << shifts_s[instruction] << " r" << rd << " r" << rs << " " << immediate << " ";
 }
 
 void addSubFunction(int opcode){
@@ -316,10 +326,12 @@ void addSubFunction(int opcode){
 	int operation = (opcode >> 9) & 1;
 	int immediateFlag = (opcode >> 10) & 1;
 	int immediate = (opcode >> 6) & 7;
-	int value = (immediateFlag == 1) ? immediate : *r[immediate];
+	int value = immediateFlag ? immediate : *r[immediate];
 	arith[operation](*r[rd], *r[rs], value);
 
 	cycles += Wait0_S_cycles;
+	if (debug)
+		std::cout << arith_s[operation] << " r" << rd << " r" << rs << (immediateFlag ? "" : " r") << immediate << " ";
 }
 
 void movCompSubAddImm(int opcode){
@@ -329,6 +341,8 @@ void movCompSubAddImm(int opcode){
 	movCompIpaddIpsub[instruction](*r[rd], immediate);
 
 	cycles += Wait0_S_cycles;
+	if (debug)
+		std::cout << movCompIpaddIpsub_s[instruction] << " r" << rd  << " " << immediate << " ";
 }
 
 void aluOps(int opcode){
@@ -340,6 +354,9 @@ void aluOps(int opcode){
 	cycles += Wait0_S_cycles;
 	if (instruction == 2 || instruction == 3 || instruction == 4 || instruction == 12)
 		cycles += 1;
+
+	if (debug)
+		std::cout << logicalOps_s[instruction] << " r" << rd << " r" << rd << " r" << rs << " ";
 }
 
 void hiRegOperations(int opcode){
@@ -364,6 +381,9 @@ void PCRelativeLoad(int opcode){
 	*r[rs] = loadFromAddress32(tmpPC);
 
 	cycles += 1;
+
+	if (debug)
+		std::cout << "ldr r" << rs << "= " << loadFromAddress32(tmpPC, true) << " ";
 }
 
 void loadStoreRegOffset(int opcode){
@@ -483,6 +503,9 @@ void pushpop(int opcode){
 		
 		if (immediate & 0x80)
 			cycles += 1;
+		
+		if (debug)
+			std::cout << "pop ";
 	}
 
 	else{
@@ -493,7 +516,8 @@ void pushpop(int opcode){
 				PUSH(*r[7-i]);
 			immediate = immediate << 1;
 		}
-
+		if (debug)
+			std::cout << "push ";
 	}
 	cycles += 1;
 }
@@ -532,7 +556,10 @@ void conditionalBranch(int opcode){
 
 	cycles += Wait0_S_cycles;
 	if (conditions[condition]())
-		cycles += 1 + Wait0_N_cycles;
+		cycles += Wait0_S_cycles + Wait0_N_cycles;
+
+	if (debug)
+		std::cout << conditions_s[condition] << " " << conditions[condition]() << " ";
 }
 
 void unconditionalBranch(int opcode){

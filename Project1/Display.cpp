@@ -22,9 +22,7 @@ void Display::updatePalettes(){
 	display->clear(sf::Color::Black);
 	scanPalettes();
 
-
 	uint16_t bg1Control = IoRAM[8];
-
 
 	int startAddr = 0x06000000;
 
@@ -33,7 +31,7 @@ void Display::updatePalettes(){
 	for (int tileY = 0; tileY < 32; tileY++)
 	for (int tileX = 0; tileX < 32; tileX++){
 		for (int y = 0; y < 8; y++){
-			int row = loadFromAddress32(startAddr);
+			int row = loadFromAddress32(startAddr, true);
 			for (int pixel = 0; pixel < 8; pixel++){
 				int color = (row & 0xf);
 				tile.setPixel(pixel, y, bgPaletteColors[color]);
@@ -67,7 +65,7 @@ void Display::updatePalettes(){
 	BG1Texture.create(256, 256);
 	for (int i = 0; i < 32; i++)
 		for (int k = 0; k < 32; k++){
-			uint16_t reg = loadFromAddress16(startAddr);
+			uint16_t reg = loadFromAddress16(startAddr, true);
 			uint16_t tilNum = reg & 0x1FF;
 			BG1Texture.update(tileMap1[0x200 + tilNum], 8 * k, 8 * i);
 			startAddr += 2;
@@ -141,7 +139,7 @@ void Display::scanPalettes(){
 	//for bg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			int setting = loadFromAddress16(startAddr);
+			int setting = loadFromAddress16(startAddr, true);
 			int red = setting & 0x1F;
 			int green = (setting >> 5) & 0x1F;
 			int blue = (setting >> 10) & 0x1F;
@@ -159,7 +157,7 @@ void Display::scanPalettes(){
 	//for fg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			int setting = loadFromAddress16(startAddr);
+			int setting = loadFromAddress16(startAddr, true);
 			int red = setting & 0x1F;
 			int green = (setting >> 5) & 0x1F;
 			int blue = (setting >> 10) & 0x1F;
@@ -177,7 +175,6 @@ void Display::scanPalettes(){
 void Display::updateStack(){
 
 	//std::cout << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] << "\n";
-
 
 	display->display();
 }

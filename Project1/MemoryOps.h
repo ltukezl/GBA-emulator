@@ -13,9 +13,9 @@ extern unsigned char GamePak[0x2000000];
 extern unsigned char GamePakSRAM[0x2000000];
 extern unsigned char* memoryLayout[16];
 
-int loadFromAddress(int);
-unsigned __int16 loadFromAddress16(int);
-unsigned __int32 loadFromAddress32(int);
+int loadFromAddress(int, bool = false);
+unsigned __int16 loadFromAddress16(int, bool = false);
+unsigned __int32 loadFromAddress32(int, bool = false);
 
 void writeToAddress(int, int);
 void writeToAddress16(int, int);

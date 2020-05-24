@@ -15,7 +15,7 @@
 
 using namespace std;
 
-bool debug = false;
+bool debug = true;
 
 /*Registers*/
 /*prepare register ranges for banks*/
@@ -137,7 +137,7 @@ int main(int argc, char *args[]){
 			debugView.handleEvents();
 #endif
 		int thumbBit = (cprs >> 5) & 1;
-		unsigned int opCode = loadFromAddress32(*r[PC]);
+		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (*r[15] == 0x3002890){
 			//cout << "..";
@@ -155,16 +155,18 @@ int main(int argc, char *args[]){
 			refreshRate = 0;
 		}
 #endif
-		cycles++;
 		refreshRate++;
 		if (cycles >= 240){
 			memoryLayout[4][6]++;
 			cycles -= 240;
 		}
-		if (debug)
-			std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] <<  endl ;
+		if (debug){
+			//std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] << endl;
+			std::cout << "cycles " << dec << cycles << std::endl;
+			
+		}
+		cycles = 0;
 	}
-
 	std::cin >> *r[0];
     return 0;
 }

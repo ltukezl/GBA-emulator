@@ -39,16 +39,18 @@ void writeToAddress(int address, int value){
 	memoryLayout[mask][address - (mask << 24)] = value;
 }
 
-int loadFromAddress(int address){
+int loadFromAddress(int address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 
-	if (address == previousAddress + 1)
-		cycles += Wait0_S_cycles;
-	else
+	if (!free){
 		cycles += Wait0_N_cycles;
-
-	previousAddress = address;
+		if (address == (previousAddress + 1))
+			cycles += Wait0_S_cycles;
+		else
+			cycles += Wait0_N_cycles;
+		previousAddress = address;
+	}
 
 	return memoryLayout[mask][address - (mask << 24)];
 }
@@ -62,18 +64,20 @@ void writeToAddress32(int address, int value){
 	}
 }
 
-unsigned __int32 loadFromAddress32(int address){
+unsigned __int32 loadFromAddress32(int address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 	int number = *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
 
 
-	if (address == previousAddress + 4)
-		cycles += Wait0_S_cycles;
-	else
+	if (!free){
 		cycles += Wait0_N_cycles;
-
-	previousAddress = address;
+		if (address == (previousAddress + 4))
+			cycles += Wait0_S_cycles;
+		else
+			cycles += Wait0_N_cycles;
+		previousAddress = address;
+	}
 
 	return number;
 }
@@ -84,18 +88,20 @@ void writeToAddress16(int address, int value){
 	*(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
 }
 
-unsigned __int16 loadFromAddress16(int address){
+unsigned __int16 loadFromAddress16(int address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 	int number = *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
 
 
-	if (address == previousAddress + 2)
-		cycles += Wait0_S_cycles;
-	else
+	if (!free){
 		cycles += Wait0_N_cycles;
-
-	previousAddress = address;
+		if (address == (previousAddress + 2))
+			cycles += Wait0_S_cycles;
+		else
+			cycles += Wait0_N_cycles;
+		previousAddress = address;
+	}
 
 	return number;
 }

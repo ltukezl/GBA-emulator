@@ -16,6 +16,8 @@ extern __int64 cycles;
 extern __int8 Wait0_N_cycles;
 extern __int8 Wait0_S_cycles;
 
+extern bool debug;
+
 template<int start>
 int signExtend(int value){
 	int m = 1U << (start - 1); //bitextend hack
