@@ -16,5 +16,5 @@ extern uint32_t SP_usr;
 #define SP 13
 #define LR 14
 #define PC 15
-
+extern bool debug;
 #endif

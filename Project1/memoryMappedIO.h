@@ -136,3 +136,19 @@ extern union TIMERCNT {
 
 	uint32_t addr;
 } TIMERCNT;
+
+extern union DMAcontrol{
+	struct{
+		uint16_t:5;
+		uint16_t destCtrl : 2;
+		uint16_t sourceCtrl : 2;
+		uint16_t repeat : 1;
+		uint16_t transferType : 1;
+		uint16_t DRQ : 1;
+		uint16_t timing : 2;
+		uint16_t irq : 1;
+		uint16_t enable : 1;
+	};
+
+	uint16_t addr;
+}DMAcontrol;

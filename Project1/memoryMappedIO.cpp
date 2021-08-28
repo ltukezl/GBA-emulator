@@ -10,3 +10,5 @@ union BgCnt BgCnt;
 union KEYINPUT KEYINPUT;
 union KEYCNT KEYCNT;
 union TIMERCNT TIMERCNT;
+
+union DMAcontrol DMAcontrol;

@@ -11,7 +11,7 @@ int noCond(){
     return 1;
 }
 
-int(*ARMconditions[16])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE, noCond};
+int(*ARMconditions[16])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE, noCond };
 
 void ARMBranch(int opCode){
     int location = opCode & 0xFFFFFF; //24 bits
@@ -375,7 +375,7 @@ void immediateRotate(int opCode){
 			int sprs = (opCode >> 22) & 1;
 			int rm = opCode & 0xF;
 			if (sprs)
-				*r[16] = *r[rm];
+				cprs = *r[16];
 			else
 				cprs = *r[rm];
 			updateMode();
@@ -391,9 +391,9 @@ void immediateRotate(int opCode){
 
 		if (immediate == 0){
 			if (sprs){
-				int tmp = *r[16] & 0xFFFFFFF;
+				int tmp = cprs & 0xFFFFFFF;
 				tmp |= *r[rm] & 0xF0000000;
-				*r[16] = tmp;
+				cprs = tmp;
 			}
 			else{
 				int tmp = cprs & 0xFFFFFFF;
@@ -425,7 +425,7 @@ void immediateRotate(int opCode){
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
-			cprs = *r[16];
+			cprs = cprs;
 			updateMode();
 		}
 		
@@ -449,7 +449,7 @@ void registerRotate(int opCode){
 	dataOperations[operationID](*r[rd], *r[rn], shiftAmount);
 
 	if (rd == 15 && (opCode >> 20) & 1){ // not tested
-		cprs = *r[16];
+		cprs = cprs;
 		updateMode();
 	}
 

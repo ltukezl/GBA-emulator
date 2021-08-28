@@ -11,6 +11,7 @@
 #include "Display.h"
 #include "interrupt.h"
 #include "timers.h"
+#include "memoryMappedIO.h"
 
 #define GPU 1
 #define BIOS_START 0
@@ -18,6 +19,7 @@
 using namespace std;
 
 bool debug = false;
+bool irqExit = false;
 
 /*Registers*/
 /*prepare register ranges for banks*/
@@ -97,6 +99,8 @@ int main(int argc, char *args[]){
 	*r[13] = 0x3007FE0;
 #endif
 	r = irq;
+	cprs = 1 << 7;
+	*r[16] = 0x8000003f;
 	*r[13] = SP_irq;
 	
 
@@ -104,7 +108,7 @@ int main(int argc, char *args[]){
 #if BIOS_START
 	r = svc;
 	*r[13] = SP_svc;
-	*r[16] = 0x10;
+	cprs = 0x10;
 #else
 	r = usrSys;
 	*r[13] = SP_usr;
@@ -133,25 +137,39 @@ int main(int argc, char *args[]){
 
 	
 	int refreshRate = 0;
-
+	//debug = true;
 	while (true){
 #if GPU
 		if (debug | refreshRate > 10000)
 			debugView.handleEvents();
 #endif
+		
+		if (*r[15] == 0x13c){
+			irqExit = true;
+		}
+
 		int thumbBit = (cprs >> 5) & 1;
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
-
-		if (*r[15] == 0x3002890){
-			//cout << "..";
-			debug = true;
-		}
 
 		if (debug)
 			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (thumbBit ? opCode & 0xFFFF : opCode) << " ";
 
 		thumbBit ? thumbExecute(opCode) : ARMExecute(opCode);
+
+		if (irqExit){	
+			cprs &= ~0xff;
+			cprs &= ~(1 << 7);
+			cprs |= 0x10;
+			cprs |= 1 << 5;
+			r = usrSys;
+			InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
+			irqExit = false;
+			std::cout << "PC now 0x" << std::hex << *r[PC] << std::dec << std::endl;
+		}
+
+		InterruptEnableRegister.addr = loadFromAddress16(0x4000200);
 		startDMA();
+		updateTimers();
 		HWInterrupts(cycles);
 #if GPU
 		if (debug | refreshRate > 10000){
@@ -160,15 +178,14 @@ int main(int argc, char *args[]){
 		}
 #endif
 		refreshRate++;
-		updateTimers();
 
-		//if (cycles >= 240){
-		//	memoryLayout[4][6]++;
-		//	cycles -= 240;
-		//}
+		if (cycles >= 240){
+			memoryLayout[4][6]++;
+			cycles -= 240;
+		}
 		if (debug){
-			//std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] << endl;
-			std::cout << "cycles " << dec << cycles << std::endl;	
+			std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] << endl;
+			//std::cout << "cycles " << dec << cycles << std::endl;	
 		}
 
 	}

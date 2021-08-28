@@ -35,7 +35,11 @@ unsigned char *memoryLayout[16] = { systemROM, unused, ExternalWorkRAM, Internal
 __int32 previousAddress = 0;
 
 bool specialWrites(uint32_t addr, uint32_t val){
-	if (addr >= 0x4000100 && addr <= 0x400010E){
+	if (addr == 0x03007FFC) {
+		writeToAddress32(0x3FFFFFC, val);
+		return false;
+	}
+	else if (addr >= 0x4000100 && addr <= 0x400010E){
 		return timerReloadWrite(addr, val);
 	}
 	return false;
