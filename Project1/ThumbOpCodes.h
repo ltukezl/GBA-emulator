@@ -57,4 +57,15 @@ int BGT();
 int BLE();
 
 int thumbExecute(short);
+
+union moveShiftedRegisterOp{
+	struct{
+		uint16_t destination : 3;
+		uint16_t source : 3;
+		uint16_t immediate : 5;
+		uint16_t instruction : 2;
+	};
+	uint16_t op;
+};
+
 #endif

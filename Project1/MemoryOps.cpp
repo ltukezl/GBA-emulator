@@ -45,6 +45,12 @@ bool specialWrites(uint32_t addr, uint32_t val){
 	return false;
 }
 
+uint32_t specialReads(uint32_t addr){
+	if (addr == 0x03007FFC) {
+		return loadFromAddress32(0x3FFFFFC);
+	}
+}
+
 void writeToAddress(uint32_t address, uint8_t value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;

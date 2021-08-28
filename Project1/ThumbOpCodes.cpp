@@ -4,6 +4,7 @@
 #include "MemoryOps.h"
 #include "interrupt.h"
 #include "Constants.h"
+#include "ThumbOpCodes.h"
 
 #define SETBIT(REG, POS) (REG |= (1 << POS))
 #define ZEROBIT(REG, POS) (REG &= (~(1<< POS)))
@@ -20,26 +21,22 @@ void zero(int result)
 
 void addCarry(int operand1, int operand2, int result)
 {
-	bool carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31 & 1;
-	cpsr.carry = carry;
+	cpsr.carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31 & 1;
 }
 
 void addOverflow(int operand1, int operand2, int result)
 {
-	bool overflow = ((operand1 & operand2 & ~result) | (~operand1 & ~operand2 & result)) >> 31 & 1;
-	cpsr.overflow = overflow;
+	cpsr.overflow = ((operand1 & operand2 & ~result) | (~operand1 & ~operand2 & result)) >> 31 & 1;
 }
 
 void subCarry(int operand1, int operand2, int result)
 {
-	bool carry = ((operand1 & ~operand2) | (operand1 & ~result) | (~operand2 & ~result)) >> 31 & 1;
-	cpsr.carry = carry;
+	cpsr.carry = ((operand1 & ~operand2) | (operand1 & ~result) | (~operand2 & ~result)) >> 31 & 1;
 }
 
 void subOverflow(int operand1, int operand2, int result)
 {
-	bool overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
-	cpsr.overflow = overflow;
+	cpsr.overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -304,19 +301,17 @@ char* shifts_s[3] = { "lsl", "lsr", "asr" };
 char* arith_s[2] = { "add", "sub" };
 char* movCompIpaddIpsub_s[4] = { "mov", "cmp", "add", "sub" };
 char* logicalOps_s[16] = { "and", "xor", "lsl", "lsr", "asr", "adc", "sbc", "ror", "tst", "neg", "cmp", "cmn", "or", "mul", "bic", "mvn" };
-//void(*hlOps[4])(int&, int) = { addNoCond, cmpHL, movNoCond, bx };
+char* hlOps_s[4] = { "add", "cmp", "mov", "bx" };
 char* conditions_s[14] = { "beq", "bne", "bcs", "bcc", "bmi", "bpl", "bvs", "bvc", "bhi", "bls", "bge", "blt", "bgt", "ble" };
 
 void moveShiftedRegister(int opcode){
-	int rd = opcode & 0x7; //register, destination
-	int rs = (opcode >> 3) & 0x7; //register, source
-	int instruction = (opcode >> 11) & 3;
-	int immediate = (opcode >> 6) & 0x1F;
-	shifts[instruction](*r[rd], *r[rs], immediate);
+	union moveShiftedRegisterOp op;
+	op.op = opcode;
+	shifts[op.instruction](*r[op.destination], *r[op.source], op.immediate);
 
 	cycles += Wait0_S_cycles;
 	if (debug)
-		std::cout << shifts_s[instruction] << " r" << rd << " r" << rs << " " << immediate << " ";
+		std::cout << shifts_s[op.instruction] << " r" << op.destination << " r" << op.source << " " << op.immediate << " ";
 }
 
 void addSubFunction(int opcode){
@@ -369,6 +364,9 @@ void hiRegOperations(int opcode){
 
 	if ((rs == 15) | (instruction == 3))
 		cycles += Wait0_N_cycles + 1;
+
+	if (debug)
+		std::cout << std::dec << hlOps_s[instruction] << " r" << (rd | hi1) << " r" << rs << std::hex;
 }
 
 void PCRelativeLoad(int opcode){
@@ -382,7 +380,7 @@ void PCRelativeLoad(int opcode){
 	cycles += 1;
 
 	if (debug)
-		std::cout << "ldr r" << rs << "= " << loadFromAddress32(tmpPC, true) << " ";
+		std::cout << "ldr r" << rs << ", =" << loadFromAddress32(tmpPC, true) << " ";
 }
 
 void loadStoreRegOffset(int opcode){
@@ -415,6 +413,7 @@ void loadStoreRegOffset(int opcode){
 }
 
 void loadStoreSignExtend(int opcode){
+	debug = true;
 	int rd = opcode & 7;
 	int rb = (opcode >> 3) & 7; // base reg
 	int ro = (opcode >> 6) & 7; // offset reg
@@ -432,6 +431,15 @@ void loadStoreSignExtend(int opcode){
 	cycles += 1;
 	if (!hFlag && !signFlag)
 		cycles += Wait0_N_cycles + 1;
+
+	if (debug && !hFlag && !signFlag)
+		std::cout << "strh [r" << rb << ", r" << ro << "] ,r" << ro << " ";
+	if (debug && !hFlag && signFlag)
+		std::cout << "ldrh r" << rd << ", [r" << rb << ",r" << ro << "] ";
+	if (debug && hFlag && !signFlag)
+		std::cout << "ldsb r" << rd << ", [r" << rb << ",r" << ro << "] ";
+	if (debug && hFlag && signFlag)
+		std::cout << "ldsh r" << rd << ", [r" << rb << ",r" << ro << "] ";
 }
 
 void loadStoreImm(int opcode){
@@ -448,6 +456,11 @@ void loadStoreImm(int opcode){
 	cycles += 1;
 	if (!loadFlag)
 		cycles += Wait0_N_cycles + 1;
+
+	if (debug && loadFlag)
+		std::cout << "ldr r" << rd << " [r" << rs << " " << immediate << "] ";
+	else if (debug && !loadFlag)
+		std::cout << "str [r" << rs << " " << immediate << "] r" << rd << " ";
 }
 
 void loadStoreHalfword(int opcode){
@@ -463,6 +476,11 @@ void loadStoreHalfword(int opcode){
 	cycles += 1;
 	if (!loadFlag)
 		cycles += Wait0_N_cycles + 1;
+
+	if (debug && loadFlag)
+		std::cout << "ldrh r" << rd << " [r" << rs << " " << immediate << "] ";
+	else if (debug && !loadFlag)
+		std::cout << "strh [r" << rs << " " << immediate << "] r" << rd << " ";
 }
 
 void loadSPRelative(int opcode){
@@ -477,6 +495,11 @@ void loadSPRelative(int opcode){
 	cycles += 1;
 	if (!loadFlag)
 		cycles += Wait0_N_cycles + 1;
+
+	if (debug && loadFlag)
+		std::cout << "ldr r" << rd << ", [sp " << immediate << "] ";
+	else if (debug && !loadFlag)
+		std::cout << "str [sp " << immediate << "],  r" << rd << " ";
 }
 
 
@@ -487,6 +510,10 @@ void loadAddress(int opcode){
 	*r[rd] = immediate + rs;
 
 	cycles += Wait0_S_cycles;
+	if (debug && rs)
+		std::cout << "add r" << rd << ", SP, 0x" << immediate << " ";
+	if (debug && !rs)
+		std::cout << "add r" << rd << ", PC, 0x" << immediate << " ";
 }
 
 void addOffsetToSP(int opcode){
@@ -495,6 +522,11 @@ void addOffsetToSP(int opcode){
 	*r[SP] += loadFlag ? -immediate : immediate;
 
 	cycles += Wait0_S_cycles;
+
+	if (debug && loadFlag)
+		std::cout << "sub sp, 0x" << immediate << " ";
+	else if (debug && !loadFlag)
+		std::cout << "add sp, 0x" << immediate << " ";
 }
 
 void pushpop(int opcode){
@@ -578,6 +610,9 @@ void unconditionalBranch(int opcode){
 	*r[PC] += signExtend<12>(immediate) + 2;
 
 	cycles += 1 + Wait0_S_cycles + Wait0_N_cycles;
+
+	if (debug)
+		std::cout << "b " << std::hex << *r[PC] << std::dec << " ";
 }
 
 void branchLink(int opcode){
@@ -587,7 +622,7 @@ void branchLink(int opcode){
 		*r[LR] = (signExtend<11>(immediate) << 12) + *r[PC] + 2;
 	else{
 		int nextInstruction = *r[PC] + 1;
-		*r[PC] = *r[LR] + (immediate << 1); //maybe wrong check later
+		*r[PC] = *r[LR] + (immediate << 1);
 		*r[LR] = nextInstruction | 1;
 	}
 	if (!HLOffset)

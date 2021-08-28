@@ -5,7 +5,7 @@
 #include "iostream"
 
 void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint32_t wordCount){
-	for (int k = 0; k < wordCount; k++){
+	for (uint32_t k = 0; k < wordCount; k++){
 		if (DMAcontrol.transferType == 0){
 			writeToAddress16(destinationAddress, loadFromAddress16(sourceAddress));
 		}

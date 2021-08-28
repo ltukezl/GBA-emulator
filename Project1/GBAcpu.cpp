@@ -143,7 +143,8 @@ int main(int argc, char *args[]){
 		if (debug | (refreshRate > 10000))
 			debugView.handleEvents();
 #endif
-		
+		if (*r[LR] == 0x1fffffff)
+			debug = true;
 		if (*r[15] == 0x13c){
 			irqExit = true;
 		}
@@ -164,13 +165,13 @@ int main(int argc, char *args[]){
 			irqExit = false;
 			std::cout << "PC now 0x" << std::hex << *r[PC] << std::dec << std::endl;
 		}
-
-		InterruptEnableRegister.addr = loadFromAddress16(0x4000200);
+		//InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
+		//InterruptEnableRegister.addr = loadFromAddress16(0x4000200);
 		startDMA();
 		updateTimers();
-		HWInterrupts(cycles);
+		//HWInterrupts(cycles);
 #if GPU
-		if (debug | refreshRate > 10000){
+		if (debug | (refreshRate > 10000)){
 			debugView.updatePalettes();
 			refreshRate = 0;
 		}
@@ -182,8 +183,9 @@ int main(int argc, char *args[]){
 			cycles -= 240;
 		}
 		if (debug){
-			std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS " << *r[16] << endl;
+			//std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS " << *r[16] << endl;
 			//std::cout << "cycles " << dec << cycles << std::endl;	
+			std::cout << std::endl;
 		}
 
 	}

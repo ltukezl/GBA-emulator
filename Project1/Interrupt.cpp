@@ -33,14 +33,15 @@ void HWInterrupts(int cycles){
 	if (!intEnabled || cpsr.IRQDisable){
 		return;
 	}
-	/*
+	
 	if (InterruptEnableRegister.vBlank){
 		if (vBlankCounter > (vBlankCounter + cycles) % 280896){
 			InterruptFlagRegister.vBlank = 1;
 		}
 		vBlankCounter = (vBlankCounter + cycles) % 280896;
 	}
-	*/
+	
+
 	if (InterruptFlagRegister.addr != 0){
 		std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;
 		cpsr.thumb = 0;
@@ -49,5 +50,6 @@ void HWInterrupts(int cycles){
 		r = irq;
 		*r[LR] = *r[PC] + 4;
 		*r[PC] = 0x18;
+		debug = true;
 	}
 }

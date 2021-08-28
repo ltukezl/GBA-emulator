@@ -80,7 +80,7 @@ void Display::updatePalettes(){
 	display->draw(BG1Sprite);
 
 
-	/*
+	
 	sf::Font font;
 	font.loadFromFile("arial.ttf");
 
@@ -107,14 +107,14 @@ void Display::updatePalettes(){
 
 	char msg[512];
 	sprintf_s(msg, " PC: %02x\n R0: %02x\n R1: %02x\n R2: %02x\n R3: %02x\n R4: %02x\n R5: %02x\n R6: %02x\n R7: %02x\n FP(r11): %02x\n IP (r12): %02x\n SP: %02x\n LR: %02x\n CPSR: %02x\n Status: %02x",
-		*r[15], *r[0], *r[1], *r[2], *r[3], *r[4], *r[5], *r[6], *r[7], *r[11], *r[12], *r[13], *r[14], cprs, cprs);
+		*r[15], *r[0], *r[1], *r[2], *r[3], *r[4], *r[5], *r[6], *r[7], *r[11], *r[12], *r[13], *r[14], cpsr.val, cpsr.val);
 
 	for (int i = 0; i < 1; i++){
 		text.setString(msg);
 		text.setPosition(sf::Vector2f(260, 110 + 10 * i));
 		display->draw(text);
 	}
-	*/
+	
 	display->display();
 }
 
