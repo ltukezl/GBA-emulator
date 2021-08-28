@@ -39,6 +39,9 @@
     <ClCompile Include="memoryMappedIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="timers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBAcpu.h">
@@ -66,6 +69,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="memoryMappedIO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="timers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

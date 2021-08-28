@@ -1,6 +1,8 @@
 #ifndef MEMORYOPS_H
 #define MEMORYOPS_H
 
+#include <stdint.h>
+
 extern unsigned char systemROM[0x4000];
 extern unsigned char unused[0x4000];
 extern unsigned char ExternalWorkRAM[0x1000000];
@@ -13,13 +15,13 @@ extern unsigned char GamePak[0x2000000];
 extern unsigned char GamePakSRAM[0x2000000];
 extern unsigned char* memoryLayout[16];
 
-int loadFromAddress(int, bool = false);
-unsigned __int16 loadFromAddress16(int, bool = false);
-unsigned __int32 loadFromAddress32(int, bool = false);
+uint8_t loadFromAddress(uint32_t addr, bool free = false);
+uint16_t loadFromAddress16(uint32_t addr, bool free = false);
+uint32_t loadFromAddress32(uint32_t addr, bool free = false);
 
-void writeToAddress(int, int);
-void writeToAddress16(int, int);
-void writeToAddress32(int, int);
+void writeToAddress(uint32_t addr, uint8_t val);
+void writeToAddress16(uint32_t addr, uint16_t val);
+void writeToAddress32(uint32_t addr, uint32_t val);
 
 void PUSH(int);
 unsigned __int32 POP();

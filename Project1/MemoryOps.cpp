@@ -3,6 +3,7 @@
 #include "MemoryOps.h"
 #include "GBAcpu.h"
 #include "iostream"
+#include "timers.h"
 #include <algorithm>
 
 uint32_t systemROMStart = 0x00000000;
@@ -33,13 +34,41 @@ unsigned char *memoryLayout[16] = { systemROM, unused, ExternalWorkRAM, Internal
 
 __int32 previousAddress = 0;
 
-void writeToAddress(int address, int value){
-	address &= ~0xF0000000;
-    int mask = (address >> 24) & 15;
-	memoryLayout[mask][address - (mask << 24)] = value;
+bool specialWrites(uint32_t addr, uint32_t val){
+	if (addr >= 0x4000100 && addr <= 0x400010E){
+		return timerReloadWrite(addr, val);
+	}
+	return false;
 }
 
-int loadFromAddress(int address, bool free){
+void writeToAddress(uint32_t address, uint8_t value){
+	address &= ~0xF0000000;
+    int mask = (address >> 24) & 15;
+	if (!specialWrites(address, value)){
+		memoryLayout[mask][address - (mask << 24)] = value;
+	}
+}
+
+void writeToAddress16(uint32_t address, uint16_t value){
+	address &= ~0xF0000000;
+	int mask = (address >> 24) & 15;
+	if (!specialWrites(address, value)){
+		*(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
+	}
+}
+
+void writeToAddress32(uint32_t address, uint32_t value){
+	address &= ~0xF0000000;
+	int mask = (address >> 24) & 15;
+	if (!specialWrites(address, value)){
+		*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
+	}
+	if (address == 0x4000208){ //waitstate reg
+
+	}
+}
+
+uint8_t loadFromAddress(uint32_t address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 
@@ -55,24 +84,14 @@ int loadFromAddress(int address, bool free){
 	return memoryLayout[mask][address - (mask << 24)];
 }
 
-void writeToAddress32(int address, int value){
+uint16_t loadFromAddress16(uint32_t address, bool free){
 	address &= ~0xF0000000;
-    int mask = (address >> 24) & 15;
-	*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
-	if (address == 0x4000208){ //waitstate reg
-
-	}
-}
-
-unsigned __int32 loadFromAddress32(int address, bool free){
-	address &= ~0xF0000000;
-    int mask = (address >> 24) & 15;
-	int number = *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
-
+	int mask = (address >> 24) & 15;
+	int number = *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
 
 	if (!free){
 		cycles += Wait0_N_cycles;
-		if (address == (previousAddress + 4))
+		if (address == (previousAddress + 2))
 			cycles += Wait0_S_cycles;
 		else
 			cycles += Wait0_N_cycles;
@@ -82,21 +101,14 @@ unsigned __int32 loadFromAddress32(int address, bool free){
 	return number;
 }
 
-void writeToAddress16(int address, int value){
+uint32_t loadFromAddress32(uint32_t address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
-	*(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
-}
-
-unsigned __int16 loadFromAddress16(int address, bool free){
-	address &= ~0xF0000000;
-    int mask = (address >> 24) & 15;
-	int number = *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
-
+	int number = *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
 
 	if (!free){
 		cycles += Wait0_N_cycles;
-		if (address == (previousAddress + 2))
+		if (address == (previousAddress + 4))
 			cycles += Wait0_S_cycles;
 		else
 			cycles += Wait0_N_cycles;

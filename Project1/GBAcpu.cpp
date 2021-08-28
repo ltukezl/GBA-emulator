@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-#include  <iomanip>
+#include <iomanip>
 #include "MemoryOps.h"
 #include "ThumbOpCodes.h"
 #include "ARMOpCodes.h"
@@ -10,6 +10,7 @@
 #include "DMA.h"
 #include "Display.h"
 #include "interrupt.h"
+#include "timers.h"
 
 #define GPU 1
 #define BIOS_START 0
@@ -79,6 +80,7 @@ otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
 
+	writeToAddress16(0x4000130, 0xFFFF);
 	IoRAM[0x130] = 0xFFFF; // input register, 0 = pressed down, 1 = released
 
 #if GPU
@@ -158,6 +160,8 @@ int main(int argc, char *args[]){
 		}
 #endif
 		refreshRate++;
+		updateTimers();
+
 		//if (cycles >= 240){
 		//	memoryLayout[4][6]++;
 		//	cycles -= 240;

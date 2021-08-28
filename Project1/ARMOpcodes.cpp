@@ -381,12 +381,30 @@ void immediateRotate(int opCode){
 			updateMode();
 			codeExecuted = true;
 		}
+	}
 
-		else if (((opCode>>12) & 0x3FF) == 0x28f)
-		{
-			std::cout << "TBD3";
-			codeExecuted = true;
+	if (((opCode >> 12) & 0x3FF) == 0x28f && ((opCode >> 23) & 3) == 2 && ((opCode >> 26) & 3) == 0 && !codeExecuted)
+	{
+		int immediate = (opCode >> 25) & 1;
+		int sprs = (opCode >> 22) & 1;
+		int rm = opCode & 0xF;
+
+		if (immediate == 0){
+			if (sprs){
+				int tmp = *r[16] & 0xFFFFFFF;
+				tmp |= *r[rm] & 0xF0000000;
+				*r[16] = tmp;
+			}
+			else{
+				int tmp = cprs & 0xFFFFFFF;
+				tmp |= *r[rm] & 0xF0000000;
+				cprs = tmp;
+			}
 		}
+		else{
+			std::cout << "TBD3";
+		}
+		codeExecuted = true;
 	}
 
 	if (!codeExecuted) {

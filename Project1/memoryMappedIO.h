@@ -65,6 +65,21 @@ extern union ColorPaletteRam{
 	uint16_t addr;
 }ColorPaletteRam;
 
+
+extern union BgCnt{
+	struct{
+		uint16_t priority : 2;
+		uint16_t baseBlock : 2;
+	    uint16_t :2;
+		uint16_t mosaic : 1;
+		uint16_t palettes : 1;
+		uint16_t baseblock : 5;
+		uint16_t overflow : 1;
+		uint16_t size : 2;
+	};
+	uint16_t addr;
+}BgCnt;
+
 //------------------------
 //gamepad
 //------------------------
@@ -103,3 +118,21 @@ extern union KEYCNT {
 	};
 	uint16_t addr;
 }KEYCNT;
+
+//------------------------
+//timers
+//------------------------
+
+extern union TIMERCNT {
+	struct{
+		uint32_t counterVal : 16;
+		uint32_t cntrSelect : 2;
+		uint32_t timing : 1;
+		uint32_t : 3;
+		uint32_t irqEn : 1;
+		uint32_t startStop : 1;
+		uint32_t: 7;
+	};
+
+	uint32_t addr;
+} TIMERCNT;

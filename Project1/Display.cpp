@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <stdio.h>
+#include <iostream>
 #include "Display.h"
 #include "MemoryOps.h"
 #include "GBAcpu.h"
@@ -126,6 +127,76 @@ void Display::handleEvents(){
 		// "close requested" event: we close the window
 		if (event.type == sf::Event::Closed)
 			display->close();
+
+		if (event.type == sf::Event::KeyPressed)
+		{
+			KEYINPUT.addr = loadFromAddress16(0x4000130, true);
+			if (event.key.code == sf::Keyboard::Down)
+			{
+				KEYINPUT.btn_down = 0;
+			}
+
+			if (event.key.code == sf::Keyboard::Up)
+			{
+				KEYINPUT.btn_up = 0;
+			}
+
+			if (event.key.code == sf::Keyboard::Left)
+			{
+				KEYINPUT.btn_left = 0;
+			}
+
+			if (event.key.code == sf::Keyboard::Right)
+			{
+				KEYINPUT.btn_right = 0;
+			}
+
+			if (event.key.code == sf::Keyboard::Z)
+			{
+				KEYINPUT.btn_A = 0;
+			}
+
+			if (event.key.code == sf::Keyboard::X)
+			{
+				KEYINPUT.btn_B = 0;
+			}
+			writeToAddress16(0x4000130, KEYINPUT.addr);
+		}
+
+		else if (event.type == sf::Event::KeyReleased)
+		{
+			KEYINPUT.addr = loadFromAddress16(0x4000130, true);
+			if (event.key.code == sf::Keyboard::Down)
+			{
+				KEYINPUT.btn_down = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::Up)
+			{
+				KEYINPUT.btn_up = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::Left)
+			{
+				KEYINPUT.btn_left = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::Right)
+			{
+				KEYINPUT.btn_right = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::Z)
+			{
+				KEYINPUT.btn_A = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::X)
+			{
+				KEYINPUT.btn_B = 1;
+			}
+			writeToAddress16(0x4000130, KEYINPUT.addr);
+		}
 	}
 
 }
