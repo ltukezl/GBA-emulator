@@ -26,7 +26,6 @@ extern union InterruptEnableRegister{
 		uint8_t DMA3 : 1;
 		uint8_t keyPad : 1;
 		uint8_t gamepak : 1;
-
 	};
 	uint16_t addr;
 }InterruptEnableRegister;
@@ -47,7 +46,6 @@ extern union InterruptFlagRegister{
 		uint8_t DMA3 : 1;
 		uint8_t keyPad : 1;
 		uint8_t gamepak : 1;
-
 	};
 	uint16_t addr;
 }InterruptFlagRegister;

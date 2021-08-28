@@ -58,13 +58,9 @@ __int32* undef[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRe
 
 __int32** r;	//used register
 
+union CPSR cpsr;
 //1  0  0  0
 //N  Z  C  V  = sign,zero,carry,overflow
-#if BIOS_START
-__int32 cprs = 0xD3;	//current program status register
-#else
-__int32 cprs = 0x1f;	//current program status register
-#endif
 
 __int64 cycles = 0;
 __int8 Wait0_N_cycles = 5;
@@ -81,9 +77,13 @@ NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in us
 otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
+#if BIOS_START
+	cpsr.val = 0xD3;	//current program status register
+#else
+	cpsr.val = 0x1f;	//current program status register
+#endif
 
-	writeToAddress16(0x4000130, 0xFFFF);
-	IoRAM[0x130] = 0xFFFF; // input register, 0 = pressed down, 1 = released
+	writeToAddress16(0x4000130, 0xFFFF); // input register, 0 = pressed down, 1 = released
 
 #if GPU
 	Display debugView(1024, 496, "paletteWindow");
@@ -99,7 +99,7 @@ int main(int argc, char *args[]){
 	*r[13] = 0x3007FE0;
 #endif
 	r = irq;
-	cprs = 1 << 7;
+	cpsr.IRQDisable = 1;
 	*r[16] = 0x8000003f;
 	*r[13] = SP_irq;
 	
@@ -140,7 +140,7 @@ int main(int argc, char *args[]){
 	//debug = true;
 	while (true){
 #if GPU
-		if (debug | refreshRate > 10000)
+		if (debug | (refreshRate > 10000))
 			debugView.handleEvents();
 #endif
 		
@@ -148,19 +148,17 @@ int main(int argc, char *args[]){
 			irqExit = true;
 		}
 
-		int thumbBit = (cprs >> 5) & 1;
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
-			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (thumbBit ? opCode & 0xFFFF : opCode) << " ";
+			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
 
-		thumbBit ? thumbExecute(opCode) : ARMExecute(opCode);
+		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 
 		if (irqExit){	
-			cprs &= ~0xff;
-			cprs &= ~(1 << 7);
-			cprs |= 0x10;
-			cprs |= 1 << 5;
+			cpsr.mode = USR;
+			cpsr.IRQDisable = 0;
+			cpsr.thumb = 1;
 			r = usrSys;
 			InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
 			irqExit = false;
@@ -184,7 +182,7 @@ int main(int argc, char *args[]){
 			cycles -= 240;
 		}
 		if (debug){
-			std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cprs << " SPRS " << *r[16] << endl;
+			std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS " << *r[16] << endl;
 			//std::cout << "cycles " << dec << cycles << std::endl;	
 		}
 

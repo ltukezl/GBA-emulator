@@ -10,57 +10,57 @@
 
 void negative(int result)
 {
-	result >> 31 ? SETBIT(cprs, 31) : ZEROBIT(cprs, 31);
+	cpsr.negative = result < 0;
 }
 
 void zero(int result)
 {
-	result ? ZEROBIT(cprs, 30) : SETBIT(cprs, 30);
+	cpsr.zero = result == 0;
 }
 
 void addCarry(int operand1, int operand2, int result)
 {
-	bool carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31;
-	carry ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	bool carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31 & 1;
+	cpsr.carry = carry;
 }
 
 void addOverflow(int operand1, int operand2, int result)
 {
-	bool overflow = ((operand1 & operand2 & ~result) | (~operand1 & ~operand2 & result)) >> 31;
-	overflow ? SETBIT(cprs, 28) : ZEROBIT(cprs, 28);
+	bool overflow = ((operand1 & operand2 & ~result) | (~operand1 & ~operand2 & result)) >> 31 & 1;
+	cpsr.overflow = overflow;
 }
 
 void subCarry(int operand1, int operand2, int result)
 {
-	bool carry = ((operand1 & ~operand2) | (operand1 & ~result) | (~operand2 & ~result)) >> 31;
-	carry ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	bool carry = ((operand1 & ~operand2) | (operand1 & ~result) | (~operand2 & ~result)) >> 31 & 1;
+	cpsr.carry = carry;
 }
 
 void subOverflow(int operand1, int operand2, int result)
 {
-	bool overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31;
-	overflow ? SETBIT(cprs, 28) : ZEROBIT(cprs, 28);
+	bool overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
+	cpsr.overflow = overflow;
 }
 
 //-------------------------------------------------------------------------------------------------------
 //last bit out is carry, set carry bits
 void lsl(int &saveTo, int from, int immidiate) {
 	if (immidiate > 0)
-		((unsigned)from >> (32 - immidiate) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+		cpsr.carry = ((unsigned)from >> (32 - immidiate) & 1);
 
 	saveTo = from << immidiate;
 	zero(saveTo);
 	negative(saveTo);
 }
 void lsr(int &saveTo, int from, int immidiate) {
-	((unsigned)from >> (immidiate + 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	cpsr.carry = ((unsigned)from >> (immidiate + 1) & 1);
 	saveTo = (unsigned)from >> immidiate;
 	zero(saveTo);
 	negative(saveTo);
 }
 
 void asr(int &saveTo, int from, int immidiate) {
-	(from >> ((int)immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	cpsr.carry = (from >> ((int)immidiate - 1) & 1);
 	saveTo = from >> immidiate;
 	zero(saveTo);
 	negative(saveTo);
@@ -142,7 +142,7 @@ void asrip(int &saveTo, int immidiate){
 
 void adc(int &saveTo, int immidiate){
 	int tmpOperand = saveTo;
-    saveTo = saveTo + immidiate + ((cprs >> 29) & 1);
+    saveTo = saveTo + immidiate + cpsr.carry;
 	zero(saveTo);
 	negative(saveTo);
 	addCarry(tmpOperand, immidiate, saveTo);
@@ -151,7 +151,7 @@ void adc(int &saveTo, int immidiate){
 
 void sbc(int &saveTo, int immidiate){
 	int tmpOperand = saveTo;
-	saveTo = (saveTo - immidiate) - ((~cprs >> 29) & 1);
+	saveTo = (saveTo - immidiate) - cpsr.carry;
 	zero(saveTo);
 	negative(saveTo);
 	subCarry(tmpOperand, immidiate, saveTo);
@@ -159,7 +159,7 @@ void sbc(int &saveTo, int immidiate){
 }
 
 void rorIP(int &saveTo, int immidiate){
-	(saveTo >> (immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	cpsr.carry = (saveTo >> (immidiate - 1) & 1);
 	saveTo = (saveTo << immidiate) | (saveTo >> (32 - immidiate));
 	negative(saveTo);
 	zero(saveTo);
@@ -230,42 +230,41 @@ void cmpHL(int& saveTo, int immidiate){
 
 void bx(int& saveTo, int immidiate){
 	*r[PC] = immidiate & ~ 1;
-	bool thumb = immidiate & 1;
-	thumb ? SETBIT(cprs, 5) : ZEROBIT(cprs, 5);
+	cpsr.thumb = immidiate & 1;
 }
 
 //--------------------------------------------------------
 
 int BEQ(){
-	return (cprs >> 30) & 1;
+	return cpsr.zero;
 }
 
 int BNE(){
-	return (~cprs >> 30) & 1;
+	return !cpsr.zero;
 }
 
 int BCS(){
-	return (cprs >> 29) & 1;
+	return cpsr.carry;
 }
 
 int BCC(){
-	return (~cprs >> 29) & 1;
+	return !cpsr.carry;
 }
 
 int BMI(){
-	return (cprs >> 31) & 1;
+	return cpsr.negative;
 }
 
 int BPL(){
-	return (~cprs >> 31) & 1;
+	return !cpsr.negative;
 }
 
 int BVS(){
-	return (cprs >> 28) & 1;
+	return cpsr.overflow;
 }
 
 int BVC(){
-	return (~cprs >> 28) & 1;
+	return !cpsr.overflow;
 }
 
 int BHI(){
@@ -368,7 +367,7 @@ void hiRegOperations(int opcode){
 
 	cycles += Wait0_S_cycles;
 
-	if (rs == 15 | instruction == 3)
+	if ((rs == 15) | (instruction == 3))
 		cycles += Wait0_N_cycles + 1;
 }
 

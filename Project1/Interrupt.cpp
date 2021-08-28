@@ -11,29 +11,26 @@ void interruptController(int opcode){
 	int interuptNum = opcode & 0xFF;
 
 	InterruptMaster.addr = loadFromAddress16(0x4000208, true);
-	__int32 irqDisable = (cprs >> 7) & 1;
-	if (!InterruptMaster.IRQEnabled || irqDisable){
+	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
 		return;
 	}
 
 	r = svc;
-	cprs = cprs;
+	cpsr.val = 0;
 
 	*r[14] = *r[PC];
 	//svc mode
-	cprs &= ~(1 << 5);
-	cprs &= ~0x1f;
-	cprs |= 0x93;
+	cpsr.thumb = 0;
+	cpsr.mode = SUPER;
 
 	*r[PC] = 0x8;
 }
 
 void HWInterrupts(int cycles){
 	__int32 intEnabled = loadFromAddress16(0x4000208, true) & 1;
-	__int32 irqDisable = cprs >> 7 & 1;
 	uint32_t currAddress = loadFromAddress32(*r[PC], true);
 
-	if (!intEnabled || irqDisable){
+	if (!intEnabled || cpsr.IRQDisable){
 		return;
 	}
 	/*
@@ -46,10 +43,9 @@ void HWInterrupts(int cycles){
 	*/
 	if (InterruptFlagRegister.addr != 0){
 		std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;
-		cprs &= ~(1 << 5);
-		cprs &= ~0xff;
-		cprs |= 1 << 7;
-		cprs |= 0x12;
+		cpsr.thumb = 0;
+		cpsr.IRQDisable = 1;
+		cpsr.mode = IRQ;
 		r = irq;
 		*r[LR] = *r[PC] + 4;
 		*r[PC] = 0x18;

@@ -130,34 +130,34 @@ void singleDataSwap(int opCode){
 
 void branchAndExhange(int opCode){
     *r[15] = *r[opCode & 15];
-    (*r[15] & 1) ? SETBIT(cprs, 5) : ZEROBIT(cprs, 5);
+    cpsr.thumb = (*r[15] & 1);
     *r[15] = (*r[15] & ~1);
 }
 
 void lslCond(int &saveTo, int from, int immidiate) {
 	if (immidiate > 0)
-		(from >> (32 - immidiate) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+		cpsr.carry = (from >> (32 - immidiate) & 1);
     saveTo = from << immidiate;
 	zero(saveTo);
 	negative(saveTo);
 }
 
 void lsrCond(int &saveTo, int from, int immidiate) {
-    ((unsigned)from >> (immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
     saveTo = (unsigned)from >> immidiate;
 	zero(saveTo);
 	negative(saveTo);
 }
 
 void asrCond(int &saveTo, int from, int immidiate) {
-	(from >> ((int)immidiate + 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	cpsr.carry = (from >> ((int)immidiate + 1) & 1);
     saveTo = from >> immidiate;
 	zero(saveTo);
 	negative(saveTo);
 }
 
 void rorCond(int &saveTo,int from, int immidiate){
-    (from >> (immidiate - 1) & 1) ? SETBIT(cprs, 29) : ZEROBIT(cprs, 29);
+	cpsr.carry = (from >> (immidiate - 1) & 1);
     saveTo = (from << immidiate) | (from >> (32 - immidiate));
 	zero(saveTo);
 	negative(saveTo);
@@ -222,12 +222,12 @@ void ARMAdds(int& saveTo, int operand1, int operand2){
 }
 
 void ARMAdc(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 + operand2 + ((cprs >> 29) & 1);
+	saveTo = operand1 + operand2 + cpsr.carry;
 }
 
 void ARMAdcs(int& saveTo, int operand1, int operand2){
     int tmpOperand = saveTo;
-    saveTo = operand1 + operand2 + ((cprs >> 29) & 1);
+	saveTo = operand1 + operand2 + cpsr.carry;
     zero(saveTo);
     negative(saveTo);
     addCarry(tmpOperand, operand1, saveTo);
@@ -235,12 +235,12 @@ void ARMAdcs(int& saveTo, int operand1, int operand2){
 }
 
 void ARMSbc(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 - operand2 + ((cprs >> 29) & 1) - 1;
+    saveTo = operand1 - operand2 + cpsr.carry - 1;
 }
 
 void ARMSbcs(int& saveTo, int operand1, int operand2){
     int tmpOperand = saveTo;
-    saveTo = operand1 - operand2 + ((cprs >> 29) & 1) - 1;
+	saveTo = operand1 - operand2 + cpsr.carry - 1;
     zero(saveTo);
     negative(saveTo);
     subCarry(tmpOperand, operand1, saveTo);
@@ -248,12 +248,12 @@ void ARMSbcs(int& saveTo, int operand1, int operand2){
 }
 
 void ARMRsc(int& saveTo, int operand1, int operand2){
-    saveTo = operand2 - operand1 + ((cprs >> 29) & 1) -1;
+	saveTo = operand2 - operand1 + cpsr.carry - 1;
 }
 
 void ARMRscs(int& saveTo, int operand1, int operand2){
     int tmpOperand = saveTo;
-    saveTo = operand2 - operand1 + ((cprs >> 29) & 1) - 1;
+    saveTo = operand2 - operand1 + cpsr.carry - 1;
     zero(saveTo);
     negative(saveTo);
     subCarry(operand2, tmpOperand, saveTo);
@@ -324,29 +324,27 @@ void ARMMvns(int& saveTo, int operand1, int operand2){
 }
 
 void updateMode(){
-	int mode = cprs & 0x1F;
 	//std::cout << "switched mode to " << mode << std::endl;
-	switch (mode){
-		case 16: //use enums
+	switch (cpsr.mode){
+		case USR:
 			r = usrSys;
 			break;
-		case 18:
+		case IRQ:
 			r = irq;
 			break;
-		case 19:
+		case SUPER:
 			r = svc;
 			break;
-		case 23:
+		case ABORT:
 			r = abt;
 			break;
-		case 27:
+		case UNDEF:
 			r = undef;
 			break;
-		case 31:
+		case SYS:
 			r = usrSys;
 			break;
 	}
-		
 }
 
 int ROR(unsigned int immediate, unsigned int by){
@@ -366,7 +364,7 @@ void immediateRotate(int opCode){
 			if (sprs)
 				*r[rm] = *r[16];
 			else
-				*r[rm] = cprs;
+				*r[rm] = cpsr.val;
 			updateMode();
 			codeExecuted = true;
 		}
@@ -375,9 +373,9 @@ void immediateRotate(int opCode){
 			int sprs = (opCode >> 22) & 1;
 			int rm = opCode & 0xF;
 			if (sprs)
-				cprs = *r[16];
+				cpsr.val = *r[16];
 			else
-				cprs = *r[rm];
+				cpsr.val = *r[rm];
 			updateMode();
 			codeExecuted = true;
 		}
@@ -391,14 +389,14 @@ void immediateRotate(int opCode){
 
 		if (immediate == 0){
 			if (sprs){
-				int tmp = cprs & 0xFFFFFFF;
+				int tmp = cpsr.val & 0xFFFFFFF;
 				tmp |= *r[rm] & 0xF0000000;
-				cprs = tmp;
+				cpsr.val = tmp;
 			}
 			else{
-				int tmp = cprs & 0xFFFFFFF;
+				int tmp = cpsr.val & 0xFFFFFFF;
 				tmp |= *r[rm] & 0xF0000000;
-				cprs = tmp;
+				cpsr.val = tmp;
 			}
 		}
 		else{
@@ -425,7 +423,7 @@ void immediateRotate(int opCode){
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
-			cprs = cprs;
+			cpsr.val = cpsr.val;
 			updateMode();
 		}
 		
@@ -449,7 +447,7 @@ void registerRotate(int opCode){
 	dataOperations[operationID](*r[rd], *r[rn], shiftAmount);
 
 	if (rd == 15 && (opCode >> 20) & 1){ // not tested
-		cprs = cprs;
+		cpsr.val = cpsr.val;
 		updateMode();
 	}
 
