@@ -78,6 +78,20 @@ extern union BgCnt{
 	uint16_t addr;
 }BgCnt;
 
+extern union LCDstatus{
+	struct{
+		uint16_t vblankFlag : 1;
+		uint16_t hblankFlag : 1;
+		uint16_t vCounter : 1;
+		uint16_t vIRQEn : 1;
+		uint16_t hIRQEn : 1;
+		uint16_t VcounterIRQEn : 1;
+		uint16_t: 2;
+		uint16_t LYC : 8;
+	};
+	uint16_t addr;
+}LCDstatus;
+
 //------------------------
 //gamepad
 //------------------------

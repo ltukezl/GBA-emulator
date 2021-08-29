@@ -34,8 +34,18 @@ unsigned char *memoryLayout[16] = { systemROM, unused, ExternalWorkRAM, Internal
 
 __int32 previousAddress = 0;
 
+void intWrite(uint16_t value){
+	*(unsigned short*)&(unsigned char)memoryLayout[4][0x202] = value;
+}
+
 bool specialWrites(uint32_t addr, uint32_t val){
-	if (addr == 0x03007FFC) {
+	if (addr == 0x4000202) {//iinterrupt flag clear
+		uint16_t tmp = loadFromAddress16(0x4000202, true);
+		tmp &= ~val;
+		intWrite(tmp);
+		return true;
+	}
+	if (addr == 0x03007FFC) { //iknterrupt handler mirror
 		writeToAddress32(0x3FFFFFC, val);
 		return false;
 	}

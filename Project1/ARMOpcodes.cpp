@@ -17,6 +17,8 @@ void ARMBranch(int opCode){
     int location = opCode & 0xFFFFFF; //24 bits
 	location = (location << 2) + 4;
     *r[PC] += signExtend<26>(location);
+	if (debug)
+		std::cout << "bx " << r[PC];
 }
 
 void incrementBase(int& baseRegister, bool nullParameter = false){
@@ -132,6 +134,8 @@ void branchAndExhange(int opCode){
     *r[15] = *r[opCode & 15];
     cpsr.thumb = (*r[15] & 1);
     *r[15] = (*r[15] & ~1);
+	if (debug)
+		std::cout << "bx " << *r[15] << " ";
 }
 
 void lslCond(int &saveTo, int from, int immidiate) {
@@ -163,7 +167,30 @@ void rorCond(int &saveTo,int from, int immidiate){
 	negative(saveTo);
 }
 
+void lslNoCond(int &saveTo, int from, int immidiate) {
+	if (immidiate > 0)
+		cpsr.carry = (from >> (32 - immidiate) & 1);
+	saveTo = from << immidiate;
+}
+
+void lsrNoCond(int &saveTo, int from, int immidiate) {
+	cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
+	saveTo = (unsigned)from >> immidiate;
+}
+
+void asrNoCond(int &saveTo, int from, int immidiate) {
+	cpsr.carry = (from >> ((int)immidiate + 1) & 1);
+	saveTo = from >> immidiate;
+}
+
+void rorNoCond(int &saveTo, int from, int immidiate){
+	cpsr.carry = (from >> (immidiate - 1) & 1);
+	saveTo = (from << immidiate) | (from >> (32 - immidiate));
+}
+
 void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
+void(*ARMshiftsNoCond[4])(int&, int, int) = { lslNoCond, lsrNoCond, asrNoCond, rorNoCond };
+char* ARMshifts_s[4] = { "lsl", "lsr", "asr", "ror" };
 
 void ARMAnd(int& saveTo, int operand1, int operand2){
     saveTo = operand1 & operand2;
@@ -355,6 +382,10 @@ void(*dataOperations[0x20])(int&, int, int) = {ARMAnd, ARMAnds, ARMEOR, ARMEORS,
 ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMTST, ARMTEQ, ARMTEQ, ARMCMP,
         ARMCMP, ARMCMN, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns};
 
+char* dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb", "rsbs",
+"add", "adds", "adc", "adcs", "sbc", "sbcs", "rsc", "rscs", "tst", "tst", "teq", "teq", "cmp",
+"cmp", "cmn", "cmn", "or", "ors", "mov", "movs", "bic", "bics", "mvn", "mvns" };
+
 void immediateRotate(int opCode){
 	bool codeExecuted = false;
 	if (((opCode >> 23) & 0x1F) == 2){
@@ -365,19 +396,29 @@ void immediateRotate(int opCode){
 				*r[rm] = *r[16];
 			else
 				*r[rm] = cpsr.val;
-			updateMode();
 			codeExecuted = true;
+
+			if (debug & sprs)
+				std::cout << "mov r" << rm << ", spsr ";
+			else if (debug & !sprs)
+				std::cout << "mov r" << rm << ", cpsr_" << cpsr.mode << " ";
 		}
 
 		else if (((opCode >> 4) & 0x3FFFF) == 0x29f00){
 			int sprs = (opCode >> 22) & 1;
 			int rm = opCode & 0xF;
 			if (sprs)
-				cpsr.val = *r[16];
-			else
+				*r[16] = *r[rm];
+			else{
 				cpsr.val = *r[rm];
-			updateMode();
+				updateMode();
+			}
 			codeExecuted = true;
+
+			if (debug & sprs)
+				std::cout << "mov cpsr_" << cpsr.mode << ", spsr ";
+			else if (debug & !sprs)
+				std::cout << "mov cpsr_" << cpsr.mode << ", r" << rm << " ";
 		}
 	}
 
@@ -391,12 +432,13 @@ void immediateRotate(int opCode){
 			if (sprs){
 				int tmp = cpsr.val & 0xFFFFFFF;
 				tmp |= *r[rm] & 0xF0000000;
-				cpsr.val = tmp;
+				*r[16] = tmp;
 			}
 			else{
 				int tmp = cpsr.val & 0xFFFFFFF;
 				tmp |= *r[rm] & 0xF0000000;
 				cpsr.val = tmp;
+				updateMode();
 			}
 		}
 		else{
@@ -417,15 +459,17 @@ void immediateRotate(int opCode){
 		int immediate = (opCode >> 7) & 0x1F;
 		int shiftId = (opCode >> 5) & 3;
 		int operationID = (opCode >> 20) & 0x1F;
-		int destBit = (opCode >> 22) & 1;
 
-		ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
+		ARMshiftsNoCond[shiftId](tmpRegister, tmpRegister, immediate);
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
 			cpsr.val = cpsr.val;
 			updateMode();
 		}
+
+		if (debug)
+			std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", r" << rn << ", " << ARMshifts_s[shiftId] << " =" << immediate << " ";
 		
 	}
 }
@@ -451,6 +495,9 @@ void registerRotate(int opCode){
 		updateMode();
 	}
 
+	if (debug)
+		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rn << ", r" << rm << " " << ARMshifts_s[shiftId] << " " << operand << " ";
+
 }
 
 void dataProcessingImmediate(int opCode){
@@ -463,6 +510,8 @@ void dataProcessingImmediate(int opCode){
 	shiftedImm = ROR(shiftedImm, shift);
     int operationID = (opCode >> 20) & 0x1F;
     dataOperations[operationID](*r[rd], operand1, shiftedImm); //shifts are taken by steps of 2 (undocumented?) TODO still bugging
+	if (debug)
+		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", " << shiftedImm << " ";
 }
 
 void halfDataTransfer(int opCode){
@@ -552,9 +601,7 @@ void multiply(int opCode){
 }
 
 void multiplyLong(int opCode){
-	for (;;);
 	std::cout << "mult long";
-	std::cin >> *r[0];
 }
 
 void singleDataTrasnferImmediatePre(int opCode){
@@ -583,6 +630,10 @@ void singleDataTrasnferImmediatePre(int opCode){
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 		break;
 	}
+	if (debug && loadStore)
+		std::cout << "ldr r" << destinationReg << " [r" << baseReg << " =" << (upDownBit ? offset : -offset) << "] ";
+	else if (debug && !loadStore)
+		std::cout << "str [r" << baseReg << " " << (upDownBit ? offset : -offset) << "] r" << destinationReg << " ";
 }
 
 void singleDataTrasnferImmediatePost(int opCode){
@@ -642,6 +693,10 @@ void singleDataTrasnferRegisterPre(int opCode){
 			*r[rn] += upDownBit ? offset : -offset;
 			*r[rd] = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
 			*r[rn] = writeBack ? *r[rn] : oldReg;
+			if (debug && byteFlag)
+				std::cout << "ldrb r" << rd << ", [r" << rn << " r" << rm << "] ";
+			else if (debug && !byteFlag)
+				std::cout << "ldr r" << rd << ", [r" << rn << " r" << rm << "] ";
 			break;
 	}
 

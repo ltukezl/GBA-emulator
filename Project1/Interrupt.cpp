@@ -5,6 +5,7 @@
 #include <iostream>
 
 int vBlankCounter = 0;
+int hBlankCounter = 0;
 bool IRQMode = false;
 
 void interruptController(int opcode){
@@ -34,22 +35,38 @@ void HWInterrupts(int cycles){
 		return;
 	}
 	
-	if (InterruptEnableRegister.vBlank){
+	if (InterruptEnableRegister.hBlank && LCDstatus.hIRQEn){
+		if (hBlankCounter > (hBlankCounter + cycles) % 1232){
+			InterruptFlagRegister.hBlank = 1;
+			LCDstatus.hblankFlag = 1;
+		}
+		hBlankCounter = (hBlankCounter + cycles) % 1232;
+	}
+
+	if (InterruptEnableRegister.vBlank && LCDstatus.vIRQEn){
 		if (vBlankCounter > (vBlankCounter + cycles) % 280896){
 			InterruptFlagRegister.vBlank = 1;
+			LCDstatus.vblankFlag = 1;
 		}
 		vBlankCounter = (vBlankCounter + cycles) % 280896;
 	}
 	
-
+	//InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	if (InterruptFlagRegister.addr != 0){
-		std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;
+		intWrite(InterruptFlagRegister.addr);
+		//debug = true;
+		if (debug)
+			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;
+		
+		r = irq;
+		*r[16] = cpsr.val;
 		cpsr.thumb = 0;
 		cpsr.IRQDisable = 1;
-		cpsr.mode = IRQ;
-		r = irq;
+		
 		*r[LR] = *r[PC] + 4;
 		*r[PC] = 0x18;
-		debug = true;
+
+		cpsr.mode = IRQ;
+		
 	}
 }

@@ -15,6 +15,8 @@ extern unsigned char GamePak[0x2000000];
 extern unsigned char GamePakSRAM[0x2000000];
 extern unsigned char* memoryLayout[16];
 
+void intWrite(uint16_t val);
+
 uint8_t loadFromAddress(uint32_t addr, bool free = false);
 uint16_t loadFromAddress16(uint32_t addr, bool free = false);
 uint32_t loadFromAddress32(uint32_t addr, bool free = false);

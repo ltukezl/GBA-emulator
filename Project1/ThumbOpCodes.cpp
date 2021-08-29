@@ -413,7 +413,6 @@ void loadStoreRegOffset(int opcode){
 }
 
 void loadStoreSignExtend(int opcode){
-	debug = true;
 	int rd = opcode & 7;
 	int rb = (opcode >> 3) & 7; // base reg
 	int ro = (opcode >> 6) & 7; // offset reg

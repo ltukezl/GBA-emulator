@@ -6,6 +6,7 @@ union InterruptFlagRegister InterruptFlagRegister;
 
 union ColorPaletteRam ColorPaletteRam;
 union BgCnt BgCnt;
+union LCDstatus LCDstatus;
 
 union KEYINPUT KEYINPUT;
 union KEYCNT KEYCNT;

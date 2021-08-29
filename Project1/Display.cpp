@@ -87,31 +87,31 @@ void Display::updatePalettes(){
 	sf::Text text;
 	text.setFont(font);
 	text.setColor(sf::Color::Red);
-	text.setCharacterSize(10);
+	text.setCharacterSize(15);
 	text.setStyle(sf::Text::Bold);
 
 	for (int i = 0; i < 10; i++){
 		char txt[16];
 		_itoa_s((*r[SP]) + i * 4, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(260, 10 * i));
+		text.setPosition(sf::Vector2f(850, 12 * i));
 		display->draw(text);
 
 
 		int value = loadFromAddress32((*r[SP]) + i * 4);
 		_itoa_s(value, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(260 + 60, 10 * i));
+		text.setPosition(sf::Vector2f(850 + 90, 12 * i));
 		display->draw(text);
 	}
 
 	char msg[512];
-	sprintf_s(msg, " PC: %02x\n R0: %02x\n R1: %02x\n R2: %02x\n R3: %02x\n R4: %02x\n R5: %02x\n R6: %02x\n R7: %02x\n FP(r11): %02x\n IP (r12): %02x\n SP: %02x\n LR: %02x\n CPSR: %02x\n Status: %02x",
-		*r[15], *r[0], *r[1], *r[2], *r[3], *r[4], *r[5], *r[6], *r[7], *r[11], *r[12], *r[13], *r[14], cpsr.val, cpsr.val);
+	sprintf_s(msg, " PC: %02x\n R0: %02x\n R1: %02x\n R2: %02x\n R3: %02x\n R4: %02x\n R5: %02x\n R6: %02x\n R7: %02x\n FP(r11): %02x\n IP (r12): %02x\n SP: %02x\n LR: %02x\n CPSR: %02x\n Status: %02x\n, zero: %01x\n, carry: %01x\n, overflow: %01x\n, negative: %01x\n",
+		*r[15], *r[0], *r[1], *r[2], *r[3], *r[4], *r[5], *r[6], *r[7], *r[11], *r[12], *r[13], *r[14], cpsr.val, *r[16], cpsr.zero, cpsr.carry, cpsr.overflow, cpsr.negative);
 
 	for (int i = 0; i < 1; i++){
 		text.setString(msg);
-		text.setPosition(sf::Vector2f(260, 110 + 10 * i));
+		text.setPosition(sf::Vector2f(850, 130 + 12 * i));
 		display->draw(text);
 	}
 	
@@ -159,6 +159,15 @@ void Display::handleEvents(){
 			if (event.key.code == sf::Keyboard::X)
 			{
 				KEYINPUT.btn_B = 0;
+			}
+			if (event.key.code == sf::Keyboard::F)
+			{
+				debug = !debug;
+			}
+			if (event.key.code == sf::Keyboard::G)
+			{
+				if (debug)
+					step = true;
 			}
 			writeToAddress16(0x4000130, KEYINPUT.addr);
 		}

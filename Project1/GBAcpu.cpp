@@ -59,6 +59,7 @@ __int32* undef[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRe
 __int32** r;	//used register
 
 union CPSR cpsr;
+bool step = false;
 //1  0  0  0
 //N  Z  C  V  = sign,zero,carry,overflow
 
@@ -97,12 +98,11 @@ int main(int argc, char *args[]){
 #else
 	r = svc;
 	*r[13] = 0x3007FE0;
+	*r[16] = 0x10;
 #endif
 	r = irq;
-	cpsr.IRQDisable = 1;
-	*r[16] = 0x8000003f;
 	*r[13] = SP_irq;
-	
+	*r[16] = 0x10;
 
 
 #if BIOS_START
@@ -137,14 +137,18 @@ int main(int argc, char *args[]){
 
 	
 	int refreshRate = 0;
-	//debug = true;
 	while (true){
 #if GPU
 		if (debug | (refreshRate > 10000))
 			debugView.handleEvents();
 #endif
-		if (*r[LR] == 0x1fffffff)
-			debug = true;
+		if (debug && !step){
+			continue;
+		}
+		step = false;
+		if (*r[15] == 0x8021c38){
+		//	debug = true;
+		}
 		if (*r[15] == 0x13c){
 			irqExit = true;
 		}
@@ -152,24 +156,24 @@ int main(int argc, char *args[]){
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
-			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
+			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << dec;
 
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 
 		if (irqExit){	
-			cpsr.mode = USR;
-			cpsr.IRQDisable = 0;
-			cpsr.thumb = 1;
+			cpsr.val = *r[16];
 			r = usrSys;
 			InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
 			irqExit = false;
-			std::cout << "PC now 0x" << std::hex << *r[PC] << std::dec << std::endl;
+			if (debug)
+				std::cout << "PC now 0x" << std::hex << *r[PC] << std::dec << std::endl;
 		}
-		//InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
-		//InterruptEnableRegister.addr = loadFromAddress16(0x4000200);
+		InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
+		InterruptEnableRegister.addr = loadFromAddress16(0x4000200, true);
+		LCDstatus.addr = loadFromAddress16(0x4000004, true);
 		startDMA();
 		updateTimers();
-		//HWInterrupts(cycles);
+		HWInterrupts(cycles);
 #if GPU
 		if (debug | (refreshRate > 10000)){
 			debugView.updatePalettes();
@@ -181,6 +185,15 @@ int main(int argc, char *args[]){
 		if (cycles >= 240){
 			memoryLayout[4][6]++;
 			cycles -= 240;
+
+			if (LCDstatus.LYC == memoryLayout[4][6] && LCDstatus.VcounterIRQEn && InterruptEnableRegister.vCounter){
+				InterruptFlagRegister.vCounter = 1;
+				LCDstatus.vCounter = 1;
+			}
+
+			if (memoryLayout[4][6] > 227)
+				memoryLayout[4][6] = 0;
+
 		}
 		if (debug){
 			//std::cout << hex << *r[0] << " " << *r[1] << " " << *r[2] << " " << *r[3] << " " << *r[4] << " " << *r[5] << " " << *r[6] << " " << *r[7] << " " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS " << *r[16] << endl;
