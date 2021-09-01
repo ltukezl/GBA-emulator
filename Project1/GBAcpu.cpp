@@ -149,7 +149,7 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8000364 ){
+		if (*r[PC] == 0x800052c ){
 			debug = true;
 		}
 		if (*r[15] == 0x13c || *r[15] == 0x188){

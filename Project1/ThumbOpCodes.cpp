@@ -6,8 +6,14 @@
 #include "Constants.h"
 #include "ThumbOpCodes.h"
 
-#define SETBIT(REG, POS) (REG |= (1 << POS))
-#define ZEROBIT(REG, POS) (REG &= (~(1<< POS)))
+uint32_t highestBit(uint32_t v){
+	union { unsigned int u[2]; double d; } t; // temp
+
+	t.u[0] = 0x43300000;
+	t.u[1] = v;
+	t.d -= 4503599627370496.0;
+	return (t.u[1] >> 20) - 0x3FF;
+}
 
 void negative(int result)
 {
@@ -174,7 +180,7 @@ void adc(int &saveTo, int immidiate){
 
 void sbc(int &saveTo, int immidiate){
 	int tmpOperand = saveTo;
-	saveTo = (saveTo - immidiate) - cpsr.carry;
+	saveTo = (saveTo - immidiate) - !cpsr.carry;
 	zero(saveTo);
 	negative(saveTo);
 	subCarry(tmpOperand, immidiate, saveTo);
@@ -401,8 +407,10 @@ void hiRegOperations(int opcode){
 	int rd = opcode & 0x07; //register, destination
 	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
 	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
-	if ((rd | hi1) == 15)
+	if ((rd | hi1) == 15){
+		*r[rd | hi1] += 2;
 		hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs] & ~1);
+	}
 	else
 		hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs]);
 
@@ -549,15 +557,15 @@ void loadSPRelative(int opcode){
 
 
 void loadAddress(int opcode){
-	int rs = ((opcode >> 11) & 1) ? *r[SP] : ((*r[PC] & ~2) + 4);
+	int rs = ((opcode >> 11) & 1) ? *r[SP] : ((*r[PC] + 2) & ~2);
 	int rd = (opcode >> 8) & 0x07;
 	int immediate = (opcode & 0xFF) << 2;
 	*r[rd] = immediate + rs;
 
 	cycles += Wait0_S_cycles;
-	if (debug && rs)
+	if (debug && ((opcode >> 11) & 1))
 		std::cout << "add r" << rd << ", SP, 0x" << immediate << " ";
-	if (debug && !rs)
+	if (debug && !((opcode >> 11) & 1))
 		std::cout << "add r" << rd << ", PC, 0x" << immediate << " ";
 }
 
