@@ -130,7 +130,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program4.bin", "rb");
+	fopen_s(&file, "thumb.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
     //fopen_s(&file, args[1], "rb");
 	fread(GamePak, 0x2000000, 1, file);
@@ -139,19 +139,20 @@ int main(int argc, char *args[]){
 	memoryInits();
 	
 	int refreshRate = 0;
+	//debug = true;
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 10000))
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			//continue;
+			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x350 ){
-			//debug = true;
+		if (*r[PC] == 0x8000364 ){
+			debug = true;
 		}
-		if (*r[15] == 0x13c){
+		if (*r[15] == 0x13c || *r[15] == 0x188){
 			irqExit = true;
 		}
 

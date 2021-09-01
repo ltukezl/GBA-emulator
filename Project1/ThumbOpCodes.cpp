@@ -44,23 +44,49 @@ void subOverflow(int operand1, int operand2, int result)
 void lsl(int &saveTo, int from, int immidiate) {
 	if (immidiate > 0)
 		cpsr.carry = ((unsigned)from >> (32 - immidiate) & 1);
-
-	saveTo = from << immidiate;
-	zero(saveTo);
-	negative(saveTo);
+	if (immidiate > 31){
+		saveTo = 0;
+		zero(saveTo);
+	}
+	else{
+		saveTo = from << immidiate;
+		zero(saveTo);
+		negative(saveTo);
+	}
 }
 void lsr(int &saveTo, int from, int immidiate) {
-	cpsr.carry = ((unsigned)from >> (immidiate + 1) & 1);
-	saveTo = (unsigned)from >> immidiate;
-	zero(saveTo);
-	negative(saveTo);
+	if (immidiate != 0)
+		cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
+	if (immidiate > 31){
+		saveTo = 0;
+		zero(saveTo);
+	}
+	else{
+		saveTo = (unsigned)from >> immidiate;
+		zero(saveTo);
+		negative(saveTo);
+	}
 }
 
 void asr(int &saveTo, int from, int immidiate) {
-	cpsr.carry = (from >> ((int)immidiate - 1) & 1);
-	saveTo = from >> immidiate;
-	zero(saveTo);
-	negative(saveTo);
+	if (immidiate != 0)
+		cpsr.carry = (from >> ((int)immidiate - 1) & 1);
+	if (immidiate > 31 && from & 0x80000000){
+		saveTo = 0xFFFFFFFF;
+		negative(saveTo);
+		cpsr.carry = 1;
+	}
+	else if (immidiate > 31)
+	{
+		saveTo = 0;
+		zero(saveTo);
+		cpsr.carry = 0;
+	}
+	else{
+		saveTo = from >> immidiate;
+		zero(saveTo);
+		negative(saveTo);
+	}
 }
 //--------------------------------------------------------
 void add(int &saveTo, int from, int immidiate) {
@@ -155,11 +181,25 @@ void sbc(int &saveTo, int immidiate){
 	subOverflow(tmpOperand, immidiate, saveTo);
 }
 
-void rorIP(int &saveTo, int immidiate){
-	cpsr.carry = (saveTo >> (immidiate - 1) & 1);
-	saveTo = (saveTo << immidiate) | (saveTo >> (32 - immidiate));
-	negative(saveTo);
-	zero(saveTo);
+void rorIP(int &saveTo, int immidiate){ 
+	if (immidiate > 32){
+		cpsr.carry = 0;
+		rorIP(saveTo, immidiate - 32);
+	}
+	else if (immidiate == 1){
+		uint32_t tmp = saveTo;
+		saveTo = tmp >> 1 | cpsr.carry << 31;
+		cpsr.carry = tmp & 1;
+		negative(saveTo);
+		zero(saveTo);
+	}
+	else{
+		if (immidiate != 0)
+			cpsr.carry = (saveTo >> (immidiate - 1) & 1);
+		saveTo = (saveTo << immidiate) | (saveTo >> (32 - immidiate));
+		negative(saveTo);
+		zero(saveTo);
+	}
 }
 
 void tst(int &operand1, int operand2){
@@ -307,7 +347,10 @@ char* conditions_s[14] = { "beq", "bne", "bcs", "bcc", "bmi", "bpl", "bvs", "bvc
 void moveShiftedRegister(int opcode){
 	union moveShiftedRegisterOp op;
 	op.op = opcode;
-	shifts[op.instruction](*r[op.destination], *r[op.source], op.immediate);
+	if (op.immediate == 0 && (op.instruction == 1 || op.instruction == 2))
+		shifts[op.instruction](*r[op.destination], *r[op.source], 32);
+	else
+		shifts[op.instruction](*r[op.destination], *r[op.source], op.immediate);
 
 	cycles += Wait0_S_cycles;
 	if (debug)
@@ -358,7 +401,10 @@ void hiRegOperations(int opcode){
 	int rd = opcode & 0x07; //register, destination
 	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
 	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
-	hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs]);// PC as operand, broken?
+	if ((rd | hi1) == 15)
+		hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs] & ~1);
+	else
+		hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs]);
 
 	cycles += Wait0_S_cycles;
 
@@ -739,7 +785,6 @@ int thumbExecute(__int16 opcode){
 					{
 					case 15: //software interrupt
 						interruptController();	
-						std::cout << std::hex << "interrpt " << *r[15] << " ";
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);

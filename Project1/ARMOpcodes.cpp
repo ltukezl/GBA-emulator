@@ -32,19 +32,28 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
     __int16 baseReg = (opCode >> 16) & 15;
     int upDownBit = (opCode >> 23) & 1;
     int writeBack = (opCode >> 21) & 1;
+	int usrMode = (opCode >> 22) & 1;
 	__int16 regList = opCode & 0xFFFF;
     int oldBase = *r[baseReg];
+
+	if (usrMode)
+		std::cout << "usr mode not implemented";
+
+	if (debug)
+		std::cout << "push ";
 
     if(((opCode >> 15)&1) & ~upDownBit){
         a(*r[baseReg], *r[15] + 12);
         b(*r[baseReg], *r[15] + 12);
     }
 
-    for(int i = 0; i <15; i++){
+    for(int i = 0; i < 15; i++){
 		if (upDownBit){
 			if (regList & 1){
 				a(*r[baseReg], *r[i]);
 				b(*r[baseReg], *r[i]);
+				if (debug)
+					std::cout << "r" << i << " ";
 			}
 			regList >>= 1;
 		}
@@ -53,6 +62,8 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 			if (regList & 0x4000){
 				a(*r[baseReg], *r[14-i]);
 				b(*r[baseReg], *r[14-i]);
+				if (debug)
+					std::cout << "r" << 14 - i << " ";
 			}
 			regList <<= 1;
 		}
@@ -71,14 +82,23 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	int baseReg = (opCode >> 16) & 15;
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
+	int usrMode = (opCode >> 22) & 1;
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
 	
-	for (int i = 0; i < 15; i++){
+	if (usrMode)
+		std::cout << "usr mode not implemented";
+
+	if (debug)
+		std::cout << "pop ";
+
+	for (int i = 0; i <= 15; i++){
 		if (upDownBit){
 			if (regList & 1){
 				*r[i] = a(*r[baseReg], false);
 				b(*r[baseReg], false);
+				if (debug)
+					std::cout << "r" << i << " ";
 			}
 			regList >>= 1;
 		}
@@ -86,6 +106,8 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 			if (regList & 0x4000){
 				*r[15-i] = a(*r[baseReg], false);
 				b(*r[baseReg], false);
+				if (debug)
+					std::cout << "r" << 15 - i << " ";
 			}
 			regList <<= 1;
 		}
@@ -380,6 +402,10 @@ int ROR(unsigned int immediate, unsigned int by){
 	return (immediate >> by) | (immediate << (32 - by));
 }
 
+int RORnoCond(unsigned int immediate, unsigned int by){
+	return (immediate >> by) | (immediate << (32 - by));
+}
+
 void(*dataOperations[0x20])(int&, int, int) = {ARMAnd, ARMAnds, ARMEOR, ARMEORS, ARMSub, ARMSubs, ARMRsb, ARMRsbs,
 ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMTST, ARMTEQ, ARMTEQ, ARMCMP,
         ARMCMP, ARMCMN, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns};
@@ -508,8 +534,15 @@ void dataProcessingImmediate(int opCode){
 	int operand1 = (rs == 15) ? *r[rs] + 4 : *r[rs];
     int immediate = opCode  & 0xFF;
     int shift = (opCode >> 8) & 0xF;
-	int shiftedImm = ROR(immediate, shift);
-	shiftedImm = ROR(shiftedImm, shift);
+	int shiftedImm = 0;
+	if (rs != 0){
+		shiftedImm = RORnoCond(immediate, shift);
+		shiftedImm = RORnoCond(shiftedImm, shift);
+	}
+	else{
+		shiftedImm = RORnoCond(immediate, shift);
+		shiftedImm = RORnoCond(shiftedImm, shift);
+	}
     int operationID = (opCode >> 20) & 0x1F;
     dataOperations[operationID](*r[rd], operand1, shiftedImm);
 	if (debug)
@@ -740,7 +773,6 @@ void ARMExecute(int opCode){
         switch(opCodeType){
 			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
 				interruptController();
-				std::cout << std::hex << "interrpt " << *r[15] << " ";
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA
 				break;

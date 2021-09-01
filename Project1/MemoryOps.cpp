@@ -16,7 +16,7 @@ uint32_t OAMStart = 0x07000000;
 uint32_t GamePakStart = 0x08000000;
 uint32_t SP_svc = 0x03007F00;
 uint32_t SP_irq = 0x03007FA0;
-uint32_t SP_usr = 0x03007FEA;
+uint32_t SP_usr = 0x03007F00;
 
 //recheck waht should be done on unused regions, breath of fire writes to "unused" area
 unsigned char systemROM[0x4000];
