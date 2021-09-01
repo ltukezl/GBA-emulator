@@ -202,7 +202,7 @@ void rorIP(int &saveTo, int immidiate){
 	else{
 		if (immidiate != 0)
 			cpsr.carry = (saveTo >> (immidiate - 1) & 1);
-		saveTo = (saveTo << immidiate) | (saveTo >> (32 - immidiate));
+		saveTo = (saveTo >> immidiate) | (saveTo << (32 - immidiate));
 		negative(saveTo);
 		zero(saveTo);
 	}
@@ -456,13 +456,13 @@ void loadStoreRegOffset(int opcode){
 		cycles += Wait0_N_cycles + 1; 
 
 	if (debug && byteFlag && !loadFlag)
-		std::cout << "strb r" << rd << " [" << rb << ", " << ro << " ]";
+		std::cout << "strb r" << rd << " [r" << rb << ", r" << ro << " ]";
 	else if (debug && !byteFlag && !loadFlag)
-		std::cout << "str r" << rd << " [" << rb << ", " << ro << " ]";
+		std::cout << "str r" << rd << " [r" << rb << ", r" << ro << " ]";
 	else if (debug && byteFlag && loadFlag)
-		std::cout << "ldrb r" << rd << " [" << rb << ", " << ro << " ]";
+		std::cout << "ldrb r" << rd << " [r" << rb << ", r" << ro << " ]";
 	else if (debug && !byteFlag && loadFlag)
-		std::cout << "ldr r" << rd << " [" << rb << ", " << ro << " ]";
+		std::cout << "ldr r" << rd << " [r" << rb << ", r" << ro << " ]";
 	
 }
 
@@ -478,8 +478,9 @@ void loadStoreSignExtend(int opcode){
 		*r[rd] = loadFromAddress16(*r[rb] + *r[ro]);
 	else if (signFlag && !hFlag) //ldsb
 		*r[rd] = signExtend<8>(loadFromAddress(*r[rb] + *r[ro]));
-	else //ldsh
+	else{ //ldsh
 		*r[rd] = signExtend<16>(loadFromAddress16(*r[ro] + *r[rb]));
+	}
 
 	cycles += 1;
 	if (!hFlag && !signFlag)

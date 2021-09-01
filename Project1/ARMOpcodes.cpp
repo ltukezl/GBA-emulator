@@ -4,6 +4,7 @@
 #include "MemoryOps.h"
 #include "Constants.h"
 #include "interrupt.h"
+#include <stdint.h>
 
 int noCond(){
     return 1;
@@ -402,7 +403,7 @@ int ROR(unsigned int immediate, unsigned int by){
 	return (immediate >> by) | (immediate << (32 - by));
 }
 
-int RORnoCond(unsigned int immediate, unsigned int by){
+uint32_t RORnoCond(uint32_t immediate, uint32_t by){
 	return (immediate >> by) | (immediate << (32 - by));
 }
 

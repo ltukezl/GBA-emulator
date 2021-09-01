@@ -2,6 +2,7 @@
 #include "Constants.h"
 #include "MemoryOps.h"
 #include "GBAcpu.h"
+#include "armopcodes.h"
 #include "iostream"
 #include "timers.h"
 #include <algorithm>
@@ -94,6 +95,7 @@ void writeToAddress16(uint32_t address, uint16_t value){
 
 void writeToAddress32(uint32_t address, uint32_t value){
 	address &= ~0xF0000000;
+	address &= ~1;
 	int mask = (address >> 24) & 15;
 	if (!specialWrites(address, value)){
 		*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
@@ -138,11 +140,14 @@ uint16_t loadFromAddress16(uint32_t address, bool free){
 	if (specialReads(address, result, loadFromAddress16)){
 		return result;
 	}
+
 	return *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];;
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
+	bool misaligned = address & 1;
 	address &= ~0xF0000000;
+	address &= ~1;
     int mask = (address >> 24) & 15;
 
 	if (!free){
@@ -158,7 +163,9 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	if (specialReads(address, result, loadFromAddress32)){
 		return result;
 	}
-	return *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];;
+	if (misaligned)
+		return RORnoCond(*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0], 8);
+	return *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
 }
 
 void PUSH(int value){
