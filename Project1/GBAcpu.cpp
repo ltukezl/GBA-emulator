@@ -130,7 +130,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program4.bin", "rb");
+	fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
     //fopen_s(&file, args[1], "rb");
 	fread(GamePak, 0x2000000, 1, file);
@@ -149,8 +149,8 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8000724 ){
-			//debug = true;
+		if (*r[PC] == 0x800024c ){
+			debug = true;
 		}
 		if (*r[15] == 0x13c || *r[15] == 0x188){
 			irqExit = true;

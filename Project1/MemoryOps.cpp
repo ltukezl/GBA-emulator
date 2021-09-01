@@ -6,6 +6,7 @@
 #include "iostream"
 #include "timers.h"
 #include <algorithm>
+#include "memoryMappedIO.h"
 
 uint32_t systemROMStart = 0x00000000;
 uint32_t ExternalWorkRAMStart = 0x02000000;
@@ -40,7 +41,15 @@ void intWrite(uint16_t value){
 }
 
 bool specialWrites(uint32_t addr, uint32_t val){
-	if (addr == 0x4000202) {//iinterrupt flag clear
+	if (addr >= 0x2040000 && addr <= 0x2FFFFFF){
+		writeToAddress32(addr - 0x40000, val);
+		return true;
+	}
+	else if (addr >= 0x3008000 && addr <= 0x3FFFFFF){
+		writeToAddress32(addr - 0x8000, val);
+		return true;
+	}
+	else if (addr == 0x4000202) {//iinterrupt flag clear
 		uint16_t tmp = loadFromAddress16(0x4000202, true);
 		tmp &= ~val;
 		intWrite(tmp);
@@ -53,17 +62,53 @@ bool specialWrites(uint32_t addr, uint32_t val){
 	else if (addr >= 0x4000100 && addr <= 0x400010E){
 		return timerReloadWrite(addr, val);
 	}
+	else if (addr >= 0x5000400 && addr <= 0x5FFFFFF){
+		writeToAddress32(addr - 0x400, val);
+		return true;
+	}
+	else if (addr >= 0x6020000 && addr <= 0x6FFFFFF){
+		writeToAddress32(addr - 0x20000, val);
+		return true;
+	}
+	else if (addr >= 0x7000400 && addr <= 0x7FFFFFF){
+		writeToAddress32(addr - 0x4000, val);
+		return true;
+	}
 	return false;
 }
 
 template<typename T, typename res>
 bool specialReads(uint32_t addr, res& result, T func){
-	if (addr >= 0x03007F00 && addr <= 0x03007FFF) {
+	if (addr >= 0x2040000 && addr <= 0x2FFFFFF){
+		result = func(addr - 0x40000, true);
+		return true;
+	}
+	else if (addr >= 0x3008000 && addr < 0x3FFFF00){
+		result = func(addr - 0x8000, true);
+		return true;
+	}
+	else if (addr >= 0x03007F00 && addr <= 0x03007FFF) {
 		result = func(addr | 0xFF8000, true);
 		return true;
 	}
 	else if (addr & ~(0xFF << 16) == 0x4000800){
 		result = func(0x4000800, true);
+		return true;
+	}
+	else if (addr >= 0x05000400 && addr <= 0x05FFFFFF) {
+		result = func(addr - 0x400, true);
+		return true;
+	}
+	else if (addr >= 0x06018000 && addr < 0x06020000) {
+		result = func(addr - 0x18000, true);
+		return true;
+	}
+	else if (addr >= 0x06020000 && addr <= 0x06040000) {
+		result = func(addr - 0x20000, true);
+		return true;
+	}
+	else if (addr >= 0x07000400 && addr <= 0x07FFFFFF) {
+		result = func(addr - 0x400, true);
 		return true;
 	}
 	else if (addr >= 0x0c000000){
@@ -80,7 +125,7 @@ bool specialReads(uint32_t addr, res& result, T func){
 void writeToAddress(uint32_t address, uint8_t value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
-	if (!specialWrites(address, value)){
+	if (!specialWrites(address, value) & address < 0x7000000){
 		memoryLayout[mask][address - (mask << 24)] = value;
 	}
 }
