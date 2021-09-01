@@ -87,7 +87,7 @@ int main(int argc, char *args[]){
 	writeToAddress16(0x4000130, 0xFFFF); // input register, 0 = pressed down, 1 = released
 
 #if GPU
-	Display debugView(1024, 496, "paletteWindow");
+	Display debugView(1280, 496, "paletteWindow");
 	//Display gameDisplay(240, 160, "game");
 #endif
 	std::cout << *(int*)argc << "\n";
@@ -95,6 +95,7 @@ int main(int argc, char *args[]){
 #if BIOS_START
 	r = usrSys;
 	*r[13] = SP_usr;
+	*r[16] = 0x10;
 #else
 	r = svc;
 	*r[13] = 0x3007FE0;
@@ -108,7 +109,7 @@ int main(int argc, char *args[]){
 #if BIOS_START
 	r = svc;
 	*r[13] = SP_svc;
-	cprs = 0x10;
+	cpsr.mode = SUPER;
 #else
 	r = usrSys;
 	*r[13] = SP_usr;
@@ -132,22 +133,23 @@ int main(int argc, char *args[]){
 	fopen_s(&file, "program4.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
     //fopen_s(&file, args[1], "rb");
-	fread(GamePak, 0x990000, 1, file);
+	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 
+	memoryInits();
 	
 	int refreshRate = 0;
 	while (true){
 #if GPU
-		if (debug | (refreshRate > 10000))
+		if (debug || (refreshRate > 10000))
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			continue;
+			//continue;
 		}
 		step = false;
-		if (*r[15] == 0x8021c38){
-		//	debug = true;
+		if (*r[PC] == 0x350 ){
+			//debug = true;
 		}
 		if (*r[15] == 0x13c){
 			irqExit = true;

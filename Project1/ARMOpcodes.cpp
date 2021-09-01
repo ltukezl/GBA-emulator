@@ -3,9 +3,7 @@
 #include "ThumbOpCodes.h"
 #include "MemoryOps.h"
 #include "Constants.h"
-
-#define SETBIT(REG, POS) (REG |= (1 << POS))
-#define ZEROBIT(REG, POS) (REG &= (~(1<< POS)))
+#include "interrupt.h"
 
 int noCond(){
     return 1;
@@ -375,6 +373,10 @@ void updateMode(){
 }
 
 int ROR(unsigned int immediate, unsigned int by){
+	if (by == 0)
+		cpsr.carry = immediate >> 31 & 1;
+	else
+		cpsr.carry = (immediate >> (by - 1)) & 1;
 	return (immediate >> by) | (immediate << (32 - by));
 }
 
@@ -509,7 +511,7 @@ void dataProcessingImmediate(int opCode){
 	int shiftedImm = ROR(immediate, shift);
 	shiftedImm = ROR(shiftedImm, shift);
     int operationID = (opCode >> 20) & 0x1F;
-    dataOperations[operationID](*r[rd], operand1, shiftedImm); //shifts are taken by steps of 2 (undocumented?) TODO still bugging
+    dataOperations[operationID](*r[rd], operand1, shiftedImm);
 	if (debug)
 		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", " << shiftedImm << " ";
 }
@@ -737,8 +739,8 @@ void ARMExecute(int opCode){
         int subType;
         switch(opCodeType){
 			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
-				std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1" << std::endl;
-				
+				interruptController();
+				std::cout << std::hex << "interrpt " << *r[15] << " ";
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA
 				break;

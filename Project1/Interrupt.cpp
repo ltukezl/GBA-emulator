@@ -8,19 +8,18 @@ int vBlankCounter = 0;
 int hBlankCounter = 0;
 bool IRQMode = false;
 
-void interruptController(int opcode){
-	int interuptNum = opcode & 0xFF;
-
+void interruptController(){
+	debug = false;
 	InterruptMaster.addr = loadFromAddress16(0x4000208, true);
 	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
 		return;
 	}
 
 	r = svc;
-	cpsr.val = 0;
-
 	*r[14] = *r[PC];
+	*r[16] = cpsr.val;
 	//svc mode
+	cpsr.IRQDisable = 1;
 	cpsr.thumb = 0;
 	cpsr.mode = SUPER;
 
@@ -28,10 +27,9 @@ void interruptController(int opcode){
 }
 
 void HWInterrupts(int cycles){
-	__int32 intEnabled = loadFromAddress16(0x4000208, true) & 1;
-	uint32_t currAddress = loadFromAddress32(*r[PC], true);
+	InterruptMaster.addr = loadFromAddress16(0x4000208, true) & 1;
 
-	if (!intEnabled || cpsr.IRQDisable){
+	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
 		return;
 	}
 	
@@ -54,7 +52,7 @@ void HWInterrupts(int cycles){
 	//InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	if (InterruptFlagRegister.addr != 0){
 		intWrite(InterruptFlagRegister.addr);
-		//debug = true;
+		debug = false;
 		if (debug)
 			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;
 		

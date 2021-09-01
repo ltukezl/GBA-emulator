@@ -1,6 +1,7 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 #include <SFML/Graphics.hpp>
+#include <stdint.h>
 
 
 struct Ring{
@@ -13,8 +14,9 @@ class Display{
 	sf::RenderWindow* display;
 	char* name;
 
-	sf::Color bgPaletteColors[256];
-	sf::Image tileMap1[32 * 32];
+	sf::Color PaletteColors[256 * 2];
+	sf::Image tileMap[32 * 32 * 2];
+	sf::Image objMap[32 * 32 * 2];
 
 public:
 	Display(int, int, char*);
@@ -28,6 +30,13 @@ public:
 	void updateStack();
 
 	void updateRegisterView();
+
+	void fillBG(uint32_t regOffset);
+
+	void fillTiles(uint32_t regOffset);
+
+	void fillObjects(uint32_t regOffset);
+
 private:
 	int cnt;
 	Ring* txtRing;

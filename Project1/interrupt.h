@@ -1,5 +1,5 @@
 #pragma once
 
-void interruptController(int value);
+void interruptController();
 
 void HWInterrupts(int);

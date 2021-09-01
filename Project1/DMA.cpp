@@ -23,21 +23,24 @@ void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint
 		else if (DMAcontrol.sourceCtrl == 1)
 			sourceAddress -= DMAcontrol.transferType ? 4 : 2;
 	}
-
-	if (InterruptEnableRegister.DMA0 && i == 0 && DMAcontrol.irq)
-		InterruptFlagRegister.DMA0 = 1;
-	else if (InterruptEnableRegister.DMA1 && i == 1 && DMAcontrol.irq)
-		InterruptFlagRegister.DMA1 = 1;
-	else if (InterruptEnableRegister.DMA2 && i == 2 && DMAcontrol.irq)
-		InterruptFlagRegister.DMA2 = 1;
-	else if (InterruptEnableRegister.DMA3 && i == 3 && DMAcontrol.irq)
-		InterruptFlagRegister.DMA3 = 1;
+	if (DMAcontrol.irq){
+		if (InterruptEnableRegister.DMA0 && i == 0)
+			InterruptFlagRegister.DMA0 = 1;
+		else if (InterruptEnableRegister.DMA1 && i == 1)
+			InterruptFlagRegister.DMA1 = 1;
+		else if (InterruptEnableRegister.DMA2 && i == 2)
+			InterruptFlagRegister.DMA2 = 1;
+		else if (InterruptEnableRegister.DMA3 && i == 3)
+			InterruptFlagRegister.DMA3 = 1;
+		intWrite(InterruptFlagRegister.addr);
+	}
 }
 
 void startDMA(){
+	InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	for (int i = 0; i < 4; i++){
 		DMAcontrol.addr = loadFromAddress32(0x40000BA + 0xC * i);
-		if (DMAcontrol.enable){
+		if ((DMAcontrol.enable) || (InterruptFlagRegister.hBlank && DMAcontrol.irq == 2) || (InterruptFlagRegister.vBlank && DMAcontrol.irq == 1)){
 			uint32_t sourceAddress = loadFromAddress32(0x40000B0 + 0xC * i, true);
 			uint32_t destinationAddress = loadFromAddress32(0x40000B4 + 0xC * i, true);
 			uint32_t wordCount = loadFromAddress16(0x40000B8 + 0xC * i, true);

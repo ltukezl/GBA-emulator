@@ -738,8 +738,8 @@ int thumbExecute(__int16 opcode){
 					switch (condition)
 					{
 					case 15: //software interrupt
-						//interruptController(opcode);	
-						//std::cout << std::hex << "interrpt " << *r[15] << " ";
+						interruptController();	
+						std::cout << std::hex << "interrpt " << *r[15] << " ";
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);

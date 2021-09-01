@@ -45,8 +45,8 @@ bool specialWrites(uint32_t addr, uint32_t val){
 		intWrite(tmp);
 		return true;
 	}
-	if (addr == 0x03007FFC) { //iknterrupt handler mirror
-		writeToAddress32(0x3FFFFFC, val);
+	else if (addr >= 0x03007F00 && addr <= 0x03007FFF) { //iknterrupt handler mirror
+		writeToAddress32(addr | 0xFF8000, val);
 		return false;
 	}
 	else if (addr >= 0x4000100 && addr <= 0x400010E){
@@ -55,10 +55,25 @@ bool specialWrites(uint32_t addr, uint32_t val){
 	return false;
 }
 
-uint32_t specialReads(uint32_t addr){
-	if (addr == 0x03007FFC) {
-		return loadFromAddress32(0x3FFFFFC);
+template<typename T, typename res>
+bool specialReads(uint32_t addr, res& result, T func){
+	if (addr >= 0x03007F00 && addr <= 0x03007FFF) {
+		result = func(addr | 0xFF8000, true);
+		return true;
 	}
+	else if (addr & ~(0xFF << 16) == 0x4000800){
+		result = func(0x4000800, true);
+		return true;
+	}
+	else if (addr >= 0x0c000000){
+		result = func(addr - 0x4000000, true);
+		return true;
+	}
+	else if (addr >= 0x0A000000){
+		result = func(addr - 0x2000000, true);
+		return true;
+	}
+	return false;
 }
 
 void writeToAddress(uint32_t address, uint8_t value){
@@ -100,14 +115,16 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 			cycles += Wait0_N_cycles;
 		previousAddress = address;
 	}
-
+	uint8_t result = 0;
+	if (specialReads(address, result, loadFromAddress)){
+		return result;
+	}
 	return memoryLayout[mask][address - (mask << 24)];
 }
 
 uint16_t loadFromAddress16(uint32_t address, bool free){
 	address &= ~0xF0000000;
 	int mask = (address >> 24) & 15;
-	int number = *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
 
 	if (!free){
 		cycles += Wait0_N_cycles;
@@ -117,14 +134,16 @@ uint16_t loadFromAddress16(uint32_t address, bool free){
 			cycles += Wait0_N_cycles;
 		previousAddress = address;
 	}
-
-	return number;
+	uint16_t result = 0;
+	if (specialReads(address, result, loadFromAddress16)){
+		return result;
+	}
+	return *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];;
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
-	int number = *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
 
 	if (!free){
 		cycles += Wait0_N_cycles;
@@ -135,7 +154,11 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 		previousAddress = address;
 	}
 
-	return number;
+	uint32_t result = 0;
+	if (specialReads(address, result, loadFromAddress32)){
+		return result;
+	}
+	return *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];;
 }
 
 void PUSH(int value){
@@ -148,4 +171,8 @@ unsigned __int32 POP(){
     int value = loadFromAddress32(*r[SP]);
     *r[SP] += 4;
     return value;
+}
+
+void memoryInits(){
+	writeToAddress32(0x4000800, 0x0D000020);
 }

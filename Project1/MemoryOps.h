@@ -28,4 +28,6 @@ void writeToAddress32(uint32_t addr, uint32_t val);
 void PUSH(int);
 unsigned __int32 POP();
 
+void memoryInits();
+
 #endif

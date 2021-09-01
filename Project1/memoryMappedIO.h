@@ -54,6 +54,26 @@ extern union InterruptFlagRegister{
 //LCD
 //------------------------
 
+extern union DISPCNT{
+	struct{
+		uint16_t bgMode : 3;
+		uint16_t CGBMode : 1;
+		uint16_t displayFrame : 1;
+		uint16_t hBlankInterval : 1;
+		uint16_t objectVRAMmap : 1;
+		uint16_t forceBlank : 1;
+		uint16_t bg0Display : 1;
+		uint16_t bg1Display : 1;
+		uint16_t bg2Display : 1;
+		uint16_t bg3Display : 1;
+		uint16_t objDisplay : 1;
+		uint16_t win0Display : 1;
+		uint16_t win1Display : 1;
+		uint16_t objwinDisplay : 1;
+	};
+	uint16_t addr;
+}DISPCNT;
+
 extern union ColorPaletteRam{
 	struct{
 		uint16_t red : 5;
@@ -67,11 +87,11 @@ extern union ColorPaletteRam{
 extern union BgCnt{
 	struct{
 		uint16_t priority : 2;
-		uint16_t baseBlock : 2;
+		uint16_t tileBaseBlock : 2;
 	    uint16_t :2;
 		uint16_t mosaic : 1;
 		uint16_t palettes : 1;
-		uint16_t baseblock : 5;
+		uint16_t bgBaseblock : 5;
 		uint16_t overflow : 1;
 		uint16_t size : 2;
 	};
