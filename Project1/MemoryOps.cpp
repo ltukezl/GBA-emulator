@@ -32,6 +32,7 @@ unsigned char OAM[0x1000000];
 unsigned char GamePak[0x2000000];
 unsigned char GamePakSRAM[0x2000000];
 
+uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x2000000, 0x400, 0x400, 0x40000, 0x400, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000 };
 unsigned char *memoryLayout[16] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePakSRAM, GamePakSRAM };
 
 __int32 previousAddress = 0;
@@ -43,10 +44,6 @@ void intWrite(uint16_t value){
 bool specialWrites(uint32_t addr, uint32_t val){
 	if (addr >= 0x2040000 && addr <= 0x2FFFFFF){
 		writeToAddress32(addr - 0x40000, val);
-		return true;
-	}
-	else if (addr >= 0x3008000 && addr <= 0x3FFFFFF){
-		writeToAddress32(addr - 0x8000, val);
 		return true;
 	}
 	else if (addr == 0x4000202) {//iinterrupt flag clear
@@ -151,9 +148,6 @@ void writeToAddress32(uint32_t address, uint32_t value){
 }
 
 uint8_t loadFromAddress(uint32_t address, bool free){
-	address &= ~0xF0000000;
-    int mask = (address >> 24) & 15;
-
 	if (!free){
 		cycles += Wait0_N_cycles;
 		if (address == (previousAddress + 1))
@@ -162,6 +156,10 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 			cycles += Wait0_N_cycles;
 		previousAddress = address;
 	}
+
+	address &= ~0xF0000000;
+    int mask = (address >> 24) & 15;
+
 	uint8_t result = 0;
 	if (specialReads(address, result, loadFromAddress)){
 		return result;
@@ -170,9 +168,6 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 }
 
 uint16_t loadFromAddress16(uint32_t address, bool free){
-	address &= ~0xF0000000;
-	int mask = (address >> 24) & 15;
-
 	if (!free){
 		cycles += Wait0_N_cycles;
 		if (address == (previousAddress + 2))
@@ -181,6 +176,10 @@ uint16_t loadFromAddress16(uint32_t address, bool free){
 			cycles += Wait0_N_cycles;
 		previousAddress = address;
 	}
+
+	address &= ~0xF0000000;
+	int mask = (address >> 24) & 15;
+
 	uint16_t result = 0;
 	if (specialReads(address, result, loadFromAddress16)){
 		return result;
@@ -190,11 +189,6 @@ uint16_t loadFromAddress16(uint32_t address, bool free){
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
-	bool misaligned = address & 1;
-	address &= ~0xF0000000;
-	address &= ~1;
-    int mask = (address >> 24) & 15;
-
 	if (!free){
 		cycles += Wait0_N_cycles;
 		if (address == (previousAddress + 4))
@@ -203,6 +197,11 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 			cycles += Wait0_N_cycles;
 		previousAddress = address;
 	}
+	
+	bool misaligned = address & 1;
+	address &= ~0xF0000000;
+	address &= ~1;
+    int mask = (address >> 24) & 15;
 
 	uint32_t result = 0;
 	if (specialReads(address, result, loadFromAddress32)){
