@@ -492,77 +492,75 @@ void loadStoreSignExtend(uint16_t opcode){
 }
 
 void loadStoreImm(uint16_t opcode){
-	int loadFlag = (opcode >> 11) & 1;
-	int byteFlag = (opcode >> 12) & 1;
-	int immediate = byteFlag ? (opcode >> 6) & 0x1F : (opcode >> 4) & 0x7C; //with word access, immediate must be word aligned. thus we move is 2 less and zero 2 lsb
-	int rs = (opcode >> 3) & 0x07;
-	int rd = opcode & 0x07;
-	if (loadFlag)
-		*r[rd] = byteFlag ? loadFromAddress(*r[rs] + immediate) : loadFromAddress32(*r[rs] + immediate);
+	union loadStoreImmediate op = { opcode };
+	uint8_t immediate = op.offset << (2 * !op.byteSize);
+	uint32_t totalAddress = *r[op.baseReg] + immediate;
+
+	if (op.loadFlag && op.byteSize)
+		*r[op.destSourceReg] = loadFromAddress(totalAddress);
+	else if (op.loadFlag && !op.byteSize)
+		*r[op.destSourceReg] = loadFromAddress32(totalAddress);
+	else if (!op.loadFlag && op.byteSize)
+		writeToAddress(totalAddress, *r[op.destSourceReg]);
 	else
-		byteFlag ? writeToAddress(*r[rs] + immediate, *r[rd]) : writeToAddress32(*r[rs] + immediate, *r[rd]);
+		writeToAddress32(totalAddress, *r[op.destSourceReg]);
 
 	cycles += 1;
-	if (!loadFlag)
+	if (!op.loadFlag)
 		cycles += Wait0_N_cycles + 1;
 
-	if (debug && loadFlag)
-		std::cout << "ldr r" << rd << " [r" << rs << " " << immediate << "] ";
-	else if (debug && !loadFlag)
-		std::cout << "str [r" << rs << " " << immediate << "] r" << rd << " ";
+	if (debug && op.loadFlag)
+		std::cout << "ldr r" << op.destSourceReg << " [r" << op.baseReg << " " << immediate << "] ";
+	else if (debug && !op.loadFlag)
+		std::cout << "str [r" << op.baseReg << " " << immediate << "] r" << op.destSourceReg << " ";
 }
 
 void loadStoreHalfword(uint16_t opcode){
-	int loadFlag = (opcode >> 11) & 1;
-	int immediate = (opcode >> 5) & 0x3E; //half word alignment, 5 bits to 6 bits last bit is 0
-	int rs = (opcode >> 3) & 0x07;
-	int rd = opcode & 0x07;
-	if (loadFlag)
-		*r[rd] = loadFromAddress16(*r[rs] + immediate);
+	union loadStoreHalfWord op = { opcode };
+	int immediate = op.offset << 1; //half word alignment, 5 bits to 6 bits last bit is 0
+	if (op.loadFlag)
+		*r[op.destSourceReg] = loadFromAddress16(*r[op.baseReg] + immediate);
 	else
-		writeToAddress16(*r[rs] + immediate, *r[rd]);
+		writeToAddress16(*r[op.baseReg] + immediate, *r[op.destSourceReg]);
 
 	cycles += 1;
-	if (!loadFlag)
+	if (!op.loadFlag)
 		cycles += Wait0_N_cycles + 1;
 
-	if (debug && loadFlag)
-		std::cout << "ldrh r" << rd << " [r" << rs << " " << immediate << "] ";
-	else if (debug && !loadFlag)
-		std::cout << "strh [r" << rs << " " << immediate << "] r" << rd << " ";
+	if (debug && op.loadFlag)
+		std::cout << "ldrh r" << op.destSourceReg << " [r" << op.baseReg << " " << immediate << "] ";
+	else if (debug && !op.loadFlag)
+		std::cout << "strh [r" << op.baseReg << " " << immediate << "] r" << op.destSourceReg << " ";
 }
 
 void loadSPRelative(uint16_t opcode){
-	int loadFlag = (opcode >> 11) & 1;
-	int rd = (opcode >> 8) & 0x07;
-	int immediate = (opcode & 0xFF) << 2;
-	if (loadFlag)
-		*r[rd] = loadFromAddress32(*r[SP] + immediate);
+	union SPrelativeLoad op = { opcode };
+	if (op.loadFlag)
+		*r[op.destSourceReg] = loadFromAddress32(*r[SP] + (op.immediate << 2));
 	else
-		writeToAddress32(*r[SP] + immediate, *r[rd]);
+		writeToAddress32(*r[SP] + (op.immediate << 2), *r[op.destSourceReg]);
 
 	cycles += 1;
-	if (!loadFlag)
+	if (!op.loadFlag)
 		cycles += Wait0_N_cycles + 1;
 
-	if (debug && loadFlag)
-		std::cout << "ldr r" << rd << ", [sp " << immediate << "] ";
-	else if (debug && !loadFlag)
-		std::cout << "str [sp " << immediate << "],  r" << rd << " ";
+	if (debug && op.loadFlag)
+		std::cout << "ldr r" << op.destSourceReg << ", [sp " << op.immediate << 2 << "] ";
+	else if (debug && !op.loadFlag)
+		std::cout << "str [sp " << op.immediate << 2 << "],  r" << op.destSourceReg << " ";
 }
 
 
 void loadAddress(uint16_t opcode){
-	int rs = ((opcode >> 11) & 1) ? *r[SP] : ((*r[PC] + 2) & ~2);
-	int rd = (opcode >> 8) & 0x07;
-	int immediate = (opcode & 0xFF) << 2;
-	*r[rd] = immediate + rs;
+	union loadAddress op = { opcode };
+	int rs = op.useSP ? *r[SP] : ((*r[PC] + 2) & ~2);
+	*r[op.destination] = (op.immediate << 2) + rs;
 
 	cycles += Wait0_S_cycles;
-	if (debug && ((opcode >> 11) & 1))
-		std::cout << "add r" << rd << ", SP, 0x" << immediate << " ";
-	if (debug && !((opcode >> 11) & 1))
-		std::cout << "add r" << rd << ", PC, 0x" << immediate << " ";
+	if (debug && op.useSP)
+		std::cout << "add r" << op.destination << ", SP, 0x" << (op.immediate << 2) << " ";
+	if (debug && !op.useSP)
+		std::cout << "add r" << op.destination << ", PC, 0x" << (op.immediate << 2) << " ";
 }
 
 void addOffsetToSP(uint16_t opcode){
@@ -579,17 +577,17 @@ void addOffsetToSP(uint16_t opcode){
 }
 
 void pushpop(uint16_t opcode){
-	int immediate = opcode & 0xFF;
-	int popFlag = (opcode >> 11) & 1;
+	union pushPopReg op = { opcode };
+	int immediate = op.regList;
 
-	if (popFlag){
+	if (op.loadBit){
 		for (int i = 0; i < 8; i++){
 			if (immediate & 1){
 				*r[i] = POP();
 			}
 			immediate = immediate >> 1;
 		}
-		*r[PC] = ((opcode >> 8) & 1) ? (POP() & -2) : (*r[PC]);
+		*r[PC] = op.PCRLBit ? (POP() & -2) : (*r[PC]);
 		
 		if (immediate & 0x80)
 			cycles += 1;
@@ -599,7 +597,7 @@ void pushpop(uint16_t opcode){
 	}
 
 	else{
-		if ((opcode >> 8) & 1)
+		if (op.PCRLBit)
 			PUSH(*r[LR]);
 		for (int i = 0; i < 8; i++){
 			if (immediate & 0x80)
@@ -642,16 +640,15 @@ void multiLoad(uint16_t opcode){
 }
 
 void conditionalBranch(uint16_t opcode){
-	int immediate = opcode & 0xFF;
-	int condition = (opcode >> 8) & 0x0F;
-	*r[PC] += conditions[condition]() ? (((__int8)immediate << 1) + 2) : 0;
+	union conditionalBranchOp op = { opcode };
+	*r[PC] += conditions[op.condition]() ? ((op.immediate << 1) + 2) : 0;
 
 	cycles += Wait0_S_cycles;
-	if (conditions[condition]())
+	if (conditions[op.condition]())
 		cycles += Wait0_S_cycles + Wait0_N_cycles;
 
 	if (debug)
-		std::cout << conditions_s[condition] << " " << conditions[condition]() << " ";
+		std::cout << conditions_s[op.condition] << " " << conditions[op.condition]() << " ";
 }
 
 void unconditionalBranch(uint16_t opcode){
