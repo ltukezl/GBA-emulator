@@ -161,31 +161,65 @@ void branchAndExhange(int opCode){
 
 void lslCond(int &saveTo, int from, int immidiate) {
 	if (immidiate > 0)
-		cpsr.carry = (from >> (32 - immidiate) & 1);
-    saveTo = from << immidiate;
-	zero(saveTo);
-	negative(saveTo);
+		cpsr.carry = ((unsigned)from >> (32 - immidiate) & 1);
+	if (immidiate > 31){
+		saveTo = 0;
+		zero(saveTo);
+	}
+	else{
+		saveTo = from << immidiate;
+		zero(saveTo);
+		negative(saveTo);
+	}
 }
 
 void lsrCond(int &saveTo, int from, int immidiate) {
-	cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
-    saveTo = (unsigned)from >> immidiate;
-	zero(saveTo);
-	negative(saveTo);
+	if (immidiate != 0)
+		cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
+	if (immidiate > 31){
+		saveTo = 0;
+		zero(saveTo);
+	}
+	else{
+		saveTo = (unsigned)from >> immidiate;
+		zero(saveTo);
+		negative(saveTo);
+	}
 }
 
 void asrCond(int &saveTo, int from, int immidiate) {
-	cpsr.carry = (from >> ((int)immidiate + 1) & 1);
-    saveTo = from >> immidiate;
-	zero(saveTo);
-	negative(saveTo);
+	if (immidiate != 0)
+		cpsr.carry = (from >> ((int)immidiate - 1) & 1);
+	if (immidiate > 31 && from & 0x80000000){
+		saveTo = 0xFFFFFFFF;
+		negative(saveTo);
+		cpsr.carry = 1;
+	}
+	else if (immidiate > 31)
+	{
+		saveTo = 0;
+		zero(saveTo);
+		cpsr.carry = 0;
+	}
+	else{
+		saveTo = from >> immidiate;
+		zero(saveTo);
+		negative(saveTo);
+	}
 }
 
 void rorCond(int &saveTo,int from, int immidiate){
-	cpsr.carry = (from >> (immidiate - 1) & 1);
-    saveTo = (from << immidiate) | (from >> (32 - immidiate));
-	zero(saveTo);
-	negative(saveTo);
+	if (immidiate > 32){
+		cpsr.carry = 0;
+		rorCond(saveTo, from, immidiate - 32);
+	}
+	else{
+		if (immidiate != 0)
+			cpsr.carry = (from >> (immidiate - 1) & 1);
+		saveTo = ((unsigned)from >> immidiate) | ((unsigned)from << (32 - immidiate));
+		negative(saveTo);
+		zero(saveTo);
+	}
 }
 
 void lslNoCond(int &saveTo, int from, int immidiate) {
@@ -195,7 +229,6 @@ void lslNoCond(int &saveTo, int from, int immidiate) {
 }
 
 void lsrNoCond(int &saveTo, int from, int immidiate) {
-	cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
 	saveTo = (unsigned)from >> immidiate;
 }
 
@@ -283,20 +316,20 @@ void ARMAdcs(int& saveTo, int operand1, int operand2){
 }
 
 void ARMSbc(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 - operand2 + cpsr.carry - 1;
+    saveTo = operand1 - operand2 - !cpsr.carry;
 }
 
 void ARMSbcs(int& saveTo, int operand1, int operand2){
     int tmpOperand = saveTo;
-	saveTo = operand1 - operand2 + cpsr.carry - 1;
+	saveTo = (operand1 - operand2) - !cpsr.carry;
     zero(saveTo);
     negative(saveTo);
     subCarry(tmpOperand, operand1, saveTo);
-    subOverflow(tmpOperand, operand1, saveTo);
+	cpsr.overflow = (saveTo > 0) && !(operand1 > 0 && operand2 > 0);
 }
 
 void ARMRsc(int& saveTo, int operand1, int operand2){
-	saveTo = operand2 - operand1 + cpsr.carry - 1;
+	saveTo = operand2 - operand1 - !cpsr.carry;
 }
 
 void ARMRscs(int& saveTo, int operand1, int operand2){
@@ -371,11 +404,15 @@ void ARMMvns(int& saveTo, int operand1, int operand2){
     negative(saveTo);
 }
 
+
 void updateMode(){
 	//std::cout << "switched mode to " << mode << std::endl;
 	switch (cpsr.mode){
 		case USR:
 			r = usrSys;
+			break;
+		case FIQ:
+			r = fiq;
 			break;
 		case IRQ:
 			r = irq;
@@ -395,6 +432,17 @@ void updateMode(){
 	}
 }
 
+void ARMMSR(int& saveTo, int operand1, int operand2){
+	cpsr.val = operand2;
+	updateMode();
+}
+
+void ARMMSR2(int& saveTo, int operand1, int operand2){
+	*r[16] = operand2;
+	updateMode();
+}
+
+
 int ROR(unsigned int immediate, unsigned int by){
 	if (by == 0)
 		cpsr.carry = immediate >> 31 & 1;
@@ -407,13 +455,43 @@ uint32_t RORnoCond(uint32_t immediate, uint32_t by){
 	return (immediate >> by) | (immediate << (32 - by));
 }
 
+void rrx(int& saveTo, uint32_t from){
+	saveTo = (cpsr.carry << 31) | (from >> 1);
+	cpsr.carry = from & 1;
+	zero(saveTo);
+}
+
+void MSR(uint32_t opCode){
+	bool SPSR = (opCode >> 22) & 1;
+	union CPSR tmp_cpsr;
+	uint8_t rotate = (opCode >> 8) & 0xF;
+	uint32_t imm = opCode & 0xFF;
+	uint32_t shiftedImm = RORnoCond(imm, rotate);
+	shiftedImm = RORnoCond(shiftedImm, rotate);
+	tmp_cpsr.val = shiftedImm;
+
+	if (SPSR)
+		*r[16] = shiftedImm;
+	else {
+		if (cpsr.mode == SYS){
+			cpsr.zero = tmp_cpsr.zero;
+			cpsr.overflow = tmp_cpsr.overflow;
+			cpsr.carry = tmp_cpsr.carry;
+			cpsr.negative = tmp_cpsr.negative;
+		}
+	}
+
+	if (debug)
+		std::cout << "MSR " << (SPSR ? "SPSR " : "CPSR ") << std::hex << shiftedImm << std::dec << " ";
+}
+
 void(*dataOperations[0x20])(int&, int, int) = {ARMAnd, ARMAnds, ARMEOR, ARMEORS, ARMSub, ARMSubs, ARMRsb, ARMRsbs,
-ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMTST, ARMTEQ, ARMTEQ, ARMCMP,
-        ARMCMP, ARMCMN, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns};
+ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMTST, ARMMSR, ARMTEQ, ARMCMP,
+ARMCMP, ARMMSR2, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns };
 
 char* dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb", "rsbs",
-"add", "adds", "adc", "adcs", "sbc", "sbcs", "rsc", "rscs", "tst", "tst", "teq", "teq", "cmp",
-"cmp", "cmn", "cmn", "or", "ors", "mov", "movs", "bic", "bics", "mvn", "mvns" };
+"add", "adds", "adc", "adcs", "sbc", "sbcs", "rsc", "rscs", "tst", "tst", "msr", "teq", "cmp",
+"cmp", "msr", "cmn", "or", "ors", "mov", "movs", "bic", "bics", "mvn", "mvns" };
 
 void immediateRotate(int opCode){
 	bool codeExecuted = false;
@@ -489,7 +567,15 @@ void immediateRotate(int opCode){
 		int shiftId = (opCode >> 5) & 3;
 		int operationID = (opCode >> 20) & 0x1F;
 
-		ARMshiftsNoCond[shiftId](tmpRegister, tmpRegister, immediate);
+		if (shiftId == 3 && immediate == 0){
+			rrx(tmpRegister, tmpRegister);
+		}
+		else{
+			if (immediate == 0 && shiftId != 0)
+				immediate = 0x20;
+			ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
+		}
+
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
@@ -510,14 +596,15 @@ void registerRotate(int opCode){
 	int rm = opCode & 0xF;
 	int rs = (opCode >> 8) & 0xF;
 	int shiftId = (opCode >> 5) & 3;
-	int shiftAmount = *r[rs] & 0xF;
+	int shiftAmount = *r[rs] & 0xFF;
+	int tmpResult = 0;
 	int operationID = (opCode >> 20) & 0x1F;
 
-	if (rn == 15 || rs == 15) // not tested
-		shiftAmount += 4;
+	ARMshifts[shiftId](tmpResult, *r[rm], shiftAmount);
+	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
 
-	ARMshifts[shiftId](shiftAmount, *r[rm], shiftAmount);
-	dataOperations[operationID](*r[rd], *r[rn], shiftAmount);
+	if (rn == 15 || rm == 15) // not tested
+		*r[rd] = *r[PC] + 8;
 
 	if (rd == 15 && (opCode >> 20) & 1){ // not tested
 		cpsr.val = cpsr.val;
@@ -530,24 +617,33 @@ void registerRotate(int opCode){
 }
 
 void dataProcessingImmediate(int opCode){
-    int rd = (opCode >> 12) & 0xF; //destination
-    int rs = (opCode >> 16) & 0xF; //first operand
+	int rd = (opCode >> 12) & 0xF; //destination
+	int rs = (opCode >> 16) & 0xF; //first operand
 	int operand1 = (rs == 15) ? *r[rs] + 4 : *r[rs];
-    int immediate = opCode  & 0xFF;
-    int shift = (opCode >> 8) & 0xF;
+	int immediate = opCode & 0xFF;
+	int shift = (opCode >> 8) & 0xF;
 	int shiftedImm = 0;
+	bool conditions = (opCode >> 20) & 1;
+
 	if (rs != 0){
 		shiftedImm = RORnoCond(immediate, shift);
 		shiftedImm = RORnoCond(shiftedImm, shift);
 	}
 	else{
-		shiftedImm = RORnoCond(immediate, shift);
-		shiftedImm = RORnoCond(shiftedImm, shift);
+		rorCond(shiftedImm, immediate, shift);
+		rorCond(shiftedImm, shiftedImm, shift);
 	}
-    int operationID = (opCode >> 20) & 0x1F;
-    dataOperations[operationID](*r[rd], operand1, shiftedImm);
+	int operationID = (opCode >> 20) & 0x1F;
+	dataOperations[operationID](*r[rd], operand1, shiftedImm);
+
+	if (rd == 15 && conditions){
+		cpsr.val = *r[16];
+		updateMode();
+	}
+
 	if (debug)
 		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", " << shiftedImm << " ";
+	
 }
 
 void halfDataTransfer(int opCode){
@@ -834,7 +930,10 @@ void ARMExecute(int opCode){
 				singleDataTrasnferImmediatePost(opCode);
 				break;
 			case 3: case 2: //data processing, immediate check msr?
-				dataProcessingImmediate(opCode);
+				if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0))
+					MSR(opCode);
+				else
+					dataProcessingImmediate(opCode);
 				break;
 			case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange
 				if(((opCode >> 4) & 0x12FFF1) == 0x12FFF1)

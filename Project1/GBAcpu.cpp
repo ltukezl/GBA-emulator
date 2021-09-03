@@ -36,6 +36,7 @@ __int32 sprs_usr = 0;
 __int32 sprs_svc = 0;
 __int32 sprs_abt = 0;
 __int32 sprs_irq = 0;
+__int32 sprs_fiq = 0;
 __int32 sprs_udf = 0;
 
 //__int32 r[16];	//used register
@@ -49,6 +50,9 @@ __int32* svc[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs
 
 __int32* abt[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 &extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &abtBanked[0], &abtBanked[1], &sharedRegs[8], &sprs_abt };
+
+__int32* fiq[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+&fiqBanked[0], &fiqBanked[1], &fiqBanked[2], &fiqBanked[3], &fiqBanked[4], &fiqBanked[5], &fiqBanked[6], &sharedRegs[8], &sprs_fiq };
 
 __int32* irq[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 &extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &irqBanked[0], &irqBanked[1], &sharedRegs[8], &sprs_irq };
@@ -129,7 +133,7 @@ int main(int argc, char *args[]){
     FILE *file;
 	FILE* bios;
 	//fopen_s(&file, "program4.bin", "rb");
-	fopen_s(&file, "thumb.gba", "rb");
+	fopen_s(&file, "arm.gba", "rb");
 	//fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
@@ -148,7 +152,7 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x80008D6 ){
+		if (*r[PC] == 0x8000B4C ){
 			debug = true;
 		}
 		if (*r[15] == 0x13c || *r[15] == 0x188){
@@ -161,6 +165,11 @@ int main(int argc, char *args[]){
 			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << dec;
 
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
+
+		if (*r[PC] >= 0xC000000)
+			*r[PC] -= 0x4000000;
+		else if (*r[PC] >= 0xA000000)
+			*r[PC] -= 0x2000000;
 
 		if (irqExit){	
 			cpsr.val = *r[16];
