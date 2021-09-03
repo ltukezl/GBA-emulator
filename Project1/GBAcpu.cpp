@@ -130,7 +130,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program4.bin", "rb");
+	fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
     //fopen_s(&file, args[1], "rb");
 	fread(GamePak, 0x2000000, 1, file);

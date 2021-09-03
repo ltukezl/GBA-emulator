@@ -68,4 +68,62 @@ union moveShiftedRegisterOp{
 	uint16_t op;
 };
 
+union addSubRegisterOp{
+	struct{
+		uint16_t destination : 3;
+		uint16_t source : 3;
+		uint16_t regOrImmediate : 3;
+		uint16_t Sub : 1;
+		uint16_t useImmediate : 1;
+	};
+	uint16_t op;
+};
+
+union movCmpAddSub{
+	struct{
+		uint16_t offset : 8;
+		uint16_t destination : 3;
+		uint16_t instruction : 2;
+	};
+	uint16_t op;
+};
+
+union aluOps{
+	struct{
+		uint16_t destination : 3;
+		uint16_t source : 3;
+		uint16_t instruction : 4;
+	};
+	uint16_t op;
+};
+
+union hiRegOps{
+	struct{
+		uint16_t destination : 3;
+		uint16_t source : 4;
+		uint16_t destHiBit : 1;
+		uint16_t instruction : 2;
+	};
+	uint16_t op;
+};
+
+union PCRelativeLoad{
+	struct{
+		uint16_t offset : 8;
+		uint16_t destination : 3;
+	};
+	uint16_t op;
+};
+
+union loadStoreRegOffset{
+	struct{
+		uint16_t destination : 3;
+		uint16_t source : 3;
+		uint16_t offsetReg : 3;
+		uint16_t: 1;
+		uint16_t byteSize : 1;
+		uint16_t loadBit : 1;
+	};
+	uint16_t op;
+};
 #endif

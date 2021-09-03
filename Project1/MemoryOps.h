@@ -17,6 +17,14 @@ extern unsigned char* memoryLayout[16];
 
 void intWrite(uint16_t val);
 
+void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val);
+void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val);
+void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val);
+
+uint8_t rawLoad8(uint8_t* arr, uint32_t addr);
+uint16_t rawLoad16(uint8_t* arr, uint32_t addr);
+uint32_t rawLoad32(uint8_t* arr, uint32_t addr);
+
 uint8_t loadFromAddress(uint32_t addr, bool free = false);
 uint16_t loadFromAddress16(uint32_t addr, bool free = false);
 uint32_t loadFromAddress32(uint32_t addr, bool free = false);

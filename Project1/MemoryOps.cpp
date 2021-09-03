@@ -21,24 +21,47 @@ uint32_t SP_irq = 0x03007FA0;
 uint32_t SP_usr = 0x03007F00;
 
 //recheck waht should be done on unused regions, breath of fire writes to "unused" area
-unsigned char systemROM[0x4000];
-unsigned char unused[0x4000];
-unsigned char ExternalWorkRAM[0x1000000];
-unsigned char InternalWorkRAM[0x1000000]; //0x8000 should be in use only
-unsigned char IoRAM[0x1000000];
-unsigned char PaletteRAM[0x1000000];
-unsigned char VRAM[0x1000000];
-unsigned char OAM[0x1000000];
-unsigned char GamePak[0x2000000];
-unsigned char GamePakSRAM[0x2000000];
+uint8_t systemROM[0x4000];
+uint8_t ExternalWorkRAM[0x1000000];
+uint8_t InternalWorkRAM[0x1000000]; //0x8000 should be in use only
+uint8_t IoRAM[0x1000000];
+uint8_t PaletteRAM[0x1000000];
+uint8_t VRAM[0x1000000];
+uint8_t OAM[0x1000000];
+uint8_t GamePak[0x2000000];
+uint8_t GamePakSRAM[0x2000000];
 
 uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x2000000, 0x400, 0x400, 0x40000, 0x400, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000 };
-unsigned char *memoryLayout[16] = { systemROM, unused, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePakSRAM, GamePakSRAM };
+unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePakSRAM, GamePakSRAM };
 
 __int32 previousAddress = 0;
 
 void intWrite(uint16_t value){
-	*(unsigned short*)&(unsigned char)memoryLayout[4][0x202] = value;
+	*(uint16_t*)&(uint8_t)IoRAM[0x202] = value;
+}
+
+void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val){
+	arr[addr] = val;
+}
+
+void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val){
+	*(uint16_t*)&(uint8_t)arr[addr] = val;
+}
+
+void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val){
+	*(uint32_t*)&(uint8_t)arr[addr] = val; 
+}
+
+uint8_t rawLoad8(uint8_t* arr, uint32_t addr){
+	return arr[addr];
+}
+
+uint16_t rawLoad16(uint8_t* arr, uint32_t addr){
+	return *(uint16_t*)&(uint8_t)arr[addr];
+}
+
+uint32_t rawLoad32(uint8_t* arr, uint32_t addr){
+	return *(uint32_t*)&(uint8_t)arr[addr];
 }
 
 bool specialWrites(uint32_t addr, uint32_t val){
@@ -131,7 +154,7 @@ void writeToAddress16(uint32_t address, uint16_t value){
 	address &= ~0xF0000000;
 	int mask = (address >> 24) & 15;
 	if (!specialWrites(address, value)){
-		*(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
+		*(uint16_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)] = value;
 	}
 }
 
@@ -140,7 +163,7 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	address &= ~1;
 	int mask = (address >> 24) & 15;
 	if (!specialWrites(address, value)){
-		*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0] = value;
+		*(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)] = value;
 	}
 	if (address == 0x4000208){ //waitstate reg
 
@@ -185,7 +208,7 @@ uint16_t loadFromAddress16(uint32_t address, bool free){
 		return result;
 	}
 
-	return *(unsigned short*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];;
+	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24) ];
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
@@ -208,8 +231,8 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 		return result;
 	}
 	if (misaligned)
-		return RORnoCond(*(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0], 8);
-	return *(unsigned int*)&(unsigned char)memoryLayout[mask][address - (mask << 24) + 0];
+		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24) + 0], 8);
+	return *(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)];
 }
 
 void PUSH(int value){
