@@ -24,7 +24,7 @@ uint16_t rawLoad16(uint8_t* arr, uint32_t addr);
 uint32_t rawLoad32(uint8_t* arr, uint32_t addr);
 
 uint8_t loadFromAddress(uint32_t addr, bool free = false);
-uint16_t loadFromAddress16(uint32_t addr, bool free = false);
+uint32_t loadFromAddress16(uint32_t addr, bool free = false);
 uint32_t loadFromAddress32(uint32_t addr, bool free = false);
 
 void writeToAddress(uint32_t addr, uint8_t val);

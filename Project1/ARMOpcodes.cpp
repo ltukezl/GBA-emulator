@@ -722,7 +722,9 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int oldReg = *r[rn];
 	switch (loadStore){
 		case 0:
-			std::cout << "TBD2";
+			*r[rn] += upDownBit ? offset : -offset;
+			byteFlag ? writeToAddress(*r[rn], *r[rd]) : writeToAddress32(*r[rn], *r[rd]);
+			*r[rn] = writeBack ? *r[rn] : oldReg;
 			break;
 
 		case 1:

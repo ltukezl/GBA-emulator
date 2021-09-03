@@ -465,8 +465,12 @@ void loadStoreSignExtend(uint16_t opcode){
 	union loadStoreSignExtended op = { opcode };
 	uint32_t totalAddress = *r[op.baseReg] + *r[op.offsetReg];
 
-	if (op.halfWord && op.extend)
-		*r[op.destSourceReg] = signExtend<16>(loadFromAddress16(totalAddress));
+	if (op.halfWord && op.extend){
+		if (totalAddress & 1) //misaligned address
+			*r[op.destSourceReg] = signExtend<8>(loadFromAddress16(totalAddress));
+		else
+			*r[op.destSourceReg] = signExtend<16>(loadFromAddress16(totalAddress));
+	}
 	else if (op.halfWord && !op.extend)	
 		*r[op.destSourceReg] = loadFromAddress16(totalAddress);
 	else if (!op.halfWord && op.extend)
@@ -610,33 +614,60 @@ void pushpop(uint16_t opcode){
 	cycles += 1;
 }
 
-//can be optimized with whiles when needed (or inlines or macro with msb find)
 void multiLoad(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
 	int baseReg = (opcode >> 8) & 7;
+
+	bool rInList = false;
+	bool first = true;
+	uint32_t oldAddr = 0;
+
 	if (loadFlag){
-		for (int i = 0; i < 8; i++){
-			if (immediate & 1){
-				*r[i] = loadFromAddress32(*r[baseReg]);
-				*r[baseReg] += 4;
-			}
-			immediate >>= 1;
+		if (immediate == 0){
+			*r[PC] = (loadFromAddress32(*r[baseReg])) & ~1;
+			*r[baseReg] += 0x40;
 		}
+		else {
+			for (int i = 0; i < 8; i++){
+				if (immediate & 1){
+					*r[i] = loadFromAddress32(*r[baseReg]);
+					*r[baseReg] += 4;
+				}
+				immediate >>= 1;
+			}
+		}
+		if (debug)
+			std::cout << "ldmia ";
 	}
 	else{
-		for (int i = 0; i < 8; i++){
-			if (immediate & 1){
-				writeToAddress32(*r[baseReg], *r[i]);
-				*r[baseReg] += 4;
-			}
-			immediate >>= 1;
+		if (immediate == 0){
+			writeToAddress32(*r[baseReg], *r[PC] + 4);
+			*r[baseReg] += 0x40;
 		}
+		else{
+			for (int i = 0; i < 8; i++){
+				if (immediate & 1){
+					if (i == baseReg && !first){
+						rInList = true;
+						oldAddr = *r[baseReg];
+						continue;
+					}
+					first = false;
+					writeToAddress32(*r[baseReg], *r[i]);
+					*r[baseReg] += 4;
+					
+				}
+				immediate >>= 1;
+			}
+		}
+		if (rInList){
+			writeToAddress32(oldAddr, *r[baseReg]);
+		}
+		if (debug)
+			std::cout << "stmia ";
 	}
-
 	cycles += 1;
-	if (debug)
-		std::cout << "stmia ";
 }
 
 void conditionalBranch(uint16_t opcode){

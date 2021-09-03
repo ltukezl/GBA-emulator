@@ -148,8 +148,8 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x800024c ){
-			//debug = true;
+		if (*r[PC] == 0x80008D6 ){
+			debug = true;
 		}
 		if (*r[15] == 0x13c || *r[15] == 0x188){
 			irqExit = true;

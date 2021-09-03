@@ -186,7 +186,7 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 	return memoryLayout[mask][address - (mask << 24)];
 }
 
-uint16_t loadFromAddress16(uint32_t address, bool free){
+uint32_t loadFromAddress16(uint32_t address, bool free){
 	if (!free){
 		cycles += Wait0_N_cycles;
 		if (address == (previousAddress + 2))
@@ -195,7 +195,7 @@ uint16_t loadFromAddress16(uint32_t address, bool free){
 			cycles += Wait0_N_cycles;
 		previousAddress = address;
 	}
-
+	bool misaligned = address & 1;
 	address &= ~0xF0000000;
 	int mask = (address >> 24) & 15;
 
@@ -203,7 +203,8 @@ uint16_t loadFromAddress16(uint32_t address, bool free){
 	if (specialReads(address, result, loadFromAddress16)){
 		return result;
 	}
-
+	if (misaligned)
+		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address & ~1) - (mask << 24) + 0], 8);
 	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24) ];
 }
 
@@ -219,7 +220,6 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	
 	bool misaligned = address & 1;
 	address &= ~0xF0000000;
-	address &= ~1;
     int mask = (address >> 24) & 15;
 
 	uint32_t result = 0;
@@ -227,7 +227,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 		return result;
 	}
 	if (misaligned)
-		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24) + 0], 8);
+		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address & ~1) - (mask << 24) + 0], 8);
 	return *(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)];
 }
 
