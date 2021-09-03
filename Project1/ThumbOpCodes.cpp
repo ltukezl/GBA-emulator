@@ -350,9 +350,8 @@ char* logicalOps_s[16] = { "and", "xor", "lsl", "lsr", "asr", "adc", "sbc", "ror
 char* hlOps_s[4] = { "add", "cmp", "mov", "bx" };
 char* conditions_s[14] = { "beq", "bne", "bcs", "bcc", "bmi", "bpl", "bvs", "bvc", "bhi", "bls", "bge", "blt", "bgt", "ble" };
 
-void moveShiftedRegister(int opcode){
-	union moveShiftedRegisterOp op;
-	op.op = opcode;
+void moveShiftedRegister(uint16_t opcode){
+	union moveShiftedRegisterOp op = { opcode };
 	if (op.immediate == 0 && (op.instruction == 1 || op.instruction == 2))
 		shifts[op.instruction](*r[op.destination], *r[op.source], 32);
 	else
@@ -363,140 +362,136 @@ void moveShiftedRegister(int opcode){
 		std::cout << shifts_s[op.instruction] << " r" << op.destination << " r" << op.source << " " << op.immediate << " ";
 }
 
-void addSubFunction(int opcode){
-	int rd = opcode & 0x7; //register, destination
-	int rs = (opcode >> 3) & 0x7; //register, source
-	int operation = (opcode >> 9) & 1;
-	int immediateFlag = (opcode >> 10) & 1;
-	int immediate = (opcode >> 6) & 7;
-	int value = immediateFlag ? immediate : *r[immediate];
-	arith[operation](*r[rd], *r[rs], value);
+void addSubFunction(uint16_t opcode){
+	union addSubRegisterOp op = { opcode };
+	int value = op.useImmediate ? op.regOrImmediate : *r[op.regOrImmediate];
+	arith[op.Sub](*r[op.destination], *r[op.source], value);
 
 	cycles += Wait0_S_cycles;
 	if (debug)
-		std::cout << arith_s[operation] << " r" << rd << " r" << rs << (immediateFlag ? " " : " r") << immediate << " ";
+		std::cout << arith_s[op.Sub] << " r" << op.destination << " r" << op.source << (op.useImmediate ? " " : " r") << op.regOrImmediate << " ";
 }
 
-void movCompSubAddImm(int opcode){
-	int instruction = (opcode >> 11) & 3;
-	int rd = (opcode >> 8) & 7;
-	int immediate = (opcode & 0xFF);
-	movCompIpaddIpsub[instruction](*r[rd], immediate);
+void movCompSubAddImm(uint16_t opcode){
+	union movCmpAddSub op = { opcode };
+	movCompIpaddIpsub[op.instruction](*r[op.destination], op.offset);
 
 	cycles += Wait0_S_cycles;
 	if (debug)
-		std::cout << movCompIpaddIpsub_s[instruction] << " r" << rd  << " #" << immediate << " ";
+		std::cout << movCompIpaddIpsub_s[op.instruction] << " r" << op.destination << " #" << op.offset << " ";
 }
 
-void aluOps(int opcode){
-	int instruction = (opcode >> 6) & 0xF;
-	int rd = opcode & 7; //register, destination
-	int rs = (opcode >> 3) & 7; //register, source
-	logicalOps[instruction](*r[rd], *r[rs]);
+void aluOps(uint16_t opcode){
+	union aluOps op = { opcode };
+	logicalOps[op.instruction](*r[op.destination], *r[op.source]);
 
 	cycles += Wait0_S_cycles;
-	if (instruction == 2 || instruction == 3 || instruction == 4 || instruction == 12)
+	if (op.instruction == 2 || op.instruction == 3 || op.instruction == 4 || op.instruction == 12)
 		cycles += 1;
 
 	if (debug)
-		std::cout << logicalOps_s[instruction] << " r" << rd << " r" << rd << " r" << rs << " ";
+		std::cout << logicalOps_s[op.instruction]  << " r" << op.destination << " r" << op.source << " ";
 }
 
-void hiRegOperations(int opcode){
-	int instruction = (opcode >> 8) & 3;
-	int rd = opcode & 0x07; //register, destination
-	int rs = (opcode >> 3) & 0xF; //register, source, exceptionally 4 bits as this opcode can access r0-r15
-	int hi1 = ((opcode >> 4) & 8); //high reg flags enables access to r8-r15 registers
-	if ((rd | hi1) == 15){
-		*r[rd | hi1] += 2;
-		hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs] & ~1);
+void hiRegOperations(uint16_t opcode){
+	union hiRegOps op = { opcode };
+	uint8_t newDestinationReg = 8 * op.destHiBit + op.destination;
+	uint32_t operand = *r[op.source];
+
+	if (newDestinationReg == 15){
+		*r[newDestinationReg] += 2;
+		operand &= ~1;
 	}
-	else
-		hlOps[instruction](*r[rd | hi1], (rs == 15) ? ((*r[PC] + 2) & ~1) : *r[rs]);
+
+	if (op.source == PC){
+		operand += 2;
+		operand &= ~1;
+	}
+
+	hlOps[op.instruction](*r[newDestinationReg], operand);
 
 	cycles += Wait0_S_cycles;
 
-	if ((rs == 15) | (instruction == 3))
+	if ((op.source == 15) | (newDestinationReg == 3))
 		cycles += Wait0_N_cycles + 1;
 
 	if (debug)
-		std::cout << std::dec << hlOps_s[instruction] << " r" << (rd | hi1) << " r" << rs << std::hex;
+		std::cout << std::dec << hlOps_s[op.instruction] << " r" << (newDestinationReg) << " r" << op.source << std::hex;
 }
 
-void PCRelativeLoad(int opcode){
-	//check this out later, memory masking?, potentially broken.
-	int tmpPC = (*r[PC] + 2) & ~2;
-	int rs = (opcode >> 8) & 7;
-	int immediate = (opcode & 0xFF) << 2; //8 bit value to 10 bit value, last bits are 00 to be word alinged
-	tmpPC += immediate;
-	*r[rs] = loadFromAddress32(tmpPC);
+void PCRelativeLoad(uint16_t opcode){
+	union PCRelativeLoad op = { opcode };
+	uint32_t tmpPC = (*r[PC] + 2) & ~2;
+	tmpPC += (op.offset << 2);
+	*r[op.destination] = loadFromAddress32(tmpPC);
 
 	cycles += 1;
 
 	if (debug)
-		std::cout << "ldr r" << rs << ", =" << loadFromAddress32(tmpPC, true) << " ";
+		std::cout << "ldr r" << op.destination << ", =" << std::hex << loadFromAddress32(tmpPC, true) << std::dec << " ";
 }
 
-void loadStoreRegOffset(int opcode){
-	int rd = opcode & 7;
-	int rb = (opcode >> 3) & 7; // base reg
-	int ro = (opcode >> 6) & 7; // offset reg
-	int byteFlag = (opcode >> 10) & 1;
-	int loadFlag = (opcode >> 11) & 1;
-	if (!loadFlag)
-		if (byteFlag)
-			writeToAddress(*r[ro] + *r[rb], *r[rd]);
-		else
-			writeToAddress32(*r[ro] + *r[rb], *r[rd]);
+void loadStoreRegOffset(uint16_t opcode){
+	union loadStoreRegOffset op = { opcode };
+	uint32_t totalAddress = *r[op.baseReg] + *r[op.offsetReg];
+
+	if (op.loadBit && op.byteSize)
+		*r[op.destSourceReg] = loadFromAddress(totalAddress);
+	else if (op.loadBit && !op.byteSize)
+		*r[op.destSourceReg] = loadFromAddress32(totalAddress);
+	else if (!op.loadBit && op.byteSize)
+		writeToAddress(totalAddress, *r[op.destSourceReg]);
 	else
-		*r[rd] = byteFlag ? loadFromAddress(*r[rb] + *r[ro]) : loadFromAddress32(*r[rb] + *r[ro]);
+		writeToAddress32(totalAddress, *r[op.destSourceReg]);
 
 	cycles += 1;
-	if (!loadFlag)
+	if (!op.loadBit)
 		cycles += Wait0_N_cycles + 1; 
 
-	if (debug && byteFlag && !loadFlag)
-		std::cout << "strb r" << rd << " [r" << rb << ", r" << ro << " ]";
-	else if (debug && !byteFlag && !loadFlag)
-		std::cout << "str r" << rd << " [r" << rb << ", r" << ro << " ]";
-	else if (debug && byteFlag && loadFlag)
-		std::cout << "ldrb r" << rd << " [r" << rb << ", r" << ro << " ]";
-	else if (debug && !byteFlag && loadFlag)
-		std::cout << "ldr r" << rd << " [r" << rb << ", r" << ro << " ]";
-	
+	if (debug){
+		if (op.loadBit && op.byteSize)
+			std::cout << "strb r";
+		else if (op.loadBit && !op.byteSize)
+			std::cout << "str r";
+		else if (!op.loadBit && op.byteSize)
+			std::cout << "ldrb r";
+		else
+			std::cout << "ldr r";
+		std::cout << op.destSourceReg << " [r" << op.baseReg << ", r" << op.offsetReg << " ] ";
+	}
 }
 
-void loadStoreSignExtend(int opcode){
-	int rd = opcode & 7;
-	int rb = (opcode >> 3) & 7; // base reg
-	int ro = (opcode >> 6) & 7; // offset reg
-	int signFlag = (opcode >> 10) & 1;
-	int hFlag = ((opcode >> 11) & 1);
-	if (!hFlag && !signFlag) //strh
-		writeToAddress16(*r[rb] + *r[ro], *r[rd]);
-	else if (!signFlag && hFlag) //ldrh
-		*r[rd] = loadFromAddress16(*r[rb] + *r[ro]);
-	else if (signFlag && !hFlag) //ldsb
-		*r[rd] = signExtend<8>(loadFromAddress(*r[rb] + *r[ro]));
-	else{ //ldsh
-		*r[rd] = signExtend<16>(loadFromAddress16(*r[ro] + *r[rb]));
-	}
+void loadStoreSignExtend(uint16_t opcode){
+	union loadStoreSignExtended op = { opcode };
+	uint32_t totalAddress = *r[op.baseReg] + *r[op.offsetReg];
+
+	if (op.halfWord && op.extend)
+		*r[op.destSourceReg] = signExtend<16>(loadFromAddress16(totalAddress));
+	else if (op.halfWord && !op.extend)	
+		*r[op.destSourceReg] = loadFromAddress16(totalAddress);
+	else if (!op.halfWord && op.extend)
+		*r[op.destSourceReg] = signExtend<8>(loadFromAddress(totalAddress));
+	else
+		writeToAddress16(totalAddress, *r[op.destSourceReg]);
 
 	cycles += 1;
-	if (!hFlag && !signFlag)
+	if (!op.halfWord && !op.extend)
 		cycles += Wait0_N_cycles + 1;
 
-	if (debug && !hFlag && !signFlag)
-		std::cout << "strh [r" << rb << ", r" << ro << "] ,r" << ro << " ";
-	if (debug && !hFlag && signFlag)
-		std::cout << "ldrh r" << rd << ", [r" << rb << ",r" << ro << "] ";
-	if (debug && hFlag && !signFlag)
-		std::cout << "ldsb r" << rd << ", [r" << rb << ",r" << ro << "] ";
-	if (debug && hFlag && signFlag)
-		std::cout << "ldsh r" << rd << ", [r" << rb << ",r" << ro << "] ";
+	if (debug){
+		if (!op.halfWord && !op.extend)
+			std::cout << "strh r";
+		if (!op.halfWord && op.extend)
+			std::cout << "ldrh r";
+		if (op.halfWord && !op.extend)
+			std::cout << "ldsb r";
+		if (op.halfWord && op.extend)
+			std::cout << "ldsh r";
+		std::cout << op.destSourceReg << ", [r" << op.baseReg << ",r" << op.offsetReg << "] ";
+	}
 }
 
-void loadStoreImm(int opcode){
+void loadStoreImm(uint16_t opcode){
 	int loadFlag = (opcode >> 11) & 1;
 	int byteFlag = (opcode >> 12) & 1;
 	int immediate = byteFlag ? (opcode >> 6) & 0x1F : (opcode >> 4) & 0x7C; //with word access, immediate must be word aligned. thus we move is 2 less and zero 2 lsb
@@ -517,7 +512,7 @@ void loadStoreImm(int opcode){
 		std::cout << "str [r" << rs << " " << immediate << "] r" << rd << " ";
 }
 
-void loadStoreHalfword(int opcode){
+void loadStoreHalfword(uint16_t opcode){
 	int loadFlag = (opcode >> 11) & 1;
 	int immediate = (opcode >> 5) & 0x3E; //half word alignment, 5 bits to 6 bits last bit is 0
 	int rs = (opcode >> 3) & 0x07;
@@ -537,7 +532,7 @@ void loadStoreHalfword(int opcode){
 		std::cout << "strh [r" << rs << " " << immediate << "] r" << rd << " ";
 }
 
-void loadSPRelative(int opcode){
+void loadSPRelative(uint16_t opcode){
 	int loadFlag = (opcode >> 11) & 1;
 	int rd = (opcode >> 8) & 0x07;
 	int immediate = (opcode & 0xFF) << 2;
@@ -557,7 +552,7 @@ void loadSPRelative(int opcode){
 }
 
 
-void loadAddress(int opcode){
+void loadAddress(uint16_t opcode){
 	int rs = ((opcode >> 11) & 1) ? *r[SP] : ((*r[PC] + 2) & ~2);
 	int rd = (opcode >> 8) & 0x07;
 	int immediate = (opcode & 0xFF) << 2;
@@ -570,7 +565,7 @@ void loadAddress(int opcode){
 		std::cout << "add r" << rd << ", PC, 0x" << immediate << " ";
 }
 
-void addOffsetToSP(int opcode){
+void addOffsetToSP(uint16_t opcode){
 	int loadFlag = (opcode >> 7) & 1;
 	int immediate = (opcode & 0x7F) << 2;
 	*r[SP] += loadFlag ? -immediate : immediate;
@@ -583,7 +578,7 @@ void addOffsetToSP(int opcode){
 		std::cout << "add sp, 0x" << immediate << " ";
 }
 
-void pushpop(int opcode){
+void pushpop(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int popFlag = (opcode >> 11) & 1;
 
@@ -618,7 +613,7 @@ void pushpop(int opcode){
 }
 
 //can be optimized with whiles when needed (or inlines or macro with msb find)
-void multiLoad(int opcode){
+void multiLoad(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
 	int baseReg = (opcode >> 8) & 7;
@@ -646,7 +641,7 @@ void multiLoad(int opcode){
 		std::cout << "stmia ";
 }
 
-void conditionalBranch(int opcode){
+void conditionalBranch(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int condition = (opcode >> 8) & 0x0F;
 	*r[PC] += conditions[condition]() ? (((__int8)immediate << 1) + 2) : 0;
@@ -659,7 +654,7 @@ void conditionalBranch(int opcode){
 		std::cout << conditions_s[condition] << " " << conditions[condition]() << " ";
 }
 
-void unconditionalBranch(int opcode){
+void unconditionalBranch(uint16_t opcode){
 	int immediate = (opcode & 0x7FF) << 1;
 	*r[PC] += signExtend<12>(immediate) + 2;
 
@@ -669,7 +664,7 @@ void unconditionalBranch(int opcode){
 		std::cout << "b " << std::hex << *r[PC] << std::dec << " ";
 }
 
-void branchLink(int opcode){
+void branchLink(uint16_t opcode){
 	int HLOffset = (opcode >> 11) & 1;
 	int immediate = (opcode & 0x7FF);
 	if (!HLOffset)
@@ -688,7 +683,7 @@ void branchLink(int opcode){
 	}
 }
 
-int thumbExecute(__int16 opcode){
+int thumbExecute(uint16_t opcode){
 	int subType;
     int instruction;
 	*r[PC] += 2;

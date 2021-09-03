@@ -67,11 +67,9 @@ __int64 cycles = 0;
 __int8 Wait0_N_cycles = 5;
 __int8 Wait0_S_cycles = 3;
 
-
 int swapEndianess32(int num){
 	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
 }
-
 
 /*
 NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in usr mode.
@@ -130,9 +128,10 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
+	//fopen_s(&file, "program4.bin", "rb");
+	//fopen_s(&file, "thumb.gba", "rb");
 	fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
-    //fopen_s(&file, args[1], "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 

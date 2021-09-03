@@ -15,8 +15,6 @@ extern unsigned char GamePak[0x2000000];
 extern unsigned char GamePakSRAM[0x2000000];
 extern unsigned char* memoryLayout[16];
 
-void intWrite(uint16_t val);
-
 void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val);
 void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val);
 void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val);

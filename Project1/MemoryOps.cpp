@@ -36,10 +36,6 @@ unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, Inter
 
 __int32 previousAddress = 0;
 
-void intWrite(uint16_t value){
-	*(uint16_t*)&(uint8_t)IoRAM[0x202] = value;
-}
-
 void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val){
 	arr[addr] = val;
 }
@@ -72,7 +68,7 @@ bool specialWrites(uint32_t addr, uint32_t val){
 	else if (addr == 0x4000202) {//iinterrupt flag clear
 		uint16_t tmp = loadFromAddress16(0x4000202, true);
 		tmp &= ~val;
-		intWrite(tmp);
+		rawWrite8(IoRAM, 0x202, tmp);
 		return true;
 	}
 	else if (addr >= 0x03007F00 && addr <= 0x03007FFF) { //iknterrupt handler mirror

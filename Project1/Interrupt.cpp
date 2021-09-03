@@ -51,7 +51,7 @@ void HWInterrupts(int cycles){
 	
 	//InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	if (InterruptFlagRegister.addr != 0){
-		intWrite(InterruptFlagRegister.addr);
+		rawWrite8(IoRAM, 0x202, InterruptFlagRegister.addr);
 		debug = false;
 		if (debug)
 			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;

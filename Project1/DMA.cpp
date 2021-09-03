@@ -32,7 +32,7 @@ void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint
 			InterruptFlagRegister.DMA2 = 1;
 		else if (InterruptEnableRegister.DMA3 && i == 3)
 			InterruptFlagRegister.DMA3 = 1;
-		intWrite(InterruptFlagRegister.addr);
+		rawWrite8(IoRAM, 0x202, InterruptFlagRegister.addr);
 	}
 }
 
