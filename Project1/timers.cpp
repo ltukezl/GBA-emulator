@@ -79,6 +79,8 @@ void updateTimers() {
 			}
 
 			if (TIMERCNT.counterVal <= reloads[i]){
+				InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
+				
 				if (i == 0 && InterruptEnableRegister.timer0OVF)
 					InterruptFlagRegister.timer0OVF = 1;
 				else if (i == 1 && InterruptEnableRegister.timer1OVF)
@@ -88,6 +90,7 @@ void updateTimers() {
 				else if (i == 3 && InterruptEnableRegister.timer3OVF)
 					InterruptFlagRegister.timer3OVF = 1;
 
+				rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
 				TIMERCNT.counterVal = reloads[i];
 
 				if (i < 4 && TIMERCNT.timing && TIMERCNT.startStop){

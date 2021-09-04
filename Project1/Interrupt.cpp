@@ -35,7 +35,9 @@ void HWInterrupts(int cycles){
 	
 	if (InterruptEnableRegister.hBlank && LCDstatus.hIRQEn){
 		if (hBlankCounter > (hBlankCounter + cycles) % 1232){
+			InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
 			InterruptFlagRegister.hBlank = 1;
+			rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
 			LCDstatus.hblankFlag = 1;
 		}
 		hBlankCounter = (hBlankCounter + cycles) % 1232;
@@ -43,7 +45,9 @@ void HWInterrupts(int cycles){
 
 	if (InterruptEnableRegister.vBlank && LCDstatus.vIRQEn){
 		if (vBlankCounter > (vBlankCounter + cycles) % 280896){
+			InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
 			InterruptFlagRegister.vBlank = 1;
+			rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
 			LCDstatus.vblankFlag = 1;
 		}
 		vBlankCounter = (vBlankCounter + cycles) % 280896;
@@ -51,8 +55,7 @@ void HWInterrupts(int cycles){
 	
 	//InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	if (InterruptFlagRegister.addr != 0){
-		rawWrite8(IoRAM, 0x202, InterruptFlagRegister.addr);
-		//debug = true;
+		//debug = true
 		if (debug)
 			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;
 		

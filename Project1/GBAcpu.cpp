@@ -132,9 +132,9 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	//fopen_s(&file, "program4.bin", "rb");
+	fopen_s(&file, "program3.bin", "rb");
 	//fopen_s(&file, "arm.gba", "rb");
-	fopen_s(&file, "memory.gba", "rb");
+	//fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -143,16 +143,17 @@ int main(int argc, char *args[]){
 	
 	int refreshRate = 0;
 	//*r[PC] = 0x8001270;
+	//debug = true;
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 10000))
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			continue;
+			//continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8000300){ //0x80012b4
+		if (*r[PC] == 0x8000196){ //0x80012b4
 			debug = true;
 		}
 		/*
@@ -199,7 +200,9 @@ int main(int argc, char *args[]){
 			cycles -= 240;
 
 			if (LCDstatus.LYC == memoryLayout[4][6] && LCDstatus.VcounterIRQEn && InterruptEnableRegister.vCounter){
+				InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
 				InterruptFlagRegister.vCounter = 1;
+				rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
 				LCDstatus.vCounter = 1;
 			}
 

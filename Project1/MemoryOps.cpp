@@ -24,7 +24,7 @@ uint32_t SP_usr = 0x03007F00;
 uint8_t systemROM[0x4000];
 uint8_t ExternalWorkRAM[0x1000000];
 uint8_t InternalWorkRAM[0x1000000]; //0x8000 should be in use only
-uint8_t IoRAM[0x1000000];
+uint8_t IoRAM[0x1000000] = { 0 };
 uint8_t PaletteRAM[0x1000000];
 uint8_t VRAM[0x1000000];
 uint8_t OAM[0x1000000];
@@ -117,8 +117,13 @@ void writeToAddress16(uint32_t address, uint16_t value){
 	else
 		address %= memsizes[mask];
 
+	if (mask == 4 && address == 0x202){
+		uint16_t tmp = rawLoad16(IoRAM, 202);
+		tmp &= ~value;
+		rawWrite16(IoRAM, 0x202, tmp);
+		return;
+	}
 	*(uint16_t*)&(uint8_t)memoryLayout[mask][address] = value;
-
 }
 
 void writeToAddress32(uint32_t address, uint32_t value){
@@ -181,7 +186,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 
 	if (misaligned)
 		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address & ~1)], 8);
-	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address ];
+	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address] & 0xFFFF;
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){

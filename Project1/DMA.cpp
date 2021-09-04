@@ -24,6 +24,7 @@ void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint
 			sourceAddress -= DMAcontrol.transferType ? 4 : 2;
 	}
 	if (DMAcontrol.irq){
+		InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
 		if (InterruptEnableRegister.DMA0 && i == 0)
 			InterruptFlagRegister.DMA0 = 1;
 		else if (InterruptEnableRegister.DMA1 && i == 1)
@@ -32,7 +33,7 @@ void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint
 			InterruptFlagRegister.DMA2 = 1;
 		else if (InterruptEnableRegister.DMA3 && i == 3)
 			InterruptFlagRegister.DMA3 = 1;
-		rawWrite8(IoRAM, 0x202, InterruptFlagRegister.addr);
+		rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
 	}
 }
 

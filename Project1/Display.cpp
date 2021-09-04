@@ -182,14 +182,14 @@ void Display::updatePalettes(){
 		fillTiles(6);
 		fillBG(6);
 	}
-
+	/*
 	InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	InterruptEnableRegister.addr = loadFromAddress16(0x4000200, true);
 	if (InterruptEnableRegister.vBlank && LCDstatus.vIRQEn){
 		InterruptFlagRegister.vBlank = DISPCNT.forceBlank;
-		rawWrite8(IoRAM, 0x202, InterruptFlagRegister.addr);
+		rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
 	}
-	
+	*/
 	sf::Font font;
 	font.loadFromFile("arial.ttf");
 

@@ -3,14 +3,14 @@
 //----------------
 //Interrupts
 //----------------
-extern union InterruptMaster{
+extern union InterruptMaster_t{
 	struct{
 		uint8_t IRQEnabled : 1;
 	};
 	uint16_t addr;
 }InterruptMaster;
 
-extern union InterruptEnableRegister{
+extern union InterruptEnableRegister_t{
 	struct{
 		uint8_t vBlank : 1;
 		uint8_t hBlank : 1;
@@ -30,7 +30,7 @@ extern union InterruptEnableRegister{
 	uint16_t addr;
 }InterruptEnableRegister;
 
-extern union InterruptFlagRegister{
+extern union InterruptFlagRegister_t{
 	struct{
 		uint8_t vBlank : 1;
 		uint8_t hBlank : 1;

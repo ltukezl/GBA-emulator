@@ -1,8 +1,8 @@
 #include "memoryMappedIO.h"
 
-union InterruptMaster InterruptMaster;
-union InterruptEnableRegister InterruptEnableRegister;
-union InterruptFlagRegister InterruptFlagRegister;
+union InterruptMaster_t InterruptMaster;
+union InterruptEnableRegister_t InterruptEnableRegister;
+union InterruptFlagRegister_t InterruptFlagRegister = {0};
 
 union ColorPaletteRam ColorPaletteRam;
 union BgCnt BgCnt;
