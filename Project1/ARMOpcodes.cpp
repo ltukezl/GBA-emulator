@@ -597,7 +597,7 @@ void immediateRotate(int opCode){
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
-			cpsr.val = cpsr.val;
+			cpsr.val = *r[16];
 			updateMode();
 		}
 
@@ -944,7 +944,7 @@ void ARMExecute(int opCode){
         int subType;
         switch(opCodeType){
 			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
-				//interruptController();
+				interruptController();
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA
 				break;

@@ -132,7 +132,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program3.bin", "rb");
+	fopen_s(&file, "program4.bin", "rb");
 	//fopen_s(&file, "arm.gba", "rb");
 	//fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
@@ -150,11 +150,11 @@ int main(int argc, char *args[]){
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			//continue;
+			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8000196){ //0x80012b4
-			debug = true;
+		if (*r[PC] == 0x188){ //0x80012b4
+			//debug = true;
 		}
 		/*
 		if (*r[15] == 0x13c || *r[15] == 0x188){
@@ -186,7 +186,7 @@ int main(int argc, char *args[]){
 		LCDstatus.addr = loadFromAddress16(0x4000004, true);
 		startDMA();
 		updateTimers();
-		//HWInterrupts(cycles);
+		HWInterrupts(cycles);
 #if GPU
 		if (debug | (refreshRate > 10000)){
 			debugView.updatePalettes();
