@@ -223,23 +223,35 @@ void rorCond(int &saveTo,int from, int immidiate){
 }
 
 void lslNoCond(int &saveTo, int from, int immidiate) {
-	if (immidiate > 0)
-		cpsr.carry = (from >> (32 - immidiate) & 1);
-	saveTo = from << immidiate;
+	if (immidiate > 31)
+		saveTo = 0;
+	else
+		saveTo = from << immidiate;
 }
 
 void lsrNoCond(int &saveTo, int from, int immidiate) {
-	saveTo = (unsigned)from >> immidiate;
+	if (immidiate > 31)
+		saveTo = 0;
+	else
+		saveTo = (unsigned)from >> immidiate;
 }
 
 void asrNoCond(int &saveTo, int from, int immidiate) {
-	cpsr.carry = (from >> ((int)immidiate + 1) & 1);
-	saveTo = from >> immidiate;
+	if (immidiate > 31 && from & 0x80000000)
+		saveTo = 0xFFFFFFFF;
+	else if (immidiate > 31)
+		saveTo = 0;
+	else
+		saveTo = from >> immidiate;
 }
 
 void rorNoCond(int &saveTo, int from, int immidiate){
-	cpsr.carry = (from >> (immidiate - 1) & 1);
-	saveTo = (from << immidiate) | (from >> (32 - immidiate));
+	if (immidiate > 32){
+		rorNoCond(saveTo, from, immidiate - 32);
+	}
+	else{
+		saveTo = ((unsigned)from >> immidiate) | ((unsigned)from << (32 - immidiate));
+	}
 }
 
 void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
@@ -566,6 +578,7 @@ void immediateRotate(int opCode){
 		int immediate = (opCode >> 7) & 0x1F;
 		int shiftId = (opCode >> 5) & 3;
 		int operationID = (opCode >> 20) & 0x1F;
+		int conditions = (opCode >> 20) & 1;
 
 		if (shiftId == 3 && immediate == 0){
 			rrx(tmpRegister, tmpRegister);
@@ -573,7 +586,10 @@ void immediateRotate(int opCode){
 		else{
 			if (immediate == 0 && shiftId != 0)
 				immediate = 0x20;
-			ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
+			if (conditions && ((operationID > 1) && (operationID < 16) || (operationID > 20) && (operationID < 24)))
+				ARMshiftsNoCond[shiftId](tmpRegister, tmpRegister, immediate);
+			else
+				ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
 		}
 
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
@@ -599,8 +615,13 @@ void registerRotate(int opCode){
 	int shiftAmount = *r[rs] & 0xFF;
 	int tmpResult = 0;
 	int operationID = (opCode >> 20) & 0x1F;
+	int conditions = (opCode >> 20) & 1;
 
-	ARMshifts[shiftId](tmpResult, *r[rm], shiftAmount);
+	if (conditions && ((operationID > 1) && (operationID < 16) || (operationID > 20) && (operationID < 24)))
+		ARMshiftsNoCond[shiftId](tmpResult, *r[rm], shiftAmount);
+	else
+		ARMshifts[shiftId](tmpResult, *r[rm], shiftAmount);
+
 	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
 
 	if (rn == 15 || rm == 15) // not tested
@@ -624,8 +645,9 @@ void dataProcessingImmediate(int opCode){
 	int shift = (opCode >> 8) & 0xF;
 	int shiftedImm = 0;
 	bool conditions = (opCode >> 20) & 1;
+	int operationID = (opCode >> 20) & 0x1F;
 
-	if (rs != 0){
+	if (conditions && ((operationID > 1) && (operationID < 16) || (operationID > 20) && (operationID < 24))){
 		shiftedImm = RORnoCond(immediate, shift);
 		shiftedImm = RORnoCond(shiftedImm, shift);
 	}
@@ -633,7 +655,7 @@ void dataProcessingImmediate(int opCode){
 		rorCond(shiftedImm, immediate, shift);
 		rorCond(shiftedImm, shiftedImm, shift);
 	}
-	int operationID = (opCode >> 20) & 0x1F;
+	
 	dataOperations[operationID](*r[rd], operand1, shiftedImm);
 
 	if (rd == 15 && conditions){
@@ -733,7 +755,40 @@ void multiply(int opCode){
 }
 
 void multiplyLong(int opCode){
-	std::cout << "mult long";
+	int sign = (opCode >> 22 ) & 1;
+	int accumulate = (opCode >> 21) & 1;
+	int setConditions = (opCode >> 20) & 1;
+
+	uint32_t rdHi = (opCode >> 16) & 0xF;
+	uint32_t rdLo = (opCode >> 12) & 0xF;
+	uint32_t Rs = (opCode >> 8) & 0xF;
+	uint32_t Rm = opCode & 0xF;
+	uint64_t tmp = 0;
+	uint64_t tmp4 = (((uint64_t)*r[rdHi] & 0xFFFFFFFF) << 32) | (*r[rdLo] & 0xFFFFFFFF);
+	if (sign){
+		int64_t tmp2 = *r[Rs];
+		int64_t tmp3 = *r[Rm];
+		tmp = tmp2 * tmp3;
+		if (accumulate)
+			tmp = tmp + tmp4;
+	}
+	else{
+		uint64_t tmp2 = *r[Rs] & 0xFFFFFFFF;
+		uint64_t tmp3 = *r[Rm] & 0xFFFFFFFF;
+		tmp = (uint64_t)tmp2 * (uint64_t)tmp3;
+		if (accumulate)
+			tmp = (uint64_t)tmp + (uint64_t)tmp4;
+	}
+
+	*r[rdHi] = (tmp >> 32) & 0xFFFFFFFF;
+	*r[rdLo] = tmp & 0xFFFFFFFF;
+
+	if (setConditions){
+		negative(*r[rdHi]);
+		zero(tmp);
+	}
+
+	std::cout << "mult long ";
 }
 
 void singleDataTrasnferImmediatePre(int opCode){
@@ -871,7 +926,7 @@ void ARMExecute(int opCode){
         int subType;
         switch(opCodeType){
 			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
-				interruptController();
+				//interruptController();
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA
 				break;

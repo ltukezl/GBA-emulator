@@ -816,7 +816,7 @@ int thumbExecute(uint16_t opcode){
 					switch (condition)
 					{
 					case 15: //software interrupt
-						interruptController();	
+						//interruptController();	
 						break;
 					default:  //conditional branch
 						conditionalBranch(opcode);

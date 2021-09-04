@@ -142,7 +142,7 @@ int main(int argc, char *args[]){
 	memoryInits();
 	
 	int refreshRate = 0;
-	//debug = true;
+	*r[PC] = 0x8000FDC;
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 10000))
@@ -152,7 +152,7 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8000B4C ){
+		if (*r[PC] == 0x8000FE4 ){
 			debug = true;
 		}
 		if (*r[15] == 0x13c || *r[15] == 0x188){
