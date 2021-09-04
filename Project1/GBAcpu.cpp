@@ -143,7 +143,6 @@ int main(int argc, char *args[]){
 	
 	int refreshRate = 0;
 	//*r[PC] = 0x8001270;
-
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 10000))
@@ -153,7 +152,7 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x80000f4 ){ //0x80012b4
+		if (*r[PC] == 0x8000300){ //0x80012b4
 			debug = true;
 		}
 		/*

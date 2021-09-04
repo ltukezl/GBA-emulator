@@ -586,10 +586,12 @@ void immediateRotate(int opCode){
 		else{
 			if (immediate == 0 && shiftId != 0)
 				immediate = 0x20;
-			if (conditions && ((operationID > 1) && (operationID < 16) || (operationID > 20) && (operationID < 24)))
+			if (conditions && (((operationID > 1) && (operationID < 16)) || ((operationID > 21) && (operationID < 24))))
 				ARMshiftsNoCond[shiftId](tmpRegister, tmpRegister, immediate);
-			else
+			else if (conditions)
 				ARMshifts[shiftId](tmpRegister, tmpRegister, immediate);
+			else
+				ARMshiftsNoCond[shiftId](tmpRegister, tmpRegister, immediate);
 		}
 
 		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
@@ -617,10 +619,12 @@ void registerRotate(int opCode){
 	int operationID = (opCode >> 20) & 0x1F;
 	int conditions = (opCode >> 20) & 1;
 
-	if (conditions && ((operationID > 1) && (operationID < 16) || (operationID > 20) && (operationID < 24)))
+	if (conditions && (((operationID > 1) && (operationID < 16)) || ((operationID > 21) && (operationID < 24))))
 		ARMshiftsNoCond[shiftId](tmpResult, *r[rm], shiftAmount);
-	else
+	else if (conditions)
 		ARMshifts[shiftId](tmpResult, *r[rm], shiftAmount);
+	else
+		ARMshiftsNoCond[shiftId](tmpResult, *r[rm], shiftAmount);
 
 	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
 
@@ -647,13 +651,17 @@ void dataProcessingImmediate(int opCode){
 	bool conditions = (opCode >> 20) & 1;
 	int operationID = (opCode >> 20) & 0x1F;
 
-	if (conditions && ((operationID > 1) && (operationID < 16) || (operationID > 20) && (operationID < 24))){
+	if (conditions && (((operationID > 1) && (operationID < 16)) || ((operationID > 21) && (operationID < 24)))){
 		shiftedImm = RORnoCond(immediate, shift);
 		shiftedImm = RORnoCond(shiftedImm, shift);
 	}
-	else{
+	else if (conditions){
 		rorCond(shiftedImm, immediate, shift);
 		rorCond(shiftedImm, shiftedImm, shift);
+	}
+	else{
+		rorNoCond(shiftedImm, immediate, shift);
+		rorNoCond(shiftedImm, shiftedImm, shift);
 	}
 	
 	dataOperations[operationID](*r[rd], operand1, shiftedImm);
