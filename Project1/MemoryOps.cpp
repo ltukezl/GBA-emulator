@@ -32,7 +32,7 @@ uint8_t GamePak[0x2000000];
 uint8_t GamePakSRAM[0x2000000];
 
 uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x2000000, 0x400, 0x400, 0x40000, 0x400, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000, 0x2000000 };
-unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, GamePak, GamePak, GamePak, GamePak, GamePak, GamePakSRAM, GamePakSRAM };
+unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
 
 __int32 previousAddress = 0;
 
@@ -61,79 +61,24 @@ uint32_t rawLoad32(uint8_t* arr, uint32_t addr){
 }
 
 bool specialWrites(uint32_t addr, uint32_t val){
-	if (addr >= 0x2040000 && addr <= 0x2FFFFFF){
-		writeToAddress32(addr - 0x40000, val);
-		return true;
-	}
-	else if (addr == 0x4000202) {//iinterrupt flag clear
+	if (addr == 0x4000202) {//iinterrupt flag clear
 		uint16_t tmp = loadFromAddress16(0x4000202, true);
 		tmp &= ~val;
 		rawWrite8(IoRAM, 0x202, tmp);
 		return true;
 	}
-	else if (addr >= 0x03007F00 && addr <= 0x03007FFF) { //iknterrupt handler mirror
-		writeToAddress32(addr | 0xFF8000, val);
-		return false;
-	}
 	else if (addr >= 0x4000100 && addr <= 0x400010E){
 		return timerReloadWrite(addr, val);
 	}
-	else if (addr >= 0x5000400 && addr <= 0x5FFFFFF){
-		writeToAddress32(addr - 0x400, val);
-		return true;
-	}
-	else if (addr >= 0x6020000 && addr <= 0x6FFFFFF){
-		writeToAddress32(addr - 0x20000, val);
-		return true;
-	}
-	else if (addr >= 0x7000400 && addr <= 0x7FFFFFF){
-		writeToAddress32(addr - 0x4000, val);
-		return true;
-	}
+
 	return false;
 }
 
 template<typename T, typename res>
 bool specialReads(uint32_t addr, res& result, T func){
 	if (addr >= 0x2040000 && addr <= 0x2FFFFFF){
-		result = func(addr - 0x40000, true);
-		return true;
-	}
-	else if (addr >= 0x3008000 && addr < 0x3FFFF00){
-		result = func(addr - 0x8000, true);
-		return true;
-	}
-	else if (addr >= 0x03007F00 && addr <= 0x03007FFF) {
-		result = func(addr | 0xFF8000, true);
-		return true;
-	}
-	else if (addr & ~(0xFF << 16) == 0x4000800){
-		result = func(0x4000800, true);
-		return true;
-	}
-	else if (addr >= 0x05000400 && addr <= 0x05FFFFFF) {
-		result = func(addr - 0x400, true);
-		return true;
-	}
-	else if (addr >= 0x06018000 && addr < 0x06020000) {
-		result = func(addr - 0x18000, true);
-		return true;
-	}
-	else if (addr >= 0x06020000 && addr <= 0x06040000) {
-		result = func(addr - 0x20000, true);
-		return true;
-	}
-	else if (addr >= 0x07000400 && addr <= 0x07FFFFFF) {
-		result = func(addr - 0x400, true);
-		return true;
-	}
-	else if (addr >= 0x0c000000){
-		result = func(addr - 0x4000000, true);
-		return true;
-	}
-	else if (addr >= 0x0A000000){
-		result = func(addr - 0x2000000, true);
-		return true;
+		//result = func(addr - 0x40000, true);
+		//return true;
 	}
 	return false;
 }
@@ -141,26 +86,22 @@ bool specialReads(uint32_t addr, res& result, T func){
 void writeToAddress(uint32_t address, uint8_t value){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
-	if (!specialWrites(address, value) & address < 0x7000000){
-		memoryLayout[mask][address - (mask << 24)] = value;
-	}
+	memoryLayout[mask][address - (mask << 24)] = value;
 }
 
 void writeToAddress16(uint32_t address, uint16_t value){
 	address &= ~0xF0000000;
 	int mask = (address >> 24) & 15;
-	if (!specialWrites(address, value)){
-		*(uint16_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)] = value;
-	}
+
+	*(uint16_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)] = value;
+
 }
 
 void writeToAddress32(uint32_t address, uint32_t value){
 	address &= ~0xF0000000;
-	address &= ~1;
 	int mask = (address >> 24) & 15;
-	if (!specialWrites(address, value)){
-		*(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)] = value;
-	}
+	*(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)] = value;
+	
 	if (address == 0x4000208){ //waitstate reg
 
 	}
@@ -179,10 +120,6 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 
-	uint8_t result = 0;
-	if (specialReads(address, result, loadFromAddress)){
-		return result;
-	}
 	return memoryLayout[mask][address - (mask << 24)];
 }
 
@@ -199,10 +136,6 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	address &= ~0xF0000000;
 	int mask = (address >> 24) & 15;
 
-	uint16_t result = 0;
-	if (specialReads(address, result, loadFromAddress16)){
-		return result;
-	}
 	if (misaligned)
 		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address & ~1) - (mask << 24) + 0], 8);
 	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24) ];
@@ -222,10 +155,6 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	address &= ~0xF0000000;
     int mask = (address >> 24) & 15;
 
-	uint32_t result = 0;
-	if (specialReads(address, result, loadFromAddress32)){
-		return result;
-	}
 	if (misaligned)
 		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address & ~1) - (mask << 24) + 0], 8);
 	return *(uint32_t*)&(uint8_t)memoryLayout[mask][address - (mask << 24)];

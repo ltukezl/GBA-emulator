@@ -133,8 +133,8 @@ int main(int argc, char *args[]){
     FILE *file;
 	FILE* bios;
 	//fopen_s(&file, "program4.bin", "rb");
-	fopen_s(&file, "arm.gba", "rb");
-	//fopen_s(&file, "memory.gba", "rb");
+	//fopen_s(&file, "arm.gba", "rb");
+	fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -142,7 +142,8 @@ int main(int argc, char *args[]){
 	memoryInits();
 	
 	int refreshRate = 0;
-	*r[PC] = 0x8000FDC;
+	//*r[PC] = 0x8001270;
+
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 10000))
@@ -152,13 +153,14 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8000FE4 ){
+		if (*r[PC] == 0x80000f4 ){ //0x80012b4
 			debug = true;
 		}
+		/*
 		if (*r[15] == 0x13c || *r[15] == 0x188){
 			irqExit = true;
 		}
-
+		*/
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
@@ -170,21 +172,21 @@ int main(int argc, char *args[]){
 			*r[PC] -= 0x4000000;
 		else if (*r[PC] >= 0xA000000)
 			*r[PC] -= 0x2000000;
-
+		/*
 		if (irqExit){	
-			cpsr.val = *r[16];
 			r = usrSys;
 			InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
 			irqExit = false;
 			if (debug)
 				std::cout << "PC now 0x" << std::hex << *r[PC] << std::dec << std::endl;
 		}
+		*/
 		InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 		InterruptEnableRegister.addr = loadFromAddress16(0x4000200, true);
 		LCDstatus.addr = loadFromAddress16(0x4000004, true);
 		startDMA();
 		updateTimers();
-		HWInterrupts(cycles);
+		//HWInterrupts(cycles);
 #if GPU
 		if (debug | (refreshRate > 10000)){
 			debugView.updatePalettes();

@@ -752,6 +752,8 @@ void multiply(int opCode){
 		negative(*r[rd]);
 		zero(*r[rd]);
 	}
+	if (debug)
+		std::cout << "mult ";
 }
 
 void multiplyLong(int opCode){
@@ -787,8 +789,8 @@ void multiplyLong(int opCode){
 		negative(*r[rdHi]);
 		zero(tmp);
 	}
-
-	std::cout << "mult long ";
+	if (debug)
+		std::cout << "mult long ";
 }
 
 void singleDataTrasnferImmediatePre(int opCode){
@@ -807,6 +809,8 @@ void singleDataTrasnferImmediatePre(int opCode){
 		*r[baseReg] += upDownBit ? offset : -offset;
 		calculated = *r[baseReg];
 		*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
+		if (destinationReg == 15)
+			*r[destinationReg] += 8;
 		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
 		break;
 	case 1:
@@ -834,6 +838,8 @@ void singleDataTrasnferImmediatePost(int opCode){
 	int calculated = *r[baseReg];
 	switch (loadStore){
 	case 0:
+		if (destinationReg == 15)
+			*r[destinationReg] += 8;
 		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
 		calculated += upDownBit ? offset : -offset;
 		break;
@@ -873,6 +879,8 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int oldReg = *r[rn];
 	switch (loadStore){
 		case 0:
+			if (rd == 15)
+				*r[rd] += 8;
 			*r[rn] += upDownBit ? offset : -offset;
 			byteFlag ? writeToAddress(*r[rn], *r[rd]) : writeToAddress32(*r[rn], *r[rd]);
 			*r[rn] = writeBack ? *r[rn] : oldReg;
@@ -907,6 +915,8 @@ void singleDataTrasnferRegisterPost(int opCode){
 
 	switch (loadStore){
 	case 0:
+		if (destinationReg == 15)
+			*r[destinationReg] += 8;
 		byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
 		*r[baseReg] += upDownBit ? offset : -offset;
 		break;
