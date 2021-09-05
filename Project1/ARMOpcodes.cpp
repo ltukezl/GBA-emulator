@@ -37,15 +37,18 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 	__int16 regList = opCode & 0xFFFF;
     int oldBase = *r[baseReg];
 
-	if (usrMode)
-		std::cout << "usr mode not implemented";
+	__int32** currentMode = r;
+
+	if (usrMode && !((opCode >> 15) & 1)){
+		r = usrSys;
+	}
 
 	if (debug)
 		std::cout << "push ";
 
     if(((opCode >> 15)&1) & ~upDownBit){
-        a(*r[baseReg], *r[15] + 12);
-        b(*r[baseReg], *r[15] + 12);
+        a(*r[baseReg], *r[15] + 8);
+        b(*r[baseReg], *r[15] + 8);
     }
 
     for(int i = 0; i < 15; i++){
@@ -71,9 +74,13 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
     }
 
     if(((opCode >> 15)&1) & upDownBit){
-        a(*r[baseReg], *r[15] + 12);
-        b(*r[baseReg], *r[15] + 12);
+        a(*r[baseReg], *r[15] + 8);
+        b(*r[baseReg], *r[15] + 8);
     }
+
+	if (usrMode){
+		r = currentMode;
+	}
 
 	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
 }
@@ -87,13 +94,16 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
 	
-	if (usrMode)
-		std::cout << "usr mode not implemented";
+	__int32** currentMode = r;
+
+	if (usrMode && !((opCode >> 15) & 1)){
+		r = usrSys;
+	}
 
 	if (debug)
 		std::cout << "pop ";
 
-	for (int i = 0; i <= 15; i++){
+	for (int i = 0; i < 16; i++){
 		if (upDownBit){
 			if (regList & 1){
 				*r[i] = a(*r[baseReg], false);
@@ -104,14 +114,18 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 			regList >>= 1;
 		}
 		else if (~upDownBit){
-			if (regList & 0x4000){
-				*r[14-i] = a(*r[baseReg], false);
+			if (regList & 0x8000){
+				*r[15-i] = a(*r[baseReg], false);
 				b(*r[baseReg], false);
 				if (debug)
 					std::cout << "r" << 14 - i << " ";
 			}
 			regList <<= 1;
 		}
+	}
+
+	if (usrMode && !((opCode >> 15) & 1)){
+		r = currentMode;
 	}
 
 	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
@@ -122,24 +136,39 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){ // not test
 	int baseReg = (opCode >> 16) & 15;
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
+	bool usrMode = (opCode >> 20) & 1;
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
 
-	for (int i = 0; i < 15; i++){
+	__int32** currentMode = r;
+
+	if (usrMode && !((opCode >> 15) & 1)){
+		r = usrSys;
+	}
+
+	for (int i = 0; i < 16; i++){
 		if (upDownBit){
 			if (regList & 1){
 				a(*r[baseReg], false);
 				*r[i] = b(*r[baseReg], false);
+				if (i == 15)
+					*r[16] = cpsr.val;
 			}
 			regList >>= 1;
 		}
 		else if (~upDownBit){
-			if (regList & 0x4000){
+			if (regList & 0x8000){
 				a(*r[baseReg], false);
-				*r[14-i] = b(*r[baseReg], false);
+				*r[15-i] = b(*r[baseReg], false);
+				if (i == 0)
+					*r[16] = cpsr.val;
 			}
 			regList <<= 1;
 		}
+	}
+
+	if (usrMode && !((opCode >> 15) & 1)){
+		r = currentMode;
 	}
 
 	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
@@ -693,7 +722,9 @@ void halfDataTransfer(int opCode){
 	int rd = (opCode >> 12) & 0xF;
 	int offset = (opCode >> 4) & 0xF0 | opCode & 0xF;
 	offset += (rn == 15) ? 8 : 0; //8 or 4? 
-	int calculated = (rd == 15) ? (*r[rn] + 12) : *r[rn]; //12 or 8?
+	if (rn == 15)
+		debug = true;
+	int calculated = (rd == 15) ? (*r[rn] + 8) : *r[rn];
 
 	switch (func){
 		case 0:
@@ -963,7 +994,7 @@ void ARMExecute(int opCode){
         int subType;
         switch(opCodeType){
 			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
-				interruptController();
+				//interruptController();
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA
 				break;
@@ -976,7 +1007,7 @@ void ARMExecute(int opCode){
 				ARMBranch(opCode);
 				break;
 			case 9: //block data transfer pre offset. maybe implement S bits
-				subType = (opCode >> 20) & 15;
+				subType = (opCode >> 20) & 0xB;
 				switch(subType){
 					case 10: case 8: //writeback / no writeback, pre offset, add offset
 						BlockDataTransferSave(opCode, incrementBase, writeToAddress32);
@@ -993,7 +1024,7 @@ void ARMExecute(int opCode){
 				}
 				break;
 			case 8: //block data transfer post offset
-				subType = (opCode >> 20) & 0xF;
+				subType = (opCode >> 20) & 0xB;
 				switch(subType){
 					case 10: case 8: //writeback / no writeback, post offset, add offset
 						BlockDataTransferSave(opCode, writeToAddress32, incrementBase);

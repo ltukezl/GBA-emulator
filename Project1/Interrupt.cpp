@@ -9,14 +9,8 @@ int hBlankCounter = 0;
 bool IRQMode = false;
 
 void interruptController(){
-	debug = false;
-	InterruptMaster.addr = loadFromAddress16(0x4000208, true);
-	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
-		return;
-	}
-
 	r = svc;
-	*r[14] = *r[PC] + 4;
+	*r[14] = *r[PC];
 	*r[16] = cpsr.val;
 	//svc mode
 	cpsr.IRQDisable = 1;
@@ -61,13 +55,12 @@ void HWInterrupts(int cycles){
 		
 		r = irq;
 		*r[16] = cpsr.val;
-		cpsr.thumb = 0;
-		cpsr.IRQDisable = 1;
-		
-		*r[LR] = *r[PC] + 4;
+
+		*r[LR] = cpsr.thumb ? (*r[PC] + 4) : (*r[PC] + 8);
 		*r[PC] = 0x18;
 
+		cpsr.thumb = 0;
+		cpsr.IRQDisable = 1;
 		cpsr.mode = IRQ;
-		
 	}
 }

@@ -132,8 +132,8 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	//fopen_s(&file, "program4.bin", "rb");
-	fopen_s(&file, "arm.gba", "rb");
+	fopen_s(&file, "program3.bin", "rb");
+	//fopen_s(&file, "arm.gba", "rb");
 	//fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
@@ -142,7 +142,8 @@ int main(int argc, char *args[]){
 	memoryInits();
 	
 	int refreshRate = 0;
-	//*r[PC] = 0x8001740;
+	//*r[PC] = 0x80018fc;
+	//*r[11] = 0x3000100;
 	//debug = true;
 	while (true){
 #if GPU
@@ -153,10 +154,9 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x80012b4){ //0x80012b4
-			debug = true;
+		if (*r[PC] == 0x80018fc){ //0x80012b4
+			//debug = true;
 		}
-
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
@@ -174,7 +174,7 @@ int main(int argc, char *args[]){
 		LCDstatus.addr = loadFromAddress16(0x4000004, true);
 		startDMA();
 		updateTimers();
-		HWInterrupts(cycles);
+		//HWInterrupts(cycles);
 #if GPU
 		if (debug | (refreshRate > 10000)){
 			debugView.updatePalettes();

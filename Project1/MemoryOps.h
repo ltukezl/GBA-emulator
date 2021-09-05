@@ -3,16 +3,15 @@
 
 #include <stdint.h>
 
-extern unsigned char systemROM[0x4000];
-extern unsigned char unused[0x4000];
-extern unsigned char ExternalWorkRAM[0x1000000];
-extern unsigned char InternalWorkRAM[0x1000000];
-extern unsigned char IoRAM[0x1000000];
-extern unsigned char PaletteRAM[0x1000000];
-extern unsigned char VRAM[0x1000000];
-extern unsigned char OAM[0x1000000];
-extern unsigned char GamePak[0x2000000];
-extern unsigned char GamePakSRAM[0x2000000];
+extern uint8_t systemROM[0x4000];
+extern uint8_t ExternalWorkRAM[0x40000];
+extern uint8_t InternalWorkRAM[0x8000];
+extern uint8_t IoRAM[0x400];
+extern uint8_t PaletteRAM[0x400];
+extern uint8_t VRAM[0x18000];
+extern uint8_t OAM[0x400];
+extern uint8_t GamePak[0x2000000];
+extern uint8_t GamePakSRAM[0x10000];
 extern unsigned char* memoryLayout[16];
 
 void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val);

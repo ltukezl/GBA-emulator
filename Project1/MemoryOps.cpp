@@ -20,16 +20,15 @@ uint32_t SP_svc = 0x03007F00;
 uint32_t SP_irq = 0x03007FA0;
 uint32_t SP_usr = 0x03007F00;
 
-//recheck waht should be done on unused regions, breath of fire writes to "unused" area
-uint8_t systemROM[0x4000];
-uint8_t ExternalWorkRAM[0x1000000];
-uint8_t InternalWorkRAM[0x1000000]; //0x8000 should be in use only
-uint8_t IoRAM[0x1000000] = { 0 };
-uint8_t PaletteRAM[0x1000000];
-uint8_t VRAM[0x1000000];
-uint8_t OAM[0x1000000];
-uint8_t GamePak[0x2000000];
-uint8_t GamePakSRAM[0x2000000];
+uint8_t systemROM[0x4000] = { 0 };
+uint8_t ExternalWorkRAM[0x40000] = { 0 };
+uint8_t InternalWorkRAM[0x8000] = { 0 };
+uint8_t IoRAM[0x400] = { 0 };
+uint8_t PaletteRAM[0x400] = { 0 };
+uint8_t VRAM[0x18000] = { 0 };
+uint8_t OAM[0x400] = { 0 };
+uint8_t GamePak[0x2000000] = { 0 };
+uint8_t GamePakSRAM[0x10000] = { 0 };
 
 uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000 };
 unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
@@ -236,5 +235,6 @@ unsigned __int32 POP(){
 }
 
 void memoryInits(){
+	writeToAddress32(0, 0xe129f000);
 	writeToAddress32(0x4000800, 0x0D000020);
 }
