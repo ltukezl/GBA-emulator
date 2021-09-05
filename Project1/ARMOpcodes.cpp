@@ -485,12 +485,10 @@ void MSR(uint32_t opCode){
 	if (SPSR)
 		*r[16] = shiftedImm;
 	else {
-		if (cpsr.mode == SYS){
-			cpsr.zero = tmp_cpsr.zero;
-			cpsr.overflow = tmp_cpsr.overflow;
-			cpsr.carry = tmp_cpsr.carry;
-			cpsr.negative = tmp_cpsr.negative;
-		}
+		cpsr.zero = tmp_cpsr.zero;
+		cpsr.overflow = tmp_cpsr.overflow;
+		cpsr.carry = tmp_cpsr.carry;
+		cpsr.negative = tmp_cpsr.negative;
 	}
 
 	if (debug)
@@ -820,6 +818,8 @@ void singleDataTrasnferImmediatePre(int opCode){
 		if (destinationReg == 15)
 			*r[destinationReg] += 8;
 		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
+		if (destinationReg == 15)
+			*r[destinationReg] -= 8;
 		break;
 	case 1:
 		*r[baseReg] += upDownBit ? offset : -offset;
@@ -829,6 +829,7 @@ void singleDataTrasnferImmediatePre(int opCode){
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 		break;
 	}
+	
 	if (debug && loadStore)
 		std::cout << "ldr r" << destinationReg << " [r" << baseReg << " =" << (upDownBit ? offset : -offset) << "] ";
 	else if (debug && !loadStore)
@@ -850,6 +851,8 @@ void singleDataTrasnferImmediatePost(int opCode){
 			*r[destinationReg] += 8;
 		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
 		calculated += upDownBit ? offset : -offset;
+		if (destinationReg == 15)
+			*r[destinationReg] -= 8;
 		break;
 	case 1:
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
@@ -927,6 +930,8 @@ void singleDataTrasnferRegisterPost(int opCode){
 			*r[destinationReg] += 8;
 		byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
 		*r[baseReg] += upDownBit ? offset : -offset;
+		if (destinationReg == 15)
+			*r[destinationReg] -= 8;
 		break;
 	case 1:
 		*r[destinationReg] = byteFlag ? loadFromAddress(*r[baseReg]) : loadFromAddress32(*r[baseReg]);

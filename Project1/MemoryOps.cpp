@@ -110,6 +110,7 @@ void writeToAddress(uint32_t address, uint8_t value){
 void writeToAddress16(uint32_t address, uint16_t value){
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
+	bool misaligned = address & 1;
 
 	DISPCNT.addr = rawLoad16(IoRAM, 0);
 	if (mask == 6 && DISPCNT.bgMode == 0)
@@ -123,12 +124,17 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		rawWrite16(IoRAM, 0x202, tmp);
 		return;
 	}
+	if (misaligned){
+		*(uint32_t*)&(uint8_t)memoryLayout[mask][address - 3] = value;
+		return;
+	}
 	*(uint16_t*)&(uint8_t)memoryLayout[mask][address] = value;
 }
 
 void writeToAddress32(uint32_t address, uint32_t value){
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
+	bool misaligned = address & 1;
 	
 	DISPCNT.addr = rawLoad16(IoRAM, 0);
 	if (mask == 6 && DISPCNT.bgMode == 0)
@@ -136,6 +142,10 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	else
 		address %= memsizes[mask];
 
+	if (misaligned){
+		*(uint32_t*)&(uint8_t)memoryLayout[mask][address - 3] = value;
+		return;
+	}
 	*(uint32_t*)&(uint8_t)memoryLayout[mask][address] = value;
 	
 	if (address == 0x4000208){ //waitstate reg
@@ -185,7 +195,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 		address %= memsizes[mask];
 
 	if (misaligned)
-		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address & ~1)], 8);
+		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address - 3)], 24);
 	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address] & 0xFFFF;
 }
 
@@ -209,7 +219,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 		address %= memsizes[mask];
 
 	if (misaligned)
-		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address & ~1)], 8);
+		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address - 3)], 24);
 	return *(uint32_t*)&(uint8_t)memoryLayout[mask][address];
 }
 
