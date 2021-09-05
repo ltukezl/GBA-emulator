@@ -125,7 +125,7 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		return;
 	}
 	if (misaligned){
-		*(uint32_t*)&(uint8_t)memoryLayout[mask][address - 3] = value;
+		*(uint32_t*)&(uint8_t)memoryLayout[mask][address - 1] = value;
 		return;
 	}
 	*(uint16_t*)&(uint8_t)memoryLayout[mask][address] = value;
@@ -195,7 +195,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 		address %= memsizes[mask];
 
 	if (misaligned)
-		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address - 3)], 24);
+		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address - 1)], 8);
 	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address] & 0xFFFF;
 }
 

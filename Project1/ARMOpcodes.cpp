@@ -75,7 +75,7 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
         b(*r[baseReg], *r[15] + 12);
     }
 
-    *r[baseReg] = writeBack ? *r[baseReg] : oldBase;
+	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
 }
 
 template <typename function1, typename function2>
@@ -105,10 +105,10 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 		}
 		else if (~upDownBit){
 			if (regList & 0x4000){
-				*r[15-i] = a(*r[baseReg], false);
+				*r[14-i] = a(*r[baseReg], false);
 				b(*r[baseReg], false);
 				if (debug)
-					std::cout << "r" << 15 - i << " ";
+					std::cout << "r" << 14 - i << " ";
 			}
 			regList <<= 1;
 		}
@@ -136,7 +136,7 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){ // not test
 		else if (~upDownBit){
 			if (regList & 0x4000){
 				a(*r[baseReg], false);
-				*r[15-i] = b(*r[baseReg], false);
+				*r[14-i] = b(*r[baseReg], false);
 			}
 			regList <<= 1;
 		}
@@ -147,8 +147,16 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){ // not test
 
 
 void singleDataSwap(int opCode){
-    std::cout << "singleDataSwap\n";
-	std::cin >> *r[0];
+	uint32_t rm = opCode & 0xF;
+	uint32_t rd = (opCode >> 12) & 0xF;
+	uint32_t rn = (opCode >> 16) & 0xF;
+	bool byteFlag = (opCode >> 22) & 1;
+
+	uint32_t tmp = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
+	byteFlag ? writeToAddress(*r[rn], *r[rm]) : writeToAddress32(*r[rn], *r[rm]);
+	*r[rd] = tmp;
+
+    std::cout << "swp r" << rd << " r" << rm << " r[" << rn << "] ";
 }
 
 void branchAndExhange(int opCode){
@@ -684,8 +692,8 @@ void halfDataTransfer(int opCode){
 	int rn = (opCode >> 16) & 0xF;
 	int rd = (opCode >> 12) & 0xF;
 	int offset = (opCode >> 4) & 0xF0 | opCode & 0xF;
-	offset += (rn == 15) ? 8 : 0;
-	int calculated = (rd == 15) ? (*r[rn] + 12) : *r[rn];
+	offset += (rn == 15) ? 8 : 0; //8 or 4? 
+	int calculated = (rd == 15) ? (*r[rn] + 12) : *r[rn]; //12 or 8?
 
 	switch (func){
 		case 0:
@@ -697,7 +705,10 @@ void halfDataTransfer(int opCode){
 				else if (shFlag == 2)
 					*r[rd] = signExtend<8>(loadFromAddress(calculated));
 				else
-					*r[rd] = signExtend<16>(loadFromAddress16(calculated));
+					if (calculated & 1)
+						*r[rd] = signExtend<8>(loadFromAddress16(calculated));
+					else
+						*r[rd] = signExtend<16>(loadFromAddress16(calculated));
 				if (!pFlag)
 					calculated += uFlag ? *r[offset] : -*r[offset];
 			}
@@ -713,7 +724,7 @@ void halfDataTransfer(int opCode){
 				if (!pFlag)
 					calculated += uFlag ? *r[offset] : -*r[offset];
 			}
-			*r[rn] = wFlag ? calculated : *r[rn];
+			*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
 			break;
 		case 1:
 			if (lFlag){
@@ -724,7 +735,10 @@ void halfDataTransfer(int opCode){
 				else if (shFlag == 2)
 					*r[rd] = signExtend<8>(loadFromAddress(calculated));
 				else
-					*r[rd] = signExtend<16>(loadFromAddress16(calculated));
+					if (calculated & 1)
+						*r[rd] = signExtend<8>(loadFromAddress16(calculated));
+					else
+						*r[rd] = signExtend<16>(loadFromAddress16(calculated));
 				if (!pFlag)
 					calculated += uFlag ? offset : offset;
 			}
@@ -740,7 +754,7 @@ void halfDataTransfer(int opCode){
 				if (!pFlag)
 					calculated += uFlag ? offset : -offset;
 			}
-			*r[rn] = wFlag ? calculated : *r[rn];
+			*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
 			break;
 	}
 	
@@ -814,7 +828,7 @@ void singleDataTrasnferImmediatePre(int opCode){
 	case 0:
 		*r[baseReg] += upDownBit ? offset : -offset;
 		calculated = *r[baseReg];
-		*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
+		*r[baseReg] = (writeBack)? *r[baseReg] : oldReg;
 		if (destinationReg == 15)
 			*r[destinationReg] += 8;
 		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
@@ -825,7 +839,7 @@ void singleDataTrasnferImmediatePre(int opCode){
 		*r[baseReg] += upDownBit ? offset : -offset;
 		//std::cout << "reg " << baseReg << " " << r[baseReg];
 		calculated = *r[baseReg];
-		*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
+		*r[baseReg] = (writeBack) ? *r[baseReg] : oldReg;
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 		break;
 	}
@@ -894,13 +908,13 @@ void singleDataTrasnferRegisterPre(int opCode){
 				*r[rd] += 8;
 			*r[rn] += upDownBit ? offset : -offset;
 			byteFlag ? writeToAddress(*r[rn], *r[rd]) : writeToAddress32(*r[rn], *r[rd]);
-			*r[rn] = writeBack ? *r[rn] : oldReg;
+			*r[rn] = (writeBack) ? *r[rn] : oldReg;
 			break;
 
 		case 1:
 			*r[rn] += upDownBit ? offset : -offset;
 			*r[rd] = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
-			*r[rn] = writeBack ? *r[rn] : oldReg;
+			*r[rn] = (writeBack) ? *r[rn] : oldReg;
 			if (debug && byteFlag)
 				std::cout << "ldrb r" << rd << ", [r" << rn << " r" << rm << "] ";
 			else if (debug && !byteFlag)

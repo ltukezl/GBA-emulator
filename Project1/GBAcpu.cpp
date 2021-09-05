@@ -132,7 +132,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	//fopen_s(&file, "program2.bin", "rb");
+	//fopen_s(&file, "program4.bin", "rb");
 	fopen_s(&file, "arm.gba", "rb");
 	//fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
@@ -142,7 +142,7 @@ int main(int argc, char *args[]){
 	memoryInits();
 	
 	int refreshRate = 0;
-	//*r[PC] = 0x8001270;
+	//*r[PC] = 0x8001740;
 	//debug = true;
 	while (true){
 #if GPU
@@ -153,14 +153,10 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x80012a0){ //0x80012b4
+		if (*r[PC] == 0x80012b4){ //0x80012b4
 			debug = true;
 		}
-		/*
-		if (*r[15] == 0x13c || *r[15] == 0x188){
-			irqExit = true;
-		}
-		*/
+
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
@@ -172,15 +168,7 @@ int main(int argc, char *args[]){
 			*r[PC] -= 0x4000000;
 		else if (*r[PC] >= 0xA000000)
 			*r[PC] -= 0x2000000;
-		/*
-		if (irqExit){	
-			r = usrSys;
-			InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
-			irqExit = false;
-			if (debug)
-				std::cout << "PC now 0x" << std::hex << *r[PC] << std::dec << std::endl;
-		}
-		*/
+
 		InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 		InterruptEnableRegister.addr = loadFromAddress16(0x4000200, true);
 		LCDstatus.addr = loadFromAddress16(0x4000004, true);

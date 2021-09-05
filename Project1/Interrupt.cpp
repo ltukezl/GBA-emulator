@@ -16,7 +16,7 @@ void interruptController(){
 	}
 
 	r = svc;
-	*r[14] = *r[PC];
+	*r[14] = *r[PC] + 4;
 	*r[16] = cpsr.val;
 	//svc mode
 	cpsr.IRQDisable = 1;
