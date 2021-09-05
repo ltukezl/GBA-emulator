@@ -156,12 +156,8 @@ int main(int argc, char *args[]){
 		if (*r[PC] == 0x80012a0){ //0x80012b4
 			debug = true;
 		}
-		/*
-		if (*r[15] == 0x13c || *r[15] == 0x188){
-			irqExit = true;
-		}
-		*/
-		unsigned int opCode = loadFromAddress32(*r[PC], true);
+
+		uint32_t opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
 			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << dec;
@@ -172,15 +168,7 @@ int main(int argc, char *args[]){
 			*r[PC] -= 0x4000000;
 		else if (*r[PC] >= 0xA000000)
 			*r[PC] -= 0x2000000;
-		/*
-		if (irqExit){	
-			r = usrSys;
-			InterruptFlagRegister.addr = loadFromAddress16(0x4000202);
-			irqExit = false;
-			if (debug)
-				std::cout << "PC now 0x" << std::hex << *r[PC] << std::dec << std::endl;
-		}
-		*/
+
 		InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 		InterruptEnableRegister.addr = loadFromAddress16(0x4000200, true);
 		LCDstatus.addr = loadFromAddress16(0x4000004, true);

@@ -808,7 +808,7 @@ void singleDataTrasnferImmediatePre(int opCode){
 	int baseReg = (opCode >> 16) & 15;
 	int destinationReg = (opCode >> 12) & 15;
 	int offset = opCode & 0xFFF;
-	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind PS
+	offset += (baseReg == 15) ? 4 : 0;
 	int oldReg = *r[baseReg];
 	switch (loadStore){
 	case 0:
@@ -823,7 +823,6 @@ void singleDataTrasnferImmediatePre(int opCode){
 		break;
 	case 1:
 		*r[baseReg] += upDownBit ? offset : -offset;
-		//std::cout << "reg " << baseReg << " " << r[baseReg];
 		calculated = *r[baseReg];
 		*r[baseReg] = writeBack ? *r[baseReg] : oldReg;
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
@@ -843,7 +842,7 @@ void singleDataTrasnferImmediatePost(int opCode){
 	int baseReg = (opCode >> 16) & 15;
 	int destinationReg = (opCode >> 12) & 15;
 	int offset = opCode & 0xFFF;
-	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
+	offset += (baseReg == 15) ? 4 : 0; 
 	int calculated = *r[baseReg];
 	switch (loadStore){
 	case 0:

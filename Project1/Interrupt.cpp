@@ -3,31 +3,68 @@
 #include "GBAcpu.h"
 #include "memoryMappedIO.h"
 #include <iostream>
+#include <stdint.h>
 
 int vBlankCounter = 0;
 int hBlankCounter = 0;
 bool IRQMode = false;
 
-void interruptController(){
-	debug = false;
-	InterruptMaster.addr = loadFromAddress16(0x4000208, true);
-	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
-		return;
+class SWI {
+	union CPSR* m_cpsr;
+	uint16_t m_IME = 0;
+
+protected:
+	SWI(uint16_t IMEAddr, union CPSR* cpsr){
+		m_IME = IMEAddr;
+		m_cpsr = cpsr;
 	}
 
-	r = svc;
-	*r[14] = *r[PC];
-	*r[16] = cpsr.val;
-	//svc mode
-	cpsr.IRQDisable = 1;
-	cpsr.thumb = 0;
-	cpsr.mode = SUPER;
+	bool enabled(){
+		InterruptMaster.addr = rawLoad16(IoRAM, m_IME);
+		if (!InterruptMaster.IRQEnabled || m_cpsr->IRQDisable){
+			return false;
+		}
+		return true;
+	}
 
-	*r[PC] = 0x8;
+	void execute(){
+		saveContext();
+		updateStatusReg();
+		*r[PC] = 0x8;
+	}
+
+	void saveContext(){
+		*r[14] = *r[PC];
+		*r[16] = m_cpsr->val;
+	}
+
+	void updateStatusReg(){
+		m_cpsr->IRQDisable = 1;
+		m_cpsr->thumb = 0;
+		m_cpsr->mode = SUPER;
+	}
+};
+
+class SupervisorMode : SWI{
+public:
+	SupervisorMode(uint16_t IMEAddr, union CPSR* cpsr) : SWI(IMEAddr, cpsr){
+
+	}
+	void sendInterrupt(){
+		r = svc;
+		execute();
+	}
+};
+
+SupervisorMode* swi = new SupervisorMode(0x208, &cpsr);
+
+void interruptController(){
+	
+
 }
 
 void HWInterrupts(int cycles){
-	InterruptMaster.addr = loadFromAddress16(0x4000208, true) & 1;
+	InterruptMaster.addr = rawLoad16(IoRAM, 0x208);
 
 	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
 		return;
