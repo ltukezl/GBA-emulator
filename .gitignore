@@ -2,3 +2,6 @@
 .vscode
 Debug/
 *.vcxproj.user
+*.sdf
+Project1/*.gba
+Project1/*.bin
