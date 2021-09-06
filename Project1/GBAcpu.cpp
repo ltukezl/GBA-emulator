@@ -132,7 +132,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program3.bin", "rb");
+	fopen_s(&file, "program4.bin", "rb");
 	//fopen_s(&file, "arm.gba", "rb");
 	//fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
@@ -154,13 +154,13 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x80018fc){ //0x80012b4
+		if (*r[PC] == 0x8021a74){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
-			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << dec;
+			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << hex << " LR " << *r[LR] << " " << " SP... " << loadFromAddress32(0x3007864) << " ";
 
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 
@@ -174,7 +174,7 @@ int main(int argc, char *args[]){
 		LCDstatus.addr = loadFromAddress16(0x4000004, true);
 		startDMA();
 		updateTimers();
-		//HWInterrupts(cycles);
+		HWInterrupts(cycles);
 #if GPU
 		if (debug | (refreshRate > 10000)){
 			debugView.updatePalettes();

@@ -54,8 +54,14 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
     for(int i = 0; i < 15; i++){
 		if (upDownBit){
 			if (regList & 1){
-				a(*r[baseReg], *r[i]);
-				b(*r[baseReg], *r[i]);
+				if (i == 13 && baseReg == 13){
+					a(*r[baseReg], oldBase);
+					b(*r[baseReg], oldBase);
+				}
+				else{
+					a(*r[baseReg], *r[14 - i]);
+					b(*r[baseReg], *r[14 - i]);
+				}
 				if (debug)
 					std::cout << "r" << i << " ";
 			}
@@ -64,8 +70,14 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 		//we are pushing from higer registers first
 		else if (~upDownBit){
 			if (regList & 0x4000){
-				a(*r[baseReg], *r[14-i]);
-				b(*r[baseReg], *r[14-i]);
+				if (i == 1 && baseReg == 13){
+					a(*r[baseReg], oldBase);
+					b(*r[baseReg], oldBase);
+				}
+				else{
+					a(*r[baseReg], *r[14 - i]);
+					b(*r[baseReg], *r[14 - i]);
+				}
 				if (debug)
 					std::cout << "r" << 14 - i << " ";
 			}
@@ -994,7 +1006,7 @@ void ARMExecute(int opCode){
         int subType;
         switch(opCodeType){
 			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
-				//interruptController();
+				interruptController();
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA
 				break;
