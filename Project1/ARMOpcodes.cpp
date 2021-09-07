@@ -765,8 +765,11 @@ void halfDataTransfer(int opCode){
 				else if (shFlag == 2)
 					*r[rd] = signExtend<8>(loadFromAddress(calculated));
 				else
-					if (calculated & 1)
-						*r[rd] = signExtend<8>(loadFromAddress16(calculated));
+					if (calculated & 1){
+						*r[rd] = loadFromAddress16(calculated);
+						if (*r[rd] & 0x80) //sign bit on
+							*r[rd] |= 0xFFFFFF00;
+					}
 					else
 						*r[rd] = signExtend<16>(loadFromAddress16(calculated));
 				if (!pFlag)
@@ -795,8 +798,11 @@ void halfDataTransfer(int opCode){
 				else if (shFlag == 2)
 					*r[rd] = signExtend<8>(loadFromAddress(calculated));
 				else
-					if (calculated & 1)
-						*r[rd] = signExtend<8>(loadFromAddress16(calculated));
+					if (calculated & 1){
+						*r[rd] = loadFromAddress16(calculated);
+						if (*r[rd] & 0x80) //sign bit on
+							*r[rd] |= 0xFFFFFF00;
+					}
 					else
 						*r[rd] = signExtend<16>(loadFromAddress16(calculated));
 				if (!pFlag)

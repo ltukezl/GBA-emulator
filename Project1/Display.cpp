@@ -21,7 +21,7 @@ Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y),
 }
 
 void Display::scanPalettes(){
-	int startAddr = 0x05000000;
+	int startAddr = 0;
 	sf::RectangleShape rectangle;
 	rectangle.setSize(sf::Vector2f(16, 16));
 
@@ -30,7 +30,7 @@ void Display::scanPalettes(){
 	//for bg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			ColorPaletteRam.addr = loadFromAddress16(startAddr, true);
+			ColorPaletteRam.addr = rawLoad16(PaletteRAM, startAddr);
 			int redScaled = ColorPaletteRam.red * scalar;
 			int greenScaled = ColorPaletteRam.green * scalar;
 			int blueScaled = ColorPaletteRam.blue * scalar;
@@ -45,7 +45,7 @@ void Display::scanPalettes(){
 	//for fg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			ColorPaletteRam.addr = loadFromAddress16(startAddr, true);
+			ColorPaletteRam.addr = rawLoad16(PaletteRAM, startAddr);
 			int redScaled = ColorPaletteRam.red * scalar;
 			int greenScaled = ColorPaletteRam.green * scalar;
 			int blueScaled = ColorPaletteRam.blue * scalar;
@@ -59,7 +59,7 @@ void Display::scanPalettes(){
 }
 
 void Display::fillTiles(uint32_t regOffset){
-	BgCnt.addr = loadFromAddress16(0x4000008 + regOffset, true);
+	BgCnt.addr = rawLoad16(IoRAM, 8 + regOffset);
 	int startAddr = 0x06000000;
 
 	/*creates tilemaps 1 and 2*/
@@ -98,15 +98,15 @@ void Display::fillTiles(uint32_t regOffset){
 }
 
 void Display::fillBG(uint32_t regOffset){
-	BgCnt.addr = loadFromAddress16(0x4000008 + regOffset, true);
-	uint32_t startAddr = 0x06000000 + BgCnt.bgBaseblock * 2048;
+	BgCnt.addr = rawLoad16(IoRAM, 8 + regOffset);
+	uint32_t startAddr = BgCnt.bgBaseblock * 2048;
 	uint32_t tileBaseBlock = BgCnt.tileBaseBlock * 0x200;
 	/*fills BG map*/
 	sf::Texture BG1Texture;
 	BG1Texture.create(256, 256);
 	for (int i = 0; i < 32; i++){
 		for (int k = 0; k < 32; k++){
-			uint16_t reg = loadFromAddress16(startAddr, true);
+			uint16_t reg = rawLoad16(VRAM, startAddr);
 			uint16_t tilNum = reg & 0x1FF;
 			BG1Texture.update(tileMap[tilNum + tileBaseBlock], 8 * k, 8 * i);
 			startAddr += 2;
@@ -120,7 +120,7 @@ void Display::fillBG(uint32_t regOffset){
 }
 
 void Display::fillObjects(uint32_t regOffset){
-	BgCnt.addr = loadFromAddress16(0x4000008 + regOffset, true);
+	BgCnt.addr = rawLoad16(IoRAM, 8 + regOffset);
 	int startAddr = 0x06010000;
 
 	/*creates tilemaps 1 and 2*/
@@ -161,7 +161,7 @@ void Display::fillObjects(uint32_t regOffset){
 void Display::updatePalettes(){
 	display->clear(sf::Color::Black);
 
-	DISPCNT.addr = loadFromAddress16(0x4000000, true);
+	DISPCNT.addr = rawLoad16(IoRAM, 0);
 
 	scanPalettes();
 	fillObjects(0);
@@ -242,7 +242,7 @@ void Display::handleEvents(){
 
 		if (event.type == sf::Event::KeyPressed)
 		{
-			KEYINPUT.addr = loadFromAddress16(0x4000130, true);
+			KEYINPUT.addr = rawLoad16(IoRAM, 130);
 			if (event.key.code == sf::Keyboard::Down)
 			{
 				KEYINPUT.btn_down = 0;
@@ -286,7 +286,7 @@ void Display::handleEvents(){
 
 		else if (event.type == sf::Event::KeyReleased)
 		{
-			KEYINPUT.addr = loadFromAddress16(0x4000130, true);
+			KEYINPUT.addr = rawLoad16(IoRAM, 130);
 			if (event.key.code == sf::Keyboard::Down)
 			{
 				KEYINPUT.btn_down = 1;

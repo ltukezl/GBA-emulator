@@ -468,8 +468,13 @@ void loadStoreSignExtend(uint16_t opcode){
 	if (op.halfWord && op.extend){
 		if (totalAddress & 1) //misaligned address
 			*r[op.destSourceReg] = signExtend<8>(loadFromAddress16(totalAddress));
-		else
-			*r[op.destSourceReg] = signExtend<16>(loadFromAddress16(totalAddress));
+		else{
+			if (totalAddress & 1){
+				*r[op.destSourceReg] = loadFromAddress16(totalAddress);
+				if (*r[op.destSourceReg] & 0x80) //sign bit on
+					*r[op.destSourceReg] |= 0xFFFFFF00;
+			}
+		}
 	}
 	else if (op.halfWord && !op.extend)	
 		*r[op.destSourceReg] = loadFromAddress16(totalAddress);

@@ -38,22 +38,14 @@ void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint
 	}
 }
 
-bool debug2 = true;
-
 void startDMA(){
-	InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
+	InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
 	for (int i = 0; i < 4; i++){
-		DMAcontrol.addr = loadFromAddress32(0x40000BA + 0xC * i);
+		DMAcontrol.addr = rawLoad32(IoRAM, 0xBA + 0xC * i);
 		if ((DMAcontrol.enable) || (InterruptFlagRegister.hBlank && DMAcontrol.irq == 2) || (InterruptFlagRegister.vBlank && DMAcontrol.irq == 1)){
-			uint32_t sourceAddress = loadFromAddress32(0x40000B0 + 0xC * i, true);
-			uint32_t destinationAddress = loadFromAddress32(0x40000B4 + 0xC * i, true);
-			uint32_t wordCount = loadFromAddress16(0x40000B8 + 0xC * i, true);
-
-			//if ((destinationAddress >= 0x8000000 && destinationAddress < 0xe000000) && i != 3)
-			//	return;
-
-			if (destinationAddress == 0xDEADBEFC)
-				debug2 = false;
+			uint32_t sourceAddress = rawLoad32(IoRAM, 0xB0 + 0xC * i);
+			uint32_t destinationAddress = rawLoad32(IoRAM, 0xB4 + 0xC * i);
+			uint32_t wordCount = rawLoad16(IoRAM, 0xB8 + 0xC * i);
 
 			if (sourceAddress < 0x05000000)
 				sourceAddress &= 0x7FFFFFF;
