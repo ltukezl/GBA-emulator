@@ -81,12 +81,14 @@ otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
 #if BIOS_START
-	cpsr.val = 0xD3;	//current program status register
+	cpsr.FIQDisable = 1;
+	cpsr.IRQDisable = 1;
+	cpsr.mode = SUPER;
 #else
 	cpsr.val = 0x1f;	//current program status register
 #endif
 
-	writeToAddress16(0x4000130, 0xFFFF); // input register, 0 = pressed down, 1 = released
+	rawWrite16(IoRAM, 0x130, 0xFFFF); // input register, 0 = pressed down, 1 = released
 
 #if GPU
 	Display debugView(1280, 496, "paletteWindow");
@@ -133,8 +135,6 @@ int main(int argc, char *args[]){
     FILE *file;
 	FILE* bios;
 	fopen_s(&file, "program4.bin", "rb");
-	//fopen_s(&file, "arm.gba", "rb");
-	//fopen_s(&file, "memory.gba", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -142,9 +142,6 @@ int main(int argc, char *args[]){
 	memoryInits();
 	
 	int refreshRate = 0;
-	//*r[PC] = 0x80018fc;
-	//*r[11] = 0x3000100;
-	//debug = true;
 	uint32_t prevAddr = 0;
 	while (true){
 #if GPU
@@ -152,10 +149,10 @@ int main(int argc, char *args[]){
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			//continue;
+			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8020afa){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x3bC){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
  		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
