@@ -214,6 +214,7 @@ void lslCond(int &saveTo, int from, int immidiate) {
 	if (immidiate > 31){
 		saveTo = 0;
 		zero(saveTo);
+		return;
 	}
 	else{
 		saveTo = from << immidiate;
@@ -307,6 +308,27 @@ void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
 void(*ARMshiftsNoCond[4])(int&, int, int) = { lslNoCond, lsrNoCond, asrNoCond, rorNoCond };
 char* ARMshifts_s[4] = { "lsl", "lsr", "asr", "ror" };
 
+union barrelShifterOp{
+	uint8_t value;
+	struct {
+		uint8_t type : 1;
+		uint8_t operation : 2;
+		uint8_t immediate : 5;
+	};
+}barrelShifterOp;
+
+uint32_t barrelShifter(uint8_t immediate, bool setStatus){
+	uint32_t result;
+	barrelShifterOp.value = immediate;
+	if (barrelShifterOp.type == 0){
+		//if (!(barrelShifterOp.operation == 0 && barrelShifterOp.immediate == 0)){
+		if (barrelShifterOp.operation == 0){
+			cpsr.carry = barrelShifterOp.immediate;
+		}
+	}
+	return 0;
+}
+
 void ARMAnd(int& saveTo, int operand1, int operand2){
     saveTo = operand1 & operand2;
 }
@@ -368,12 +390,11 @@ void ARMAdc(int& saveTo, int operand1, int operand2){
 }
 
 void ARMAdcs(int& saveTo, int operand1, int operand2){
-    int tmpOperand = saveTo;
 	saveTo = operand1 + operand2 + cpsr.carry;
     zero(saveTo);
     negative(saveTo);
-    addCarry(tmpOperand, operand1, saveTo);
-    addOverflow(tmpOperand, operand1, saveTo);
+	addCarry(operand2, operand1, saveTo);
+	addOverflow(operand2, operand1, saveTo);
 }
 
 void ARMSbc(int& saveTo, int operand1, int operand2){
@@ -381,12 +402,11 @@ void ARMSbc(int& saveTo, int operand1, int operand2){
 }
 
 void ARMSbcs(int& saveTo, int operand1, int operand2){
-    int tmpOperand = saveTo;
-	saveTo = (operand1 - operand2) - !cpsr.carry;
+	saveTo = operand1 - operand2 - !cpsr.carry;
     zero(saveTo);
     negative(saveTo);
-    subCarry(tmpOperand, operand1, saveTo);
-	cpsr.overflow = (saveTo > 0) && !(operand1 > 0 && operand2 > 0);
+	subCarry(operand1, operand2, saveTo);
+	subOverflow(operand1, operand2, saveTo);
 }
 
 void ARMRsc(int& saveTo, int operand1, int operand2){
@@ -394,12 +414,11 @@ void ARMRsc(int& saveTo, int operand1, int operand2){
 }
 
 void ARMRscs(int& saveTo, int operand1, int operand2){
-    int tmpOperand = saveTo;
-    saveTo = operand2 - operand1 + cpsr.carry - 1;
+    saveTo = operand2 - operand1 - !cpsr.carry;
     zero(saveTo);
     negative(saveTo);
-    subCarry(operand2, tmpOperand, saveTo);
-    subOverflow(operand2, tmpOperand, saveTo);
+	subCarry(operand2, operand1, saveTo);
+	subOverflow(operand2, operand1, saveTo);
 }
 
 void ARMTST(int& saveTo, int operand1, int operand2){
@@ -465,7 +484,6 @@ void ARMMvns(int& saveTo, int operand1, int operand2){
     negative(saveTo);
 }
 
-
 void updateMode(){
 	//std::cout << "switched mode to " << mode << std::endl;
 	switch (cpsr.mode){
@@ -502,7 +520,6 @@ void ARMMSR2(int& saveTo, int operand1, int operand2){
 	*r[16] = operand2;
 	updateMode();
 }
-
 
 int ROR(unsigned int immediate, unsigned int by){
 	if (by == 0)

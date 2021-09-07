@@ -4,6 +4,7 @@
 #include "MemoryOps.h"
 #include "iostream"
 
+
 void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint32_t wordCount){
 	for (uint32_t k = 0; k < wordCount; k++){
 		if (DMAcontrol.transferType == 0){
@@ -37,6 +38,8 @@ void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint
 	}
 }
 
+bool debug2 = true;
+
 void startDMA(){
 	InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	for (int i = 0; i < 4; i++){
@@ -45,6 +48,12 @@ void startDMA(){
 			uint32_t sourceAddress = loadFromAddress32(0x40000B0 + 0xC * i, true);
 			uint32_t destinationAddress = loadFromAddress32(0x40000B4 + 0xC * i, true);
 			uint32_t wordCount = loadFromAddress16(0x40000B8 + 0xC * i, true);
+
+			//if ((destinationAddress >= 0x8000000 && destinationAddress < 0xe000000) && i != 3)
+			//	return;
+
+			if (destinationAddress == 0xDEADBEFC)
+				debug2 = false;
 
 			if (sourceAddress < 0x05000000)
 				sourceAddress &= 0x7FFFFFF;

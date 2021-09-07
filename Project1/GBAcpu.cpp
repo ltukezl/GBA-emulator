@@ -145,23 +145,25 @@ int main(int argc, char *args[]){
 	//*r[PC] = 0x80018fc;
 	//*r[11] = 0x3000100;
 	//debug = true;
+	uint32_t prevAddr = 0;
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 10000))
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			continue;
+			//continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8021a74){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
 		unsigned int opCode = loadFromAddress32(*r[PC], true);
 
 		if (debug)
-			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << hex << " LR " << *r[LR] << " " << " SP... " << loadFromAddress32(0x3007864) << " ";
+			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << hex << " LR " << *r[LR] << " " << " prev " << prevAddr << " ";
 
+		uint32_t prevAddr = *r[LR];
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 
 		if (*r[PC] >= 0xC000000)

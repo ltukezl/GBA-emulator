@@ -30,7 +30,7 @@ uint8_t OAM[0x400] = { 0 };
 uint8_t GamePak[0x2000000] = { 0 };
 uint8_t GamePakSRAM[0x10000] = { 0 };
 
-uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000 };
+uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x10000, 0x10000 };
 unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
 
 __int32 previousAddress = 0;
@@ -145,6 +145,7 @@ void writeToAddress32(uint32_t address, uint32_t value){
 		*(uint32_t*)&(uint8_t)memoryLayout[mask][address - 3] = value;
 		return;
 	}
+
 	*(uint32_t*)&(uint8_t)memoryLayout[mask][address] = value;
 	
 	if (address == 0x4000208){ //waitstate reg
@@ -219,6 +220,9 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 
 	if (misaligned)
 		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address - 3)], 24);
+	uint32_t val = *(uint32_t*)&(uint8_t)memoryLayout[mask][address];
+	if (val == 0x656dBABE)
+		debug = true;
 	return *(uint32_t*)&(uint8_t)memoryLayout[mask][address];
 }
 

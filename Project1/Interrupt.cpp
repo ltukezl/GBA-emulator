@@ -4,11 +4,15 @@
 #include "memoryMappedIO.h"
 #include <iostream>
 
+#define ENABLED 0
+
+
 int vBlankCounter = 0;
 int hBlankCounter = 0;
 bool IRQMode = false;
 
 void interruptController(){
+#if ENABLED
 	r = svc;
 	*r[14] = *r[PC];
 	*r[16] = cpsr.val;
@@ -18,9 +22,11 @@ void interruptController(){
 	cpsr.mode = SUPER;
 
 	*r[PC] = 0x8;
+#endif
 }
 
 void HWInterrupts(int cycles){
+#if ENABLED
 	InterruptMaster.addr = loadFromAddress16(0x4000208, true) & 1;
 
 	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
@@ -63,4 +69,5 @@ void HWInterrupts(int cycles){
 		cpsr.IRQDisable = 1;
 		cpsr.mode = IRQ;
 	}
+#endif
 }
