@@ -155,15 +155,14 @@ int main(int argc, char *args[]){
 			//continue;
 		}
 		step = false;
-		if (*r[PC] == 0){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x8020afa){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
-		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
+ 		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
 
 		if (debug)
-			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " " << hex << " LR " << *r[LR] << " " << " prev " << prevAddr << " ";
+			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
 
-		uint32_t prevAddr = *r[LR];
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 
 		if (*r[PC] >= 0xC000000)

@@ -184,13 +184,7 @@ void Display::updatePalettes(){
 	}
 	
 #ifdef ENABLED
-	InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
-	InterruptEnableRegister.addr = loadFromAddress16(0x4000200, true);
-	if (InterruptEnableRegister.vBlank && LCDstatus.vIRQEn){
-		if (DISPCNT.forceBlank)
-			InterruptFlagRegister.vBlank = 1;
-		rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
-	}
+
 #endif
 	
 	sf::Font font;

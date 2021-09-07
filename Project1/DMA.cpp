@@ -8,10 +8,10 @@
 void doDMA(uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint32_t wordCount){
 	for (uint32_t k = 0; k < wordCount; k++){
 		if (DMAcontrol.transferType == 0){
-			writeToAddress16(destinationAddress, loadFromAddress16(sourceAddress));
+			writeToAddress16(destinationAddress & ~0x1, loadFromAddress16(sourceAddress & ~0x1));
 		}
 		else{
-			writeToAddress32(destinationAddress, loadFromAddress32(sourceAddress));
+			writeToAddress32(destinationAddress & ~0x3, loadFromAddress32(sourceAddress & ~0x3));
 		}
 
 		if (DMAcontrol.destCtrl == 0 || DMAcontrol.destCtrl == 3)

@@ -4,8 +4,7 @@
 #include "memoryMappedIO.h"
 #include <iostream>
 
-#define ENABLED 0
-
+#define ENABLED 1
 
 int vBlankCounter = 0;
 int hBlankCounter = 0;
@@ -13,6 +12,7 @@ bool IRQMode = false;
 
 void interruptController(){
 #if ENABLED
+	//debug = true;
 	r = svc;
 	*r[14] = *r[PC];
 	*r[16] = cpsr.val;
@@ -27,13 +27,13 @@ void interruptController(){
 
 void HWInterrupts(int cycles){
 #if ENABLED
-	InterruptMaster.addr = loadFromAddress16(0x4000208, true) & 1;
+	InterruptMaster.addr = rawLoad16(IoRAM, 0x208);
 
 	if (!InterruptMaster.IRQEnabled || cpsr.IRQDisable){
 		return;
 	}
 	
-	if (InterruptEnableRegister.hBlank && LCDstatus.hIRQEn){
+	if (InterruptEnableRegister.hBlank){
 		if (hBlankCounter > (hBlankCounter + cycles) % 1232){
 			InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
 			InterruptFlagRegister.hBlank = 1;
@@ -43,7 +43,7 @@ void HWInterrupts(int cycles){
 		hBlankCounter = (hBlankCounter + cycles) % 1232;
 	}
 
-	if (InterruptEnableRegister.vBlank && LCDstatus.vIRQEn){
+	if (InterruptEnableRegister.vBlank){
 		if (vBlankCounter > (vBlankCounter + cycles) % 280896){
 			InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
 			InterruptFlagRegister.vBlank = 1;
@@ -55,14 +55,15 @@ void HWInterrupts(int cycles){
 	
 	//InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
 	if (InterruptFlagRegister.addr != 0){
-		//debug = true
+		//debug = true;
 		if (debug)
-			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << std::dec << std::endl;
+			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << " saving LR " << (cpsr.thumb ? *r[PC] + 4 : *r[PC]) << " " << std::dec << std::endl;
 		
 		r = irq;
 		*r[16] = cpsr.val;
 
-		*r[LR] = cpsr.thumb ? (*r[PC] + 4) : (*r[PC] + 8);
+		//*r[LR] = cpsr.thumb ? *r[PC] + 4 : *r[PC];
+		*r[LR] = *r[PC] + 4;
 		*r[PC] = 0x18;
 
 		cpsr.thumb = 0;
