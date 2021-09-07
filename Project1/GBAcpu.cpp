@@ -171,9 +171,9 @@ int main(int argc, char *args[]){
 		else if (*r[PC] >= 0xA000000)
 			*r[PC] -= 0x2000000;
 
-		InterruptFlagRegister.addr = loadFromAddress16(0x4000202, true);
-		InterruptEnableRegister.addr = loadFromAddress16(0x4000200, true);
-		LCDstatus.addr = loadFromAddress16(0x4000004, true);
+		InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
+		InterruptEnableRegister.addr = rawLoad16(IoRAM, 0x200);
+		LCDstatus.addr = rawLoad16(IoRAM, 0x204);
 		startDMA();
 		updateTimers();
 		HWInterrupts(cycles);

@@ -242,7 +242,7 @@ void Display::handleEvents(){
 
 		if (event.type == sf::Event::KeyPressed)
 		{
-			KEYINPUT.addr = rawLoad16(IoRAM, 130);
+			KEYINPUT.addr = rawLoad16(IoRAM, 0x130);
 			if (event.key.code == sf::Keyboard::Down)
 			{
 				KEYINPUT.btn_down = 0;
@@ -281,12 +281,12 @@ void Display::handleEvents(){
 				if (debug)
 					step = true;
 			}
-			writeToAddress16(0x4000130, KEYINPUT.addr);
+			rawWrite16(IoRAM, 0x130, KEYINPUT.addr);
 		}
 
 		else if (event.type == sf::Event::KeyReleased)
 		{
-			KEYINPUT.addr = rawLoad16(IoRAM, 130);
+			KEYINPUT.addr = rawLoad16(IoRAM, 0x130);
 			if (event.key.code == sf::Keyboard::Down)
 			{
 				KEYINPUT.btn_down = 1;
@@ -316,7 +316,7 @@ void Display::handleEvents(){
 			{
 				KEYINPUT.btn_B = 1;
 			}
-			writeToAddress16(0x4000130, KEYINPUT.addr);
+			rawWrite16(IoRAM, 0x130, KEYINPUT.addr);
 		}
 	}
 

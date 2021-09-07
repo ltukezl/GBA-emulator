@@ -210,7 +210,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	}
 
 	DISPCNT.addr = rawLoad16(IoRAM, 0);
-	bool misaligned = address & 1;
+	uint32_t misalignment = address & 3;
     uint32_t mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 
@@ -219,11 +219,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	else
 		address %= memsizes[mask];
 
-	if (misaligned)
-		return RORnoCond(*(uint32_t*)&(uint8_t)memoryLayout[mask][(address - 3)], 24);
-	uint32_t val = *(uint32_t*)&(uint8_t)memoryLayout[mask][address];
-
-	return *(uint32_t*)&(uint8_t)memoryLayout[mask][address];
+	return RORnoCond(rawLoad32(memoryLayout[mask], address - misalignment), (8 * misalignment));
 }
 
 void PUSH(int value){
@@ -240,5 +236,5 @@ unsigned __int32 POP(){
 
 void memoryInits(){
 	//writeToAddress32(0, 0xe129f000);
-	writeToAddress32(0x4000800, 0x0D000020);
+	rawWrite32(IoRAM, 0x800, 0x0D000020);
 }
