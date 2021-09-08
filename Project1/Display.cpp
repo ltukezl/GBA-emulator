@@ -186,7 +186,7 @@ void Display::updatePalettes(){
 #ifdef ENABLED
 
 #endif
-	
+	/*
 	sf::Font font;
 	font.loadFromFile("arial.ttf");
 
@@ -220,7 +220,7 @@ void Display::updatePalettes(){
 		text.setPosition(sf::Vector2f(850+256, 130 + 12 * i));
 		display->draw(text);
 	}
-	
+	*/
 	display->display();
 }
 
@@ -266,6 +266,17 @@ void Display::handleEvents(){
 			{
 				KEYINPUT.btn_B = 0;
 			}
+
+			if (event.key.code == sf::Keyboard::A)
+			{
+				KEYINPUT.btn_l = 0;
+			}
+
+			if (event.key.code == sf::Keyboard::S)
+			{
+				KEYINPUT.btn_r = 0;
+			}
+
 			if (event.key.code == sf::Keyboard::F)
 			{
 				debug = !debug;
@@ -276,6 +287,25 @@ void Display::handleEvents(){
 					step = true;
 			}
 			rawWrite16(IoRAM, 0x130, KEYINPUT.addr);
+
+			InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
+			InterruptEnableRegister.addr = rawLoad16(IoRAM, 0x200);
+			KEYCNT.addr = rawLoad16(IoRAM, 0x132);
+
+			if (KEYCNT.IRQ_EN && InterruptEnableRegister.keyPad){
+				uint16_t tmp = ~((KEYINPUT.addr) & 0x3FFF);
+				if (KEYCNT.IRQ_cond){
+					if (tmp & (KEYCNT.addr & 0x3FFF)){
+						InterruptFlagRegister.keyPad = 1;
+					}
+				}
+				else{
+					if ((tmp & (KEYCNT.addr & 0x3FFF)) == tmp){
+						InterruptFlagRegister.keyPad = 1;
+					}
+				}
+				rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
+			}
 		}
 
 		else if (event.type == sf::Event::KeyReleased)
@@ -309,6 +339,16 @@ void Display::handleEvents(){
 			if (event.key.code == sf::Keyboard::X)
 			{
 				KEYINPUT.btn_B = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::A)
+			{
+				KEYINPUT.btn_l = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::S)
+			{
+				KEYINPUT.btn_r = 1;
 			}
 			rawWrite16(IoRAM, 0x130, KEYINPUT.addr);
 		}

@@ -107,6 +107,9 @@ void writeToAddress(uint32_t address, uint8_t value){
 		return;
 	}
 
+	if (specialWrites(mask, address, value))
+		return;
+
 	memoryLayout[mask][address] = value;
 }
 

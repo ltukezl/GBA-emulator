@@ -208,59 +208,90 @@ void branchAndExhange(int opCode){
 		std::cout << "bx " << *r[15] << " ";
 }
 
+class OpCodeCond {
+protected: 
+	virtual bool calcCarry(uint32_t sourceValue, uint8_t shiftAmount) = 0;
+	virtual void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint32_t shiftAmount) = 0;
+public:
+	void execute(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount);
+};
+
+class Lsl : OpCodeCond {
+protected:
+	bool calcCarry(uint32_t sourceValue, uint8_t shiftAmount){
+		return ((unsigned)sourceValue >> (32 - shiftAmount) & 1);
+	}
+
+	void shift(uint32_t& destinationRegister,  uint32_t sourceValue, uint32_t shiftAmount){
+		if (shiftAmount >= 32){
+			destinationRegister = 0;
+			return;
+		}
+		destinationRegister = sourceValue << shiftAmount;
+	}
+};
+
 void lslCond(int &saveTo, int from, int immidiate) {
 	if (immidiate > 0)
 		cpsr.carry = ((unsigned)from >> (32 - immidiate) & 1);
-	if (immidiate > 31){
+	if (immidiate == 32){
 		saveTo = 0;
-		zero(saveTo);
-		return;
+		cpsr.carry = from & 1;
+	}
+	else if (immidiate >= 33){
+		saveTo = 0;
+		cpsr.carry = 0;
 	}
 	else{
 		saveTo = from << immidiate;
-		zero(saveTo);
-		negative(saveTo);
 	}
+	negative(saveTo);
+	zero(saveTo);
 }
 
 void lsrCond(int &saveTo, int from, int immidiate) {
-	if (immidiate != 0)
+	if (immidiate > 0)
 		cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
-	if (immidiate > 31){
+	if (immidiate == 32){
 		saveTo = 0;
-		zero(saveTo);
+		cpsr.carry = (from >> 31) & 1;
+	}
+	else if (immidiate >= 33){
+		saveTo = 0;
+		cpsr.carry = 0;
 	}
 	else{
 		saveTo = (unsigned)from >> immidiate;
-		zero(saveTo);
-		negative(saveTo);
 	}
+	negative(saveTo);
+	zero(saveTo);
 }
 
 void asrCond(int &saveTo, int from, int immidiate) {
 	if (immidiate != 0)
 		cpsr.carry = (from >> ((int)immidiate - 1) & 1);
-	if (immidiate > 31 && from & 0x80000000){
+	if (immidiate > 31 && from < 0){
 		saveTo = 0xFFFFFFFF;
-		negative(saveTo);
 		cpsr.carry = 1;
 	}
 	else if (immidiate > 31)
 	{
 		saveTo = 0;
-		zero(saveTo);
 		cpsr.carry = 0;
 	}
 	else{
 		saveTo = from >> immidiate;
-		zero(saveTo);
-		negative(saveTo);
 	}
+	zero(saveTo);
+	negative(saveTo);
 }
 
 void rorCond(int &saveTo,int from, int immidiate){
-	if (immidiate > 32){
-		cpsr.carry = 0;
+	if (immidiate == 32){
+		saveTo = from;
+		cpsr.carry = (from >> 32) & 1;
+	}
+	else if (immidiate > 32){
 		rorCond(saveTo, from, immidiate - 32);
 	}
 	else{
@@ -307,27 +338,6 @@ void rorNoCond(int &saveTo, int from, int immidiate){
 void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
 void(*ARMshiftsNoCond[4])(int&, int, int) = { lslNoCond, lsrNoCond, asrNoCond, rorNoCond };
 char* ARMshifts_s[4] = { "lsl", "lsr", "asr", "ror" };
-
-union barrelShifterOp{
-	uint8_t value;
-	struct {
-		uint8_t type : 1;
-		uint8_t operation : 2;
-		uint8_t immediate : 5;
-	};
-}barrelShifterOp;
-
-uint32_t barrelShifter(uint8_t immediate, bool setStatus){
-	uint32_t result;
-	barrelShifterOp.value = immediate;
-	if (barrelShifterOp.type == 0){
-		//if (!(barrelShifterOp.operation == 0 && barrelShifterOp.immediate == 0)){
-		if (barrelShifterOp.operation == 0){
-			cpsr.carry = barrelShifterOp.immediate;
-		}
-	}
-	return 0;
-}
 
 void ARMAnd(int& saveTo, int operand1, int operand2){
     saveTo = operand1 & operand2;
@@ -637,7 +647,7 @@ void immediateRotate(int opCode){
 		int tmpRegister = *r[rn];
 
 		if (rn == 15 || rs == 15)
-			tmpRegister += 4;
+			tmpRegister += 4; //BUG:: should be +8 but somehow break CPSR
 
 		int immediate = (opCode >> 7) & 0x1F;
 		int shiftId = (opCode >> 5) & 3;
@@ -693,7 +703,7 @@ void registerRotate(int opCode){
 	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
 
 	if (rn == 15 || rm == 15) // not tested
-		*r[rd] = *r[PC] + 8;
+		*r[rd] += 8;
 
 	if (rd == 15 && (opCode >> 20) & 1){ // not tested
 		cpsr.val = cpsr.val;
@@ -888,7 +898,7 @@ void singleDataTrasnferImmediatePre(int opCode){
 	int baseReg = (opCode >> 16) & 15;
 	int destinationReg = (opCode >> 12) & 15;
 	int offset = opCode & 0xFFF;
-	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind PS
+	offset += (baseReg == 15) ? 4 : 0;
 	int oldReg = *r[baseReg];
 	switch (loadStore){
 	case 0:
@@ -903,7 +913,6 @@ void singleDataTrasnferImmediatePre(int opCode){
 		break;
 	case 1:
 		*r[baseReg] += upDownBit ? offset : -offset;
-		//std::cout << "reg " << baseReg << " " << r[baseReg];
 		calculated = *r[baseReg];
 		*r[baseReg] = (writeBack) ? *r[baseReg] : oldReg;
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
@@ -1028,7 +1037,7 @@ void ARMExecute(int opCode){
         int opCodeType = (opCode >> 24) & 0xF;
         int subType;
         switch(opCodeType){
-			case 15: //no interrups yet because there is no mechanism or required op codes implemented yet
+			case 15:
 				interruptController();
 				break;
 			case 14: //coProcessor data ops / register transfer, not used in GBA

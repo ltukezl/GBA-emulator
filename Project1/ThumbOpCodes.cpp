@@ -45,6 +45,19 @@ void subOverflow(int operand1, int operand2, int result)
 	cpsr.overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
 }
 
+union barrelShifterOp{
+	uint8_t value;
+	struct {
+		uint8_t type : 1;
+		uint8_t operation : 2;
+		uint8_t immediate : 5;
+	};
+}barrelShifterOp;
+
+class BarrelShifter {
+	
+};
+
 //-------------------------------------------------------------------------------------------------------
 //last bit out is carry, set carry bits
 void lsl(int &saveTo, int from, int immidiate) {
@@ -71,13 +84,13 @@ void lsr(int &saveTo, int from, int immidiate) {
 		saveTo = (unsigned)from >> immidiate;
 		zero(saveTo);
 		negative(saveTo);
-	}
+	} 
 }
 
 void asr(int &saveTo, int from, int immidiate) {
 	if (immidiate != 0)
 		cpsr.carry = (from >> ((int)immidiate - 1) & 1);
-	if (immidiate > 31 && from & 0x80000000){
+	if (immidiate > 31 && from < 0){
 		saveTo = 0xFFFFFFFF;
 		negative(saveTo);
 		cpsr.carry = 1;
