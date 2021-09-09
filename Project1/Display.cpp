@@ -186,7 +186,7 @@ void Display::updatePalettes(){
 #ifdef ENABLED
 
 #endif
-	/*
+	
 	sf::Font font;
 	font.loadFromFile("arial.ttf");
 
@@ -220,7 +220,7 @@ void Display::updatePalettes(){
 		text.setPosition(sf::Vector2f(850+256, 130 + 12 * i));
 		display->draw(text);
 	}
-	*/
+	
 	display->display();
 }
 

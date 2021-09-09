@@ -645,14 +645,16 @@ void immediateRotate(int opCode){
 		int rs = (opCode >> 16) & 15; //first operand
 		int rn = opCode & 15; //2nd operand
 		int tmpRegister = *r[rn];
-
-		if (rn == 15 || rs == 15)
-			tmpRegister += 4; //BUG:: should be +8 but somehow break CPSR
-
 		int immediate = (opCode >> 7) & 0x1F;
 		int shiftId = (opCode >> 5) & 3;
 		int operationID = (opCode >> 20) & 0x1F;
 		int conditions = (opCode >> 20) & 1;
+		int operand1 = *r[rs];
+
+		if (rn == 15)
+			tmpRegister += 4;
+		else if (rs == 15)
+			operand1 += 4;
 
 		if (shiftId == 3 && immediate == 0){
 			rrx(tmpRegister, tmpRegister);
@@ -668,13 +670,13 @@ void immediateRotate(int opCode){
 				ARMshiftsNoCond[shiftId](tmpRegister, tmpRegister, immediate);
 		}
 
-		dataOperations[operationID](*r[rd], *r[rs], tmpRegister);
+		dataOperations[operationID](*r[rd], operand1, tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
 			cpsr.val = *r[16];
 			updateMode();
 		}
-
+		
 		if (debug)
 			std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", r" << rn << ", " << ARMshifts_s[shiftId] << " =" << immediate << " ";
 		
@@ -693,6 +695,11 @@ void registerRotate(int opCode){
 	int operationID = (opCode >> 20) & 0x1F;
 	int conditions = (opCode >> 20) & 1;
 
+	if (rm == 15) // not tested
+		*r[rm] += 8;
+	else if (rn == 15)
+		*r[rn] += 8;
+
 	if (conditions && (((operationID > 3) && (operationID < 16)) || ((operationID > 21) && (operationID < 24))))
 		ARMshiftsNoCond[shiftId](tmpResult, *r[rm], shiftAmount);
 	else if (conditions)
@@ -701,9 +708,6 @@ void registerRotate(int opCode){
 		ARMshiftsNoCond[shiftId](tmpResult, *r[rm], shiftAmount);
 
 	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
-
-	if (rn == 15 || rm == 15) // not tested
-		*r[rd] += 8;
 
 	if (rd == 15 && (opCode >> 20) & 1){ // not tested
 		cpsr.val = cpsr.val;
@@ -718,8 +722,11 @@ void registerRotate(int opCode){
 void dataProcessingImmediate(int opCode){
 	int rd = (opCode >> 12) & 0xF; //destination
 	int rs = (opCode >> 16) & 0xF; //first operand
-	int operand1 = (rs == 15) ? *r[rs] + 4 : *r[rs];
+	//int operand1 = (rs == 15) ? *r[rs] + 4 : *r[rs];
+	int operand1 = *r[rs];
 	int immediate = opCode & 0xFF;
+	if (rs == 15)
+		immediate += 4;
 	int shift = (opCode >> 8) & 0xF;
 	int shiftedImm = 0;
 	bool conditions = (opCode >> 20) & 1;
@@ -761,8 +768,6 @@ void halfDataTransfer(int opCode){
 	int rd = (opCode >> 12) & 0xF;
 	int offset = (opCode >> 4) & 0xF0 | opCode & 0xF;
 	offset += (rn == 15) ? 8 : 0; //8 or 4? 
-	if (rn == 15)
-		debug = true;
 	int calculated = (rd == 15) ? (*r[rn] + 8) : *r[rn];
 
 	switch (func){
