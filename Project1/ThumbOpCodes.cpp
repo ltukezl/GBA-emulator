@@ -84,17 +84,16 @@ void hiRegOperations(uint16_t opcode){
 	uint32_t operand1 = *r[newDestinationReg];
 	uint32_t operand2 = *r[op.source];
 
-	if (newDestinationReg == 15){
-		operand1 += 2;
-		operand1 &= ~1;
-	}
-
 	if (op.source == PC){
 		operand2 += 2;
 		operand2 &= ~1;
 	}
 
 	hlOps[op.instruction](*r[newDestinationReg], operand1, operand2);
+
+	if (newDestinationReg == 15){
+		*r[newDestinationReg] &= ~1;
+	}
 
 	cycles += Wait0_S_cycles;
 

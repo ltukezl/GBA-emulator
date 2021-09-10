@@ -149,11 +149,14 @@ int main(int argc, char *args[]){
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			continue;
+			//continue;
 		}
 		step = false;
 
-		if (*r[PC] == 0x8003152){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x80b9a42){ //0x8006668, 0x801d6a2
+			//debug = true;
+		}
+		if (*r[0] == 0xbfd8){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
  		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
