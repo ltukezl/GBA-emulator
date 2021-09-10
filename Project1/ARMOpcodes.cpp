@@ -232,70 +232,43 @@ protected:
 };
 
 void lslCond(int &saveTo, int from, int immidiate) {
-	if (immidiate > 0)
-		cpsr.carry = ((unsigned)from >> (32 - immidiate) & 1);
-	if (immidiate == 32){
-		saveTo = 0;
-		cpsr.carry = from & 1;
-	}
-	else if (immidiate >= 33){
-		saveTo = 0;
+	uint64_t tmp = (unsigned)from;
+	saveTo = tmp << immidiate;
+
+	if (immidiate > 32)
 		cpsr.carry = 0;
-	}
-	else{
-		saveTo = from << immidiate;
-	}
+	else if (immidiate > 0)
+		cpsr.carry = ((unsigned)tmp >> (32 - immidiate) & 1);
 	negative(saveTo);
 	zero(saveTo);
 }
 
 void lsrCond(int &saveTo, int from, int immidiate) {
+	uint64_t tmp = (unsigned)from;
+	saveTo = tmp >> immidiate;
+
 	if (immidiate > 0)
-		cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
-	if (immidiate == 32){
-		saveTo = 0;
-		cpsr.carry = (from >> 31) & 1;
-	}
-	else if (immidiate >= 33){
-		saveTo = 0;
-		cpsr.carry = 0;
-	}
-	else{
-		saveTo = (unsigned)from >> immidiate;
-	}
+		cpsr.carry = (tmp >> (immidiate - 1) & 1);
 	negative(saveTo);
 	zero(saveTo);
 }
 
 void asrCond(int &saveTo, int from, int immidiate) {
+	int64_t tmp = from;
+	saveTo = tmp >> immidiate;
+
 	if (immidiate != 0)
-		cpsr.carry = (from >> ((int)immidiate - 1) & 1);
-	if (immidiate > 31 && from < 0){
-		saveTo = 0xFFFFFFFF;
-		cpsr.carry = 1;
-	}
-	else if (immidiate > 31)
-	{
-		saveTo = 0;
-		cpsr.carry = 0;
-	}
-	else{
-		saveTo = from >> immidiate;
-	}
+		cpsr.carry = (tmp >> (immidiate - 1) & 1);
 	zero(saveTo);
 	negative(saveTo);
 }
 
 void rorCond(int &saveTo,int from, int immidiate){
-	if (immidiate == 32){
-		saveTo = from;
-		cpsr.carry = (from >> 32) & 1;
-	}
-	else if (immidiate > 32){
+	if (immidiate > 32){
 		rorCond(saveTo, from, immidiate - 32);
 	}
 	else{
-		if (immidiate != 0)
+		if (immidiate > 0)
 			cpsr.carry = (from >> (immidiate - 1) & 1);
 		saveTo = ((unsigned)from >> immidiate) | ((unsigned)from << (32 - immidiate));
 		negative(saveTo);
@@ -304,26 +277,18 @@ void rorCond(int &saveTo,int from, int immidiate){
 }
 
 void lslNoCond(int &saveTo, int from, int immidiate) {
-	if (immidiate > 31)
-		saveTo = 0;
-	else
-		saveTo = from << immidiate;
+	uint64_t tmp = (unsigned)from;
+	saveTo = tmp << immidiate;
 }
 
 void lsrNoCond(int &saveTo, int from, int immidiate) {
-	if (immidiate > 31)
-		saveTo = 0;
-	else
-		saveTo = (unsigned)from >> immidiate;
+	uint64_t tmp = (unsigned)from;
+	saveTo = tmp >> immidiate;
 }
 
 void asrNoCond(int &saveTo, int from, int immidiate) {
-	if (immidiate > 31 && from & 0x80000000)
-		saveTo = 0xFFFFFFFF;
-	else if (immidiate > 31)
-		saveTo = 0;
-	else
-		saveTo = from >> immidiate;
+	int64_t tmp = from;
+	saveTo = tmp >> immidiate;
 }
 
 void rorNoCond(int &saveTo, int from, int immidiate){
@@ -547,6 +512,7 @@ void rrx(int& saveTo, uint32_t from){
 	saveTo = (cpsr.carry << 31) | (from >> 1);
 	cpsr.carry = from & 1;
 	zero(saveTo);
+	negative(saveTo);
 }
 
 void MSR(uint32_t opCode){

@@ -152,7 +152,7 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = false;
-		if (*r[PC] == 0x8008534){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x300f88){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
  		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
@@ -162,7 +162,7 @@ int main(int argc, char *args[]){
 
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 		if (*r[14] == 0x8008540)
-			debug = true;
+			//debug = true;
 
 		if (*r[PC] >= 0xC000000)
 			*r[PC] -= 0x4000000;

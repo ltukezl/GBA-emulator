@@ -62,6 +62,7 @@ void Display::fillTiles(uint32_t regOffset){
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0x06000000;
 
+
 	/*creates tilemaps 1 and 2*/
 	sf::Image tile;
 	tile.create(8, 8, sf::Color::Blue);
@@ -99,8 +100,9 @@ void Display::fillTiles(uint32_t regOffset){
 
 void Display::fillBG(uint32_t regOffset){
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
-	uint32_t startAddr = bgCnt->bgBaseblock * 2048;
+	uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 	uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x200;
+
 	/*fills BG map*/
 	sf::Texture BG1Texture;
 	BG1Texture.create(256, 256);
@@ -130,6 +132,7 @@ void Display::fillObjects(uint32_t regOffset){
 		for (int tileX = 0; tileX < 32; tileX++){
 			for (int y = 0; y < 8; y++){
 				int row = loadFromAddress32(startAddr, true);
+				//int row = rawLoad32(VRAM, startAddr - 0x6010000);
 				for (int pixel = 0; pixel < 8; pixel++){
 					int color = (row & 0xf);
 					tile.setPixel(pixel, y, PaletteColors[256 + color]);

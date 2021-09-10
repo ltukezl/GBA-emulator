@@ -86,6 +86,9 @@ void writeToAddress(uint32_t address, uint8_t value){
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 
+	if (mask == 7 && value == 0xd8)
+		debug = false;
+
 	if (mask == 4 && address > memsizes[mask])
 		return;
 

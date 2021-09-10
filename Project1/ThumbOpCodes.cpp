@@ -6,15 +6,6 @@
 #include "Constants.h"
 #include "ThumbOpCodes.h"
 
-uint32_t highestBit(uint32_t v){
-	union { unsigned int u[2]; double d; } t; // temp
-
-	t.u[0] = 0x43300000;
-	t.u[1] = v;
-	t.d -= 4503599627370496.0;
-	return (t.u[1] >> 20) - 0x3FF;
-}
-
 void negative(int result)
 {
 	cpsr.negative = result < 0;
@@ -44,19 +35,6 @@ void subOverflow(int operand1, int operand2, int result)
 {
 	cpsr.overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
 }
-
-union barrelShifterOp{
-	uint8_t value;
-	struct {
-		uint8_t type : 1;
-		uint8_t operation : 2;
-		uint8_t immediate : 5;
-	};
-}barrelShifterOp;
-
-class BarrelShifter {
-	
-};
 
 //-------------------------------------------------------------------------------------------------------
 //last bit out is carry, set carry bits
