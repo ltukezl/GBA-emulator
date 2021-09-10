@@ -78,8 +78,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="arithmeticOps.cpp" />
     <ClCompile Include="ARMOpcodes.cpp" />
     <ClCompile Include="GBAcpu.cpp" />
+    <ClCompile Include="logicalOps.cpp" />
     <ClCompile Include="memoryMappedIO.cpp" />
     <ClCompile Include="MemoryOps.cpp" />
     <ClCompile Include="DMA.cpp" />
@@ -90,6 +92,7 @@
     <ClCompile Include="timers.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="arithmeticOps.h" />
     <ClInclude Include="armopcodes.h" />
     <ClInclude Include="conditions.h" />
     <ClInclude Include="GBAcpu.h" />
@@ -97,6 +100,7 @@
     <ClInclude Include="DMA.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="interrupt.h" />
+    <ClInclude Include="logicalOps.h" />
     <ClInclude Include="memoryMappedIO.h" />
     <ClInclude Include="MemoryOps.h" />
     <ClInclude Include="ThumbOpCodes.h" />

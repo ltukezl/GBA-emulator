@@ -7,207 +7,25 @@
 #include "ThumbOpCodes.h"
 #include "armopcodes.h"
 #include "conditions.h"
+#include "arithmeticOps.h"
+#include "logicalOps.h"
 
-void negative(int result)
-{
-	cpsr.negative = result < 0;
-}
-
-void zero(int result)
-{
-	cpsr.zero = result == 0;
-}
-
-void addCarry(int operand1, int operand2, int result)
-{
-	cpsr.carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31 & 1;
-}
-
-void addOverflow(int operand1, int operand2, int result)
-{
-	cpsr.overflow = ((operand1 & operand2 & ~result) | (~operand1 & ~operand2 & result)) >> 31 & 1;
-}
-
-void subCarry(int operand1, int operand2, int result)
-{
-	cpsr.carry = ((operand1 & ~operand2) | (operand1 & ~result) | (~operand2 & ~result)) >> 31 & 1;
-}
-
-void subOverflow(int operand1, int operand2, int result)
-{
-	cpsr.overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
-}
-
-//--------------------------------------------------------
-void add(int &saveTo, int from, int immidiate) {
-	saveTo = from + immidiate;
-	negative(saveTo);
-	zero(saveTo);
-	addCarry(from, immidiate, saveTo);
-	addOverflow(from, immidiate, saveTo);
-}
-
-void sub(int &saveTo, int from, int immidiate) {
-	saveTo = from - immidiate;
-	negative(saveTo);
-	zero(saveTo);
-	subCarry(from, immidiate, saveTo);
-	subOverflow(from, immidiate, saveTo);
-}
-//--------------------------------------------------------
-void mov(int &saveTo, int source){
-	saveTo = source;
+void mul(int &saveTo, int immidiate, int immidiate2){
+	saveTo = (immidiate2 * immidiate) & 0xFFFFFFFF;
 	negative(saveTo);
 	zero(saveTo);
 }
 
-void cmp(int &saveTo, int source){
-	int result = saveTo - source;
-	negative(result);
-	zero(result);
-	subCarry(saveTo, source, result);
-	subOverflow(saveTo, source, result);
-}
-
-void add8imm(int &saveTo, int immidiate){
-	int tmpOperand = saveTo;
-	saveTo = saveTo + immidiate;
-	negative(saveTo);
-	zero(saveTo);
-	addCarry(tmpOperand, immidiate, saveTo);
-	addOverflow(tmpOperand, immidiate, saveTo);
-}
-
-void sub8imm(int &saveTo, int immidiate){
-	int tmpOperand = saveTo;
-	saveTo = saveTo - immidiate;
-	negative(saveTo);
-	zero(saveTo);
-	subCarry(tmpOperand, immidiate, saveTo);
-	subOverflow(tmpOperand, immidiate, saveTo);
-}
-
-//--------------------------------------------------------
-
-void lslip(int &saveTo, int immidiate){
-	lslCond(saveTo, saveTo, immidiate);
-}
-
-void lsrip(int &saveTo, int immidiate){
-	lsrCond(saveTo, saveTo, immidiate);
-}
-
-void asrip(int &saveTo, int immidiate){
-	asrCond(saveTo, saveTo, immidiate);
-}
-
-void rorIP(int &saveTo, int immidiate){
-	rorCond(saveTo, saveTo, immidiate);
-}
-
-void TAND(int &saveTo, int immidiate){
-	saveTo = saveTo & immidiate;
-	negative(saveTo);
-	zero(saveTo);
-}
-
-void TEOR(int &saveTo, int immidiate){
-	saveTo = saveTo ^ immidiate;
-	negative(saveTo);
-	zero(saveTo);
-}
-
-void adc(int &saveTo, int immidiate){
-	int tmpOperand = saveTo;
-    saveTo = saveTo + immidiate + cpsr.carry;
-	zero(saveTo);
-	negative(saveTo);
-	addCarry(tmpOperand, immidiate, saveTo);
-	addOverflow(tmpOperand, immidiate, saveTo);
-}
-
-void sbc(int &saveTo, int immidiate){
-	int tmpOperand = saveTo;
-	saveTo = (saveTo - immidiate) - !cpsr.carry;
-	zero(saveTo);
-	negative(saveTo);
-	subCarry(tmpOperand, immidiate, saveTo);
-	subOverflow(tmpOperand, immidiate, saveTo);
-}
-
-void tst(int &operand1, int operand2){
-	int result = operand1 & operand2;
-	negative(result);
-	zero(result);
-}
-
-void neg(int &saveTo, int immidiate){
-	saveTo = -immidiate;
-	negative(saveTo);
-	zero(saveTo);
-	subCarry(0, immidiate, saveTo);
-	subOverflow(0, immidiate, saveTo);
-}
-
-void cmpReg(int &reg1, int reg2){
-	cmp(reg1, reg2);
-}
-
-void cmnReg(int &reg1, int reg2){
-	int result = reg1 + reg2;
-	zero(result);
-	negative(result);
-	addCarry(reg1, reg2, result);
-	addOverflow(reg1, reg2, result);
-}
-
-void ORR(int &saveTo, int immidiate){
-	saveTo = saveTo | immidiate;
-	negative(saveTo);
-	zero(saveTo);
-}
-
-void mul(int &saveTo, int immidiate){
-	saveTo = (saveTo * immidiate) & 0xFFFFFFFF;
-	negative(saveTo);
-	zero(saveTo);
-}
-
-void bic(int &saveTo, int immidiate){
-	saveTo = saveTo & ~immidiate;
-	negative(saveTo);
-	zero(saveTo);
-}
-
-void mvn(int &saveTo, int immidiate) {
-	saveTo = ~immidiate;
-	negative(saveTo);
-	zero(saveTo);
-}
-
-//--------------------------------------------------------
-void addNoCond(int& saveTo, int immidiate){
-	saveTo = saveTo + immidiate;
-}
-
-void movNoCond(int& saveTo, int immidiate){
-	saveTo = immidiate;
-}
-
-void cmpHL(int& saveTo, int immidiate){
-	cmpReg(saveTo, immidiate);
-}
-
-void bx(int& saveTo, int immidiate){
-	*r[PC] = immidiate & ~ 1;
-	cpsr.thumb = immidiate & 1;
+void bx(int& saveTo, int immidiate, int immidiate2){
+	*r[PC] = immidiate2 & ~ 1;
+	cpsr.thumb = immidiate2 & 1;
 }
 
 void(*shifts[3])(int&, int, int) = { lslCond, lsrCond, asrCond };
-void(*arith[2])(int&, int, int) = { add, sub };
-void(*movCompIpaddIpsub[4])(int&, int) = { mov, cmp, add8imm, sub8imm };
-void(*logicalOps[16])(int&, int) = { TAND, TEOR, lslip, lsrip, asrip, adc, sbc, rorIP, tst, neg, cmpReg, cmnReg, ORR, mul, bic, mvn };
-void(*hlOps[4])(int&, int) = { addNoCond, cmpHL, movNoCond, bx };
+void(*arith[2])(int&, int, int) = { Adds, Subs };
+void(*movCompIpaddIpsub[4])(int&, int, int) = { Movs, Cmp, Adds, Subs };
+void(*logicalOps[16])(int&, int, int) = { Ands, Eors, lslCond, lsrCond, asrCond, Adcs, Sbcs, rorCond, Tst, Neg, Cmp, Cmn, Orrs, mul, Bics, Mvns };
+void(*hlOps[4])(int&, int, int) = { Add, Cmp, Mov, bx };
 
 char* shifts_s[3] = { "lsl", "lsr", "asr" };
 char* arith_s[2] = { "add", "sub" };
@@ -240,7 +58,7 @@ void addSubFunction(uint16_t opcode){
 
 void movCompSubAddImm(uint16_t opcode){
 	union movCmpAddSub op = { opcode };
-	movCompIpaddIpsub[op.instruction](*r[op.destination], op.offset);
+	movCompIpaddIpsub[op.instruction](*r[op.destination], *r[op.destination], op.offset);
 
 	cycles += Wait0_S_cycles;
 	if (debug)
@@ -249,7 +67,7 @@ void movCompSubAddImm(uint16_t opcode){
 
 void aluOps(uint16_t opcode){
 	union aluOps op = { opcode };
-	logicalOps[op.instruction](*r[op.destination], *r[op.source]);
+	logicalOps[op.instruction](*r[op.destination], *r[op.destination], *r[op.source]);
 
 	cycles += Wait0_S_cycles;
 	if (op.instruction == 2 || op.instruction == 3 || op.instruction == 4 || op.instruction == 12)
@@ -260,21 +78,23 @@ void aluOps(uint16_t opcode){
 }
 
 void hiRegOperations(uint16_t opcode){
+
 	union hiRegOps op = { opcode };
 	uint8_t newDestinationReg = 8 * op.destHiBit + op.destination;
-	uint32_t operand = *r[op.source];
+	uint32_t operand1 = *r[newDestinationReg];
+	uint32_t operand2 = *r[op.source];
 
 	if (newDestinationReg == 15){
-		*r[newDestinationReg] += 2;
-		operand &= ~1;
+		operand1 += 2;
+		operand1 &= ~1;
 	}
 
 	if (op.source == PC){
-		operand += 2;
-		operand &= ~1;
+		operand2 += 2;
+		operand2 &= ~1;
 	}
 
-	hlOps[op.instruction](*r[newDestinationReg], operand);
+	hlOps[op.instruction](*r[newDestinationReg], operand1, operand2);
 
 	cycles += Wait0_S_cycles;
 

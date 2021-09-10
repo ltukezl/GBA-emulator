@@ -6,6 +6,8 @@
 #include "Constants.h"
 #include "interrupt.h"
 #include "conditions.h"
+#include "arithmeticOps.h"
+#include "logicalOps.h"
 #include <stdint.h>
 
 void ARMBranch(int opCode){
@@ -296,164 +298,23 @@ void rorNoCond(int &saveTo, int from, int immidiate){
 	}
 }
 
+uint32_t RORnoCond(uint32_t immediate, uint32_t by){
+	if (by > 32){
+		RORnoCond(immediate, by - 32);
+	}
+	return (immediate >> by) | (immediate << (32 - by));
+}
+
+void rrx(int& saveTo, uint32_t from){
+	saveTo = (cpsr.carry << 31) | (from >> 1);
+	cpsr.carry = from & 1;
+	zero(saveTo);
+	negative(saveTo);
+}
+
 void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
 void(*ARMshiftsNoCond[4])(int&, int, int) = { lslNoCond, lsrNoCond, asrNoCond, rorNoCond };
 char* ARMshifts_s[4] = { "lsl", "lsr", "asr", "ror" };
-
-void ARMAnd(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 & operand2;
-}
-
-void ARMAnds(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 & operand2;
-    zero(saveTo);
-    negative(saveTo);
-}
-
-void ARMEOR(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 ^ operand2;
-}
-
-void ARMEORS(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 ^ operand2;
-    zero(saveTo);
-    negative(saveTo);
-}
-
-void ARMSub(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 - operand2;
-}
-
-void ARMSubs(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 - operand2;
-    zero(saveTo);
-    negative(saveTo);
-    subCarry(operand1, operand2, saveTo);
-    subOverflow(operand1, operand2, saveTo);
-}
-
-void ARMRsb(int& saveTo, int operand1, int operand2){
-    saveTo = operand2 - operand1;
-}
-
-void ARMRsbs(int& saveTo, int operand1, int operand2){
-    saveTo = operand2 - operand1;
-    zero(saveTo);
-    negative(saveTo);
-    subCarry(operand2, operand1, saveTo);
-    subOverflow(operand2, operand1, saveTo);
-}
-
-void ARMAdd(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 + operand2;
-}
-
-void ARMAdds(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 + operand2;
-    zero(saveTo);
-    negative(saveTo);
-    addCarry(operand2, operand1, saveTo);
-    addOverflow(operand2, operand1, saveTo);
-}
-
-void ARMAdc(int& saveTo, int operand1, int operand2){
-	saveTo = operand1 + operand2 + cpsr.carry;
-}
-
-void ARMAdcs(int& saveTo, int operand1, int operand2){
-	saveTo = operand1 + operand2 + cpsr.carry;
-    zero(saveTo);
-    negative(saveTo);
-	addCarry(operand2, operand1, saveTo);
-	addOverflow(operand2, operand1, saveTo);
-}
-
-void ARMSbc(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 - operand2 - !cpsr.carry;
-}
-
-void ARMSbcs(int& saveTo, int operand1, int operand2){
-	saveTo = operand1 - operand2 - !cpsr.carry;
-    zero(saveTo);
-    negative(saveTo);
-	subCarry(operand1, operand2, saveTo);
-	subOverflow(operand1, operand2, saveTo);
-}
-
-void ARMRsc(int& saveTo, int operand1, int operand2){
-	saveTo = operand2 - operand1 - !cpsr.carry;
-}
-
-void ARMRscs(int& saveTo, int operand1, int operand2){
-    saveTo = operand2 - operand1 - !cpsr.carry;
-    zero(saveTo);
-    negative(saveTo);
-	subCarry(operand2, operand1, saveTo);
-	subOverflow(operand2, operand1, saveTo);
-}
-
-void ARMTST(int& saveTo, int operand1, int operand2){
-    zero(operand1 & operand2);
-    negative(operand1 & operand2);
-}
-
-void ARMTEQ(int& saveTo, int operand1, int operand2){
-    zero(operand1 ^ operand2);
-    negative(operand1 ^ operand2);
-}
-
-void ARMCMP(int& saveTo, int operand1, int operand2){
-    zero(operand1 - operand2);
-    negative(operand1 - operand2);
-	subCarry(operand1, operand2, operand1 - operand2);
-	subOverflow(operand1, operand2, operand1 - operand2);
-}
-
-void ARMCMN(int& saveTo, int operand1, int operand2){
-    zero(operand1 + operand2);
-    negative(operand1 + operand2);
-	addCarry(operand1, operand2, operand1 + operand2);
-	addOverflow(operand1, operand2, operand1 + operand2);
-}
-
-void ARMORR(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 | operand2;
-}
-
-void ARMORRS(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 | operand2;
-    zero(saveTo);
-    negative(saveTo);
-}
-
-void ARMMov(int& saveTo, int operand1, int operand2){
-    saveTo = operand2;
-}
-void ARMMovs(int& saveTo, int operand1, int operand2){
-    saveTo = operand2;
-    zero(saveTo);
-    negative(saveTo);
-}
-
-void ARMBic(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 & ~operand2;
-}
-
-void ARMBics(int& saveTo, int operand1, int operand2){
-    saveTo = operand1 & ~operand2;
-    zero(saveTo);
-    negative(saveTo);
-}
-
-void ARMMvn(int& saveTo, int operand1, int operand2){
-    saveTo = ~operand2;
-}
-
-void ARMMvns(int& saveTo, int operand1, int operand2){
-    saveTo = ~operand2;
-    zero(saveTo);
-    negative(saveTo);
-}
 
 void updateMode(){
 	//std::cout << "switched mode to " << mode << std::endl;
@@ -492,25 +353,6 @@ void ARMMSR2(int& saveTo, int operand1, int operand2){
 	updateMode();
 }
 
-int ROR(unsigned int immediate, unsigned int by){
-	if (by == 0)
-		cpsr.carry = immediate >> 31 & 1;
-	else
-		cpsr.carry = (immediate >> (by - 1)) & 1;
-	return (immediate >> by) | (immediate << (32 - by));
-}
-
-uint32_t RORnoCond(uint32_t immediate, uint32_t by){
-	return (immediate >> by) | (immediate << (32 - by));
-}
-
-void rrx(int& saveTo, uint32_t from){
-	saveTo = (cpsr.carry << 31) | (from >> 1);
-	cpsr.carry = from & 1;
-	zero(saveTo);
-	negative(saveTo);
-}
-
 void MSR(uint32_t opCode){
 	bool SPSR = (opCode >> 22) & 1;
 	union CPSR tmp_cpsr;
@@ -533,9 +375,9 @@ void MSR(uint32_t opCode){
 		std::cout << "MSR " << (SPSR ? "SPSR " : "CPSR ") << std::hex << shiftedImm << std::dec << " ";
 }
 
-void(*dataOperations[0x20])(int&, int, int) = {ARMAnd, ARMAnds, ARMEOR, ARMEORS, ARMSub, ARMSubs, ARMRsb, ARMRsbs,
-ARMAdd, ARMAdds, ARMAdc, ARMAdcs, ARMSbc, ARMSbcs, ARMRsc, ARMRscs, ARMTST, ARMTST, ARMMSR, ARMTEQ, ARMCMP,
-ARMCMP, ARMMSR2, ARMCMN, ARMORR, ARMORRS, ARMMov, ARMMovs, ARMBic, ARMBics, ARMMvn, ARMMvns };
+void(*dataOperations[0x20])(int&, int, int) = {And, Ands, Eor, Eors, Sub, Subs, Rsb, Rsbs,
+Add, Adds, Adc, Adcs, Sbc, Sbcs, Rsc, Rscs, Tst, Tst, ARMMSR, Teq, Cmp,
+Cmp, ARMMSR2, Cmn, Orr, Orrs, Mov, Movs, Bic, Bics, Mvn, Mvns };
 
 char* dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb", "rsbs",
 "add", "adds", "adc", "adcs", "sbc", "sbcs", "rsc", "rscs", "tst", "tst", "msr", "teq", "cmp",

@@ -45,6 +45,12 @@
     <ClCompile Include="conditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="arithmeticOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="logicalOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBAcpu.h">
@@ -78,6 +84,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="conditions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="arithmeticOps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="logicalOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
