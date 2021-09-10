@@ -8,7 +8,7 @@ extern union InterruptMaster_t{
 		uint8_t IRQEnabled : 1;
 	};
 	uint16_t addr;
-}InterruptMaster;
+};
 
 extern union InterruptEnableRegister_t{
 	struct{
@@ -28,7 +28,7 @@ extern union InterruptEnableRegister_t{
 		uint8_t gamepak : 1;
 	};
 	uint16_t addr;
-}InterruptEnableRegister;
+};
 
 extern union InterruptFlagRegister_t{
 	struct{
@@ -48,7 +48,7 @@ extern union InterruptFlagRegister_t{
 		uint8_t gamepak : 1;
 	};
 	uint16_t addr;
-}InterruptFlagRegister;
+};
 
 //------------------------
 //LCD
@@ -72,7 +72,7 @@ extern union DISPCNT{
 		uint16_t objwinDisplay : 1;
 	};
 	uint16_t addr;
-}DISPCNT;
+};
 
 extern union ColorPaletteRam{
 	struct{
@@ -81,7 +81,7 @@ extern union ColorPaletteRam{
 		uint16_t blue : 5;
 	};
 	uint16_t addr;
-}ColorPaletteRam;
+};
 
 
 extern union BgCnt{
@@ -96,7 +96,7 @@ extern union BgCnt{
 		uint16_t size : 2;
 	};
 	uint16_t addr;
-}BgCnt;
+};
 
 extern union LCDstatus{
 	struct{
@@ -110,7 +110,17 @@ extern union LCDstatus{
 		uint16_t LYC : 8;
 	};
 	uint16_t addr;
-}LCDstatus;
+};
+
+union BGoffset{
+	struct {
+		uint16_t offset : 8;
+		uint16_t: 8;
+	};
+	uint16_t addr;
+};
+
+extern union BGoffset* BG0HOFS;
 
 //------------------------
 //gamepad
@@ -130,7 +140,7 @@ extern union KEYINPUT{
 		uint16_t btn_l : 1;
 	};
 	uint16_t addr;
-}KEYINPUT;
+};
 
 extern union KEYCNT {
 	struct{
@@ -149,7 +159,7 @@ extern union KEYCNT {
 		uint16_t IRQ_cond : 1;
 	};
 	uint16_t addr;
-}KEYCNT;
+};
 
 //------------------------
 //timers
@@ -167,7 +177,7 @@ extern union TIMERCNT {
 	};
 
 	uint32_t addr;
-} TIMERCNT;
+};
 
 extern union DMAcontrol{
 	struct{
@@ -183,4 +193,14 @@ extern union DMAcontrol{
 	};
 
 	uint16_t addr;
-}DMAcontrol;
+};
+
+extern union DISPCNT* displayCtrl;
+extern union LCDstatus* LCDStatus;
+
+extern union KEYCNT* keypadInterruptCtrl;
+extern union KEYINPUT* keyInput;
+
+extern union InterruptEnableRegister_t* InterruptEnableRegister;
+extern union InterruptFlagRegister_t* InterruptFlagRegister;
+extern union InterruptMaster_t* InterruptMaster;

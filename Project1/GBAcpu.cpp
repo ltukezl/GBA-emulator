@@ -145,7 +145,7 @@ int main(int argc, char *args[]){
 	uint32_t prevAddr = 0;
 	while (true){
 #if GPU
-		if (debug || (refreshRate > 10000))
+		if (debug || (refreshRate > 100000))
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
@@ -169,14 +169,11 @@ int main(int argc, char *args[]){
 		else if (*r[PC] >= 0xA000000)
 			*r[PC] -= 0x2000000;
 
-		InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
-		InterruptEnableRegister.addr = rawLoad16(IoRAM, 0x200);
-		LCDstatus.addr = rawLoad16(IoRAM, 0x204);
 		startDMA();
 		updateTimers();
 		HWInterrupts(cycles);
 #if GPU
-		if (debug | (refreshRate > 10000)){
+		if (debug | (refreshRate > 100000)){
 			debugView.updatePalettes();
 			refreshRate = 0;
 		}
@@ -187,11 +184,9 @@ int main(int argc, char *args[]){
 			memoryLayout[4][6]++;
 			cycles -= 240;
 
-			if (LCDstatus.LYC == memoryLayout[4][6] && LCDstatus.VcounterIRQEn && InterruptEnableRegister.vCounter){
-				InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
-				InterruptFlagRegister.vCounter = 1;
-				rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
-				LCDstatus.vCounter = 1;
+			if (LCDStatus->LYC == memoryLayout[4][6] && LCDStatus->VcounterIRQEn && InterruptEnableRegister->vCounter){
+				InterruptFlagRegister->vCounter = 1;
+				LCDStatus->vCounter = 1;
 			}
 
 			if (memoryLayout[4][6] > 227)

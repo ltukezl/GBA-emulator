@@ -89,18 +89,17 @@ void writeToAddress(uint32_t address, uint8_t value){
 	if (mask == 4 && address > memsizes[mask])
 		return;
 
-	if (mask == 6 && DISPCNT.bgMode == 0)
+	if (mask == 6 && displayCtrl->bgMode == 0)
 		address %= 0x8000;
 	else
 		address %= memsizes[mask];
 
-	DISPCNT.addr = rawLoad16(IoRAM, 0);
 	if (mask == 7 
-		|| (DISPCNT.bgMode == 7 && mask == 6 && address >= 0x10000)
-		|| (DISPCNT.bgMode == 4 && mask == 6 && address >= 0x10000))
+		|| (displayCtrl->bgMode == 7 && mask == 6 && address >= 0x10000)
+		|| (displayCtrl->bgMode == 4 && mask == 6 && address >= 0x10000))
 		return;
 
-	if ((DISPCNT.bgMode == 4 && mask == 6 && address < 0x10000)
+	if ((displayCtrl->bgMode == 4 && mask == 6 && address < 0x10000)
 		|| mask == 5){
 		memoryLayout[mask][address] = value;
 		memoryLayout[mask][address + 1] = value;
@@ -118,11 +117,10 @@ void writeToAddress16(uint32_t address, uint16_t value){
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 1;
 
-	DISPCNT.addr = rawLoad16(IoRAM, 0);
 	if (mask == 4 && address > memsizes[mask])
 		return;
 
-	if (mask == 6 && DISPCNT.bgMode == 0)
+	if (mask == 6 && displayCtrl->bgMode == 0)
 		address %= 0x8000;
 	else
 		address %= memsizes[mask];
@@ -137,13 +135,11 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 3;
-	
-	DISPCNT.addr = rawLoad16(IoRAM, 0);
 
 	if (mask == 4 && address > memsizes[mask])
 		return;
 
-	if (mask == 6 && DISPCNT.bgMode == 0)
+	if (mask == 6 && displayCtrl->bgMode == 0)
 		address %= 0x8000;
 	else
 		address %= memsizes[mask];
@@ -171,12 +167,10 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 
-	DISPCNT.addr = rawLoad16(IoRAM, 0);
-
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	if (mask == 6 && DISPCNT.bgMode == 0)
+	if (mask == 6 && displayCtrl->bgMode == 0)
 		address %= 0x8000;
 	else
 		address %= memsizes[mask];
@@ -197,12 +191,10 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 
-	DISPCNT.addr = rawLoad16(IoRAM, 0);
-
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	if (mask == 6 && DISPCNT.bgMode == 0)
+	if (mask == 6 && displayCtrl->bgMode == 0)
 		address %= 0x8000;
 	else
 		address %= memsizes[mask];
@@ -222,7 +214,6 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 		previousAddress = address;
 	}
 
-	DISPCNT.addr = rawLoad16(IoRAM, 0);
 	uint32_t misalignment = address & 3;
     uint32_t mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
@@ -230,7 +221,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	if (mask == 6 && DISPCNT.bgMode == 0)
+	if (mask == 6 && displayCtrl->bgMode == 0)
 		address %= 0x8000;
 	else
 		address %= memsizes[mask];

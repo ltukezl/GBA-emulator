@@ -54,51 +54,49 @@ bool timerReloadWrite(uint32_t addr, uint32_t val){
 void updateTimers() {
 
 	for (int i = 0; i < 4; i++){
-		TIMERCNT.addr = loadFromAddress32(0x4000100 + 4 * i, true);
-		if (TIMERCNT.startStop){
-			if (TIMERCNT.cntrSelect == ONE_TO_ONE){
-				TIMERCNT.counterVal += 1;
+		TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[0x100 + 4 * i];
+		if (timerCtrl->startStop){
+			if (timerCtrl->cntrSelect == ONE_TO_ONE){
+				timerCtrl->counterVal += 1;
 			}
-			else if (TIMERCNT.cntrSelect == ONE_TO_64){
+			else if (timerCtrl->cntrSelect == ONE_TO_64){
 				if (called[i] >(called[i] + 1) % 64){
-					TIMERCNT.counterVal += 1;
+					timerCtrl->counterVal += 1;
 				}
 				called[i] = (called[i] + 1) % 64;
 			}
-			else if (TIMERCNT.cntrSelect == ONE_TO_256){
+			else if (timerCtrl->cntrSelect == ONE_TO_256){
 				if (called[i] > (called[i] + 1) % 256){
-					TIMERCNT.counterVal += 1;
+					timerCtrl->counterVal += 1;
 				}
 				called[i] = (called[i] + 1) % 256;
 			}
-			else if (TIMERCNT.cntrSelect == ONE_TO_1024){
+			else if (timerCtrl->cntrSelect == ONE_TO_1024){
 				if (called[i] > (called[i] + 1) % 1024){
-					TIMERCNT.counterVal += 1;
+					timerCtrl->counterVal += 1;
 				}
 				called[i] = (called[i] + 1) % 1024;
 			}
 
-			if (TIMERCNT.counterVal <= reloads[i]){
-				InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
+			if (timerCtrl->counterVal <= reloads[i]){
 				
-				if (i == 0 && InterruptEnableRegister.timer0OVF)
-					InterruptFlagRegister.timer0OVF = 1;
-				else if (i == 1 && InterruptEnableRegister.timer1OVF)
-					InterruptFlagRegister.timer1OVF = 1;
-				else if (i == 2 && InterruptEnableRegister.timer2OVF)
-					InterruptFlagRegister.timer2OVF = 1;
-				else if (i == 3 && InterruptEnableRegister.timer3OVF)
-					InterruptFlagRegister.timer3OVF = 1;
+				if (i == 0 && InterruptEnableRegister->timer0OVF)
+					InterruptFlagRegister->timer0OVF = 1;
+				else if (i == 1 && InterruptEnableRegister->timer1OVF)
+					InterruptFlagRegister->timer1OVF = 1;
+				else if (i == 2 && InterruptEnableRegister->timer2OVF)
+					InterruptFlagRegister->timer2OVF = 1;
+				else if (i == 3 && InterruptEnableRegister->timer3OVF)
+					InterruptFlagRegister->timer3OVF = 1;
 
-				rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
-				TIMERCNT.counterVal = reloads[i];
+				timerCtrl->counterVal = reloads[i];
 
-				if (i < 4 && TIMERCNT.timing && TIMERCNT.startStop){
+				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
 					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
 					*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * (i + 1)] = oldVal + 1;
 				}
 			}
-			*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * i] = TIMERCNT.counterVal;
+			*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * i] = timerCtrl->counterVal;
 		}
 	}
 }

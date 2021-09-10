@@ -30,10 +30,10 @@ void Display::scanPalettes(){
 	//for bg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			ColorPaletteRam.addr = rawLoad16(PaletteRAM, startAddr);
-			int redScaled = ColorPaletteRam.red * scalar;
-			int greenScaled = ColorPaletteRam.green * scalar;
-			int blueScaled = ColorPaletteRam.blue * scalar;
+			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&PaletteRAM[startAddr];
+			int redScaled = colorPaletteRam->red * scalar;
+			int greenScaled = colorPaletteRam->green * scalar;
+			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			PaletteColors[16 * i + k] = color;
 			rectangle.setFillColor(color);
@@ -45,10 +45,10 @@ void Display::scanPalettes(){
 	//for fg palettes
 	for (int i = 0; i < 16; i++)
 		for (int k = 0; k < 16; k++){
-			ColorPaletteRam.addr = rawLoad16(PaletteRAM, startAddr);
-			int redScaled = ColorPaletteRam.red * scalar;
-			int greenScaled = ColorPaletteRam.green * scalar;
-			int blueScaled = ColorPaletteRam.blue * scalar;
+			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&PaletteRAM[startAddr];
+			int redScaled = colorPaletteRam->red * scalar;
+			int greenScaled = colorPaletteRam->green * scalar;
+			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			PaletteColors[256 + 16 * i + k] = color;
 			rectangle.setFillColor(color);
@@ -59,7 +59,7 @@ void Display::scanPalettes(){
 }
 
 void Display::fillTiles(uint32_t regOffset){
-	BgCnt.addr = rawLoad16(IoRAM, 8 + regOffset);
+	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0x06000000;
 
 	/*creates tilemaps 1 and 2*/
@@ -98,9 +98,9 @@ void Display::fillTiles(uint32_t regOffset){
 }
 
 void Display::fillBG(uint32_t regOffset){
-	BgCnt.addr = rawLoad16(IoRAM, 8 + regOffset);
-	uint32_t startAddr = BgCnt.bgBaseblock * 2048;
-	uint32_t tileBaseBlock = BgCnt.tileBaseBlock * 0x200;
+	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
+	uint32_t startAddr = bgCnt->bgBaseblock * 2048;
+	uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x200;
 	/*fills BG map*/
 	sf::Texture BG1Texture;
 	BG1Texture.create(256, 256);
@@ -120,7 +120,7 @@ void Display::fillBG(uint32_t regOffset){
 }
 
 void Display::fillObjects(uint32_t regOffset){
-	BgCnt.addr = rawLoad16(IoRAM, 8 + regOffset);
+	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0x06010000;
 
 	/*creates tilemaps 1 and 2*/
@@ -161,24 +161,22 @@ void Display::fillObjects(uint32_t regOffset){
 void Display::updatePalettes(){
 	display->clear(sf::Color::Black);
 
-	DISPCNT.addr = rawLoad16(IoRAM, 0);
-
 	scanPalettes();
 	fillObjects(0);
 
-	if (DISPCNT.bg0Display){
+	if (displayCtrl->bg0Display){
 		fillTiles(0);
 		fillBG(0);
 	}
-	if (DISPCNT.bg1Display){
+	if (displayCtrl->bg1Display){
 		fillTiles(2);
 		fillBG(2);
 	}
-	if (DISPCNT.bg2Display){
+	if (displayCtrl->bg2Display){
 		fillTiles(4);
 		fillBG(4);
 	}
-	if (DISPCNT.bg3Display){
+	if (displayCtrl->bg3Display){
 		fillTiles(6);
 		fillBG(6);
 	}
@@ -236,45 +234,44 @@ void Display::handleEvents(){
 
 		if (event.type == sf::Event::KeyPressed)
 		{
-			KEYINPUT.addr = rawLoad16(IoRAM, 0x130);
 			if (event.key.code == sf::Keyboard::Down)
 			{
-				KEYINPUT.btn_down = 0;
+				keyInput->btn_down = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::Up)
 			{
-				KEYINPUT.btn_up = 0;
+				keyInput->btn_up = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::Left)
 			{
-				KEYINPUT.btn_left = 0;
+				keyInput->btn_left = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::Right)
 			{
-				KEYINPUT.btn_right = 0;
+				keyInput->btn_right = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::Z)
 			{
-				KEYINPUT.btn_A = 0;
+				keyInput->btn_A = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::X)
 			{
-				KEYINPUT.btn_B = 0;
+				keyInput->btn_B = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::A)
 			{
-				KEYINPUT.btn_l = 0;
+				keyInput->btn_l = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::S)
 			{
-				KEYINPUT.btn_r = 0;
+				keyInput->btn_r = 0;
 			}
 
 			if (event.key.code == sf::Keyboard::F)
@@ -286,71 +283,63 @@ void Display::handleEvents(){
 				if (debug)
 					step = true;
 			}
-			rawWrite16(IoRAM, 0x130, KEYINPUT.addr);
 
-			InterruptFlagRegister.addr = rawLoad16(IoRAM, 0x202);
-			InterruptEnableRegister.addr = rawLoad16(IoRAM, 0x200);
-			KEYCNT.addr = rawLoad16(IoRAM, 0x132);
-
-			if (KEYCNT.IRQ_EN && InterruptEnableRegister.keyPad){
-				uint16_t tmp = ~((KEYINPUT.addr) & 0x3FFF);
-				if (KEYCNT.IRQ_cond){
-					if (tmp & (KEYCNT.addr & 0x3FFF)){
-						InterruptFlagRegister.keyPad = 1;
+			if (keypadInterruptCtrl->IRQ_EN && InterruptEnableRegister->keyPad){
+				uint16_t tmp = ~((keyInput->addr) & 0x3FFF);
+				if (keypadInterruptCtrl->IRQ_cond){
+					if (tmp & (keypadInterruptCtrl->addr & 0x3FFF)){
+						InterruptFlagRegister->keyPad = 1;
 					}
 				}
 				else{
-					if ((tmp & (KEYCNT.addr & 0x3FFF)) == tmp){
-						InterruptFlagRegister.keyPad = 1;
+					if ((tmp & (keyInput->addr & 0x3FFF)) == tmp){
+						InterruptFlagRegister->keyPad = 1;
 					}
 				}
-				rawWrite16(IoRAM, 0x202, InterruptFlagRegister.addr);
 			}
 		}
 
 		else if (event.type == sf::Event::KeyReleased)
 		{
-			KEYINPUT.addr = rawLoad16(IoRAM, 0x130);
 			if (event.key.code == sf::Keyboard::Down)
 			{
-				KEYINPUT.btn_down = 1;
+				keyInput->btn_down = 1;
 			}
 
 			if (event.key.code == sf::Keyboard::Up)
 			{
-				KEYINPUT.btn_up = 1;
+				keyInput->btn_up = 1;
 			}
 
 			if (event.key.code == sf::Keyboard::Left)
 			{
-				KEYINPUT.btn_left = 1;
+				keyInput->btn_left = 1;
 			}
 
 			if (event.key.code == sf::Keyboard::Right)
 			{
-				KEYINPUT.btn_right = 1;
+				keyInput->btn_right = 1;
 			}
 
 			if (event.key.code == sf::Keyboard::Z)
 			{
-				KEYINPUT.btn_A = 1;
+				keyInput->btn_A = 1;
 			}
 
 			if (event.key.code == sf::Keyboard::X)
 			{
-				KEYINPUT.btn_B = 1;
+				keyInput->btn_B = 1;
 			}
 
 			if (event.key.code == sf::Keyboard::A)
 			{
-				KEYINPUT.btn_l = 1;
+				keyInput->btn_l = 1;
 			}
 
 			if (event.key.code == sf::Keyboard::S)
 			{
-				KEYINPUT.btn_r = 1;
+				keyInput->btn_r = 1;
 			}
-			rawWrite16(IoRAM, 0x130, KEYINPUT.addr);
 		}
 	}
 
@@ -365,9 +354,5 @@ void Display::updateStack(){
 
 
 void Display::updateRegisterView(){
-
-
-
 	display->display();
-
 }
