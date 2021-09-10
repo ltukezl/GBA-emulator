@@ -5,6 +5,8 @@
 #include "interrupt.h"
 #include "Constants.h"
 #include "ThumbOpCodes.h"
+#include "armopcodes.h"
+#include "conditions.h"
 
 void negative(int result)
 {
@@ -36,55 +38,6 @@ void subOverflow(int operand1, int operand2, int result)
 	cpsr.overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
 }
 
-//-------------------------------------------------------------------------------------------------------
-//last bit out is carry, set carry bits
-void lsl(int &saveTo, int from, int immidiate) {
-	if (immidiate > 0)
-		cpsr.carry = ((unsigned)from >> (32 - immidiate) & 1);
-	if (immidiate > 31){
-		saveTo = 0;
-		zero(saveTo);
-	}
-	else{
-		saveTo = from << immidiate;
-		zero(saveTo);
-		negative(saveTo);
-	}
-}
-void lsr(int &saveTo, int from, int immidiate) {
-	if (immidiate != 0)
-		cpsr.carry = ((unsigned)from >> (immidiate - 1) & 1);
-	if (immidiate > 31){
-		saveTo = 0;
-		zero(saveTo);
-	}
-	else{
-		saveTo = (unsigned)from >> immidiate;
-		zero(saveTo);
-		negative(saveTo);
-	} 
-}
-
-void asr(int &saveTo, int from, int immidiate) {
-	if (immidiate != 0)
-		cpsr.carry = (from >> ((int)immidiate - 1) & 1);
-	if (immidiate > 31 && from < 0){
-		saveTo = 0xFFFFFFFF;
-		negative(saveTo);
-		cpsr.carry = 1;
-	}
-	else if (immidiate > 31)
-	{
-		saveTo = 0;
-		zero(saveTo);
-		cpsr.carry = 0;
-	}
-	else{
-		saveTo = from >> immidiate;
-		zero(saveTo);
-		negative(saveTo);
-	}
-}
 //--------------------------------------------------------
 void add(int &saveTo, int from, int immidiate) {
 	saveTo = from + immidiate;
@@ -136,6 +89,22 @@ void sub8imm(int &saveTo, int immidiate){
 
 //--------------------------------------------------------
 
+void lslip(int &saveTo, int immidiate){
+	lslCond(saveTo, saveTo, immidiate);
+}
+
+void lsrip(int &saveTo, int immidiate){
+	lsrCond(saveTo, saveTo, immidiate);
+}
+
+void asrip(int &saveTo, int immidiate){
+	asrCond(saveTo, saveTo, immidiate);
+}
+
+void rorIP(int &saveTo, int immidiate){
+	rorCond(saveTo, saveTo, immidiate);
+}
+
 void TAND(int &saveTo, int immidiate){
 	saveTo = saveTo & immidiate;
 	negative(saveTo);
@@ -146,18 +115,6 @@ void TEOR(int &saveTo, int immidiate){
 	saveTo = saveTo ^ immidiate;
 	negative(saveTo);
 	zero(saveTo);
-}
-
-void lslip(int &saveTo, int immidiate){
-	lsl(saveTo, saveTo, immidiate);
-}
-
-void lsrip(int &saveTo, int immidiate){
-	lsr(saveTo, saveTo, immidiate);
-}
-
-void asrip(int &saveTo, int immidiate){
-	asr(saveTo, saveTo, immidiate);
 }
 
 void adc(int &saveTo, int immidiate){
@@ -176,27 +133,6 @@ void sbc(int &saveTo, int immidiate){
 	negative(saveTo);
 	subCarry(tmpOperand, immidiate, saveTo);
 	subOverflow(tmpOperand, immidiate, saveTo);
-}
-
-void rorIP(int &saveTo, int immidiate){ 
-	if (immidiate > 32){
-		cpsr.carry = 0;
-		rorIP(saveTo, immidiate - 32);
-	}
-	else if (immidiate == 1){
-		uint32_t tmp = saveTo;
-		saveTo = tmp >> 1 | cpsr.carry << 31;
-		cpsr.carry = tmp & 1;
-		negative(saveTo);
-		zero(saveTo);
-	}
-	else{
-		if (immidiate != 0)
-			cpsr.carry = (saveTo >> (immidiate - 1) & 1);
-		saveTo = (saveTo >> immidiate) | (saveTo << (32 - immidiate));
-		negative(saveTo);
-		zero(saveTo);
-	}
 }
 
 void tst(int &operand1, int operand2){
@@ -267,72 +203,11 @@ void bx(int& saveTo, int immidiate){
 	cpsr.thumb = immidiate & 1;
 }
 
-//--------------------------------------------------------
-
-int BEQ(){
-	return cpsr.zero;
-}
-
-int BNE(){
-	return !cpsr.zero;
-}
-
-int BCS(){
-	return cpsr.carry;
-}
-
-int BCC(){
-	return !cpsr.carry;
-}
-
-int BMI(){
-	return cpsr.negative;
-}
-
-int BPL(){
-	return !cpsr.negative;
-}
-
-int BVS(){
-	return cpsr.overflow;
-}
-
-int BVC(){
-	return !cpsr.overflow;
-}
-
-int BHI(){
-	return BCS() & BNE();
-}
-
-int BLS(){
-	return BCC() | BEQ();
-}
-
-int BLT(){
-	return BMI() ^ BVS();
-}
-
-int BGE(){
-	return ((BMI() & BVS()) | (BVC() & BPL()));
-}
-
-int BGT(){
-	return BNE() & BGE();
-}
-
-int BLE(){
-	return BEQ() | BLT();
-}
-
-//-----------------
-
-void(*shifts[3])(int&, int, int) = { lsl, lsr, asr };
+void(*shifts[3])(int&, int, int) = { lslCond, lsrCond, asrCond };
 void(*arith[2])(int&, int, int) = { add, sub };
 void(*movCompIpaddIpsub[4])(int&, int) = { mov, cmp, add8imm, sub8imm };
 void(*logicalOps[16])(int&, int) = { TAND, TEOR, lslip, lsrip, asrip, adc, sbc, rorIP, tst, neg, cmpReg, cmnReg, ORR, mul, bic, mvn };
 void(*hlOps[4])(int&, int) = { addNoCond, cmpHL, movNoCond, bx };
-int(*conditions[14])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE };
 
 char* shifts_s[3] = { "lsl", "lsr", "asr" };
 char* arith_s[2] = { "add", "sub" };

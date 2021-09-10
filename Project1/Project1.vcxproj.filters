@@ -42,6 +42,9 @@
     <ClCompile Include="timers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="conditions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBAcpu.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="timers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

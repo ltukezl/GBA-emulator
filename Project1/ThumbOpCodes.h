@@ -7,10 +7,6 @@ void addOverflow(int operand1, int operand2, int result);
 void subCarry(int operand1, int operand2, int result);
 void subOverflow(int operand1, int operand2, int result);
 
-void lsl(int&, int, int);
-void lsr(int&, int, int);
-void asr(int&, int, int);
-
 void add(int&, int, int);
 void sub(int&, int, int);
 
@@ -40,21 +36,6 @@ void addNoCond(int&, int);
 void movNoCond(int&, int);
 void cmpHL(int&, int);
 void bx(int&, int);
-
-int BEQ();
-int BNE();
-int BCS();
-int BCC();
-int BMI();
-int BPL();
-int BVS();
-int BVC();
-int BHI();
-int BLS();
-int BLT();
-int BGE();
-int BGT();
-int BLE();
 
 int thumbExecute(uint16_t);
 

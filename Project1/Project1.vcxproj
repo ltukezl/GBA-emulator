@@ -85,11 +85,13 @@
     <ClCompile Include="DMA.cpp" />
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="Interrupt.cpp" />
+    <ClCompile Include="conditions.cpp" />
     <ClCompile Include="ThumbOpCodes.cpp" />
     <ClCompile Include="timers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="armopcodes.h" />
+    <ClInclude Include="conditions.h" />
     <ClInclude Include="GBAcpu.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="DMA.h" />

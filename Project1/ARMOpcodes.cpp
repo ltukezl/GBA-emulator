@@ -1,16 +1,12 @@
 #include "iostream"
 #include "GBAcpu.h"
 #include "ThumbOpCodes.h"
+#include "armopcodes.h"
 #include "MemoryOps.h"
 #include "Constants.h"
 #include "interrupt.h"
+#include "conditions.h"
 #include <stdint.h>
-
-int noCond(){
-    return 1;
-}
-
-int(*ARMconditions[16])() = { BEQ, BNE, BCS, BCC, BMI, BPL, BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE, noCond };
 
 void ARMBranch(int opCode){
     int location = opCode & 0xFFFFFF; //24 bits
@@ -688,7 +684,6 @@ void registerRotate(int opCode){
 void dataProcessingImmediate(int opCode){
 	int rd = (opCode >> 12) & 0xF; //destination
 	int rs = (opCode >> 16) & 0xF; //first operand
-	//int operand1 = (rs == 15) ? *r[rs] + 4 : *r[rs];
 	int operand1 = *r[rs];
 	int immediate = opCode & 0xFF;
 	if (rs == 15)
@@ -1003,7 +998,7 @@ void singleDataTrasnferRegisterPost(int opCode){
 void ARMExecute(int opCode){
     int condition = (opCode >> 28) & 0xF;
 	*r[PC] += 4;
-    if(ARMconditions[condition]()) //condition true
+	if (conditions[condition]()) //condition true
     {
         int opCodeType = (opCode >> 24) & 0xF;
         int subType;
