@@ -89,11 +89,12 @@ void hiRegOperations(uint16_t opcode){
 		operand2 &= ~1;
 	}
 
-	hlOps[op.instruction](*r[newDestinationReg], operand1, operand2);
-
 	if (newDestinationReg == 15){
-		*r[newDestinationReg] &= ~1;
+		operand1 += 2;
+		operand2 &= ~1;
 	}
+
+	hlOps[op.instruction](*r[newDestinationReg], operand1, operand2);
 
 	cycles += Wait0_S_cycles;
 

@@ -134,7 +134,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program4.bin", "rb");
+	fopen_s(&file, "program3.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -149,11 +149,11 @@ int main(int argc, char *args[]){
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			//continue;
+			continue;
 		}
 		step = false;
 
-		if (*r[PC] == 0x80b9a42){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x800052e){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
 		if (*r[0] == 0xbfd8){ //0x8006668, 0x801d6a2
