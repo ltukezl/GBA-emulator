@@ -152,14 +152,13 @@ void loadStoreSignExtend(uint16_t opcode){
 	uint32_t totalAddress = *r[op.baseReg] + *r[op.offsetReg];
 
 	if (op.halfWord && op.extend){
-		if (totalAddress & 1) //misaligned address
+		if (totalAddress & 1){
 			*r[op.destSourceReg] = signExtend<8>(loadFromAddress16(totalAddress));
+			if (*r[op.destSourceReg] & 0x80) //sign bit on
+				*r[op.destSourceReg] |= 0xFFFFFF00;
+		}
 		else{
-			if (totalAddress & 1){
-				*r[op.destSourceReg] = loadFromAddress16(totalAddress);
-				if (*r[op.destSourceReg] & 0x80) //sign bit on
-					*r[op.destSourceReg] |= 0xFFFFFF00;
-			}
+			*r[op.destSourceReg] = signExtend<16>(loadFromAddress16(totalAddress));
 		}
 	}
 	else if (op.halfWord && !op.extend)	
