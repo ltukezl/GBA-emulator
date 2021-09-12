@@ -103,5 +103,5 @@ void Rscs(int& saveTo, int operand1, int operand2){
 }
 
 void Neg(int& saveTo, int operand1, int operand2){
-	Rsbs(saveTo, operand1, 0);
+	Rsbs(saveTo, operand2, 0);
 }

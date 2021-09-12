@@ -154,8 +154,8 @@ int main(int argc, char *args[]){
 		}
 		step = false;
 
-		if (*r[PC] == 0x3000028){ //0x8006668, 0x801d6a2
-			debug = true;
+		if (*r[PC] == 0x00052c){ //0x8006668, 0x801d6a2
+			//debug = true;
 		}
 		if (*r[0] == 0xbfd8){ //0x8006668, 0x801d6a2
 			//debug = true;
