@@ -80,6 +80,7 @@
   <ItemGroup>
     <ClCompile Include="arithmeticOps.cpp" />
     <ClCompile Include="ARMOpcodes.cpp" />
+    <ClCompile Include="barrelShifter.cpp" />
     <ClCompile Include="GBAcpu.cpp" />
     <ClCompile Include="logicalOps.cpp" />
     <ClCompile Include="memoryMappedIO.cpp" />

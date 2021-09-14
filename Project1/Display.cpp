@@ -124,6 +124,8 @@ void Display::fillBG(uint32_t regOffset){
 void Display::fillObjects(uint32_t regOffset){
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0x06010000;
+	if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4 || displayCtrl->bgMode == 5)
+		startAddr += 0x4000;
 
 	/*creates tilemaps 1 and 2*/
 	sf::Image tile;

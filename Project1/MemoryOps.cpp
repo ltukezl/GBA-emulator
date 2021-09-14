@@ -82,6 +82,21 @@ bool specialReads(uint32_t addr, res& result, T func){
 	return false;
 }
 
+uint32_t clampAddress(uint32_t mask, uint32_t address){
+	if (mask == 6 && (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2) && address >= 0x10000){
+		address %= 0x8000;
+		address += 0x10000;
+	}
+	else if (mask == 6 && (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4 || displayCtrl->bgMode == 5) && address >= 0x14000){
+		address %= 0x8000;
+		address += 0x14000;
+	}
+	else
+		address %= memsizes[mask];
+
+	return address;
+}
+
 void writeToAddress(uint32_t address, uint8_t value){
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
@@ -92,10 +107,7 @@ void writeToAddress(uint32_t address, uint8_t value){
 	if (mask == 4 && address > memsizes[mask])
 		return;
 
-	if (mask == 6 && displayCtrl->bgMode == 0)
-		address %= 0x8000;
-	else
-		address %= memsizes[mask];
+	address = clampAddress(mask, address);
 
 	if (mask == 7 
 		|| (displayCtrl->bgMode == 7 && mask == 6 && address >= 0x10000)
@@ -123,10 +135,7 @@ void writeToAddress16(uint32_t address, uint16_t value){
 	if (mask == 4 && address > memsizes[mask])
 		return;
 
-	if (mask == 6 && displayCtrl->bgMode == 0)
-		address %= 0x8000;
-	else
-		address %= memsizes[mask];
+	address = clampAddress(mask, address);
 
 	if (specialWrites(mask, address, value))
 		return;
@@ -142,10 +151,7 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	if (mask == 4 && address > memsizes[mask])
 		return;
 
-	if (mask == 6 && displayCtrl->bgMode == 0)
-		address %= 0x8000;
-	else
-		address %= memsizes[mask];
+	address = clampAddress(mask, address);
 
 	if (specialWrites(mask, address, value))
 		return;
@@ -173,10 +179,7 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	if (mask == 6 && displayCtrl->bgMode == 0)
-		address %= 0x8000;
-	else
-		address %= memsizes[mask];
+	address = clampAddress(mask, address);
 
 	return memoryLayout[mask][address];
 }
@@ -197,10 +200,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	if (mask == 6 && displayCtrl->bgMode == 0)
-		address %= 0x8000;
-	else
-		address %= memsizes[mask];
+	address = clampAddress(mask, address);
 
 	if (misaligned)
 		return RORnoCond(*(uint16_t*)&(uint8_t)memoryLayout[mask][(address - 1)], 8);
@@ -224,10 +224,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	if (mask == 6 && displayCtrl->bgMode == 0)
-		address %= 0x8000;
-	else
-		address %= memsizes[mask];
+	address = clampAddress(mask, address);
 
 	return RORnoCond(rawLoad32(memoryLayout[mask], address - misalignment), (8 * misalignment));
 }

@@ -142,7 +142,7 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 }
 
 template <typename function1, typename function2>
-void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){ // not tested
+void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 	int baseReg = (opCode >> 16) & 15;
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
@@ -205,29 +205,6 @@ void branchAndExhange(int opCode){
 	if (debug)
 		std::cout << "bx " << *r[15] << " ";
 }
-
-class OpCodeCond {
-protected: 
-	virtual bool calcCarry(uint32_t sourceValue, uint8_t shiftAmount) = 0;
-	virtual void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint32_t shiftAmount) = 0;
-public:
-	void execute(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount);
-};
-
-class Lsl : OpCodeCond {
-protected:
-	bool calcCarry(uint32_t sourceValue, uint8_t shiftAmount){
-		return ((unsigned)sourceValue >> (32 - shiftAmount) & 1);
-	}
-
-	void shift(uint32_t& destinationRegister,  uint32_t sourceValue, uint32_t shiftAmount){
-		if (shiftAmount >= 32){
-			destinationRegister = 0;
-			return;
-		}
-		destinationRegister = sourceValue << shiftAmount;
-	}
-};
 
 void lslCond(int &saveTo, int from, int immidiate) {
 	uint64_t tmp = (unsigned)from;
@@ -557,7 +534,6 @@ void dataProcessingImmediate(int opCode){
 
 	if (debug)
 		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", " << shiftedImm << " ";
-	
 }
 
 void halfDataTransfer(int opCode){

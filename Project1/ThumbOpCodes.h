@@ -157,4 +157,5 @@ union conditionalBranchOp{
 		uint16_t condition : 4;
 	};
 };
+
 #endif
