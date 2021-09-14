@@ -93,7 +93,8 @@ extern union BgCnt{
 		uint16_t palettes : 1;
 		uint16_t bgBaseblock : 5;
 		uint16_t overflow : 1;
-		uint16_t size : 2;
+		uint16_t hWide : 1;
+		uint16_t vWide : 1;
 	};
 	uint16_t addr;
 };

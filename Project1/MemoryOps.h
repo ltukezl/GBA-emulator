@@ -6,7 +6,7 @@
 extern uint8_t systemROM[0x4000];
 extern uint8_t ExternalWorkRAM[0x40000];
 extern uint8_t InternalWorkRAM[0x8000];
-extern uint8_t IoRAM[0x800];
+extern uint8_t IoRAM[0x801];
 extern uint8_t PaletteRAM[0x400];
 extern uint8_t VRAM[0x18000];
 extern uint8_t OAM[0x400];

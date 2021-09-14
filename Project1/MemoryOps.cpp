@@ -23,7 +23,7 @@ uint32_t SP_usr = 0x03007F00;
 uint8_t systemROM[0x4000] = { 0 };
 uint8_t ExternalWorkRAM[0x40000] = { 0 };
 uint8_t InternalWorkRAM[0x8000] = { 0 };
-uint8_t IoRAM[0x800] = { 0 };
+uint8_t IoRAM[0x801] = { 0 };
 uint8_t PaletteRAM[0x400] = { 0 };
 uint8_t VRAM[0x18000] = { 0 };
 uint8_t OAM[0x400] = { 0 };
@@ -83,6 +83,8 @@ bool specialReads(uint32_t addr, res& result, T func){
 }
 
 uint32_t clampAddress(uint32_t mask, uint32_t address){
+	if (mask == 5 && address == 2)
+		debug = false;
 	address %= memsizes[mask];
 	if (mask == 6 && address >= 0x18000)
 		address -= 0x8000;

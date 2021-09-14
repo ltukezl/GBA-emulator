@@ -71,7 +71,7 @@ void Display::fillTiles(uint32_t regOffset){
 				int row = loadFromAddress32(startAddr, true);
 				for (int pixel = 0; pixel < 8; pixel++){
 					int color = (row & 0xf);
-					tile.setPixel(pixel, y, PaletteColors[color*2]);
+					tile.setPixel(pixel, y, PaletteColors[color]);
 					row >>= 4;
 				}
 				startAddr += 4;
@@ -105,7 +105,9 @@ void Display::fillBG(uint32_t regOffset){
 
 	/*fills BG map*/
 	sf::Texture BG1Texture;
-	BG1Texture.create(256, 256);
+	uint16_t size_x = bgCnt->hWide ? 512 : 256;
+	uint16_t size_y = bgCnt->vWide ? 512 : 256;
+	BG1Texture.create(size_x, size_y);
 	if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2){
 		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x200;
@@ -116,6 +118,39 @@ void Display::fillBG(uint32_t regOffset){
 				BG1Texture.update(tileMap[tilNum + tileBaseBlock], 8 * k, 8 * i);
 
 				startAddr += 2;
+			}
+		}
+		if (bgCnt->hWide){
+			for (int i = 0; i < 32; i++){
+				for (int k = 0; k < 32; k++){
+					uint16_t reg = rawLoad16(VRAM, startAddr);
+					uint16_t tilNum = reg & 0x1FF;
+					BG1Texture.update(tileMap[tilNum + tileBaseBlock],256 + 8 * k, 8 * i);
+
+					startAddr += 2;
+				}
+			}
+		}
+		if (bgCnt->vWide){
+			for (int i = 0; i < 32; i++){
+				for (int k = 0; k < 32; k++){
+					uint16_t reg = rawLoad16(VRAM, startAddr);
+					uint16_t tilNum = reg & 0x1FF;
+					BG1Texture.update(tileMap[tilNum + tileBaseBlock], 8 * k, 256 + 8 * i);
+
+					startAddr += 2;
+				}
+			}
+		}
+		if (bgCnt->vWide && bgCnt->vWide){
+			for (int i = 0; i < 32; i++){
+				for (int k = 0; k < 32; k++){
+					uint16_t reg = rawLoad16(VRAM, startAddr);
+					uint16_t tilNum = reg & 0x1FF;
+					BG1Texture.update(tileMap[tilNum + tileBaseBlock], 256 + 8 * k, 256 + 8 * i);
+
+					startAddr += 2;
+				}
 			}
 		}
 	}
@@ -139,6 +174,7 @@ void Display::fillBG(uint32_t regOffset){
 	sf::Sprite BG1Sprite;
 	BG1Sprite.setTexture(BG1Texture, true);
 	BG1Sprite.setPosition(514, 256 * (regOffset / 2));
+	BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
 
 	display->draw(BG1Sprite);
 }
