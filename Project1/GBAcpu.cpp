@@ -91,7 +91,7 @@ int main(int argc, char *args[]){
 	rawWrite16(IoRAM, 0x130, 0xFFFF); // input register, 0 = pressed down, 1 = released
 
 #if GPU
-	Display debugView(1280, 496, "paletteWindow");
+	Display debugView(1280, 496*2, "paletteWindow");
 	//Display gameDisplay(240, 160, "game");
 #endif
 	std::cout << *(int*)argc << "\n";
