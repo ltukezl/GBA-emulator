@@ -71,7 +71,7 @@ void Display::fillTiles(uint32_t regOffset){
 				int row = loadFromAddress32(startAddr, true);
 				for (int pixel = 0; pixel < 8; pixel++){
 					int color = (row & 0xf);
-					tile.setPixel(pixel, y, PaletteColors[color]);
+					tile.setPixel(pixel, y, PaletteColors[color*2]);
 					row >>= 4;
 				}
 				startAddr += 4;
@@ -99,20 +99,43 @@ void Display::fillTiles(uint32_t regOffset){
 
 void Display::fillBG(uint32_t regOffset){
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
-	uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
-	uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x200;
+	uint32_t startAddr = 0;
+	uint32_t tileBaseBlock = 0;
+	const int scalar = 255 / 31;
 
 	/*fills BG map*/
 	sf::Texture BG1Texture;
 	BG1Texture.create(256, 256);
-	for (int i = 0; i < 32; i++){
-		for (int k = 0; k < 32; k++){
-			uint16_t reg = rawLoad16(VRAM, startAddr);
-			uint16_t tilNum = reg & 0x1FF;
-			BG1Texture.update(tileMap[tilNum + tileBaseBlock], 8 * k, 8 * i);
-			startAddr += 2;
+	if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2){
+		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
+		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x200;
+		for (int i = 0; i < 32; i++){
+			for (int k = 0; k < 32; k++){
+				uint16_t reg = rawLoad16(VRAM, startAddr);
+				uint16_t tilNum = reg & 0x1FF;
+				BG1Texture.update(tileMap[tilNum + tileBaseBlock], 8 * k, 8 * i);
+
+				startAddr += 2;
+			}
 		}
 	}
+
+	else if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4){
+		sf::Image tile;
+		for (int k = 0; k < 160; k++)
+			for (int i = 0; i < 240; i++){
+				ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
+				int redScaled = colorPaletteRam->red * scalar;
+				int greenScaled = colorPaletteRam->green * scalar;
+				int blueScaled = colorPaletteRam->blue * scalar;
+				sf::Color color(redScaled, greenScaled, blueScaled);
+				tile.create(1, 1, color);
+				BG1Texture.update(tile, i, k);
+
+				startAddr += 2;
+			}
+	}
+
 	sf::Sprite BG1Sprite;
 	BG1Sprite.setTexture(BG1Texture, true);
 	BG1Sprite.setPosition(514, 256 * (regOffset / 2));
@@ -131,7 +154,6 @@ void Display::fillObjects(uint32_t regOffset){
 		for (int tileX = 0; tileX < 32; tileX++){
 			for (int y = 0; y < 8; y++){
 				int row = loadFromAddress32(startAddr, true);
-				//int row = rawLoad32(VRAM, startAddr - 0x6010000);
 				for (int pixel = 0; pixel < 8; pixel++){
 					int color = (row & 0xf);
 					tile.setPixel(pixel, y, PaletteColors[256 + color]);

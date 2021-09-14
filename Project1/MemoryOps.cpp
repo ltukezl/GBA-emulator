@@ -87,7 +87,6 @@ uint32_t clampAddress(uint32_t mask, uint32_t address){
 	if (mask == 6 && address >= 0x18000)
 		address -= 0x8000;
 
-
 	return address;
 }
 
