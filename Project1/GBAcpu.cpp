@@ -150,14 +150,11 @@ int main(int argc, char *args[]){
 			debugView.handleEvents();
 #endif
 		if (debug && !step){
-			//continue;
+			continue;
 		}
 		step = false;
 
 		if (*r[PC] == 0x00052c){ //0x8006668, 0x801d6a2
-			//debug = true;
-		}
-		if (*r[0] == 0xbfd8){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
  		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
@@ -197,14 +194,10 @@ int main(int argc, char *args[]){
 
 		}
 		if (debug){
-			std::cout << hex << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10]  << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16] << endl;
+			//std::cout << hex << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10]  << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16] << endl;
 			//std::cout << "cycles " << dec << cycles << std::endl;	
-			//std::cout << std::endl;
+			std::cout << std::endl;
 		}
-		if (*r[PC] == 0x300002C){ //0x8006668, 0x801d6a2
-			debug = false;
-		}
-
 	}
 
     return 0;

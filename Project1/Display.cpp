@@ -108,24 +108,55 @@ void Display::fillBG(uint32_t regOffset){
 	uint16_t size_x = bgCnt->hWide ? 512 : 256;
 	uint16_t size_y = bgCnt->vWide ? 512 : 256;
 	BG1Texture.create(size_x, size_y);
+
+	sf::Image tile;
+	tile.create(8, 8, sf::Color::Blue);
+
 	if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2){
 		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
-		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x200;
+		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x4000;
 		for (int i = 0; i < 32; i++){
 			for (int k = 0; k < 32; k++){
 				uint16_t reg = rawLoad16(VRAM, startAddr);
 				uint16_t tilNum = reg & 0x1FF;
-				BG1Texture.update(tileMap[tilNum + tileBaseBlock], 8 * k, 8 * i);
+				uint16_t paletteNum = (reg >> 12) & 0xF;
+
+				uint32_t pixeloffset = 0;
+				for (int y = 0; y < 8; y++){
+					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum*0x20 + pixeloffset, true);
+					for (int pixel = 0; pixel < 8; pixel++){
+						int color = (row & 0xf);
+						tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+						row >>= 4;
+					}
+					pixeloffset += 4;
+				}
+
+				BG1Texture.update(tile, 8 * k, 8 * i);
 
 				startAddr += 2;
 			}
 		}
+		
 		if (bgCnt->hWide){
 			for (int i = 0; i < 32; i++){
 				for (int k = 0; k < 32; k++){
 					uint16_t reg = rawLoad16(VRAM, startAddr);
 					uint16_t tilNum = reg & 0x1FF;
-					BG1Texture.update(tileMap[tilNum + tileBaseBlock],256 + 8 * k, 8 * i);
+					uint16_t paletteNum = (reg >> 12) & 0xF;
+
+					uint32_t pixeloffset = 0;
+					for (int y = 0; y < 8; y++){
+						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum * 0x20 + pixeloffset, true);
+						for (int pixel = 0; pixel < 8; pixel++){
+							int color = (row & 0xf);
+							tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+							row >>= 4;
+						}
+						pixeloffset += 4;
+					}
+
+					BG1Texture.update(tile, 256 + 8 * k, 8 * i);
 
 					startAddr += 2;
 				}
@@ -136,7 +167,20 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					uint16_t reg = rawLoad16(VRAM, startAddr);
 					uint16_t tilNum = reg & 0x1FF;
-					BG1Texture.update(tileMap[tilNum + tileBaseBlock], 8 * k, 256 + 8 * i);
+					uint16_t paletteNum = (reg >> 12) & 0xF;
+
+					uint32_t pixeloffset = 0;
+					for (int y = 0; y < 8; y++){
+						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum * 0x20 + pixeloffset, true);
+						for (int pixel = 0; pixel < 8; pixel++){
+							int color = (row & 0xf);
+							tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+							row >>= 4;
+						}
+						pixeloffset += 4;
+					}
+
+					BG1Texture.update(tile, 8 * k, 256 + 8 * i);
 
 					startAddr += 2;
 				}
@@ -147,12 +191,26 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					uint16_t reg = rawLoad16(VRAM, startAddr);
 					uint16_t tilNum = reg & 0x1FF;
-					BG1Texture.update(tileMap[tilNum + tileBaseBlock], 256 + 8 * k, 256 + 8 * i);
+					uint16_t paletteNum = (reg >> 12) & 0xF;
+
+				uint32_t pixeloffset = 0;
+				for (int y = 0; y < 8; y++){
+					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum*0x20 + pixeloffset, true);
+					for (int pixel = 0; pixel < 8; pixel++){
+						int color = (row & 0xf);
+						tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+						row >>= 4;
+					}
+					pixeloffset += 4;
+				}
+
+				BG1Texture.update(tile, 256 + 8 * k, 256 + 8 * i);
 
 					startAddr += 2;
 				}
 			}
 		}
+		
 	}
 
 	else if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4){
