@@ -16,39 +16,51 @@ uint16_t called[4] = { 0 };
 bool timerReloadWrite(uint32_t addr, uint32_t val){
 	union TIMERCNT oldReg;
 	union TIMERCNT newReg;
-	oldReg.addr = loadFromAddress32(addr, true);
+	oldReg.addr = rawLoad32(IoRAM, addr);
 	newReg.addr = val;
 
-	if (!oldReg.startStop && newReg.startStop){
-		if (addr == 0x4000102){
-			writeToAddress16(addr - 2, reloads[0]);
-		}
-		else if (addr == 0x4000106){
-			writeToAddress16(addr - 2, reloads[1]);
-		}
-		else if (addr == 0x400010A){
-			writeToAddress16(addr - 2, reloads[2]);
-		}
-		else if (addr == 0x400010E){
-			writeToAddress16(addr - 2, reloads[3]);
-		}
-		return false;
+	if (addr == 0x100){
+		reloads[0] = 0x10000 - val&0xFFFF;
+	}
+	else if (addr == 0x104){
+		reloads[1] = 0x10000 - val & 0xFFFF;;
+	}
+	else if (addr == 0x108){
+		reloads[2] = 0x10000 - val & 0xFFFF;;
+	}
+	else if (addr == 0x10B){
+		reloads[3] = 0x10000 - val & 0xFFFF;;
 	}
 
-	if (addr == 0x4000100){
-		reloads[0] = val;
-	}
-	else if (addr == 0x4000104){
-		reloads[1] = val;
-	}
-	else if (addr == 0x4000108){
-		reloads[2] = val;
-	}
-	else if (addr == 0x400010C){
-		reloads[3] = val;
+	if (!oldReg.startStop && newReg.startStop){
+		rawWrite32(IoRAM, addr, val);
 	}
 
 	return true;
+}
+
+bool reloadCounter(uint32_t addr, uint32_t val){
+	union TIMERCNT oldReg;
+	union TIMERCNT newReg;
+	oldReg.addr = rawLoad32(IoRAM, addr - 2);
+	newReg.addr = val;
+
+	if (!oldReg.startStop && newReg.startStop){
+		if (addr == 0x102){
+			rawWrite16(IoRAM, addr - 2, reloads[0]);
+		}
+		else if (addr == 0x106){
+			rawWrite16(IoRAM, addr - 2, reloads[1]);
+		}
+		else if (addr == 0x10A){
+			rawWrite16(IoRAM, addr - 2, reloads[2]);
+		}
+		else if (addr == 0x10D){
+			rawWrite16(IoRAM, addr - 2, reloads[3]);
+		}
+	}
+
+	return false;
 }
 
 void updateTimers() {
@@ -56,6 +68,24 @@ void updateTimers() {
 	for (int i = 0; i < 4; i++){
 		TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[0x100 + 4 * i];
 		if (timerCtrl->startStop){
+			if (timerCtrl->counterVal == reloads[i]){
+				if (i == 0 && InterruptEnableRegister->timer0OVF)
+					InterruptFlagRegister->timer0OVF = 1;
+				else if (i == 1 && InterruptEnableRegister->timer1OVF)
+					InterruptFlagRegister->timer1OVF = 1;
+				else if (i == 2 && InterruptEnableRegister->timer2OVF)
+					InterruptFlagRegister->timer2OVF = 1;
+				else if (i == 3 && InterruptEnableRegister->timer3OVF)
+					InterruptFlagRegister->timer3OVF = 1;
+
+				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
+					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
+					*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * (i + 1)] = oldVal + 1;
+				}
+
+				timerCtrl->counterVal = 0;
+			}
+
 			if (timerCtrl->cntrSelect == ONE_TO_ONE){
 				timerCtrl->counterVal += 1;
 			}
@@ -77,26 +107,6 @@ void updateTimers() {
 				}
 				called[i] = (called[i] + 1) % 1024;
 			}
-
-			if (timerCtrl->counterVal <= reloads[i]){
-				
-				if (i == 0 && InterruptEnableRegister->timer0OVF)
-					InterruptFlagRegister->timer0OVF = 1;
-				else if (i == 1 && InterruptEnableRegister->timer1OVF)
-					InterruptFlagRegister->timer1OVF = 1;
-				else if (i == 2 && InterruptEnableRegister->timer2OVF)
-					InterruptFlagRegister->timer2OVF = 1;
-				else if (i == 3 && InterruptEnableRegister->timer3OVF)
-					InterruptFlagRegister->timer3OVF = 1;
-
-				timerCtrl->counterVal = reloads[i];
-
-				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
-					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
-					*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * (i + 1)] = oldVal + 1;
-				}
-			}
-			*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * i] = timerCtrl->counterVal;
 		}
 	}
 }

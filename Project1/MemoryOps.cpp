@@ -66,8 +66,11 @@ bool specialWrites(uint32_t mask, uint32_t addr, uint32_t val){
 		rawWrite16(IoRAM, 0x202, tmp);
 		return true;
 	}
-	else if (addr >= 0x4000100 && addr <= 0x400010E){
+	else if (mask == 4 && (addr == 0x100 || addr == 0x104 || addr == 0x108 || addr == 0x10B)){
 		return timerReloadWrite(addr, val);
+	}
+	else if (mask == 4 && (addr == 0x102 || addr == 0x106 || addr == 0x10A || addr == 0x10D)){
+		return reloadCounter(addr, val);
 	}
 
 	return false;

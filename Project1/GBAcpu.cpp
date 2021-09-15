@@ -134,7 +134,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program3.bin", "rb");
+	fopen_s(&file, "program4.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);

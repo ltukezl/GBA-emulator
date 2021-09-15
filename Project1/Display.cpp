@@ -22,10 +22,13 @@ Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y),
 
 void Display::scanPalettes(){
 	int startAddr = 0;
-	sf::RectangleShape rectangle;
-	rectangle.setSize(sf::Vector2f(16, 16));
-
 	const int scalar = 255 / 31;
+
+	sf::Texture BG1Texture;
+	BG1Texture.create(16, 32);
+
+	sf::Image tile;
+	tile.create(16, 32, sf::Color::Black);
 
 	//for bg palettes
 	for (int i = 0; i < 16; i++)
@@ -36,9 +39,7 @@ void Display::scanPalettes(){
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			PaletteColors[16 * i + k] = color;
-			rectangle.setFillColor(color);
-			rectangle.setPosition(sf::Vector2f(16 * k, 16 * i));
-			display->draw(rectangle);
+			tile.setPixel(k, i, color);
 			startAddr += 2;
 		}
 
@@ -51,11 +52,18 @@ void Display::scanPalettes(){
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			PaletteColors[256 + 16 * i + k] = color;
-			rectangle.setFillColor(color);
-			rectangle.setPosition(sf::Vector2f(16 * k, 272 + 16 * i));
-			display->draw(rectangle);
+			tile.setPixel(k, 16 + 1, color);
 			startAddr += 2;
 		}
+
+	BG1Texture.update(tile, 0, 0);
+
+	sf::Sprite BG1Sprite;
+	BG1Sprite.setTexture(BG1Texture, true);
+	BG1Sprite.setPosition(0, 0);
+	BG1Sprite.setScale(16.0, 16.0);
+
+	display->draw(BG1Sprite);
 }
 
 void Display::fillTiles(uint32_t regOffset){
