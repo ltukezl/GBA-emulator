@@ -21,6 +21,8 @@ bool timerReloadWrite(uint32_t addr, uint32_t val){
 
 	//debug = true;
 
+	
+
 	TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[addr];
 
 	if (addr == 0x100){

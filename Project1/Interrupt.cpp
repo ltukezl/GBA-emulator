@@ -25,6 +25,9 @@ void interruptController(){
 #endif
 }
 
+bool timerCountHappened = false;
+uint8_t timerCount = 0;
+
 void HWInterrupts(int cycles){
 #if ENABLED
 	if (!InterruptMaster->IRQEnabled || cpsr.IRQDisable){
@@ -47,6 +50,23 @@ void HWInterrupts(int cycles){
 		vBlankCounter = (vBlankCounter + cycles) % 280896;
 	}
 	
+	if (InterruptFlagRegister->timer0OVF){
+		InterruptFlagRegister->timer0OVF = 0;
+		if (!timerCountHappened)
+			timerCount = 5;
+		timerCountHappened = true;
+	}
+
+	if (timerCountHappened && timerCount != 0){
+		timerCount--;
+	}
+	else if (timerCountHappened && timerCount == 0){
+		InterruptFlagRegister->timer0OVF = 1;
+		timerCountHappened = false;
+		//debug = true;
+	}
+
+
 	if (InterruptFlagRegister->addr != 0){
 		if (debug)
 			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << " saving LR " << (cpsr.thumb ? *r[PC] + 4 : *r[PC]) << " " << std::dec << std::endl;
