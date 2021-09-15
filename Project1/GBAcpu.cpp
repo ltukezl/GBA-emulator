@@ -154,7 +154,7 @@ int main(int argc, char *args[]){
 		}
 		step = false;
 
-		if (*r[PC] == 0x00052c){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x3000590){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
  		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
@@ -170,8 +170,8 @@ int main(int argc, char *args[]){
 			*r[PC] -= 0x2000000;
 
 		startDMA();
-		updateTimers();
 		HWInterrupts(cycles);
+		updateTimers(cycles);
 #if GPU
 		if (debug | (refreshRate > 100000)){
 			debugView.updatePalettes();

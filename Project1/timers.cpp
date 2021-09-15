@@ -1,7 +1,9 @@
 #include "timers.h"
 #include "memoryMappedIO.h"
 #include "MemoryOps.h"
+#include "GBAcpu.h"
 #include <stdint.h>
+#include <iostream>
 
 enum prescaler {
 	ONE_TO_ONE,
@@ -14,25 +16,27 @@ uint16_t reloads[4] = { 0 };
 uint16_t called[4] = { 0 };
 
 bool timerReloadWrite(uint32_t addr, uint32_t val){
-	union TIMERCNT oldReg;
 	union TIMERCNT newReg;
-	oldReg.addr = rawLoad32(IoRAM, addr);
 	newReg.addr = val;
 
+	//debug = true;
+
+	TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[addr];
+
 	if (addr == 0x100){
-		reloads[0] = 0x10000 - val&0xFFFF;
+		reloads[0] = val;
 	}
 	else if (addr == 0x104){
-		reloads[1] = 0x10000 - val & 0xFFFF;;
+		reloads[1] = val;
 	}
 	else if (addr == 0x108){
-		reloads[2] = 0x10000 - val & 0xFFFF;;
+		reloads[2] = val;
 	}
 	else if (addr == 0x10B){
-		reloads[3] = 0x10000 - val & 0xFFFF;;
+		reloads[3] = val;
 	}
 
-	if (!oldReg.startStop && newReg.startStop){
+	if (!timerCtrl->startStop && newReg.startStop){
 		rawWrite32(IoRAM, addr, val);
 	}
 
@@ -63,29 +67,11 @@ bool reloadCounter(uint32_t addr, uint32_t val){
 	return false;
 }
 
-void updateTimers() {
+void updateTimers(uint32_t cycles) {
 
 	for (int i = 0; i < 4; i++){
 		TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[0x100 + 4 * i];
 		if (timerCtrl->startStop){
-			if (timerCtrl->counterVal == reloads[i]){
-				if (i == 0 && InterruptEnableRegister->timer0OVF)
-					InterruptFlagRegister->timer0OVF = 1;
-				else if (i == 1 && InterruptEnableRegister->timer1OVF)
-					InterruptFlagRegister->timer1OVF = 1;
-				else if (i == 2 && InterruptEnableRegister->timer2OVF)
-					InterruptFlagRegister->timer2OVF = 1;
-				else if (i == 3 && InterruptEnableRegister->timer3OVF)
-					InterruptFlagRegister->timer3OVF = 1;
-
-				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
-					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
-					*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * (i + 1)] = oldVal + 1;
-				}
-
-				timerCtrl->counterVal = 0;
-			}
-
 			if (timerCtrl->cntrSelect == ONE_TO_ONE){
 				timerCtrl->counterVal += 1;
 			}
@@ -107,6 +93,27 @@ void updateTimers() {
 				}
 				called[i] = (called[i] + 1) % 1024;
 			}
+
+			if (timerCtrl->counterVal == 0){
+				if (i == 0 && InterruptEnableRegister->timer0OVF)
+					InterruptFlagRegister->timer0OVF = 1;
+				else if (i == 1 && InterruptEnableRegister->timer1OVF)
+					InterruptFlagRegister->timer1OVF = 1;
+				else if (i == 2 && InterruptEnableRegister->timer2OVF)
+					InterruptFlagRegister->timer2OVF = 1;
+				else if (i == 3 && InterruptEnableRegister->timer3OVF)
+					InterruptFlagRegister->timer3OVF = 1;
+
+				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
+					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
+					*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * (i + 1)] = oldVal + 1;
+				}
+
+				timerCtrl->counterVal = reloads[i];
+			}
+
+			if (debug)
+				std::cout << "timer counter " << std::hex << timerCtrl->counterVal << std::dec << " ";
 		}
 	}
 }

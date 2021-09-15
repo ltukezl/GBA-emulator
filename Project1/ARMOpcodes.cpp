@@ -818,6 +818,7 @@ void ARMExecute(int opCode){
 	*r[PC] += 4;
 	if (conditions[condition]()) //condition true
     {
+		cycles += 2;
         int opCodeType = (opCode >> 24) & 0xF;
         int subType;
         switch(opCodeType){
@@ -903,5 +904,8 @@ void ARMExecute(int opCode){
 				    halfDataTransfer(opCode);
 				break;
 		}
+	}
+	else{
+		cycles += 2;
 	}
 }

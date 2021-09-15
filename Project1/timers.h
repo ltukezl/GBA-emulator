@@ -4,6 +4,6 @@
 
 bool timerReloadWrite(uint32_t addr, uint32_t val);
 bool reloadCounter(uint32_t addr, uint32_t val);
-void updateTimers();
+void updateTimers(uint32_t cycles);
 
 #endif
