@@ -1,7 +1,6 @@
 #ifndef CONDITIONS_H
 #define CONDITIONS_H
 
-
 int BEQ();
 int BNE();
 int BCS();
@@ -19,5 +18,6 @@ int BLE();
 int noCond();
 
 extern int(*conditions[15])();
+extern char* conditions_s[15];
 
 #endif

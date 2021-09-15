@@ -32,7 +32,6 @@ char* arith_s[2] = { "add", "sub" };
 char* movCompIpaddIpsub_s[4] = { "mov", "cmp", "add", "sub" };
 char* logicalOps_s[16] = { "and", "xor", "lsl", "lsr", "asr", "adc", "sbc", "ror", "tst", "neg", "cmp", "cmn", "or", "mul", "bic", "mvn" };
 char* hlOps_s[4] = { "add", "cmp", "mov", "bx" };
-char* conditions_s[14] = { "beq", "bne", "bcs", "bcc", "bmi", "bpl", "bvs", "bvc", "bhi", "bls", "bge", "blt", "bgt", "ble" };
 
 void moveShiftedRegister(uint16_t opcode){
 	union moveShiftedRegisterOp op = { opcode };

@@ -113,9 +113,6 @@ void updateTimers(uint32_t cycles) {
 
 				timerCtrl->counterVal = reloads[i];
 			}
-
-			if (debug)
-				std::cout << "timer counter " << std::hex << timerCtrl->counterVal << std::dec << " ";
 		}
 	}
 }

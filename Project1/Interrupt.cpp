@@ -25,8 +25,8 @@ void interruptController(){
 #endif
 }
 
-bool timerCountHappened = false;
-uint8_t timerCount = 0;
+bool timerCountHappened[4] = { false };
+uint8_t timerCount[4] = { 0 };
 
 void HWInterrupts(int cycles){
 #if ENABLED
@@ -50,22 +50,24 @@ void HWInterrupts(int cycles){
 		vBlankCounter = (vBlankCounter + cycles) % 280896;
 	}
 	
-	if (InterruptFlagRegister->timer0OVF){
-		InterruptFlagRegister->timer0OVF = 0;
-		if (!timerCountHappened)
-			timerCount = 5;
-		timerCountHappened = true;
-	}
+	uint16_t mask = 1 << 3;
+	for (int timerInt = 0; timerInt < 4; timerInt++){
+		if (InterruptFlagRegister->addr & mask){
+			InterruptFlagRegister->addr &= ~mask;
+			if (!timerCountHappened[timerInt])
+				timerCount[timerInt] = 5;
+			timerCountHappened[timerInt] = true;
+		}
 
-	if (timerCountHappened && timerCount != 0){
-		timerCount--;
+		if (timerCountHappened[timerInt] && timerCount[timerInt] != 0){
+			timerCount[timerInt]--;
+		}
+		else if (timerCountHappened[timerInt] && timerCount[timerInt] == 0){
+			InterruptFlagRegister->addr |= mask;
+			timerCountHappened[timerInt] = false;
+		}
+		mask <<= 1;
 	}
-	else if (timerCountHappened && timerCount == 0){
-		InterruptFlagRegister->timer0OVF = 1;
-		timerCountHappened = false;
-		//debug = true;
-	}
-
 
 	if (InterruptFlagRegister->addr != 0){
 		if (debug)
