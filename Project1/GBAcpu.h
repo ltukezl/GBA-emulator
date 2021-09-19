@@ -42,6 +42,7 @@ extern __int8 Wait0_S_cycles;
 
 extern bool debug;
 extern bool step;
+extern bool memStatistics;
 
 template<int start>
 int signExtend(int value){

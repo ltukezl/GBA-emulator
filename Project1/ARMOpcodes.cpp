@@ -320,12 +320,12 @@ void updateMode(){
 	}
 }
 
-void ARMMSR(int& saveTo, int operand1, int operand2){
+void msr(int& saveTo, int operand1, int operand2){
 	cpsr.val = operand2;
 	updateMode();
 }
 
-void ARMMSR2(int& saveTo, int operand1, int operand2){
+void msr2(int& saveTo, int operand1, int operand2){
 	*r[16] = operand2;
 	updateMode();
 }
@@ -352,9 +352,18 @@ void MSR(uint32_t opCode){
 		std::cout << "MSR " << (SPSR ? "SPSR " : "CPSR ") << std::hex << shiftedImm << std::dec << " ";
 }
 
+
+void mrs(int& saveTo, int operand1, int operand2){
+	saveTo = cpsr.val;
+}
+
+void mrs2(int& saveTo, int operand1, int operand2){
+	saveTo = *r[16];
+}
+
 void(*dataOperations[0x20])(int&, int, int) = {And, Ands, Eor, Eors, Sub, Subs, Rsb, Rsbs,
-Add, Adds, Adc, Adcs, Sbc, Sbcs, Rsc, Rscs, Tst, Tst, ARMMSR, Teq, Cmp,
-Cmp, ARMMSR2, Cmn, Orr, Orrs, Mov, Movs, Bic, Bics, Mvn, Mvns };
+Add, Adds, Adc, Adcs, Sbc, Sbcs, Rsc, Rscs, mrs, Tst, msr, Teq, mrs2,
+Cmp, msr2, Cmn, Orr, Orrs, Mov, Movs, Bic, Bics, Mvn, Mvns };
 
 char* dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb", "rsbs",
 "add", "adds", "adc", "adcs", "sbc", "sbcs", "rsc", "rscs", "tst", "tst", "msr", "teq", "cmp",
@@ -362,61 +371,20 @@ char* dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb
 
 void immediateRotate(int opCode){
 	bool codeExecuted = false;
-	if (((opCode >> 23) & 0x1F) == 2){
-		if ((opCode & 0xFFF) == 0 && (((opCode >> 16) & 0x3F) == 0xF)){
-			int sprs = (opCode >> 22) & 1;
-			int rm = (opCode >> 12) & 0xF;
-			if (sprs)
-				*r[rm] = *r[16];
-			else
-				*r[rm] = cpsr.val;
-			codeExecuted = true;
-
-			if (debug & sprs)
-				std::cout << "mov r" << rm << ", spsr ";
-			else if (debug & !sprs)
-				std::cout << "mov r" << rm << ", cpsr_" << cpsr.mode << " ";
-		}
-
-		else if (((opCode >> 4) & 0x3FFFF) == 0x29f00){
-			int sprs = (opCode >> 22) & 1;
-			int rm = opCode & 0xF;
-			if (sprs)
-				*r[16] = *r[rm];
-			else{
-				cpsr.val = *r[rm];
-				updateMode();
-			}
-			codeExecuted = true;
-
-			if (debug & sprs)
-				std::cout << "mov cpsr_" << cpsr.mode << ", spsr ";
-			else if (debug & !sprs)
-				std::cout << "mov cpsr_" << cpsr.mode << ", r" << rm << " ";
-		}
-	}
-
 	if (((opCode >> 12) & 0x3FF) == 0x28f && ((opCode >> 23) & 3) == 2 && ((opCode >> 26) & 3) == 0 && !codeExecuted)
 	{
-		int immediate = (opCode >> 25) & 1;
 		int sprs = (opCode >> 22) & 1;
 		int rm = opCode & 0xF;
 
-		if (immediate == 0){
-			if (sprs){
-				int tmp = cpsr.val & 0xFFFFFFF;
-				tmp |= *r[rm] & 0xF0000000;
-				*r[16] = tmp;
-			}
-			else{
-				int tmp = cpsr.val & 0xFFFFFFF;
-				tmp |= *r[rm] & 0xF0000000;
-				cpsr.val = tmp;
-				updateMode();
-			}
+		if (sprs){
+			int tmp = cpsr.val & 0xFFFFFFF;
+			tmp |= *r[rm] & 0xF0000000;
+			*r[16] = tmp;
 		}
 		else{
-			std::cout << "TBD3";
+			int tmp = cpsr.val & 0xFFFFFFF;
+			tmp |= *r[rm] & 0xF0000000;
+			cpsr.val = tmp;
 		}
 		codeExecuted = true;
 	}
@@ -491,7 +459,7 @@ void registerRotate(int opCode){
 	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
 
 	if (rd == 15 && (opCode >> 20) & 1){ // not tested
-		cpsr.val = cpsr.val;
+		cpsr.val = *r[16];
 		updateMode();
 	}
 
@@ -780,8 +748,6 @@ void singleDataTrasnferRegisterPre(int opCode){
 				std::cout << "ldr r" << rd << ", [r" << rn << " r" << rm << "] ";
 			break;
 	}
-
-
 }
 
 void singleDataTrasnferRegisterPost(int opCode){

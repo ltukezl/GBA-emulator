@@ -95,6 +95,7 @@
   <ItemGroup>
     <ClInclude Include="arithmeticOps.h" />
     <ClInclude Include="armopcodes.h" />
+    <ClInclude Include="barrelShifter.h" />
     <ClInclude Include="conditions.h" />
     <ClInclude Include="GBAcpu.h" />
     <ClInclude Include="Constants.h" />

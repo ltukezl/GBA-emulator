@@ -52,7 +52,7 @@ void Display::scanPalettes(){
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			PaletteColors[256 + 16 * i + k] = color;
-			tile.setPixel(k, 16 + 1, color);
+			tile.setPixel(k, 16 + i, color);
 			startAddr += 2;
 		}
 
@@ -346,6 +346,19 @@ void Display::updatePalettes(){
 	}
 	
 	display->display();
+	if (memStatistics){
+		std::cout << "----------------------" << "\n";
+		for (const auto& elem : *memAccessesesWrite)
+		{
+			std::cout << std::hex << "Write address " << elem.first << " amount of accesses " << elem.second.first << " last val " << elem.second.second << std::dec << "\n";
+		}
+		std::cout << "----------------------" << "\n";
+		for (const auto& elem : *memAccessesesRead)
+		{
+			std::cout << std::hex << "read address " << elem.first << " amount of accesses " << elem.second.first << " last val " << elem.second.second << std::dec << "\n";
+		}
+		std::cout << "----------------------" << "\n";
+	}	
 }
 
 
@@ -408,6 +421,15 @@ void Display::handleEvents(){
 			{
 				if (debug)
 					step = true;
+			}
+			if (event.key.code == sf::Keyboard::M)
+			{
+				//memStatistics = !memStatistics;
+				if (!memAccessesesWrite->empty())
+					memAccessesesWrite->clear();
+
+				if (!memAccessesesRead->empty())
+					memAccessesesRead->clear();
 			}
 
 			if (keypadInterruptCtrl->IRQ_EN && InterruptEnableRegister->keyPad){

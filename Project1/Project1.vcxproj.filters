@@ -95,5 +95,8 @@
     <ClInclude Include="logicalOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="barrelShifter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

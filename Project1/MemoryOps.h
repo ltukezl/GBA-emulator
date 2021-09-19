@@ -2,6 +2,8 @@
 #define MEMORYOPS_H
 
 #include <stdint.h>
+#include <map>
+#include <tuple>
 
 extern uint8_t systemROM[0x4000];
 extern uint8_t ExternalWorkRAM[0x40000];
@@ -34,5 +36,8 @@ void PUSH(int);
 unsigned __int32 POP();
 
 void memoryInits();
+
+extern std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesRead;
+extern std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesWrite;
 
 #endif
