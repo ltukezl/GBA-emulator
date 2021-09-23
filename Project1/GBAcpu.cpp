@@ -20,7 +20,6 @@ using namespace std;
 
 bool memStatistics = false;
 bool debug = false;
-bool irqExit = false;
 
 /*Registers*/
 /*prepare register ranges for banks*/
@@ -69,6 +68,7 @@ bool step = false;
 //N  Z  C  V  = sign,zero,carry,overflow
 
 __int64 cycles = 0;
+__int64 prevCycles = 0;
 __int8 Wait0_N_cycles = 5;
 __int8 Wait0_S_cycles = 3;
 
@@ -135,7 +135,7 @@ int main(int argc, char *args[]){
 
     FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program3.bin", "rb");
+	fopen_s(&file, "program5.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -143,19 +143,22 @@ int main(int argc, char *args[]){
 	memoryInits();
 	
 	int refreshRate = 0;
+	int vCounterDrawCycles = 0;
 	uint32_t prevAddr = 0;
-	//debug = true;
+	cycles = 0;
+	debug = false;
 	while (true){
 #if GPU
-		if (debug || (refreshRate > 280896))
+		if (debug || (refreshRate > 100000)){
 			debugView.handleEvents();
+		}
 #endif
 		if (debug && !step){
-			continue;
+			//continue;
 		}
 		step = false;
 
-		if (*r[PC] == 0x80047f6){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x30028dc){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
  		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
@@ -175,31 +178,35 @@ int main(int argc, char *args[]){
 		HWInterrupts(cycles);
 		
 #if GPU
-		if (debug | (refreshRate > 280896)){
+		if (debug | (refreshRate > 100000)){
 			debugView.updatePalettes();
 			refreshRate = 0;
 		}
 #endif
-		refreshRate++;
-
-		if (cycles >= 240){
+		refreshRate += cycles;
+		vCounterDrawCycles += cycles;
+		if (vCounterDrawCycles >= 240){
 			memoryLayout[4][6]++;
-			cycles -= 240;
+			vCounterDrawCycles -= 240;
 
 			if (LCDStatus->LYC == memoryLayout[4][6] && LCDStatus->VcounterIRQEn && InterruptEnableRegister->vCounter){
 				InterruptFlagRegister->vCounter = 1;
 				LCDStatus->vCounter = 1;
+				//debug = true;
 			}
 
 			if (memoryLayout[4][6] > 227)
 				memoryLayout[4][6] = 0;
 
-		}
+		}	
+
 		if (debug){
-			std::cout << hex << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10]  << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16] << endl;
-			//std::cout << "cycles " << dec << cycles << std::endl;	
+			std::cout << hex << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10]  << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16];
+			std::cout << " cycles " << dec << cycles << std::endl;	
 			//std::cout << std::endl;
 		}
+
+		cycles = 0;
 	}
 
     return 0;

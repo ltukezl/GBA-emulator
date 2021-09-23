@@ -10,6 +10,7 @@ union KEYINPUT* keyInput = (KEYINPUT*)&IoRAM[0x130];
 
 union InterruptEnableRegister_t* InterruptEnableRegister = (InterruptEnableRegister_t*)&IoRAM[0x200];
 union InterruptFlagRegister_t* InterruptFlagRegister = (InterruptFlagRegister_t*)&IoRAM[0x202];
+union WAITCNT* waitStateControl = (WAITCNT*)&IoRAM[0x204];
 union InterruptMaster_t* InterruptMaster = (InterruptMaster_t*)&IoRAM[0x208];
 
 union TIMERCNT* TIMERCNT;

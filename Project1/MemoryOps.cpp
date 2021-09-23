@@ -35,7 +35,12 @@ uint8_t GamePakSRAM[0x10000] = { 0 };
 uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x10000, 0x10000 };
 unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
 
-__int32 previousAddress = 0;
+uint32_t previousAddress = 0;
+
+uint8_t firstAccessCycles[4] = { 4, 3, 2, 8 };
+uint8_t WS0Second[2] = { 2, 1 };
+uint8_t WS1Second[2] = { 4, 1 };
+uint8_t WS2Second[2] = { 8, 1 };
 
 std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesWrite;
 std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesRead;
@@ -63,6 +68,32 @@ void readLog(uint32_t address, uint32_t val){
 			memAccessesesRead->at(address).second = val;
 		}
 	}
+}
+
+void calculateCycles(uint32_t address, bool isSequental){
+	if (isSequental){
+		if (address >= 0xC000000){
+			cycles += WS2Second[waitStateControl->waitstate2Second];
+		}
+		else if (address >= 0xA000000){
+			cycles += WS1Second[waitStateControl->waitstate2Second];
+		}
+		else if (address >= 0x8000000){
+			cycles += WS0Second[waitStateControl->waitstate2Second];
+		}
+	}
+	else{
+		if (address >= 0xC000000){
+			cycles += firstAccessCycles[waitStateControl->waitstate2First];
+		}
+		else if (address >= 0xA000000){
+			cycles += firstAccessCycles[waitStateControl->waitstate1First];
+		}
+		else if (address >= 0x8000000){
+			cycles += firstAccessCycles[waitStateControl->waitstate0First];
+		}
+	}
+	previousAddress = address;
 }
 
 void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val){
@@ -188,22 +219,12 @@ void writeToAddress32(uint32_t address, uint32_t value){
 		return;
 
 	*(uint32_t*)&(uint8_t)memoryLayout[mask][address - misalignment] = value;
-	
-	if (address == 0x4000208){ //waitstate reg
-
-	}
 }
 
 uint8_t loadFromAddress(uint32_t address, bool free){
 	readLog(address, 0);
-	if (!free){
-		cycles += Wait0_N_cycles;
-		if (address == (previousAddress + 1))
-			cycles += Wait0_S_cycles;
-		else
-			cycles += Wait0_N_cycles;
-		previousAddress = address;
-	}
+	if (!free)
+		calculateCycles(address, (previousAddress + 1) == address);
 
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
@@ -218,14 +239,9 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 
 uint32_t loadFromAddress16(uint32_t address, bool free){
 	readLog(address, 0);
-	if (!free){
-		cycles += Wait0_N_cycles;
-		if (address == (previousAddress + 2))
-			cycles += Wait0_S_cycles;
-		else
-			cycles += Wait0_N_cycles;
-		previousAddress = address;
-	}
+	if (!free)
+		calculateCycles(address, (previousAddress + 2) == address);
+
 	bool misaligned = address & 1;
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
@@ -242,14 +258,8 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
 	readLog(address, 0);
-	if (!free){
-		cycles += Wait0_N_cycles;
-		if (address == (previousAddress + 4))
-			cycles += Wait0_S_cycles;
-		else
-			cycles += Wait0_N_cycles;
-		previousAddress = address;
-	}
+	if (!free)
+		calculateCycles(address, (previousAddress + 4) == address);
 
 	uint32_t misalignment = address & 3;
     uint32_t mask = (address >> 24) & 15;

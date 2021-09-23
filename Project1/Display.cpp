@@ -328,7 +328,7 @@ void Display::updatePalettes(){
 		display->draw(text);
 
 
-		int value = loadFromAddress32((*r[SP]) + i * 4);
+		int value = loadFromAddress32((*r[SP]) + i * 4, true);
 		_itoa_s(value, txt, 16);
 		text.setString(txt);
 		text.setPosition(sf::Vector2f(850+256 + 90, 12 * i));

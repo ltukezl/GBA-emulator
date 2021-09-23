@@ -75,25 +75,25 @@ void updateTimers(uint32_t cycles) {
 		TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[0x100 + 4 * i];
 		if (timerCtrl->startStop){
 			if (timerCtrl->cntrSelect == ONE_TO_ONE){
-				timerCtrl->counterVal += 1;
+				timerCtrl->counterVal += cycles;
 			}
 			else if (timerCtrl->cntrSelect == ONE_TO_64){
-				if (called[i] >(called[i] + 1) % 64){
+				if (called[i] >(called[i] + cycles) % 64){
 					timerCtrl->counterVal += 1;
 				}
-				called[i] = (called[i] + 1) % 64;
+				called[i] = (called[i] + cycles) % 64;
 			}
 			else if (timerCtrl->cntrSelect == ONE_TO_256){
-				if (called[i] > (called[i] + 1) % 256){
+				if (called[i] > (called[i] + cycles) % 256){
 					timerCtrl->counterVal += 1;
 				}
-				called[i] = (called[i] + 1) % 256;
+				called[i] = (called[i] + cycles) % 256;
 			}
 			else if (timerCtrl->cntrSelect == ONE_TO_1024){
-				if (called[i] > (called[i] + 1) % 1024){
+				if (called[i] > (called[i] + cycles) % 1024){
 					timerCtrl->counterVal += 1;
 				}
-				called[i] = (called[i] + 1) % 1024;
+				called[i] = (called[i] + cycles) % 1024;
 			}
 
 			if (timerCtrl->counterVal == 0){

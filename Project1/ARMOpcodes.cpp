@@ -57,8 +57,8 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 					b(*r[baseReg], oldBase);
 				}
 				else{
-					a(*r[baseReg], *r[14 - i]);
-					b(*r[baseReg], *r[14 - i]);
+					a(*r[baseReg], *r[i]);
+					b(*r[baseReg], *r[i]);
 				}
 				if (debug)
 					std::cout << "r" << i << " ";
@@ -784,7 +784,7 @@ void ARMExecute(int opCode){
 	*r[PC] += 4;
 	if (conditions[condition]()) //condition true
     {
-		cycles += 2;
+		cycles += 1;
         int opCodeType = (opCode >> 24) & 0xF;
         int subType;
         switch(opCodeType){
@@ -872,6 +872,6 @@ void ARMExecute(int opCode){
 		}
 	}
 	else{
-		cycles += 2;
+		cycles += 1;
 	}
 }

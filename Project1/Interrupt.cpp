@@ -5,10 +5,10 @@
 #include <iostream>
 
 #define ENABLED 1
+bool IRQMode = false;
 
 int vBlankCounter = 0;
 int hBlankCounter = 0;
-bool IRQMode = false;
 
 void interruptController(){
 #if ENABLED
@@ -33,23 +33,25 @@ void HWInterrupts(int cycles){
 	if (!InterruptMaster->IRQEnabled || cpsr.IRQDisable){
 		return;
 	}
-	
-	if (InterruptEnableRegister->hBlank){
-		if (hBlankCounter > (hBlankCounter + cycles) % 1232){
+
+	if (InterruptEnableRegister->hBlank && LCDStatus->hIRQEn){
+		hBlankCounter += cycles;
+		if (hBlankCounter >= 1232){
+			hBlankCounter -= 1232;
 			InterruptFlagRegister->hBlank = 1;
 			LCDStatus->hblankFlag = 1;
 		}
-		hBlankCounter = (hBlankCounter + cycles) % 1232;
 	}
 
-	if (InterruptEnableRegister->vBlank){
-		if (vBlankCounter > (vBlankCounter + cycles) % 280896){
+	if (InterruptEnableRegister->vBlank && LCDStatus->vIRQEn){
+		vBlankCounter += cycles;
+		if (vBlankCounter >= 280896){
+			vBlankCounter -= 280896;
 			InterruptFlagRegister->vBlank = 1;
 			LCDStatus->vblankFlag = 1;
 		}
-		vBlankCounter = (vBlankCounter + cycles) % 280896;
 	}
-	
+		
 	uint16_t mask = 1 << 3;
 	for (int timerInt = 0; timerInt < 4; timerInt++){
 		if (InterruptFlagRegister->addr & mask){
@@ -60,9 +62,9 @@ void HWInterrupts(int cycles){
 		}
 
 		if (timerCountHappened[timerInt] && timerCount[timerInt] != 0){
-			timerCount[timerInt]--;
+			timerCount[timerInt] -= cycles;
 		}
-		else if (timerCountHappened[timerInt] && timerCount[timerInt] == 0){
+		else if (timerCountHappened[timerInt] && timerCount[timerInt] <= 0){
 			InterruptFlagRegister->addr |= mask;
 			timerCountHappened[timerInt] = false;
 		}
@@ -72,7 +74,7 @@ void HWInterrupts(int cycles){
 	if (InterruptFlagRegister->addr != 0){
 		if (debug)
 			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << " saving LR " << (cpsr.thumb ? *r[PC] + 4 : *r[PC]) << " " << std::dec << std::endl;
-		
+		//debug = true;
 		r = irq;
 		*r[16] = cpsr.val;
 

@@ -196,6 +196,24 @@ extern union DMAcontrol{
 	uint16_t addr;
 };
 
+//------------------------
+//mem control
+//------------------------
+
+extern union WAITCNT {
+	struct{
+		uint16_t sramWait : 2;
+		uint16_t waitstate0First : 2;
+		uint16_t waitstate0Second : 1;
+		uint16_t waitstate1First : 2;
+		uint16_t waitstate1Second : 1;
+		uint16_t waitstate2First : 2;
+		uint16_t waitstate2Second : 1;
+	};
+
+	uint16_t addr;
+};
+
 extern union DISPCNT* displayCtrl;
 extern union LCDstatus* LCDStatus;
 
@@ -205,3 +223,5 @@ extern union KEYINPUT* keyInput;
 extern union InterruptEnableRegister_t* InterruptEnableRegister;
 extern union InterruptFlagRegister_t* InterruptFlagRegister;
 extern union InterruptMaster_t* InterruptMaster;
+
+extern union WAITCNT* waitStateControl;
