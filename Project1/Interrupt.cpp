@@ -7,9 +7,6 @@
 #define ENABLED 1
 bool IRQMode = false;
 
-int vBlankCounter = 0;
-int hBlankCounter = 0;
-
 void interruptController(){
 #if ENABLED
 	//debug = true;
@@ -33,24 +30,6 @@ void HWInterrupts(int cycles){
 	if (!InterruptMaster->IRQEnabled || cpsr.IRQDisable){
 		return;
 	}
-
-	if (InterruptEnableRegister->hBlank && LCDStatus->hIRQEn){
-		hBlankCounter += cycles;
-		if (hBlankCounter >= 1232){
-			hBlankCounter -= 1232;
-			InterruptFlagRegister->hBlank = 1;
-			LCDStatus->hblankFlag = 1;
-		}
-	}
-
-	if (InterruptEnableRegister->vBlank && LCDStatus->vIRQEn){
-		vBlankCounter += cycles;
-		if (vBlankCounter >= 280896){
-			vBlankCounter -= 280896;
-			InterruptFlagRegister->vBlank = 1;
-			LCDStatus->vblankFlag = 1;
-		}
-	}
 		
 	uint16_t mask = 1 << 3;
 	for (int timerInt = 0; timerInt < 4; timerInt++){
@@ -61,7 +40,7 @@ void HWInterrupts(int cycles){
 			timerCountHappened[timerInt] = true;
 		}
 
-		if (timerCountHappened[timerInt] && timerCount[timerInt] != 0){
+		if (timerCountHappened[timerInt] && timerCount[timerInt] > 0){
 			timerCount[timerInt] -= cycles;
 		}
 		else if (timerCountHappened[timerInt] && timerCount[timerInt] <= 0){

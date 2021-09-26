@@ -37,8 +37,13 @@ extern union CPSR {
 }cpsr;
 
 extern __int64 cycles;
-extern __int8 Wait0_N_cycles;
-extern __int8 Wait0_S_cycles;
+extern __int8 N_cycles;
+extern __int8 S_cycles;
+
+extern uint8_t firstAccessCycles[4];
+extern uint8_t WS0Second[2];
+extern uint8_t WS1Second[2];
+extern uint8_t WS2Second[2];
 
 extern bool debug;
 extern bool step;

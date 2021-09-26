@@ -19,6 +19,9 @@ class Display{
 	sf::Image objMap[32 * 32 * 2];
 
 public:
+
+	bool VRAMupdated = false;
+
 	Display(int, int, char*);
 
 	void updatePalettes();
@@ -42,6 +45,6 @@ private:
 	Ring* txtRing;
 };
 
-
+extern Display* debugView;
 
 #endif

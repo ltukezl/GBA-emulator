@@ -67,8 +67,10 @@ void Display::scanPalettes(){
 }
 
 void Display::fillTiles(uint32_t regOffset){
+	if (!VRAMupdated)
+		return;
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
-	int startAddr = 0x06000000;
+	int startAddr = 0;
 
 	/*creates tilemaps 1 and 2*/
 	sf::Image tile;
@@ -76,7 +78,7 @@ void Display::fillTiles(uint32_t regOffset){
 	for (int tileY = 0; tileY < 64; tileY++)
 		for (int tileX = 0; tileX < 32; tileX++){
 			for (int y = 0; y < 8; y++){
-				int row = loadFromAddress32(startAddr, true);
+				int row = rawLoad32(VRAM, startAddr);
 				for (int pixel = 0; pixel < 8; pixel++){
 					int color = (row & 0xf);
 					tile.setPixel(pixel, y, PaletteColors[color]);
@@ -86,7 +88,6 @@ void Display::fillTiles(uint32_t regOffset){
 			}
 			tileMap[32 * tileY + tileX] = tile;
 		}
-
 
 	/*draws tilemaps 1 and 2 to screen*/
 	sf::Texture tileMap1Texture;
@@ -106,6 +107,9 @@ void Display::fillTiles(uint32_t regOffset){
 }
 
 void Display::fillBG(uint32_t regOffset){
+	if (!VRAMupdated)
+		return;
+
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	uint32_t startAddr = 0;
 	uint32_t tileBaseBlock = 0;
@@ -243,13 +247,17 @@ void Display::fillBG(uint32_t regOffset){
 	BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
 
 	display->draw(BG1Sprite);
+
+	VRAMupdated = false;
 }
 
 void Display::fillObjects(uint32_t regOffset){
+	if (!VRAMupdated)
+		return;
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0x06010000;
 
-	/*creates tilemaps 1 and 2*/
+	/*creates sprites 1 and 2*/
 	sf::Image tile;
 	tile.create(8, 8, sf::Color::Blue);
 	for (int tileY = 0; tileY < 32; tileY++)
@@ -267,7 +275,7 @@ void Display::fillObjects(uint32_t regOffset){
 		}
 
 
-	/*draws tilemaps 1 and 2 to screen*/
+	/*draws sprites 1 and 2 to screen*/
 	sf::Texture objMapTexture;
 	objMapTexture.create(256, 513);
 
@@ -346,19 +354,6 @@ void Display::updatePalettes(){
 	}
 	
 	display->display();
-	if (memStatistics){
-		std::cout << "----------------------" << "\n";
-		for (const auto& elem : *memAccessesesWrite)
-		{
-			std::cout << std::hex << "Write address " << elem.first << " amount of accesses " << elem.second.first << " last val " << elem.second.second << std::dec << "\n";
-		}
-		std::cout << "----------------------" << "\n";
-		for (const auto& elem : *memAccessesesRead)
-		{
-			std::cout << std::hex << "read address " << elem.first << " amount of accesses " << elem.second.first << " last val " << elem.second.second << std::dec << "\n";
-		}
-		std::cout << "----------------------" << "\n";
-	}	
 }
 
 
@@ -421,15 +416,6 @@ void Display::handleEvents(){
 			{
 				if (debug)
 					step = true;
-			}
-			if (event.key.code == sf::Keyboard::M)
-			{
-				//memStatistics = !memStatistics;
-				if (!memAccessesesWrite->empty())
-					memAccessesesWrite->clear();
-
-				if (!memAccessesesRead->empty())
-					memAccessesesRead->clear();
 			}
 
 			if (keypadInterruptCtrl->IRQ_EN && InterruptEnableRegister->keyPad){

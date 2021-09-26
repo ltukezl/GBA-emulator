@@ -14,14 +14,13 @@ enum prescaler {
 
 uint16_t reloads[4] = { 0 };
 uint16_t called[4] = { 0 };
+bool overflowed = false;
 
 bool timerReloadWrite(uint32_t addr, uint32_t val){
 	union TIMERCNT newReg;
 	newReg.addr = val;
 
 	//debug = true;
-
-	
 
 	TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[addr];
 
@@ -74,6 +73,7 @@ void updateTimers(uint32_t cycles) {
 	for (int i = 0; i < 4; i++){
 		TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[0x100 + 4 * i];
 		if (timerCtrl->startStop){
+			overflowed = ((timerCtrl->counterVal + cycles) & 0xFFFF) <= timerCtrl->counterVal;
 			if (timerCtrl->cntrSelect == ONE_TO_ONE){
 				timerCtrl->counterVal += cycles;
 			}
@@ -96,7 +96,7 @@ void updateTimers(uint32_t cycles) {
 				called[i] = (called[i] + cycles) % 1024;
 			}
 
-			if (timerCtrl->counterVal == 0){
+			if (overflowed){
 				if (i == 0 && InterruptEnableRegister->timer0OVF)
 					InterruptFlagRegister->timer0OVF = 1;
 				else if (i == 1 && InterruptEnableRegister->timer1OVF)
@@ -112,6 +112,7 @@ void updateTimers(uint32_t cycles) {
 				}
 
 				timerCtrl->counterVal = reloads[i];
+				overflowed = false;
 			}
 		}
 	}

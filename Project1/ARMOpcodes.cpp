@@ -474,7 +474,7 @@ void dataProcessingImmediate(int opCode){
 	int operand1 = *r[rs];
 	int immediate = opCode & 0xFF;
 	if (rs == 15)
-		immediate += 4;
+		operand1 += 4;
 	int shift = (opCode >> 8) & 0xF;
 	int shiftedImm = 0;
 	bool conditions = (opCode >> 20) & 1;
@@ -670,6 +670,8 @@ void singleDataTrasnferImmediatePre(int opCode){
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 		break;
 	}
+
+	cycles += S_cycles + N_cycles + 1;
 	
 	if (debug && loadStore)
 		std::cout << "ldr r" << destinationReg << " [r" << baseReg << " =" << (upDownBit ? offset : -offset) << "] ";
@@ -701,6 +703,8 @@ void singleDataTrasnferImmediatePost(int opCode){
 		break;
 	}
 	*r[baseReg] = calculated;
+
+	cycles += S_cycles + N_cycles + 1;
 }
 
 void singleDataTrasnferRegisterPre(int opCode){
@@ -748,6 +752,8 @@ void singleDataTrasnferRegisterPre(int opCode){
 				std::cout << "ldr r" << rd << ", [r" << rn << " r" << rm << "] ";
 			break;
 	}
+
+	cycles += S_cycles + N_cycles + 1;
 }
 
 void singleDataTrasnferRegisterPost(int opCode){
@@ -777,14 +783,16 @@ void singleDataTrasnferRegisterPost(int opCode){
 		*r[baseReg] += upDownBit ? offset : -offset;
 		break;
 	}
+
+	cycles += S_cycles + N_cycles + 1;
 }
 
 void ARMExecute(int opCode){
     int condition = (opCode >> 28) & 0xF;
 	*r[PC] += 4;
+	cycles += 1;
 	if (conditions[condition]()) //condition true
     {
-		cycles += 1;
         int opCodeType = (opCode >> 24) & 0xF;
         int subType;
         switch(opCodeType){
@@ -870,8 +878,5 @@ void ARMExecute(int opCode){
 				    halfDataTransfer(opCode);
 				break;
 		}
-	}
-	else{
-		cycles += 1;
 	}
 }

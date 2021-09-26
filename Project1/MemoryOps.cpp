@@ -1,14 +1,11 @@
-#include <math.h>
 #include "Constants.h"
 #include "MemoryOps.h"
 #include "GBAcpu.h"
 #include "armopcodes.h"
 #include "iostream"
 #include "timers.h"
-#include <algorithm>
 #include "memoryMappedIO.h"
-#include <map>
-#include <tuple>
+#include "Display.h"
 
 uint32_t systemROMStart = 0x00000000;
 uint32_t ExternalWorkRAMStart = 0x02000000;
@@ -36,39 +33,6 @@ uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000
 unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
 
 uint32_t previousAddress = 0;
-
-uint8_t firstAccessCycles[4] = { 4, 3, 2, 8 };
-uint8_t WS0Second[2] = { 2, 1 };
-uint8_t WS1Second[2] = { 4, 1 };
-uint8_t WS2Second[2] = { 8, 1 };
-
-std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesWrite;
-std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesRead;
-
-void writeLog(uint32_t address, uint32_t val){
-	if (memStatistics){
-		if (memAccessesesWrite->empty() || (memAccessesesWrite->find(address) == memAccessesesWrite->end())){
-			memAccessesesWrite->insert(std::make_pair(address, std::make_pair(1, val)));
-		}
-		else{
-			memAccessesesWrite->at(address).first++;
-			memAccessesesWrite->at(address).second = val;
-		}
-	}
-}
-
-void readLog(uint32_t address, uint32_t val){
-	if (memStatistics){
-		if (memAccessesesRead->empty() || memAccessesesRead->find(address) == memAccessesesRead->end()){
-			auto tmp = std::make_pair(1, val);
-			memAccessesesRead->insert(std::make_pair(address, tmp));
-		}
-		else{
-			memAccessesesRead->at(address).first++;
-			memAccessesesRead->at(address).second = val;
-		}
-	}
-}
 
 void calculateCycles(uint32_t address, bool isSequental){
 	if (isSequental){
@@ -133,6 +97,8 @@ bool specialWrites(uint32_t mask, uint32_t addr, uint32_t val){
 	else if (mask == 4 && (addr == 0x102 || addr == 0x106 || addr == 0x10A || addr == 0x10D)){
 		return reloadCounter(addr, val);
 	}
+	else if (mask == 6)
+		debugView->VRAMupdated = true;
 
 	return false;
 }
@@ -157,7 +123,7 @@ uint32_t clampAddress(uint32_t mask, uint32_t address){
 }
 
 void writeToAddress(uint32_t address, uint8_t value){
-	writeLog(address, value);
+	calculateCycles(address, (previousAddress + 1) == address);
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 
@@ -188,7 +154,7 @@ void writeToAddress(uint32_t address, uint8_t value){
 }
 
 void writeToAddress16(uint32_t address, uint16_t value){
-	writeLog(address, value);
+	calculateCycles(address, (previousAddress + 2) == address);
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 1;
@@ -205,7 +171,9 @@ void writeToAddress16(uint32_t address, uint16_t value){
 }
 
 void writeToAddress32(uint32_t address, uint32_t value){
-	writeLog(address, value);
+	calculateCycles(address, (previousAddress + 4) == address);
+	calculateCycles(address, true);
+	cycles += 1;
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 3;
@@ -222,7 +190,6 @@ void writeToAddress32(uint32_t address, uint32_t value){
 }
 
 uint8_t loadFromAddress(uint32_t address, bool free){
-	readLog(address, 0);
 	if (!free)
 		calculateCycles(address, (previousAddress + 1) == address);
 
@@ -238,7 +205,6 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 }
 
 uint32_t loadFromAddress16(uint32_t address, bool free){
-	readLog(address, 0);
 	if (!free)
 		calculateCycles(address, (previousAddress + 2) == address);
 
@@ -257,9 +223,11 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
-	readLog(address, 0);
-	if (!free)
+	if (!free){
 		calculateCycles(address, (previousAddress + 4) == address);
+		calculateCycles(address, true);
+		cycles += 1;
+	}
 
 	uint32_t misalignment = address & 3;
     uint32_t mask = (address >> 24) & 15;
@@ -286,8 +254,6 @@ unsigned __int32 POP(){
 }
 
 void memoryInits(){
-	memAccessesesRead = new std::map < uint32_t, std::pair<uint32_t, uint32_t> > ;
-	memAccessesesWrite = new std::map < uint32_t, std::pair<uint32_t, uint32_t> >;
 	//writeToAddress32(0, 0xe129f000);
 	rawWrite32(IoRAM, 0x800, 0x0D000020);
 }

@@ -37,7 +37,4 @@ unsigned __int32 POP();
 
 void memoryInits();
 
-extern std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesRead;
-extern std::map<uint32_t, std::pair<uint32_t, uint32_t>>* memAccessesesWrite;
-
 #endif

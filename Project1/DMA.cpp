@@ -62,7 +62,7 @@ void startDMA(){
 
 			if ((i == 1 || i == 2) && DMAControl->timing == 3){
 				for (int words = 0; words < 4; words++){
-					writeToAddress32(destinationAddress + 4, loadFromAddress32(sourceAddress)); //fifo mode, do addr control logic
+					//writeToAddress32(destinationAddress + 4, loadFromAddress32(sourceAddress)); //fifo mode, do addr control logic sound control. do later
 				}
 			}
 

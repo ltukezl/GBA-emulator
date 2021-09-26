@@ -21,6 +21,11 @@ using namespace std;
 bool memStatistics = false;
 bool debug = false;
 
+int vBlankCounter = 0;
+int hBlankCounter = 0;
+
+bool hBlankHappened = false;
+bool vBlankHappened = false;
 /*Registers*/
 /*prepare register ranges for banks*/
 __int32 sharedRegs[9];
@@ -42,8 +47,8 @@ __int32 sprs_udf = 0;
 //__int32 r[16];	//used register
 
 /*prepare complete banks for modes*/
-__int32* usrSys[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7], 
-&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &usrBanked[0], &usrBanked[1], &sharedRegs[8], &sprs_usr};
+__int32* usrSys[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &usrBanked[0], &usrBanked[1], &sharedRegs[8], &sprs_usr };
 
 __int32* svc[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 &extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &svcBanked[0], &svcBanked[1], &sharedRegs[8], &sprs_svc };
@@ -69,12 +74,40 @@ bool step = false;
 
 __int64 cycles = 0;
 __int64 prevCycles = 0;
-__int8 Wait0_N_cycles = 5;
-__int8 Wait0_S_cycles = 3;
+__int8 N_cycles = 0;
+__int8 S_cycles = 0;
+/*
+uint8_t firstAccessCycles[4] = { 4, 3, 2, 8 };
+uint8_t WS0Second[2] = { 2, 1 };
+uint8_t WS1Second[2] = { 4, 1 };
+uint8_t WS2Second[2] = { 8, 1 };
+*/
+
+uint8_t firstAccessCycles[4] = { 1, 1, 1, 1 };
+uint8_t WS0Second[2] = { 1, 1 };
+uint8_t WS1Second[2] = { 1, 1 };
+uint8_t WS2Second[2] = { 1, 1 };
 
 int swapEndianess32(int num){
 	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
 }
+
+void updateInstructionCycleTimings(uint32_t address){
+	if (address >= 0xC000000){
+		N_cycles = firstAccessCycles[waitStateControl->waitstate2First];
+		S_cycles = WS2Second[waitStateControl->waitstate2Second];
+	}
+	else if (address >= 0xA000000){
+		N_cycles = firstAccessCycles[waitStateControl->waitstate1First];
+		S_cycles = WS1Second[waitStateControl->waitstate1Second];
+	}
+	else if (address >= 0x8000000){
+		N_cycles = firstAccessCycles[waitStateControl->waitstate0First];
+		S_cycles = WS0Second[waitStateControl->waitstate0Second];
+	}
+}
+
+Display* debugView;
 
 /*
 NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in usr mode.
@@ -92,11 +125,10 @@ int main(int argc, char *args[]){
 	rawWrite16(IoRAM, 0x130, 0xFFFF); // input register, 0 = pressed down, 1 = released
 
 #if GPU
-	Display debugView(1280, 496*2, "paletteWindow");
+	debugView = new Display(1280, 496 * 2, "paletteWindow");
 	//Display gameDisplay(240, 160, "game");
 #endif
 	std::cout << *(int*)argc << "\n";
-
 #if BIOS_START
 	r = usrSys;
 	*r[13] = SP_usr;
@@ -128,20 +160,20 @@ int main(int argc, char *args[]){
 
 
 #if BIOS_START
-	
+
 #else
 	memoryLayout[4][6] = 0x9A; //Vcount initializtion use 7e when cycle counting is ready
 #endif
 
-    FILE *file;
+	FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program5.bin", "rb");
+	fopen_s(&file, "program2.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 
 	memoryInits();
-	
+
 	int refreshRate = 0;
 	int vCounterDrawCycles = 0;
 	uint32_t prevAddr = 0;
@@ -150,41 +182,35 @@ int main(int argc, char *args[]){
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 100000)){
-			debugView.handleEvents();
+			debugView->handleEvents();
 		}
 #endif
 		if (debug && !step){
-			//continue;
+			continue;
 		}
 		step = false;
 
-		if (*r[PC] == 0x30028dc){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x3002220){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
- 		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
+		//updateInstructionCycleTimings(*r[PC]);
+		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
 
 		if (debug)
 			cout << hex << *r[15] << " opCode: " << setfill('0') << setw(4) << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
 
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
+		cycles = 1;
 
-		if (*r[PC] >= 0xC000000)
-			*r[PC] -= 0x4000000;
-		else if (*r[PC] >= 0xA000000)
-			*r[PC] -= 0x2000000;
-
-		startDMA();
-		updateTimers(cycles);
-		HWInterrupts(cycles);
-		
 #if GPU
 		if (debug | (refreshRate > 100000)){
-			debugView.updatePalettes();
+			debugView->updatePalettes();
 			refreshRate = 0;
 		}
 #endif
 		refreshRate += cycles;
 		vCounterDrawCycles += cycles;
+	
 		if (vCounterDrawCycles >= 240){
 			memoryLayout[4][6]++;
 			vCounterDrawCycles -= 240;
@@ -197,18 +223,43 @@ int main(int argc, char *args[]){
 
 			if (memoryLayout[4][6] > 227)
 				memoryLayout[4][6] = 0;
+		}
 
-		}	
+		
+		hBlankCounter += cycles;
+		if (hBlankCounter >= 1232 && !LCDStatus->vblankFlag){
+			hBlankCounter -= 1232;
+			LCDStatus->hblankFlag = 0;
+			if (InterruptEnableRegister->hBlank && LCDStatus->hIRQEn && hBlankHappened){
+				InterruptFlagRegister->hBlank = 1;
+			}
+		}
+		else if (hBlankCounter > 960)
+			LCDStatus->hblankFlag = 1;
+
+		vBlankCounter += cycles;
+		if (vBlankCounter >= 280896){
+				vBlankCounter -= 280896;
+			LCDStatus->vblankFlag = 0;
+			if (InterruptEnableRegister->vBlank && LCDStatus->vIRQEn)
+				InterruptFlagRegister->vBlank = 1;	
+		}
+		else if (vBlankCounter > 197120)
+			LCDStatus->vblankFlag = 1;
+
+		startDMA();
+		updateTimers(cycles);
+		HWInterrupts(cycles);
 
 		if (debug){
-			std::cout << hex << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10]  << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16];
-			std::cout << " cycles " << dec << cycles << std::endl;	
+			std::cout << hex << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16];
+			std::cout << " cycles " << dec << cycles << std::endl;
 			//std::cout << std::endl;
 		}
 
 		cycles = 0;
 	}
 
-    return 0;
+	return 0;
 }
 
