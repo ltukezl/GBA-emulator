@@ -18,17 +18,14 @@ Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y),
 		memset(tmp, 0, sizeof(Ring));
 	}
 	tmp->next = txtRing;
+
+	paletteTexture.create(16, 32);
+	paletteTile.create(16, 32, sf::Color::Black);
 }
 
 void Display::scanPalettes(){
 	int startAddr = 0;
 	const int scalar = 255 / 31;
-
-	sf::Texture BG1Texture;
-	BG1Texture.create(16, 32);
-
-	sf::Image tile;
-	tile.create(16, 32, sf::Color::Black);
 
 	//for bg palettes
 	for (int i = 0; i < 16; i++)
@@ -39,7 +36,7 @@ void Display::scanPalettes(){
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			PaletteColors[16 * i + k] = color;
-			tile.setPixel(k, i, color);
+			paletteTile.setPixel(k, i, color);
 			startAddr += 2;
 		}
 
@@ -52,14 +49,14 @@ void Display::scanPalettes(){
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
 			PaletteColors[256 + 16 * i + k] = color;
-			tile.setPixel(k, 16 + i, color);
+			paletteTile.setPixel(k, 16 + i, color);
 			startAddr += 2;
 		}
 
-	BG1Texture.update(tile, 0, 0);
+	paletteTexture.update(paletteTile, 0, 0);
 
 	sf::Sprite BG1Sprite;
-	BG1Sprite.setTexture(BG1Texture, true);
+	BG1Sprite.setTexture(paletteTexture, true);
 	BG1Sprite.setPosition(0, 0);
 	BG1Sprite.setScale(16.0, 16.0);
 
@@ -67,8 +64,8 @@ void Display::scanPalettes(){
 }
 
 void Display::fillTiles(uint32_t regOffset){
-	if (!VRAMupdated)
-		return;
+	//if (!VRAMupdated)
+		//return;
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0;
 
@@ -107,8 +104,8 @@ void Display::fillTiles(uint32_t regOffset){
 }
 
 void Display::fillBG(uint32_t regOffset){
-	if (!VRAMupdated)
-		return;
+	//if (!VRAMupdated)
+		//return;
 
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	uint32_t startAddr = 0;
@@ -252,8 +249,8 @@ void Display::fillBG(uint32_t regOffset){
 }
 
 void Display::fillObjects(uint32_t regOffset){
-	if (!VRAMupdated)
-		return;
+	//if (!VRAMupdated)
+		//return;
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0x06010000;
 

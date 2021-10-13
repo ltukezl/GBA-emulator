@@ -8,6 +8,7 @@
 #include "conditions.h"
 #include "arithmeticOps.h"
 #include "logicalOps.h"
+#include "barrelShifter.h"
 #include <stdint.h>
 
 void ARMBranch(int opCode){
@@ -857,17 +858,18 @@ void ARMExecute(int opCode){
 				break;
 			case 3: case 2: //data processing, immediate check msr?
 				if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0))
-					MSR(opCode);
+					MSR(opCode);//<-
 				else
 					dataProcessingImmediate(opCode);
-				break;
 			case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange
 				if(((opCode >> 4) & 0x12FFF1) == 0x12FFF1)
 					branchAndExhange(opCode);
-				else if(((opCode >> 4) & 1) == 0) //data processing
-					immediateRotate(opCode);
+				else if (((opCode >> 4) & 1) == 0){ //data processing
+					DataProcessingOpcode(opCode).execute();
+					immediateRotate(opCode);//<-
+				}
 				else if(((opCode >> 7) & 1) == 0) //data processing
-					registerRotate(opCode);
+					registerRotate(opCode);  //<-
 				else if ((((opCode >> 23) & 0x1F) == 2) && (((opCode >> 4) & 0xFF) == 9))
 					singleDataSwap(opCode);
 				else if (((opCode >> 23) & 0x1F) == 0 && (((opCode >> 4) & 0xF) == 9))

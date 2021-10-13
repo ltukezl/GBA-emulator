@@ -18,6 +18,9 @@ class Display{
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
 
+	sf::Texture paletteTexture;
+	sf::Image paletteTile;
+
 public:
 
 	bool VRAMupdated = false;

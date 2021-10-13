@@ -12,6 +12,7 @@
 #include "interrupt.h"
 #include "timers.h"
 #include "memoryMappedIO.h"
+#include "barrelShifter.h"
 
 #define GPU 1
 #define BIOS_START 0
@@ -167,7 +168,7 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program2.bin", "rb");
+	fopen_s(&file, "program3.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -179,6 +180,8 @@ int main(int argc, char *args[]){
 	uint32_t prevAddr = 0;
 	cycles = 0;
 	debug = false;
+
+	unitTestForTeppo();
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 100000)){
