@@ -1,7 +1,33 @@
 #pragma once
 #include <stdint.h>
 
+enum DataProcessingOpCodes {
+	AND,
+	EOR,
+	SUB,
+	RSB,
+	ADD,
+	ADC,
+	SBC,
+	RSC,
+	TST,
+	TEQ,
+	CMP,
+	CMN,
+	ORR,
+	MOV,
+	BIC,
+	MVN,
+};
+
+enum DataProcessingSetOpCodes{
+	NO_SET,
+	SET
+};
+
 class DataProcessingOpcode {
+private:
+	void* shifter;
 
 public:
 	union {
@@ -19,6 +45,9 @@ public:
 	}m_opCode;
 
 	DataProcessingOpcode(uint32_t opCode);
+	~DataProcessingOpcode();
+
+	DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint32_t imm);
 
 	void execute();
 };

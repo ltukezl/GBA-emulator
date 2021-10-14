@@ -445,7 +445,7 @@ void registerRotate(int opCode){
 	int operationID = (opCode >> 20) & 0x1F;
 	int conditions = (opCode >> 20) & 1;
 
-	if (rm == 15) // not tested
+	if (rm == 15)
 		*r[rm] += 8;
 	else if (rn == 15)
 		*r[rn] += 8;
@@ -459,7 +459,7 @@ void registerRotate(int opCode){
 
 	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
 
-	if (rd == 15 && (opCode >> 20) & 1){ // not tested
+	if (rd == 15 && (opCode >> 20) & 1){
 		cpsr.val = *r[16];
 		updateMode();
 	}
@@ -861,11 +861,12 @@ void ARMExecute(int opCode){
 					MSR(opCode);//<-
 				else
 					dataProcessingImmediate(opCode);
+				break;
 			case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange
 				if(((opCode >> 4) & 0x12FFF1) == 0x12FFF1)
 					branchAndExhange(opCode);
 				else if (((opCode >> 4) & 1) == 0){ //data processing
-					DataProcessingOpcode(opCode).execute();
+					//DataProcessingOpcode(opCode).execute();
 					immediateRotate(opCode);//<-
 				}
 				else if(((opCode >> 7) & 1) == 0) //data processing

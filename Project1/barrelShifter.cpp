@@ -1,7 +1,10 @@
 #include "barrelShifter.h"
 #include "GBAcpu.h"
+#include "arithmeticOps.h"
+#include "logicalOps.h"
 
-template <int ...> struct IntList {};
+void(*dataOperationsC[0x10])(int&, int, int) = { And, Eor, Sub, Rsb,
+Add, Adc, Sbc, Rsc, Tst, Teq, Cmp, Cmn, Orr, Mov, Bic, Mvn };
 
 class ShiferUnit {
 protected:
@@ -83,7 +86,7 @@ protected:
 	}
 
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override {
-		if (sourceValue > 32){
+		if (shiftAmount > 32){
 			shift(destinationRegister, sourceValue, shiftAmount - 32);
 		}
 		else{
@@ -107,39 +110,17 @@ protected:
 	}
 };
 
-class BarrelShifterDecoder {
-private:
+class RotatorUnits{
+public:
 	ShiferUnit* m_shifts[4];
 
-	union {
-		uint16_t val;
-		struct{
-			uint16_t immediate : 8;
-			uint16_t rotateAmount : 4;
-		};
-	}immediateRotater;
-
-	union {
-		uint16_t val;
-		struct{
-			uint16_t sourceRegister : 4;
-			uint16_t type : 1;
-			uint16_t shiftCode : 2;
-			uint16_t reminder : 5;
-		};
-	}asd;
-
-public:
-	BarrelShifterDecoder(uint16_t immediate) {
+	RotatorUnits(){
 		m_shifts[0] = new Lsl(cpsr);
 		m_shifts[1] = new Lsr(cpsr);
 		m_shifts[2] = new Asr(cpsr);
 		m_shifts[3] = new Ror(cpsr);
-		asd.val = immediate;
-		immediateRotater.val = immediate;
 	}
-
-	~BarrelShifterDecoder() {
+	~RotatorUnits(){
 		delete m_shifts[0];
 		delete m_shifts[1];
 		delete m_shifts[2];
@@ -150,22 +131,117 @@ public:
 		m_shifts[2] = nullptr;
 		m_shifts[3] = nullptr;
 	}
+	virtual uint32_t calculate(bool setStatus) = 0;
+};
 
-	void decode(DataProcessingOpcode& opCode){
-		uint32_t a = 0;
-		m_shifts[asd.shiftCode]->execute(a, 0, 0, false);
+class ImmediateRotater : public RotatorUnits{
+public:
+	union {
+		uint16_t val;
+		struct{
+			uint16_t immediate : 8;
+			uint16_t rotateAmount : 4;
+		};
+	}immediateRotaterFields;
+
+	ImmediateRotater(uint16_t immediate) { immediateRotaterFields.val = immediate; }
+	ImmediateRotater(uint16_t immediate, uint16_t rotateAmount) {
+		immediateRotaterFields.immediate = immediate;
+		immediateRotaterFields.rotateAmount = rotateAmount;
+	}
+
+	uint32_t calculate(bool setStatus) override{
+		uint32_t tempResult = 0;
+		auto ror = Ror(cpsr);
+		ror.execute(tempResult, immediateRotaterFields.immediate, immediateRotaterFields.rotateAmount, setStatus);
+		ror.execute(tempResult, immediateRotaterFields.immediate, immediateRotaterFields.rotateAmount, setStatus);
+		return tempResult;
+	}
+};
+
+class RegisterWithImmediateShifter : public RotatorUnits{
+public:
+	union {
+		uint16_t val;
+		struct{
+			uint16_t sourceRegister : 4;
+			uint16_t type : 1;
+			uint16_t shiftCode : 2;
+			uint16_t reminder : 5;
+		};
+	}registerRotaterFields;
+	RegisterWithImmediateShifter(uint16_t val) { registerRotaterFields.val = val; }
+	
+	uint32_t calculate(bool setStatus) override {
+		uint32_t tmpResult = 0;
+		m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], registerRotaterFields.reminder, setStatus);
+		return tmpResult;
+	}
+};
+
+class RegisterWithRegisterShifter : public RotatorUnits{
+public:
+	union {
+		uint16_t val;
+		struct{
+			uint16_t sourceRegister : 4;
+			uint16_t type : 1;
+			uint16_t shiftCode : 2;
+			uint16_t: 1;
+			uint16_t shiftRegister : 5;
+		};
+	}registerRotaterFields;
+	RegisterWithRegisterShifter(uint16_t val) { registerRotaterFields.val = val; }
+
+	uint32_t calculate(bool setStatus) override {
+		uint32_t tmpResult = 0;
+		m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], *r[registerRotaterFields.shiftRegister], setStatus);
+		return tmpResult;
+	}
+};
+
+class BarrelShifterDecoder {
+public:
+	BarrelShifterDecoder() {}
+
+	RotatorUnits* decode(DataProcessingOpcode& opCode){
+		if (opCode.m_opCode.isImmediate)
+			return new ImmediateRotater(opCode.m_opCode.immediate);
+		else if (opCode.m_opCode.immediate & 0x8)
+			return new RegisterWithImmediateShifter(opCode.m_opCode.immediate);
+		else
+			return new RegisterWithRegisterShifter(opCode.m_opCode.immediate);
 	}
 };
 
 DataProcessingOpcode::DataProcessingOpcode(uint32_t opCode) {
 	m_opCode.val = opCode;
+	shifter = nullptr;
+}
+
+DataProcessingOpcode::~DataProcessingOpcode(){
+	delete shifter;
 }
 
 void DataProcessingOpcode::execute() {
-	//doDataProcessing(m_opCode.destinationRegister, firstOperandRegister, secondOperand)
+	shifter = BarrelShifterDecoder().decode(*this);
+	uint32_t secondOperand = static_cast<RotatorUnits*>(shifter)->calculate(m_opCode.setStatusCodes);
+
+	dataOperationsC[m_opCode.dataProcessingOpcode](*r[m_opCode.destinationRegister], *r[m_opCode.firstOperandRegister], secondOperand);
+}
+
+DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint32_t imm){
+	m_opCode.executionCondition = 0xE;
+	m_opCode.isImmediate = immediateFlg;
+	m_opCode.dataProcessingOpcode = opCode;
+	m_opCode.setStatusCodes = setStatus;
+	m_opCode.firstOperandRegister = firstOpReg;
+	m_opCode.destinationRegister = destReg;
+	m_opCode.immediate = imm;
 }
 
 void unitTestForTeppo(){
+	DataProcessingOpcode(SUB, NO_SET, 0, 0, true, 0x100).execute();
 	DataProcessingOpcode(0xe3a00012).execute();
 	DataProcessingOpcode(0xe3a00032).execute();
 	DataProcessingOpcode(0xe3a00052).execute();
