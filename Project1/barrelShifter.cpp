@@ -113,6 +113,7 @@ protected:
 class RotatorUnits{
 public:
 	ShiferUnit* m_shifts[4];
+	uint16_t m_val;
 
 	RotatorUnits(){
 		m_shifts[0] = new Lsl(cpsr);
@@ -144,10 +145,14 @@ public:
 		};
 	}immediateRotaterFields;
 
-	ImmediateRotater(uint16_t immediate) { immediateRotaterFields.val = immediate; }
+	ImmediateRotater(uint16_t immediate) {
+		immediateRotaterFields.val = immediate;
+		m_val = immediate;
+	}
 	ImmediateRotater(uint16_t immediate, uint16_t rotateAmount) {
 		immediateRotaterFields.immediate = immediate;
 		immediateRotaterFields.rotateAmount = rotateAmount;
+		m_val = immediateRotaterFields.val;
 	}
 
 	uint32_t calculate(bool setStatus) override{
@@ -230,7 +235,7 @@ void DataProcessingOpcode::execute() {
 	dataOperationsC[m_opCode.dataProcessingOpcode](*r[m_opCode.destinationRegister], *r[m_opCode.firstOperandRegister], secondOperand);
 }
 
-DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint32_t imm){
+DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint16_t imm){
 	m_opCode.executionCondition = 0xE;
 	m_opCode.isImmediate = immediateFlg;
 	m_opCode.dataProcessingOpcode = opCode;
@@ -241,7 +246,7 @@ DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataPro
 }
 
 void unitTestForTeppo(){
-	DataProcessingOpcode(SUB, NO_SET, 0, 0, true, 0x100).execute();
+	DataProcessingOpcode(SUB, NO_SET, 0, 0, true, ImmediateRotater(1, 3).m_val).execute();
 	DataProcessingOpcode(0xe3a00012).execute();
 	DataProcessingOpcode(0xe3a00032).execute();
 	DataProcessingOpcode(0xe3a00052).execute();

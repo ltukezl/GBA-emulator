@@ -47,7 +47,7 @@ public:
 	DataProcessingOpcode(uint32_t opCode);
 	~DataProcessingOpcode();
 
-	DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint32_t imm);
+	DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint16_t imm);
 
 	void execute();
 };
