@@ -97,8 +97,12 @@ bool specialWrites(uint32_t mask, uint32_t addr, uint32_t val){
 	else if (mask == 4 && (addr == 0x102 || addr == 0x106 || addr == 0x10A || addr == 0x10D)){
 		return reloadCounter(addr, val);
 	}
-	else if (mask == 6)
+	else if (mask == 6 && addr < 0x10000){
 		debugView->VRAMupdated = true;
+	}
+	else if (mask == 6 && addr >= 0x10000){
+		debugView->OBJupdated = true;
+	}
 
 	return false;
 }

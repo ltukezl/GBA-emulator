@@ -14,6 +14,7 @@ class Display{
 	sf::RenderWindow* display;
 	char* name;
 
+	sf::Sprite paletteSprite;
 	sf::Color PaletteColors[256 * 2];
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
@@ -21,9 +22,21 @@ class Display{
 	sf::Texture paletteTexture;
 	sf::Image paletteTile;
 
+	sf::Image tmpTile;
+	sf::Sprite tilemapSprite;
+
+	sf::Texture tileMap1Texture;
+
+	sf::Texture objMapTexture;
+	sf::Sprite objMapSprite;
+
+	sf::Image bgTextures[4][64][64];
+
+	
 public:
 
 	bool VRAMupdated = false;
+	bool OBJupdated = false;
 
 	Display(int, int, char*);
 
@@ -42,6 +55,8 @@ public:
 	void fillTiles(uint32_t regOffset);
 
 	void fillObjects(uint32_t regOffset);
+
+	void appendBGs();
 
 private:
 	int cnt;

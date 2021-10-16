@@ -21,6 +21,27 @@ Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y),
 
 	paletteTexture.create(16, 32);
 	paletteTile.create(16, 32, sf::Color::Black);
+
+	paletteSprite.setTexture(paletteTexture, true);
+	paletteSprite.setPosition(0, 0);
+	paletteSprite.setScale(16.0, 16.0);
+
+	tmpTile.create(8, 8);
+	tmpTile.createMaskFromColor(sf::Color(0, 0, 0));
+	tileMap1Texture.create(256, 513);
+
+	tilemapSprite.setTexture(tileMap1Texture, true);
+	tilemapSprite.setPosition(257, 0);
+
+	objMapTexture.create(256, 513);
+	objMapSprite.setTexture(objMapTexture, true);
+	objMapSprite.setPosition(257 * 3, 0);
+	for (int bg = 0; bg < 4; bg++)
+	for (int k = 0; k < 64; k++)
+	for (int i = 0; i < 64; i++){
+		bgTextures[bg][i][k].create(8, 8);
+		bgTextures[bg][i][k].createMaskFromColor(sf::Color(0, 0, 0));
+	}
 }
 
 void Display::scanPalettes(){
@@ -54,51 +75,39 @@ void Display::scanPalettes(){
 		}
 
 	paletteTexture.update(paletteTile, 0, 0);
-
-	sf::Sprite BG1Sprite;
-	BG1Sprite.setTexture(paletteTexture, true);
-	BG1Sprite.setPosition(0, 0);
-	BG1Sprite.setScale(16.0, 16.0);
-
-	display->draw(BG1Sprite);
+	display->draw(paletteSprite);
 }
 
 void Display::fillTiles(uint32_t regOffset){
-	//if (!VRAMupdated)
-		//return;
+	if (!VRAMupdated){
+		display->draw(tilemapSprite);
+		return;
+	}
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0;
 
 	/*creates tilemaps 1 and 2*/
-	sf::Image tile;
-	tile.create(8, 8, sf::Color::Blue);
 	for (int tileY = 0; tileY < 64; tileY++)
 		for (int tileX = 0; tileX < 32; tileX++){
 			for (int y = 0; y < 8; y++){
 				int row = rawLoad32(VRAM, startAddr);
 				for (int pixel = 0; pixel < 8; pixel++){
 					int color = (row & 0xf);
-					tile.setPixel(pixel, y, PaletteColors[color]);
+					tmpTile.setPixel(pixel, y, PaletteColors[color]);
 					row >>= 4;
 				}
 				startAddr += 4;
 			}
-			tileMap[32 * tileY + tileX] = tile;
+			tileMap[32 * tileY + tileX] = tmpTile;
 		}
 
 	/*draws tilemaps 1 and 2 to screen*/
-	sf::Texture tileMap1Texture;
-	tileMap1Texture.create(256 * 2, 513);
 
 	for (int i = 0; i < 64; i++)
 		for (int k = 0; k < 32; k++){
 			sf::Image tile = tileMap[32 * i + k];
 			tileMap1Texture.update(tile, 8 * k, 8 * i);
 		}
-
-	sf::Sprite tilemapSprite;
-	tilemapSprite.setTexture(tileMap1Texture, true);
-	tilemapSprite.setPosition(257, 0);
 
 	display->draw(tilemapSprite);
 }
@@ -113,21 +122,18 @@ void Display::fillBG(uint32_t regOffset){
 	const int scalar = 255 / 31;
 
 	/*fills BG map*/
-	sf::Texture BG1Texture;
 	uint16_t size_x = bgCnt->hWide ? 512 : 256;
 	uint16_t size_y = bgCnt->vWide ? 512 : 256;
-	BG1Texture.create(size_x, size_y);
-
-	sf::Image tile;
-	tile.create(8, 8, sf::Color::Blue);
 
 	if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2){
+		sf::Texture bgText;
+		bgText.create(512, 512);
 		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x4000;
 		for (int i = 0; i < 32; i++){
 			for (int k = 0; k < 32; k++){
 				uint16_t reg = rawLoad16(VRAM, startAddr);
-				uint16_t tilNum = reg & 0x1FF;
+				uint16_t tilNum = reg & 0x3FF;
 				uint16_t paletteNum = (reg >> 12) & 0xF;
 
 				uint32_t pixeloffset = 0;
@@ -135,14 +141,14 @@ void Display::fillBG(uint32_t regOffset){
 					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum*0x20 + pixeloffset, true);
 					for (int pixel = 0; pixel < 8; pixel++){
 						int color = (row & 0xf);
-						tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+						tmpTile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
 						row >>= 4;
 					}
 					pixeloffset += 4;
 				}
 
-				BG1Texture.update(tile, 8 * k, 8 * i);
-
+				bgTextures[regOffset / 2][k][i] = tmpTile;
+				bgText.update(tmpTile, 8 * k, 8 * i);
 				startAddr += 2;
 			}
 		}
@@ -151,7 +157,7 @@ void Display::fillBG(uint32_t regOffset){
 			for (int i = 0; i < 32; i++){
 				for (int k = 0; k < 32; k++){
 					uint16_t reg = rawLoad16(VRAM, startAddr);
-					uint16_t tilNum = reg & 0x1FF;
+					uint16_t tilNum = reg & 0x3FF;
 					uint16_t paletteNum = (reg >> 12) & 0xF;
 
 					uint32_t pixeloffset = 0;
@@ -159,14 +165,14 @@ void Display::fillBG(uint32_t regOffset){
 						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum * 0x20 + pixeloffset, true);
 						for (int pixel = 0; pixel < 8; pixel++){
 							int color = (row & 0xf);
-							tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+							tmpTile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
 							row >>= 4;
 						}
 						pixeloffset += 4;
 					}
 
-					BG1Texture.update(tile, 256 + 8 * k, 8 * i);
-
+					bgTextures[regOffset / 2][k][32 + i] = tmpTile;
+					bgText.update(tmpTile,256 + 8 * k, 8 * i);
 					startAddr += 2;
 				}
 			}
@@ -175,7 +181,7 @@ void Display::fillBG(uint32_t regOffset){
 			for (int i = 0; i < 32; i++){
 				for (int k = 0; k < 32; k++){
 					uint16_t reg = rawLoad16(VRAM, startAddr);
-					uint16_t tilNum = reg & 0x1FF;
+					uint16_t tilNum = reg & 0x3FF;
 					uint16_t paletteNum = (reg >> 12) & 0xF;
 
 					uint32_t pixeloffset = 0;
@@ -183,14 +189,14 @@ void Display::fillBG(uint32_t regOffset){
 						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum * 0x20 + pixeloffset, true);
 						for (int pixel = 0; pixel < 8; pixel++){
 							int color = (row & 0xf);
-							tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+							tmpTile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
 							row >>= 4;
 						}
 						pixeloffset += 4;
 					}
 
-					BG1Texture.update(tile, 8 * k, 256 + 8 * i);
-
+					bgTextures[regOffset / 2][32 + k][i] = tmpTile;
+					bgText.update(tmpTile, 8 * k, 256 + 8 * i);
 					startAddr += 2;
 				}
 			}
@@ -199,7 +205,7 @@ void Display::fillBG(uint32_t regOffset){
 			for (int i = 0; i < 32; i++){
 				for (int k = 0; k < 32; k++){
 					uint16_t reg = rawLoad16(VRAM, startAddr);
-					uint16_t tilNum = reg & 0x1FF;
+					uint16_t tilNum = reg & 0x3FF;
 					uint16_t paletteNum = (reg >> 12) & 0xF;
 
 				uint32_t pixeloffset = 0;
@@ -207,23 +213,30 @@ void Display::fillBG(uint32_t regOffset){
 					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tilNum*0x20 + pixeloffset, true);
 					for (int pixel = 0; pixel < 8; pixel++){
 						int color = (row & 0xf);
-						tile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
+						tmpTile.setPixel(pixel, y, PaletteColors[16 * paletteNum + color]);
 						row >>= 4;
 					}
 					pixeloffset += 4;
 				}
 
-				BG1Texture.update(tile, 256 + 8 * k, 256 + 8 * i);
-
+					bgTextures[regOffset / 2][32 + k][32 + i] = tmpTile;
+					bgText.update(tmpTile, 256 + 8 * k, 256 + 8 * i);
 					startAddr += 2;
 				}
 			}
 		}
 		
+		sf::Sprite BG1Sprite;
+		BG1Sprite.setTexture(bgText, true);
+		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
+		BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
+
+		display->draw(BG1Sprite);
 	}
 
 	else if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4){
 		sf::Image tile;
+		sf::Texture mode3Texture;
 		for (int k = 0; k < 160; k++)
 			for (int i = 0; i < 240; i++){
 				ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
@@ -232,49 +245,45 @@ void Display::fillBG(uint32_t regOffset){
 				int blueScaled = colorPaletteRam->blue * scalar;
 				sf::Color color(redScaled, greenScaled, blueScaled);
 				tile.create(1, 1, color);
-				BG1Texture.update(tile, i, k);
+				mode3Texture.update(tile, i, k);
 
 				startAddr += 2;
 			}
+		sf::Sprite BG1Sprite;
+		BG1Sprite.setTexture(mode3Texture, true);
+		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
+		BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
+		display->draw(BG1Sprite);
 	}
-
-	sf::Sprite BG1Sprite;
-	BG1Sprite.setTexture(BG1Texture, true);
-	BG1Sprite.setPosition(514, 256 * (regOffset / 2));
-	BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
-
-	display->draw(BG1Sprite);
 
 	VRAMupdated = false;
 }
 
 void Display::fillObjects(uint32_t regOffset){
-	//if (!VRAMupdated)
-		//return;
+	if (!OBJupdated){
+		display->draw(objMapSprite);
+		return;
+	}
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	int startAddr = 0x06010000;
 
 	/*creates sprites 1 and 2*/
-	sf::Image tile;
-	tile.create(8, 8, sf::Color::Blue);
 	for (int tileY = 0; tileY < 32; tileY++)
 		for (int tileX = 0; tileX < 32; tileX++){
 			for (int y = 0; y < 8; y++){
 				int row = loadFromAddress32(startAddr, true);
 				for (int pixel = 0; pixel < 8; pixel++){
 					int color = (row & 0xf);
-					tile.setPixel(pixel, y, PaletteColors[256 + color]);
+					tmpTile.setPixel(pixel, y, PaletteColors[256 + color]);
 					row >>= 4;
 				}
 				startAddr += 4;
 			}
-			objMap[32 * tileY + tileX] = tile;
+			objMap[32 * tileY + tileX] = tmpTile;
 		}
 
 
 	/*draws sprites 1 and 2 to screen*/
-	sf::Texture objMapTexture;
-	objMapTexture.create(256, 513);
 
 	for (int i = 0; i < 32; i++)
 		for (int k = 0; k < 32; k++){
@@ -282,11 +291,29 @@ void Display::fillObjects(uint32_t regOffset){
 			objMapTexture.update(tile, 8 * k, 8 * i);
 		}
 
-	sf::Sprite objMapSprite;
-	objMapSprite.setTexture(objMapTexture, true);
-	objMapSprite.setPosition(257*3, 0);
-
 	display->draw(objMapSprite);
+	OBJupdated = false;
+}
+
+void Display::appendBGs(){
+	sf::Texture gameTXT;
+	gameTXT.create(512, 512);
+	for (int k = 0; k < 64; k++)
+	for (int i = 0; i < 64; i++){
+		bgTextures[0][i][k].createMaskFromColor(sf::Color(0, 0, 0));
+		bgTextures[1][i][k].createMaskFromColor(sf::Color(0, 0, 0));
+		bgTextures[2][i][k].createMaskFromColor(sf::Color(0, 0, 0));
+		bgTextures[3][i][k].createMaskFromColor(sf::Color(0, 0, 0));
+
+		bgTextures[3][k][i].copy(bgTextures[2][k][i], 0, 0, sf::IntRect(0, 0, 512, 512) ,true);
+		bgTextures[3][k][i].copy(bgTextures[1][k][i], 0, 0, sf::IntRect(0, 0, 512, 512), true);
+		bgTextures[3][k][i].copy(bgTextures[0][k][i], 0, 0, sf::IntRect(0, 0, 512, 512), true);
+		gameTXT.update(bgTextures[3][k][i], 8 * k, 8 * i);
+	}
+	sf::Sprite BG1Sprite;
+	BG1Sprite.setTexture(gameTXT, true);
+	BG1Sprite.setPosition(0, 512);
+	display->draw(BG1Sprite);
 }
 
 void Display::updatePalettes(){
@@ -311,6 +338,8 @@ void Display::updatePalettes(){
 		fillTiles(6);
 		fillBG(6);
 	}
+
+	appendBGs();
 	
 #ifdef ENABLED
 
