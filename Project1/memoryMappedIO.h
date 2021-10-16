@@ -121,7 +121,57 @@ union BGoffset{
 	uint16_t addr;
 };
 
+union BgTile{
+	struct{
+		uint16_t tileNumber : 10;
+		uint16_t horizontalFlip : 1;
+		uint16_t VerticalFlip : 1;
+		uint16_t paletteNum : 4;
+	};
+	uint16_t addr;
+};
+
 extern union BGoffset* BG0HOFS;
+extern union BGoffset* BG0VOFS;
+
+extern union BGoffset* BG1HOFS;
+extern union BGoffset* BG1VOFS;
+
+extern union BGoffset* BG2HOFS;
+extern union BGoffset* BG2VOFS;
+
+extern union BGoffset* BG3HOFS;
+extern union BGoffset* BG3VOFS;
+
+//------------------------
+//obj regs
+//------------------------
+
+union ObjReg1{
+	struct{
+		uint32_t yCoord : 8;
+		uint32_t RotOrScale : 1;
+		uint32_t isDoubleOrNoDisplay : 1;
+		uint32_t objMode : 2;
+		uint32_t mosaicMode : 1;
+		uint32_t colorMode : 1;
+		uint32_t shape : 2;
+
+		uint32_t xCoord : 9;
+		uint32_t parameter : 5;
+		uint32_t size : 2;
+	};
+	uint32_t addr;
+};
+
+union ObjReg2{
+	struct{
+		uint16_t tileNumber : 10;
+		uint16_t priority : 2;
+		uint16_t paletteNumber : 4;
+	};
+	uint16_t addr;
+};
 
 //------------------------
 //gamepad

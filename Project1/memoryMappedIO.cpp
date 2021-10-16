@@ -4,6 +4,13 @@
 union DISPCNT* displayCtrl = (DISPCNT*)&IoRAM[0x0];
 union LCDstatus* LCDStatus = (LCDstatus*)&IoRAM[0x4];
 union BGoffset* BG0HOFS = (BGoffset*)&IoRAM[0x10];
+union BGoffset* BG0VOFS = (BGoffset*)&IoRAM[0x12];
+union BGoffset* BG1HOFS = (BGoffset*)&IoRAM[0x14];
+union BGoffset* BG1VOFS = (BGoffset*)&IoRAM[0x16];
+union BGoffset* BG2HOFS = (BGoffset*)&IoRAM[0x18];
+union BGoffset* BG2VOFS = (BGoffset*)&IoRAM[0x1A];
+union BGoffset* BG3HOFS = (BGoffset*)&IoRAM[0x1C];
+union BGoffset* BG3VOFS = (BGoffset*)&IoRAM[0x1E];
 
 union KEYCNT* keypadInterruptCtrl = (KEYCNT*)&IoRAM[0x132];
 union KEYINPUT* keyInput = (KEYINPUT*)&IoRAM[0x130];

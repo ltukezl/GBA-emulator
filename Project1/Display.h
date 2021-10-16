@@ -30,8 +30,9 @@ class Display{
 	sf::Texture objMapTexture;
 	sf::Sprite objMapSprite;
 
-	sf::Image bgTextures[4][64][64];
+	sf::Texture bgText[4];
 
+	sf::RenderTexture gameTXT;
 	
 public:
 
