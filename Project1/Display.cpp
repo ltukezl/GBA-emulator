@@ -63,7 +63,7 @@ void Display::scanPalettes(){
 			int greenScaled = colorPaletteRam->green * scalar;
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
-			if (colorPaletteRam->addr == 0)
+			if (k == 0)
 				color.a = 0;
 			PaletteColors[16 * i + k] = color;
 			paletteTile.setPixel(k, i, color);
@@ -78,7 +78,7 @@ void Display::scanPalettes(){
 			int greenScaled = colorPaletteRam->green * scalar;
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
-			if (colorPaletteRam->addr == 0)
+			if (k == 0)
 				color.a = 0;
 			PaletteColors[256 + 16 * i + k] = color;
 			paletteTile.setPixel(k, 16 + i, color);
@@ -125,7 +125,7 @@ void Display::fillTiles(uint32_t regOffset){
 
 void Display::fillBG(uint32_t regOffset){
 	//if (!VRAMupdated)
-		//return;
+	//return;
 
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	uint32_t startAddr = 0;
@@ -145,7 +145,7 @@ void Display::fillBG(uint32_t regOffset){
 
 				uint32_t pixeloffset = 0;
 				for (int y = 0; y < 8; y++){
-					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber* 0x20 + pixeloffset, true);
+					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber * 0x20 + pixeloffset, true);
 					for (int pixel = 0; pixel < 8; pixel++){
 						int color = (row & 0xf);
 						tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
@@ -162,7 +162,7 @@ void Display::fillBG(uint32_t regOffset){
 				startAddr += 2;
 			}
 		}
-		
+
 		if (bgCnt->hWide){
 			for (int i = 0; i < 32; i++){
 				for (int k = 0; k < 32; k++){
@@ -218,27 +218,27 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-				uint32_t pixeloffset = 0;
-				for (int y = 0; y < 8; y++){
-					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber * 0x20 + pixeloffset, true);
-					for (int pixel = 0; pixel < 8; pixel++){
-						int color = (row & 0xf);
-						tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
-						row >>= 4;
+					uint32_t pixeloffset = 0;
+					for (int y = 0; y < 8; y++){
+						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber * 0x20 + pixeloffset, true);
+						for (int pixel = 0; pixel < 8; pixel++){
+							int color = (row & 0xf);
+							tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
+							row >>= 4;
+						}
+						pixeloffset += 4;
 					}
-					pixeloffset += 4;
-				}
-				if (tile->horizontalFlip)
-					tmpTile.flipHorizontally();
-				if (tile->VerticalFlip)
-					tmpTile.flipVertically();
+					if (tile->horizontalFlip)
+						tmpTile.flipHorizontally();
+					if (tile->VerticalFlip)
+						tmpTile.flipVertically();
 
 					bgText[regOffset / 2].update(tmpTile, 256 + 8 * k, 256 + 8 * i);
 					startAddr += 2;
 				}
 			}
 		}
-		
+
 		sf::Sprite BG1Sprite;
 		BG1Sprite.setTexture(bgText[regOffset / 2], true);
 		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
@@ -309,36 +309,48 @@ void Display::fillObjects(uint32_t regOffset){
 }
 
 void Display::appendBGs(){
+	BgCnt* bgCnt0 = (BgCnt*)&IoRAM[0x8];
+	BgCnt* bgCnt1 = (BgCnt*)&IoRAM[0xA];
+	BgCnt* bgCnt2 = (BgCnt*)&IoRAM[0xC];
+	BgCnt* bgCnt3 = (BgCnt*)&IoRAM[0xE];
 	gameTXT.clear(sf::Color(0, 0, 0));
+
+	std::vector<sf::Sprite> renderOrder[4];
 
 	if (displayCtrl->bg3Display){
 		if (displayCtrl->bgMode == 0)
-			gameTXT.draw(sf::Sprite(bgText[3], sf::IntRect(BG3HOFS->offset, BG3VOFS->offset, 240, 160)));
+			renderOrder[bgCnt3->priority].push_back(sf::Sprite(bgText[3], sf::IntRect(BG3HOFS->offset, BG3VOFS->offset, 240, 160)));
 		else
-			gameTXT.draw(sf::Sprite(bgText[3]));
+			renderOrder[bgCnt3->priority].push_back(sf::Sprite(bgText[3]));
 	}
 	if (displayCtrl->bg2Display){
 		if (displayCtrl->bgMode == 0)
-			gameTXT.draw(sf::Sprite(bgText[2], sf::IntRect(BG2HOFS->offset, BG2VOFS->offset, 240, 160)));
+			renderOrder[bgCnt2->priority].push_back(sf::Sprite(bgText[2], sf::IntRect(BG2HOFS->offset, BG2VOFS->offset, 240, 160)));
 		else
-			gameTXT.draw(sf::Sprite(bgText[2]));
+			renderOrder[bgCnt2->priority].push_back(sf::Sprite(bgText[2]));
 	}
 	if (displayCtrl->bg1Display){
 		if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1)
-			gameTXT.draw(sf::Sprite(bgText[1], sf::IntRect(BG1HOFS->offset, BG1VOFS->offset, 240, 160)));
+			renderOrder[bgCnt1->priority].push_back(sf::Sprite(bgText[1], sf::IntRect(BG1HOFS->offset, BG1VOFS->offset, 240, 160)));
 		else
-			gameTXT.draw(sf::Sprite(bgText[1]));
+			renderOrder[bgCnt1->priority].push_back(sf::Sprite(bgText[1]));
 	}
 	if (displayCtrl->bg0Display){
 		if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1)
-			gameTXT.draw(sf::Sprite(bgText[0], sf::IntRect(BG0HOFS->offset, BG0VOFS->offset, 240, 160)));
+			renderOrder[bgCnt0->priority].push_back(sf::Sprite(bgText[0], sf::IntRect(BG0HOFS->offset, BG0VOFS->offset, 240, 160)));
 		else
-			gameTXT.draw(sf::Sprite(bgText[0]));
+			renderOrder[bgCnt0->priority].push_back(sf::Sprite(bgText[0]));
+	}
+	
+	for (int vec = 3; vec >= 0; vec--){
+		for(auto& s: renderOrder[vec])
+			gameTXT.draw(s);
 	}
 
 	gameTXT.display();
 
-	sf::Sprite img = sf::Sprite(gameTXT.getTexture(),sf::IntRect(0,0,240,160));
+	sf::Sprite img = sf::Sprite(gameTXT.getTexture(), sf::IntRect(0, 0, 240, 160));
+	//sf::Sprite img = sf::Sprite(gameTXT.getTexture());
 	img.setPosition(0, 512);
 	img.scale(2, 2);
 	display->draw(img);
@@ -368,11 +380,11 @@ void Display::updatePalettes(){
 	}
 
 	appendBGs();
-	
+
 #ifdef ENABLED
 
 #endif
-	
+
 	sf::Font font;
 	font.loadFromFile("arial.ttf");
 
@@ -386,14 +398,14 @@ void Display::updatePalettes(){
 		char txt[16];
 		_itoa_s((*r[SP]) + i * 4, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(850+256, 12 * i));
+		text.setPosition(sf::Vector2f(850 + 256, 12 * i));
 		display->draw(text);
 
 
 		int value = loadFromAddress32((*r[SP]) + i * 4, true);
 		_itoa_s(value, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(850+256 + 90, 12 * i));
+		text.setPosition(sf::Vector2f(850 + 256 + 90, 12 * i));
 		display->draw(text);
 	}
 
@@ -403,10 +415,10 @@ void Display::updatePalettes(){
 
 	for (int i = 0; i < 1; i++){
 		text.setString(msg);
-		text.setPosition(sf::Vector2f(850+256, 130 + 12 * i));
+		text.setPosition(sf::Vector2f(850 + 256, 130 + 12 * i));
 		display->draw(text);
 	}
-	
+
 	display->display();
 }
 

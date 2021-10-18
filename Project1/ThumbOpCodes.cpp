@@ -17,7 +17,7 @@ void mul(int &saveTo, int immidiate, int immidiate2){
 }
 
 void bx(int& saveTo, int immidiate, int immidiate2){
-	*r[PC] = immidiate2 & ~ 1;
+	*r[PC] = immidiate2 & ~1;
 	cpsr.thumb = immidiate2 & 1;
 }
 
@@ -73,7 +73,7 @@ void aluOps(uint16_t opcode){
 		cycles += 1;
 
 	if (debug)
-		std::cout << logicalOps_s[op.instruction]  << " r" << op.destination << " r" << op.source << " ";
+		std::cout << logicalOps_s[op.instruction] << " r" << op.destination << " r" << op.source << " ";
 }
 
 void hiRegOperations(uint16_t opcode){
@@ -158,7 +158,7 @@ void loadStoreSignExtend(uint16_t opcode){
 			*r[op.destSourceReg] = signExtend<16>(loadFromAddress16(totalAddress));
 		}
 	}
-	else if (op.halfWord && !op.extend)	
+	else if (op.halfWord && !op.extend)
 		*r[op.destSourceReg] = loadFromAddress16(totalAddress);
 	else if (!op.halfWord && op.extend)
 		*r[op.destSourceReg] = signExtend<8>(loadFromAddress(totalAddress));
@@ -273,10 +273,10 @@ void pushpop(uint16_t opcode){
 			immediate = immediate >> 1;
 		}
 		*r[PC] = op.PCRLBit ? (POP() & -2) : (*r[PC]);
-		
+
 		if (immediate & 0x80)
 			cycles += 1;
-		
+
 		if (debug)
 			std::cout << "pop ";
 	}
@@ -286,7 +286,7 @@ void pushpop(uint16_t opcode){
 			PUSH(*r[LR]);
 		for (int i = 0; i < 8; i++){
 			if (immediate & 0x80)
-				PUSH(*r[7-i]);
+				PUSH(*r[7 - i]);
 			immediate = immediate << 1;
 		}
 		if (debug)
@@ -337,7 +337,7 @@ void multiLoad(uint16_t opcode){
 					first = false;
 					writeToAddress32(*r[baseReg], *r[i]);
 					*r[baseReg] += 4;
-					
+
 				}
 				immediate >>= 1;
 			}
@@ -365,7 +365,7 @@ void conditionalBranch(uint16_t opcode){
 
 void unconditionalBranch(uint16_t opcode){
 	int immediate = (opcode & 0x7FF) << 1;
-	*r[PC] += signExtend<12>(immediate) + 2;
+	*r[PC] += signExtend<12>(immediate) +2;
 
 	cycles += 1 + S_cycles + N_cycles;
 
@@ -394,133 +394,133 @@ void branchLink(uint16_t opcode){
 
 int thumbExecute(uint16_t opcode){
 	int subType;
-    int instruction;
+	int instruction;
 	*r[PC] += 2;
 	cycles += 1;
-    __int16 type = (opcode & 0xE000) >> 13;
+	__int16 type = (opcode & 0xE000) >> 13;
 
-    switch (type) {
-		case 0: //shifts or add or sub, maybe sign extended for immidiates?
-			instruction = (opcode >> 11) & 3;
-			switch (instruction){
-				case 0x00: case 0x01: case 0x02: //shifts
-					moveShiftedRegister(opcode);
-					break;
-
-				case 0x03: //add / substract
-					addSubFunction(opcode);
-					break;
-			}
+	switch (type) {
+	case 0: //shifts or add or sub, maybe sign extended for immidiates?
+		instruction = (opcode >> 11) & 3;
+		switch (instruction){
+		case 0x00: case 0x01: case 0x02: //shifts
+			moveShiftedRegister(opcode);
 			break;
 
-		case 1: // move|compare|substract|add immediate
-			movCompSubAddImm(opcode);
+		case 0x03: //add / substract
+			addSubFunction(opcode);
+			break;
+		}
+		break;
+
+	case 1: // move|compare|substract|add immediate
+		movCompSubAddImm(opcode);
+		break;
+
+	case 2: //logical ops / memory load / store
+		subType = (opcode >> 10) & 7;
+		switch (subType){
+		case 0: //logical ops reg - reg
+			aluOps(opcode);
 			break;
 
-		case 2: //logical ops / memory load / store
-			subType = (opcode >> 10) & 7;
-			switch (subType){
-				case 0: //logical ops reg - reg
-					aluOps(opcode);
-					break;
+		case 1: //high low reg loading, branch
+			hiRegOperations(opcode);
+			break;
 
-				case 1: //high low reg loading, branch
-					hiRegOperations(opcode);
-					break;
+		case 2: case 3: //PC relative load
+			PCRelativeLoad(opcode);
+			break;
 
-				case 2: case 3: //PC relative load
-					PCRelativeLoad(opcode);
-					break;
+		default:
+			int subType2 = (opcode >> 9) & 1;
+			switch (subType2){
+			case 0: //load / store with reg offset
+				loadStoreRegOffset(opcode);
+				break;
 
-				default:
-					int subType2 = (opcode >> 9) & 1;
-					switch (subType2){
-						case 0: //load / store with reg offset
-							loadStoreRegOffset(opcode);
-							break;
-
-						case 1: //load / store sign extended byte / word
-							loadStoreSignExtend(opcode);
-							break;
-					}
+			case 1: //load / store sign extended byte / word
+				loadStoreSignExtend(opcode);
 				break;
 			}
 			break;
-		
-		case 3: //load / store reg - imm
-			loadStoreImm(opcode);
+		}
+		break;
+
+	case 3: //load / store reg - imm
+		loadStoreImm(opcode);
+		break;
+
+	case 4: // load store halfword reg - imm
+		subType = (opcode >> 12) & 1;
+		switch (subType){
+		case 0: //load half word reg - imm
+			loadStoreHalfword(opcode);
 			break;
 
-		case 4: // load store halfword reg - imm
-			subType = (opcode >> 12) & 1;
-			switch (subType){
-			case 0: //load half word reg - imm
-				loadStoreHalfword(opcode);
+		case 1: //load SP relative
+			loadSPRelative(opcode);
+			break;
+		}
+		break;
+
+	case 5:
+		subType = (opcode >> 12) & 0x01;
+		switch (subType){
+		case 0x00: // load address to reg
+			loadAddress(opcode);
+			break;
+
+		case 0x01:
+			int subType2 = (opcode >> 10) & 1;
+			switch (subType2){
+			case 0: // add Stack pointer offset
+				addOffsetToSP(opcode);
 				break;
 
-			case 1: //load SP relative
-				loadSPRelative(opcode);
+			case 1: //push pop reg
+				pushpop(opcode);
 				break;
 			}
 			break;
-		
-		case 5:
-			subType = (opcode >> 12) & 0x01;
-			switch (subType){
-				case 0x00: // load address to reg
-					loadAddress(opcode);
-					break;
+		}
+		break;
 
-				case 0x01:
-					int subType2 = (opcode >> 10) & 1;
-					switch (subType2){
-						case 0: // add Stack pointer offset
-							addOffsetToSP(opcode);
-							break;
+	case 6:
+		subType = (opcode >> 12) & 1;
+		switch (subType){
+		case 0: // multiple load / store
+			multiLoad(opcode);
+			break;
 
-						case 1: //push pop reg
-							pushpop(opcode);
-							break;
-					}
-					break;
+		case 1:
+			int condition = (opcode >> 8) & 0x0F;
+			switch (condition)
+			{
+			case 15: //software interrupt
+				interruptController();
+				break;
+			default:  //conditional branch
+				conditionalBranch(opcode);
+				break;
 			}
 			break;
-		
-		case 6:
-			subType = (opcode >> 12) & 1;
-			switch (subType){
-				case 0: // multiple load / store
-					multiLoad(opcode);
-					break;
+		}
+		break;
 
-				case 1:
-					int condition = (opcode >> 8) & 0x0F;
-					switch (condition)
-					{
-					case 15: //software interrupt
-						interruptController();	
-						break;
-					default:  //conditional branch
-						conditionalBranch(opcode);
-						break;
-					}
-					break;
-			}
+	case 7:
+		subType = (opcode >> 12) & 1;
+		switch (subType){
+		case 0: //unconditional branch
+			unconditionalBranch(opcode);
 			break;
-		
-		case 7:
-			subType = (opcode >> 12) & 1;
-			switch (subType){
-				case 0: //unconditional branch
-					unconditionalBranch(opcode);
-					break;
 
-				case 1: //branch and link
-					branchLink(opcode);
-					break;
-			}
+		case 1: //branch and link
+			branchLink(opcode);
 			break;
-    }
-    return 0;
+		}
+		break;
+	}
+	return 0;
 }
 

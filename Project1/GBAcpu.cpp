@@ -213,7 +213,7 @@ int main(int argc, char *args[]){
 #endif
 		refreshRate += cycles;
 		vCounterDrawCycles += cycles;
-	
+
 		if (vCounterDrawCycles >= 240){
 			memoryLayout[4][6]++;
 			vCounterDrawCycles -= 240;
@@ -228,7 +228,7 @@ int main(int argc, char *args[]){
 				memoryLayout[4][6] = 0;
 		}
 
-		
+
 		hBlankCounter += cycles;
 		if (hBlankCounter >= 1232 && !LCDStatus->vblankFlag){
 			hBlankCounter -= 1232;
@@ -242,10 +242,10 @@ int main(int argc, char *args[]){
 
 		vBlankCounter += cycles;
 		if (vBlankCounter >= 280896){
-				vBlankCounter -= 280896;
+			vBlankCounter -= 280896;
 			LCDStatus->vblankFlag = 0;
 			if (InterruptEnableRegister->vBlank && LCDStatus->vIRQEn)
-				InterruptFlagRegister->vBlank = 1;	
+				InterruptFlagRegister->vBlank = 1;
 		}
 		else if (vBlankCounter > 197120)
 			LCDStatus->vblankFlag = 1;
