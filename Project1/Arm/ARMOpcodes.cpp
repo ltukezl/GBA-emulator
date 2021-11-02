@@ -11,9 +11,11 @@
 #include <stdint.h>
 
 void ARMBranch(int opCode){
+	*r[PC] += 4;
 	int location = opCode & 0xFFFFFF; //24 bits
-	location = (location << 2) + 4;
-	*r[PC] += signExtend<26>(location);
+	location = (location << 2);
+	uint32_t tmp = signExtend<26>(location);
+	*r[PC] += tmp;
 	if (debug)
 		std::cout << conditions_s[opCode >> 28 & 0xF] << " " << r[PC] << " " << conditions[opCode >> 28 & 0xF]() << " ";
 }
