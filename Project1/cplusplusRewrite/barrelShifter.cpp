@@ -1,7 +1,7 @@
 #include "barrelShifter.h"
 #include "GBAcpu.h"
-#include "arithmeticOps.h"
-#include "logicalOps.h"
+#include "CommonOperations/arithmeticOps.h"
+#include "CommonOperations/logicalOps.h"
 #include <iostream>
 
 void(*dataOperationsC[0x10])(int&, int, int) = { And, Eor, Sub, Rsb,

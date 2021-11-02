@@ -18,40 +18,40 @@
     <ClCompile Include="GBAcpu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ThumbOpCodes.cpp">
+    <ClCompile Include="DMA\DMA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MemoryOps.cpp">
+    <ClCompile Include="Memory\MemoryOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ARMOpcodes.cpp">
+    <ClCompile Include="Memory\memoryMappedIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DMA.cpp">
+    <ClCompile Include="Interrupt\Interrupt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Display.cpp">
+    <ClCompile Include="CommonOperations\logicalOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Interrupt.cpp">
+    <ClCompile Include="CommonOperations\arithmeticOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="memoryMappedIO.cpp">
+    <ClCompile Include="cplusplusRewrite\barrelShifter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="timers.cpp">
+    <ClCompile Include="CommonOperations\conditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="conditions.cpp">
+    <ClCompile Include="Arm\ARMOpcodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="arithmeticOps.cpp">
+    <ClCompile Include="Thumb\ThumbOpCodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="logicalOps.cpp">
+    <ClCompile Include="Display\Display.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="barrelShifter.cpp">
+    <ClCompile Include="Timer\timers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,43 +59,43 @@
     <ClInclude Include="GBAcpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ThumbOpCodes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MemoryOps.h">
+    <ClInclude Include="DMA\DMA.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="armopcodes.h">
+    <ClInclude Include="Memory\MemoryOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DMA.h">
+    <ClInclude Include="Memory\memoryMappedIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Display.h">
+    <ClInclude Include="Interrupt\interrupt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="interrupt.h">
+    <ClInclude Include="CommonOperations\logicalOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="memoryMappedIO.h">
+    <ClInclude Include="CommonOperations\arithmeticOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="timers.h">
+    <ClInclude Include="cplusplusRewrite\barrelShifter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="conditions.h">
+    <ClInclude Include="CommonOperations\conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="arithmeticOps.h">
+    <ClInclude Include="Arm\armopcodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="logicalOps.h">
+    <ClInclude Include="Thumb\ThumbOpCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="barrelShifter.h">
+    <ClInclude Include="Display\Display.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer\timers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

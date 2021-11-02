@@ -2,7 +2,7 @@
 #define DISPLAY_H
 #include <SFML/Graphics.hpp>
 #include <stdint.h>
-#include "memoryMappedIO.h"
+#include "Memory/memoryMappedIO.h"
 
 
 struct Ring{

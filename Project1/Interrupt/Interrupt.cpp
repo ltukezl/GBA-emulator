@@ -1,7 +1,7 @@
 #include "Constants.h"
-#include "MemoryOps.h"
+#include "Memory/MemoryOps.h"
 #include "GBAcpu.h"
-#include "memoryMappedIO.h"
+#include "Memory/memoryMappedIO.h"
 #include <iostream>
 
 #define ENABLED 1

@@ -1,11 +1,11 @@
 #include "Constants.h"
 #include "MemoryOps.h"
 #include "GBAcpu.h"
-#include "armopcodes.h"
+#include "Arm/armopcodes.h"
 #include "iostream"
-#include "timers.h"
+#include "Timer/timers.h"
 #include "memoryMappedIO.h"
-#include "Display.h"
+#include "Display/Display.h"
 
 uint32_t systemROMStart = 0x00000000;
 uint32_t ExternalWorkRAMStart = 0x02000000;

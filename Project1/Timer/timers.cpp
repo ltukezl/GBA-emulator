@@ -1,6 +1,6 @@
 #include "timers.h"
-#include "memoryMappedIO.h"
-#include "MemoryOps.h"
+#include "Memory/memoryMappedIO.h"
+#include "Memory/MemoryOps.h"
 #include "GBAcpu.h"
 #include <stdint.h>
 #include <iostream>

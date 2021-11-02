@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <iostream>
 #include "Display.h"
-#include "MemoryOps.h"
+#include "Memory/MemoryOps.h"
 #include "GBAcpu.h"
 #include "Constants.h"
-#include "memoryMappedIO.h"
+#include "Memory/memoryMappedIO.h"
 
 struct Display::OamSize shapes[3][4] = { { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
 										{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
@@ -240,8 +240,8 @@ void Display::fillBG(uint32_t regOffset){
 		}
 
 		sf::Sprite BG1Sprite(bgText[regOffset / 2], sf::IntRect(0, 0, size_x, size_y));
-		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
-		BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
+		BG1Sprite.setPosition(514.0f, 256.0f * (regOffset / 2));
+		BG1Sprite.setScale(256.0f / size_x, 256.0f / size_y);
 
 		display->draw(BG1Sprite);
 	}
@@ -263,7 +263,7 @@ void Display::fillBG(uint32_t regOffset){
 			}
 		sf::Sprite BG1Sprite;
 		BG1Sprite.setTexture(mode3Texture, true);
-		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
+		BG1Sprite.setPosition(514.0f, 256.0f * (regOffset / 2));
 		BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
 		display->draw(BG1Sprite);
 	}
@@ -426,14 +426,14 @@ void Display::updatePalettes(){
 		char txt[16];
 		_itoa_s((*r[SP]) + i * 4, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(850 + 256, 12 * i));
+		text.setPosition(sf::Vector2f(850.0f + 256.0f, 12.0f * i));
 		display->draw(text);
 
 
 		int value = loadFromAddress32((*r[SP]) + i * 4, true);
 		_itoa_s(value, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(850 + 256 + 90, 12 * i));
+		text.setPosition(sf::Vector2f(850.0f + 256.0f + 90.0f, 12.0f * i));
 		display->draw(text);
 	}
 
@@ -443,7 +443,7 @@ void Display::updatePalettes(){
 
 	for (int i = 0; i < 1; i++){
 		text.setString(msg);
-		text.setPosition(sf::Vector2f(850 + 256, 130 + 12 * i));
+		text.setPosition(sf::Vector2f(850.0f + 256.0f, 130.0f + 12.0f * i));
 		display->draw(text);
 	}
 

@@ -2,17 +2,17 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include "MemoryOps.h"
-#include "ThumbOpCodes.h"
-#include "ARMOpCodes.h"
+#include "Memory/MemoryOps.h"
+#include "Thumb/ThumbOpCodes.h"
+#include "Arm/ARMOpCodes.h"
 #include "Constants.h"
 #include "GBAcpu.h"
-#include "DMA.h"
-#include "Display.h"
-#include "interrupt.h"
-#include "timers.h"
-#include "memoryMappedIO.h"
-#include "barrelShifter.h"
+#include "DMA/DMA.h"
+#include "Display/Display.h"
+#include "Interrupt/interrupt.h"
+#include "Timer/timers.h"
+#include "Memory/memoryMappedIO.h"
+#include "cplusplusRewrite/barrelShifter.h"
 
 #define GPU 1
 #define BIOS_START 0
@@ -22,8 +22,8 @@ using namespace std;
 bool memStatistics = false;
 bool debug = false;
 
-int vBlankCounter = 0;
-int hBlankCounter = 0;
+__int64 vBlankCounter = 0;
+__int64 hBlankCounter = 0;
 
 bool hBlankHappened = false;
 bool vBlankHappened = false;
@@ -168,7 +168,7 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE* bios;
-	fopen_s(&file, "program5.bin", "rb");
+	fopen_s(&file, "TestBinaries/program5.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);

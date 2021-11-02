@@ -1,7 +1,6 @@
-#include "MemoryOps.h"
 #include "DMA.h"
-#include "memoryMappedIO.h"
-#include "MemoryOps.h"
+#include "Memory/MemoryOps.h"
+#include "Memory/memoryMappedIO.h"
 #include "iostream"
 
 

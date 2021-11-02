@@ -1,14 +1,14 @@
 #include <iostream>
 #include <string>
 #include "GBAcpu.h"
-#include "MemoryOps.h"
-#include "interrupt.h"
+#include "Memory/MemoryOps.h"
+#include "Interrupt/interrupt.h"
 #include "Constants.h"
 #include "ThumbOpCodes.h"
-#include "armopcodes.h"
-#include "conditions.h"
-#include "arithmeticOps.h"
-#include "logicalOps.h"
+#include "Arm/armopcodes.h"
+#include "CommonOperations/conditions.h"
+#include "CommonOperations/arithmeticOps.h"
+#include "CommonOperations/logicalOps.h"
 
 void mul(int &saveTo, int immidiate, int immidiate2){
 	saveTo = (immidiate2 * immidiate) & 0xFFFFFFFF;

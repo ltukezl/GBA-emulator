@@ -3,14 +3,14 @@
 //----------------
 //Interrupts
 //----------------
-extern union InterruptMaster_t{
+union InterruptMaster_t{
 	struct{
 		uint8_t IRQEnabled : 1;
 	};
 	uint16_t addr;
 };
 
-extern union InterruptEnableRegister_t{
+union InterruptEnableRegister_t{
 	struct{
 		uint8_t vBlank : 1;
 		uint8_t hBlank : 1;
@@ -30,7 +30,7 @@ extern union InterruptEnableRegister_t{
 	uint16_t addr;
 };
 
-extern union InterruptFlagRegister_t{
+union InterruptFlagRegister_t{
 	struct{
 		uint8_t vBlank : 1;
 		uint8_t hBlank : 1;
@@ -54,7 +54,7 @@ extern union InterruptFlagRegister_t{
 //LCD
 //------------------------
 
-extern union DISPCNT{
+union DISPCNT{
 	struct{
 		uint16_t bgMode : 3;
 		uint16_t CGBMode : 1;
@@ -74,7 +74,7 @@ extern union DISPCNT{
 	uint16_t addr;
 };
 
-extern union ColorPaletteRam{
+union ColorPaletteRam{
 	struct{
 		uint16_t red : 5;
 		uint16_t green : 5;
@@ -84,7 +84,7 @@ extern union ColorPaletteRam{
 };
 
 
-extern union BgCnt{
+union BgCnt{
 	struct{
 		uint16_t priority : 2;
 		uint16_t tileBaseBlock : 2;
@@ -99,7 +99,7 @@ extern union BgCnt{
 	uint16_t addr;
 };
 
-extern union LCDstatus{
+union LCDstatus{
 	struct{
 		uint16_t vblankFlag : 1;
 		uint16_t hblankFlag : 1;
@@ -177,7 +177,7 @@ union ObjReg2{
 //gamepad
 //------------------------
 
-extern union KEYINPUT{
+union KEYINPUT{
 	struct{
 		uint16_t btn_A : 1;
 		uint16_t btn_B : 1;
@@ -193,7 +193,7 @@ extern union KEYINPUT{
 	uint16_t addr;
 };
 
-extern union KEYCNT {
+union KEYCNT {
 	struct{
 		uint16_t btn_A : 1;
 		uint16_t btn_B : 1;
@@ -216,7 +216,7 @@ extern union KEYCNT {
 //timers
 //------------------------
 
-extern union TIMERCNT {
+union TIMERCNT {
 	struct{
 		uint32_t counterVal : 16;
 		uint32_t cntrSelect : 2;
@@ -230,7 +230,7 @@ extern union TIMERCNT {
 	uint32_t addr;
 };
 
-extern union DMAcontrol{
+union DMAcontrol{
 	struct{
 		uint16_t:5;
 		uint16_t destCtrl : 2;
@@ -250,7 +250,7 @@ extern union DMAcontrol{
 //mem control
 //------------------------
 
-extern union WAITCNT {
+union WAITCNT {
 	struct{
 		uint16_t sramWait : 2;
 		uint16_t waitstate0First : 2;

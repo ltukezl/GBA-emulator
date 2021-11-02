@@ -7,3 +7,10 @@ Project1/*.gba
 Project1/*.bin
 *.pyc
 *.pyo
+*.cd
+*.BIOS
+*.ttf
+*.psess
+*.opensdf
+Release/
+Project1/TestBinaries/

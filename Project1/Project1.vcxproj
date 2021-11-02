@@ -45,7 +45,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\tuomo-pc\Desktop\github\GBA-emulator\Project1;D:\c sources\SFML-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -64,7 +64,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\tuomo-pc\Desktop\github\GBA-emulator\Project1;D:\c sources\SFML-2.3.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -78,35 +78,35 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="arithmeticOps.cpp" />
-    <ClCompile Include="ARMOpcodes.cpp" />
-    <ClCompile Include="barrelShifter.cpp" />
+    <ClCompile Include="CommonOperations\arithmeticOps.cpp" />
+    <ClCompile Include="Arm\ARMOpcodes.cpp" />
+    <ClCompile Include="cplusplusRewrite\barrelShifter.cpp" />
     <ClCompile Include="GBAcpu.cpp" />
-    <ClCompile Include="logicalOps.cpp" />
-    <ClCompile Include="memoryMappedIO.cpp" />
-    <ClCompile Include="MemoryOps.cpp" />
-    <ClCompile Include="DMA.cpp" />
-    <ClCompile Include="Display.cpp" />
-    <ClCompile Include="Interrupt.cpp" />
-    <ClCompile Include="conditions.cpp" />
-    <ClCompile Include="ThumbOpCodes.cpp" />
-    <ClCompile Include="timers.cpp" />
+    <ClCompile Include="CommonOperations\logicalOps.cpp" />
+    <ClCompile Include="Memory\memoryMappedIO.cpp" />
+    <ClCompile Include="Memory\MemoryOps.cpp" />
+    <ClCompile Include="DMA\DMA.cpp" />
+    <ClCompile Include="Display\Display.cpp" />
+    <ClCompile Include="Interrupt\Interrupt.cpp" />
+    <ClCompile Include="CommonOperations\conditions.cpp" />
+    <ClCompile Include="Thumb\ThumbOpCodes.cpp" />
+    <ClCompile Include="Timer\timers.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="arithmeticOps.h" />
-    <ClInclude Include="armopcodes.h" />
-    <ClInclude Include="barrelShifter.h" />
-    <ClInclude Include="conditions.h" />
+    <ClInclude Include="CommonOperations\arithmeticOps.h" />
+    <ClInclude Include="Arm\armopcodes.h" />
+    <ClInclude Include="cplusplusRewrite\barrelShifter.h" />
+    <ClInclude Include="CommonOperations\conditions.h" />
     <ClInclude Include="GBAcpu.h" />
     <ClInclude Include="Constants.h" />
-    <ClInclude Include="DMA.h" />
-    <ClInclude Include="Display.h" />
-    <ClInclude Include="interrupt.h" />
-    <ClInclude Include="logicalOps.h" />
-    <ClInclude Include="memoryMappedIO.h" />
-    <ClInclude Include="MemoryOps.h" />
-    <ClInclude Include="ThumbOpCodes.h" />
-    <ClInclude Include="timers.h" />
+    <ClInclude Include="DMA\DMA.h" />
+    <ClInclude Include="Display\Display.h" />
+    <ClInclude Include="Interrupt\interrupt.h" />
+    <ClInclude Include="CommonOperations\logicalOps.h" />
+    <ClInclude Include="Memory\memoryMappedIO.h" />
+    <ClInclude Include="Memory\MemoryOps.h" />
+    <ClInclude Include="Thumb\ThumbOpCodes.h" />
+    <ClInclude Include="Timer\timers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

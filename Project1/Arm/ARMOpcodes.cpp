@@ -1,14 +1,13 @@
 #include "iostream"
 #include "GBAcpu.h"
-#include "ThumbOpCodes.h"
+#include "Thumb/ThumbOpCodes.h"
 #include "armopcodes.h"
-#include "MemoryOps.h"
+#include "Memory/MemoryOps.h"
 #include "Constants.h"
-#include "interrupt.h"
-#include "conditions.h"
-#include "arithmeticOps.h"
-#include "logicalOps.h"
-#include "barrelShifter.h"
+#include "Interrupt/interrupt.h"
+#include "CommonOperations/conditions.h"
+#include "CommonOperations/arithmeticOps.h"
+#include "CommonOperations/logicalOps.h"
 #include <stdint.h>
 
 void ARMBranch(int opCode){
