@@ -240,15 +240,17 @@ void Display::fillBG(uint32_t regOffset){
 		}
 
 		sf::Sprite BG1Sprite(bgText[regOffset / 2], sf::IntRect(0, 0, size_x, size_y));
-		BG1Sprite.setPosition(514.0f, 256.0f * (regOffset / 2));
-		BG1Sprite.setScale(256.0f / size_x, 256.0f / size_y);
+		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
+		BG1Sprite.setScale(256 / size_x, 256 / size_y);
 
 		display->draw(BG1Sprite);
 	}
 
-	else if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4){
+	else if (displayCtrl->bgMode == 3){
+		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 		sf::Image tile;
 		sf::Texture mode3Texture;
+		mode3Texture.create(240, 160);
 		for (int k = 0; k < 160; k++)
 			for (int i = 0; i < 240; i++){
 				ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
@@ -263,8 +265,25 @@ void Display::fillBG(uint32_t regOffset){
 			}
 		sf::Sprite BG1Sprite;
 		BG1Sprite.setTexture(mode3Texture, true);
-		BG1Sprite.setPosition(514.0f, 256.0f * (regOffset / 2));
-		BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
+		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
+		BG1Sprite.setScale(256 / size_x, 256 / size_y);
+		display->draw(BG1Sprite);
+	}
+	else if (displayCtrl->bgMode == 4){
+		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
+		sf::Image tile;
+		for (int k = 0; k < 160; k++)
+			for (int i = 0; i < 240; i++){
+				uint8_t colorIdx = loadFromAddress(0x6000000 + startAddr);
+				tile.create(1, 1, PaletteColors[colorIdx]);
+				bgText[regOffset / 2].update(tile, i, k);
+
+				startAddr += 1;
+			}
+		sf::Sprite BG1Sprite(bgText[regOffset / 2], sf::IntRect(0, 0, size_x, size_y));
+		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
+		BG1Sprite.setScale(256 / size_x, 256 / size_y);
+
 		display->draw(BG1Sprite);
 	}
 
@@ -426,14 +445,14 @@ void Display::updatePalettes(){
 		char txt[16];
 		_itoa_s((*r[SP]) + i * 4, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(850.0f + 256.0f, 12.0f * i));
+		text.setPosition(sf::Vector2f(850 + 256, 12 * i));
 		display->draw(text);
 
 
 		int value = loadFromAddress32((*r[SP]) + i * 4, true);
 		_itoa_s(value, txt, 16);
 		text.setString(txt);
-		text.setPosition(sf::Vector2f(850.0f + 256.0f + 90.0f, 12.0f * i));
+		text.setPosition(sf::Vector2f(850 + 256 + 90, 12 * i));
 		display->draw(text);
 	}
 
@@ -443,7 +462,7 @@ void Display::updatePalettes(){
 
 	for (int i = 0; i < 1; i++){
 		text.setString(msg);
-		text.setPosition(sf::Vector2f(850.0f + 256.0f, 130.0f + 12.0f * i));
+		text.setPosition(sf::Vector2f(850 + 256, 130 + 12 * i));
 		display->draw(text);
 	}
 

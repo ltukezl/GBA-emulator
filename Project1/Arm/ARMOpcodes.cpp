@@ -103,6 +103,8 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	int usrMode = (opCode >> 22) & 1;
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
+	int memAddress = oldBase;
+	bool baseInRList = regList & (1 << baseReg);
 
 	__int32** currentMode = r;
 
@@ -116,8 +118,8 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	for (int i = 0; i < 16; i++){
 		if (upDownBit){
 			if (regList & 1){
-				*r[i] = a(*r[baseReg], false);
-				b(*r[baseReg], false);
+				*r[i] = a(memAddress, false);
+				b(memAddress, false);
 				if (debug)
 					std::cout << "r" << i << " ";
 			}
@@ -125,8 +127,8 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 		}
 		else if (~upDownBit){
 			if (regList & 0x8000){
-				*r[15 - i] = a(*r[baseReg], false);
-				b(*r[baseReg], false);
+				*r[15 - i] = a(memAddress, false);
+				b(memAddress, false);
 				if (debug)
 					std::cout << "r" << 14 - i << " ";
 			}
@@ -138,7 +140,8 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 		r = currentMode;
 	}
 
-	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
+	if (!baseInRList)
+		*r[baseReg] = writeBack ? memAddress : oldBase;
 }
 
 template <typename function1, typename function2>
@@ -149,6 +152,8 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 	bool usrMode = (opCode >> 20) & 1;
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
+	int memAddress = oldBase;
+	bool baseInRList = regList & (1 << baseReg);
 
 	__int32** currentMode = r;
 
@@ -159,8 +164,8 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 	for (int i = 0; i < 16; i++){
 		if (upDownBit){
 			if (regList & 1){
-				a(*r[baseReg], false);
-				*r[i] = b(*r[baseReg], false);
+				a(memAddress, false);
+				*r[i] = b(memAddress, false);
 				if (i == 15)
 					*r[16] = cpsr.val;
 			}
@@ -168,8 +173,8 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 		}
 		else if (~upDownBit){
 			if (regList & 0x8000){
-				a(*r[baseReg], false);
-				*r[15 - i] = b(*r[baseReg], false);
+				a(memAddress, false);
+				*r[15 - i] = b(memAddress, false);
 				if (i == 0)
 					*r[16] = cpsr.val;
 			}
@@ -181,7 +186,8 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 		r = currentMode;
 	}
 
-	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
+	if (!baseInRList)
+		*r[baseReg] = writeBack ? memAddress : oldBase;
 }
 
 
