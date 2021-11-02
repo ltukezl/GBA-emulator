@@ -300,9 +300,9 @@ void multiLoad(uint16_t opcode){
 	int loadFlag = (opcode >> 11) & 1;
 	int baseReg = (opcode >> 8) & 7;
 
-	bool rInList = false;
-	bool first = true;
-	uint32_t oldAddr = 0;
+	uint32_t savedAddr = 0;
+	bool rInList = immediate & (1 << baseReg);
+	bool first = (immediate & ((1 << baseReg) - 1)) == 0;
 
 	if (loadFlag){
 		if (immediate == 0){
@@ -329,22 +329,16 @@ void multiLoad(uint16_t opcode){
 		else{
 			for (int i = 0; i < 8; i++){
 				if (immediate & 1){
-					if (i == baseReg && !first){
-						rInList = true;
-						oldAddr = *r[baseReg];
-						continue;
-					}
-					first = false;
+					if (i == baseReg)
+						savedAddr = *r[baseReg];
 					writeToAddress32(*r[baseReg], *r[i]);
 					*r[baseReg] += 4;
-
 				}
 				immediate >>= 1;
 			}
 		}
-		if (rInList){
-			writeToAddress32(oldAddr, *r[baseReg]);
-		}
+		if (rInList && !first)
+			writeToAddress32(savedAddr, *r[baseReg]);
 		if (debug)
 			std::cout << "stmia ";
 	}
