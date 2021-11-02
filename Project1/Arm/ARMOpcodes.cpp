@@ -576,6 +576,8 @@ void halfDataTransfer(int opCode){
 					*r[rd] = signExtend<16>(loadFromAddress16(calculated));
 			if (!pFlag)
 				calculated += uFlag ? offset : offset;
+			if (rn != rd)
+				*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
 		}
 		else{
 			if (pFlag)
@@ -588,8 +590,8 @@ void halfDataTransfer(int opCode){
 				writeToAddress16(calculated, signExtend<16>(*r[rd]));
 			if (!pFlag)
 				calculated += uFlag ? offset : -offset;
+			*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
 		}
-		*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
 		break;
 	}
 
@@ -666,9 +668,13 @@ void singleDataTrasnferImmediatePre(int opCode){
 		*r[baseReg] = (writeBack) ? *r[baseReg] : oldReg;
 		if (destinationReg == 15)
 			*r[destinationReg] += 8;
+		if (destinationReg == baseReg)
+			*r[destinationReg] -= offset;
 		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
 		if (destinationReg == 15)
 			*r[destinationReg] -= 8;
+		if (destinationReg == baseReg)
+			*r[destinationReg] += offset;
 		break;
 	case 1:
 		*r[baseReg] += upDownBit ? offset : -offset;
@@ -695,6 +701,7 @@ void singleDataTrasnferImmediatePost(int opCode){
 	int offset = opCode & 0xFFF;
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
 	int calculated = *r[baseReg];
+	cycles += S_cycles + N_cycles + 1;
 	switch (loadStore){
 	case 0:
 		if (destinationReg == 15)
@@ -703,15 +710,17 @@ void singleDataTrasnferImmediatePost(int opCode){
 		calculated += upDownBit ? offset : -offset;
 		if (destinationReg == 15)
 			*r[destinationReg] -= 8;
+		*r[baseReg] = calculated;
+		return;
 		break;
 	case 1:
 		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 		calculated += upDownBit ? offset : -offset;
+		if (destinationReg != baseReg)
+			*r[baseReg] = calculated;
+		return;
 		break;
 	}
-	*r[baseReg] = calculated;
-
-	cycles += S_cycles + N_cycles + 1;
 }
 
 void singleDataTrasnferRegisterPre(int opCode){
@@ -728,6 +737,7 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int loadStore = (opCode >> 20) & 1;
 
 	int shiftId = (opCode >> 5) & 3;
+	int tmpRegister = *r[rm];
 
 	if ((opCode >> 4) & 1){
 		std::cout << "TBD";
@@ -736,7 +746,11 @@ void singleDataTrasnferRegisterPre(int opCode){
 	else
 	{
 		offset = (opCode >> 7) & 0x1F;
-		ARMshifts[shiftId](offset, *r[rm], offset);
+		if (shiftId == 3 && offset == 0){
+			rrx(tmpRegister, tmpRegister);
+		}
+		else
+			ARMshifts[shiftId](tmpRegister, *r[rm], offset);
 	}
 
 	int oldReg = *r[rn];
@@ -744,19 +758,19 @@ void singleDataTrasnferRegisterPre(int opCode){
 	case 0:
 		if (rd == 15)
 			*r[rd] += 8;
-		*r[rn] += upDownBit ? offset : -offset;
+		*r[rn] += upDownBit ? tmpRegister : -tmpRegister;
 		byteFlag ? writeToAddress(*r[rn], *r[rd]) : writeToAddress32(*r[rn], *r[rd]);
 		*r[rn] = (writeBack) ? *r[rn] : oldReg;
 		break;
 
 	case 1:
-		*r[rn] += upDownBit ? offset : -offset;
+		*r[rn] += upDownBit ? tmpRegister : -tmpRegister;
 		*r[rd] = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
 		*r[rn] = (writeBack) ? *r[rn] : oldReg;
 		if (debug && byteFlag)
-			std::cout << "ldrb r" << rd << ", [r" << rn << " r" << rm << "] ";
+			std::cout << "ldrb r" << +rd << ", [r" << +rn << " r" << +rm << "] ";
 		else if (debug && !byteFlag)
-			std::cout << "ldr r" << rd << ", [r" << rn << " r" << rm << "] ";
+			std::cout << "ldr r" << +rd << ", [r" << +rn << " r" << +rm << "] ";
 		break;
 	}
 
