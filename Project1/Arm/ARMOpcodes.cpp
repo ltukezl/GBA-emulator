@@ -105,10 +105,16 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	int usrMode = (opCode >> 22) & 1;
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
-	int memAddress = oldBase;
+	int memAddress = oldBase & ~0x3;
 	bool baseInRList = regList & (1 << baseReg);
 
 	__int32** currentMode = r;
+
+	if (regList == 0){
+		*r[PC] = loadFromAddress32(*r[baseReg]);
+		*r[baseReg] += 0x40;
+		return;
+	}
 
 	if (usrMode && !((opCode >> 15) & 1)){
 		r = usrSys;
@@ -154,10 +160,16 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 	bool usrMode = (opCode >> 20) & 1;
 	int regList = opCode & 0xFFFF;
 	int oldBase = *r[baseReg];
-	int memAddress = oldBase;
+	int memAddress = oldBase & ~0x3;
 	bool baseInRList = regList & (1 << baseReg);
 
 	__int32** currentMode = r;
+
+	if (regList == 0){
+		*r[PC] = loadFromAddress32(*r[baseReg]);
+		*r[baseReg] += 0x40;
+		return;
+	}
 
 	if (usrMode && !((opCode >> 15) & 1)){
 		r = usrSys;
@@ -203,7 +215,8 @@ void singleDataSwap(int opCode){
 	byteFlag ? writeToAddress(*r[rn], *r[rm]) : writeToAddress32(*r[rn], *r[rm]);
 	*r[rd] = tmp;
 
-	std::cout << "swp r" << rd << " r" << rm << " r[" << rn << "] ";
+	if (debug)
+		std::cout << "swp r" << +rd << " r" << +rm << " r[" << +rn << "] ";
 }
 
 void branchAndExhange(int opCode){
@@ -521,7 +534,7 @@ void halfDataTransfer(int opCode){
 	int rn = (opCode >> 16) & 0xF;
 	int rd = (opCode >> 12) & 0xF;
 	int offset = (opCode >> 4) & 0xF0 | opCode & 0xF;
-	offset += (rn == 15) ? 8 : 0; //8 or 4? 
+	offset += (rn == 15) ? 8 : 0;
 	int calculated = (rd == 15) ? (*r[rn] + 8) : *r[rn];
 
 	switch (func){
@@ -594,7 +607,6 @@ void halfDataTransfer(int opCode){
 		}
 		break;
 	}
-
 }
 
 void multiply(int opCode){
