@@ -137,6 +137,9 @@ void writeToAddress(uint32_t address, uint8_t value){
 	else if ((mask == 5 || mask == 6 || mask == 7) & (displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
 		return;
 
+	else if (mask == 0)
+		return;
+
 	address = clampAddress(mask, address);
 
 	if (mask == 7 
@@ -165,6 +168,8 @@ void writeToAddress16(uint32_t address, uint16_t value){
 
 	if (mask == 4 && address > memsizes[mask])
 		return;
+	else if (mask == 0)
+		return;
 
 	address = clampAddress(mask, address);
 
@@ -183,6 +188,9 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	uint32_t misalignment = address & 3;
 
 	if (mask == 4 && address > memsizes[mask])
+		return;
+
+	else if (mask == 0)
 		return;
 
 	address = clampAddress(mask, address);

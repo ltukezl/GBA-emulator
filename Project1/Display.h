@@ -2,6 +2,7 @@
 #define DISPLAY_H
 #include <SFML/Graphics.hpp>
 #include <stdint.h>
+#include "memoryMappedIO.h"
 
 
 struct Ring{
@@ -18,6 +19,8 @@ class Display{
 	sf::Color PaletteColors[256 * 2];
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
+	uint8_t colors[2 * 16 * 16 * 4];
+	uint8_t bgTile[8 * 8 * 4];
 
 	sf::Texture paletteTexture;
 	sf::Image paletteTile;
@@ -33,8 +36,12 @@ class Display{
 	sf::Texture bgText[4];
 
 	sf::RenderTexture gameTXT;
+
 	
+
 public:
+
+	struct OamSize{ uint8_t x; uint8_t y; };
 
 	bool VRAMupdated = false;
 	bool OBJupdated = false;
@@ -62,6 +69,9 @@ public:
 private:
 	int cnt;
 	Ring* txtRing;
+
+	sf::Image& calculate4BitTile(uint32_t base, BgTile* tile);
+	sf::Image& calculate8BitTile(uint32_t base, BgTile* tile);
 };
 
 extern Display* debugView;

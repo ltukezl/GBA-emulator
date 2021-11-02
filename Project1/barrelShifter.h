@@ -20,6 +20,13 @@ enum DataProcessingOpCodes {
 	MVN,
 };
 
+enum Rotation{
+	LSL,
+	LSR,
+	ASR,
+	ROR,
+};
+
 enum DataProcessingSetOpCodes{
 	NO_SET,
 	SET

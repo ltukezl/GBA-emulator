@@ -369,35 +369,7 @@ Cmp, msr2, Cmn, Orr, Orrs, Mov, Movs, Bic, Bics, Mvn, Mvns };
 char* dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb", "rsbs",
 "add", "adds", "adc", "adcs", "sbc", "sbcs", "rsc", "rscs", "tst", "tst", "msr", "teq", "cmp",
 "cmp", "msr", "cmn", "or", "ors", "mov", "movs", "bic", "bics", "mvn", "mvns" };
-/*
-class andd{
-void setCond(a){
-zero(a)
-negative(a)
-}
 
-void execute(a, uint16_t b,set ){
-2ndop = barrelshifter(b).setCond(set)
-tmp a & 2ndop
-if (set)
-setCond(tmp, a, 2ndop)
-}
-};
-
-class addd{
-void setCond(a, b, c){
-zero(a)
-negative(a)
-}
-
-void execute(a, b ,set){
-2ndop = barrelshifter(b).setCond(false)
-tmp = a + 2ndop
-if (set)
-setCond(tmp, a, b)
-}
-};
-*/
 void immediateRotate(int opCode){
 	bool codeExecuted = false;
 	if (((opCode >> 12) & 0x3FF) == 0x28f && ((opCode >> 23) & 3) == 2 && ((opCode >> 26) & 3) == 0 && !codeExecuted)
@@ -456,7 +428,7 @@ void immediateRotate(int opCode){
 		}
 
 		if (debug)
-			std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", r" << rn << ", " << ARMshifts_s[shiftId] << " =" << immediate << " ";
+			std::cout << dataOperations_s[operationID] << " r" << +rd << ", r" << +rs << ", r" << +rn << ", " << ARMshifts_s[shiftId] << " =" << +immediate << " ";
 	}
 }
 
@@ -492,7 +464,7 @@ void registerRotate(int opCode){
 	}
 
 	if (debug)
-		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rn << ", r" << rm << " " << ARMshifts_s[shiftId] << " " << operand << " ";
+		std::cout << dataOperations_s[operationID] << " r" << +rd << ", r" << +rn << ", r" << +rm << " " << ARMshifts_s[shiftId] << " " << +operand << " ";
 
 }
 

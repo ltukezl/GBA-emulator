@@ -42,7 +42,7 @@ void moveShiftedRegister(uint16_t opcode){
 
 	cycles += S_cycles;
 	if (debug)
-		std::cout << shifts_s[op.instruction] << " r" << op.destination << " r" << op.source << " " << op.immediate << " ";
+		std::cout << shifts_s[op.instruction] << " r" << +op.destination << " r" << +op.source << " " << +op.immediate << " ";
 }
 
 void addSubFunction(uint16_t opcode){
@@ -52,7 +52,7 @@ void addSubFunction(uint16_t opcode){
 
 	cycles += S_cycles;
 	if (debug)
-		std::cout << arith_s[op.Sub] << " r" << op.destination << " r" << op.source << (op.useImmediate ? " " : " r") << op.regOrImmediate << " ";
+		std::cout << arith_s[op.Sub] << " r" << +op.destination << " r" << +op.source << (op.useImmediate ? " " : " r") << +op.regOrImmediate << " ";
 }
 
 void movCompSubAddImm(uint16_t opcode){
@@ -61,7 +61,7 @@ void movCompSubAddImm(uint16_t opcode){
 
 	cycles += S_cycles;
 	if (debug)
-		std::cout << movCompIpaddIpsub_s[op.instruction] << " r" << op.destination << " #" << op.offset << " ";
+		std::cout << movCompIpaddIpsub_s[op.instruction] << " r" << +op.destination << " #" << +op.offset << " ";
 }
 
 void aluOps(uint16_t opcode){
@@ -73,7 +73,7 @@ void aluOps(uint16_t opcode){
 		cycles += 1;
 
 	if (debug)
-		std::cout << logicalOps_s[op.instruction] << " r" << op.destination << " r" << op.source << " ";
+		std::cout << logicalOps_s[op.instruction] << " r" << +op.destination << " r" << +op.source << " ";
 }
 
 void hiRegOperations(uint16_t opcode){
@@ -101,7 +101,7 @@ void hiRegOperations(uint16_t opcode){
 		cycles += N_cycles + 1;
 
 	if (debug)
-		std::cout << std::dec << hlOps_s[op.instruction] << " r" << (newDestinationReg) << " r" << op.source << std::hex;
+		std::cout << std::dec << hlOps_s[op.instruction] << " r" << +(newDestinationReg) << " r" << +op.source << std::hex;
 }
 
 void PCRelativeLoad(uint16_t opcode){
@@ -113,7 +113,7 @@ void PCRelativeLoad(uint16_t opcode){
 	cycles += 1;
 
 	if (debug)
-		std::cout << "ldr r" << op.destination << ", =" << std::hex << loadFromAddress32(tmpPC, true) << std::dec << " ";
+		std::cout << "ldr r" << +op.destination << ", =" << std::hex << loadFromAddress32(tmpPC, true) << std::dec << " ";
 }
 
 void loadStoreRegOffset(uint16_t opcode){
@@ -140,7 +140,7 @@ void loadStoreRegOffset(uint16_t opcode){
 			std::cout << "ldrb r";
 		else
 			std::cout << "ldr r";
-		std::cout << op.destSourceReg << " [r" << op.baseReg << ", r" << op.offsetReg << " ] ";
+		std::cout << +op.destSourceReg << " [r" << +op.baseReg << ", r" << +op.offsetReg << " ] ";
 	}
 }
 
@@ -176,7 +176,7 @@ void loadStoreSignExtend(uint16_t opcode){
 			std::cout << "ldsb r";
 		if (op.halfWord && op.extend)
 			std::cout << "ldsh r";
-		std::cout << op.destSourceReg << ", [r" << op.baseReg << ",r" << op.offsetReg << "] ";
+		std::cout << +op.destSourceReg << ", [r" << +op.baseReg << ",r" << +op.offsetReg << "] ";
 	}
 }
 
@@ -197,9 +197,9 @@ void loadStoreImm(uint16_t opcode){
 	cycles += S_cycles + N_cycles + 1;
 
 	if (debug && op.loadFlag)
-		std::cout << "ldr r" << op.destSourceReg << " [r" << op.baseReg << " " << immediate << "] ";
+		std::cout << "ldr r" << +op.destSourceReg << " [r" << +op.baseReg << " " << +immediate << "] ";
 	else if (debug && !op.loadFlag)
-		std::cout << "str [r" << op.baseReg << " " << immediate << "] r" << op.destSourceReg << " ";
+		std::cout << "str [r" << +op.baseReg << " " << +immediate << "] r" << +op.destSourceReg << " ";
 }
 
 void loadStoreHalfword(uint16_t opcode){
@@ -213,9 +213,9 @@ void loadStoreHalfword(uint16_t opcode){
 	cycles += S_cycles + N_cycles + 1;
 
 	if (debug && op.loadFlag)
-		std::cout << "ldrh r" << op.destSourceReg << " [r" << op.baseReg << " " << immediate << "] ";
+		std::cout << "ldrh r" << +op.destSourceReg << " [r" << +op.baseReg << " " << +immediate << "] ";
 	else if (debug && !op.loadFlag)
-		std::cout << "strh [r" << op.baseReg << " " << immediate << "] r" << op.destSourceReg << " ";
+		std::cout << "strh [r" <<+ op.baseReg << " " << +immediate << "] r" << +op.destSourceReg << " ";
 }
 
 void loadSPRelative(uint16_t opcode){
@@ -230,9 +230,9 @@ void loadSPRelative(uint16_t opcode){
 		cycles += N_cycles + 1;
 
 	if (debug && op.loadFlag)
-		std::cout << "ldr r" << op.destSourceReg << ", [sp " << op.immediate << 2 << "] ";
+		std::cout << "ldr r" << +op.destSourceReg << ", [sp " << +op.immediate << 2 << "] ";
 	else if (debug && !op.loadFlag)
-		std::cout << "str [sp " << op.immediate << 2 << "],  r" << op.destSourceReg << " ";
+		std::cout << "str [sp " << +op.immediate << 2 << "],  r" << +op.destSourceReg << " ";
 }
 
 
@@ -243,9 +243,9 @@ void loadAddress(uint16_t opcode){
 
 	cycles += S_cycles;
 	if (debug && op.useSP)
-		std::cout << "add r" << op.destination << ", SP, 0x" << (op.immediate << 2) << " ";
+		std::cout << "add r" << +op.destination << ", SP, 0x" << +(op.immediate << 2) << " ";
 	if (debug && !op.useSP)
-		std::cout << "add r" << op.destination << ", PC, 0x" << (op.immediate << 2) << " ";
+		std::cout << "add r" << +op.destination << ", PC, 0x" << +(op.immediate << 2) << " ";
 }
 
 void addOffsetToSP(uint16_t opcode){
@@ -256,9 +256,9 @@ void addOffsetToSP(uint16_t opcode){
 	cycles += S_cycles;
 
 	if (debug && loadFlag)
-		std::cout << "sub sp, 0x" << immediate << " ";
+		std::cout << "sub sp, 0x" << +immediate << " ";
 	else if (debug && !loadFlag)
-		std::cout << "add sp, 0x" << immediate << " ";
+		std::cout << "add sp, 0x" << +immediate << " ";
 }
 
 void pushpop(uint16_t opcode){

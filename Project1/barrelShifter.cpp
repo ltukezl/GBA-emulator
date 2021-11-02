@@ -2,6 +2,7 @@
 #include "GBAcpu.h"
 #include "arithmeticOps.h"
 #include "logicalOps.h"
+#include <iostream>
 
 void(*dataOperationsC[0x10])(int&, int, int) = { And, Eor, Sub, Rsb,
 Add, Adc, Sbc, Rsc, Tst, Teq, Cmp, Cmn, Orr, Mov, Bic, Mvn };
@@ -172,14 +173,21 @@ public:
 			uint16_t sourceRegister : 4;
 			uint16_t type : 1;
 			uint16_t shiftCode : 2;
-			uint16_t reminder : 5;
+			uint16_t shiftAmount : 5;
 		};
 	}registerRotaterFields;
-	RegisterWithImmediateShifter(uint16_t val) { registerRotaterFields.val = val; }
+	RegisterWithImmediateShifter(uint16_t val) { registerRotaterFields.val = val; m_val = val; }
+	RegisterWithImmediateShifter(uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount) {
+		registerRotaterFields.sourceRegister = sourceRegister;
+		registerRotaterFields.type = 0;
+		registerRotaterFields.shiftCode = rotation;
+		registerRotaterFields.shiftAmount = shiftAmount;
+		m_val = registerRotaterFields.val;
+	}
 	
 	uint32_t calculate(bool setStatus) override {
 		uint32_t tmpResult = 0;
-		m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], registerRotaterFields.reminder, setStatus);
+		m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], registerRotaterFields.shiftAmount, setStatus);
 		return tmpResult;
 	}
 };
@@ -196,7 +204,14 @@ public:
 			uint16_t shiftRegister : 5;
 		};
 	}registerRotaterFields;
-	RegisterWithRegisterShifter(uint16_t val) { registerRotaterFields.val = val; }
+	RegisterWithRegisterShifter(uint16_t val) { registerRotaterFields.val = val; m_val = val; }
+	RegisterWithRegisterShifter(uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister) {
+		registerRotaterFields.sourceRegister = sourceRegister;
+		registerRotaterFields.type = 1;
+		registerRotaterFields.shiftCode = rotation;
+		registerRotaterFields.shiftRegister = shiftRegister;
+		m_val = registerRotaterFields.val;
+	}
 
 	uint32_t calculate(bool setStatus) override {
 		uint32_t tmpResult = 0;
@@ -245,10 +260,170 @@ DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataPro
 	m_opCode.immediate = imm;
 }
 
+void assert(uint32_t result, uint32_t expected){
+	if (result != expected){
+		std::cout << std::hex << result << " != " << expected << std::endl;
+		for (;;);
+	}
+}
+
 void unitTestForTeppo(){
-	DataProcessingOpcode(SUB, NO_SET, 0, 0, true, ImmediateRotater(1, 3).m_val).execute();
-	DataProcessingOpcode(0xe3a00012).execute();
-	DataProcessingOpcode(0xe3a00032).execute();
-	DataProcessingOpcode(0xe3a00052).execute();
-	DataProcessingOpcode(0xe3a00072).execute();
+	//mov tests
+	cpsr.val = 0x1F;
+	*r[0] = 0;
+	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0, 0).m_val).execute();
+	assert(*r[0], 0);
+	assert(cpsr.val, 0x4000001f);
+	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0xFF, 0).m_val).execute();
+	assert(*r[0], 0xFF);
+	assert(cpsr.val, 0x0000001f);
+	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0xFF, 8).m_val).execute();
+	assert(*r[0], 0xFF000000);
+	assert(cpsr.val, 0xA000001f);
+	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0xFF, 4).m_val).execute();
+	assert(*r[0], 0xF000000F);
+	assert(cpsr.val, 0xA000001f);
+
+	//lsl tests RegisterWithImmediateShifter
+	*r[1] = 0xFFF;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSL, 0).m_val).execute();
+	assert(*r[0], 0xFFF);
+	assert(cpsr.val, 0x1F);
+
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSL, 1).m_val).execute();
+	assert(*r[0], 0x1FFE);
+	assert(cpsr.val, 0x1F);
+
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSL, 31).m_val).execute();
+	assert(*r[0], 0x80000000);
+	assert(cpsr.val, 0xA000001F);
+
+	//lsr tests RegisterWithImmediateShifter
+	*r[1] = 0xFFF;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSR, 0).m_val).execute();
+	assert(*r[0], 0xFFF);
+	assert(cpsr.val, 0x1F);
+
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSR, 1).m_val).execute();
+	assert(*r[0], 0x7FF);
+	assert(cpsr.val, 0x2000001F);
+
+	*r[1] = 0xC0000000;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSR, 31).m_val).execute();
+	assert(*r[0], 0x1);
+	assert(cpsr.val, 0x2000001F);
+
+	//asr tests RegisterWithImmediateShifter
+	*r[1] = 0x80000FFF;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, ASR, 0).m_val).execute();
+	assert(*r[0], 0x80000FFF);
+	assert(cpsr.val, 0x8000001F);
+
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, ASR, 1).m_val).execute();
+	assert(*r[0], 0xC00007FF);
+	assert(cpsr.val, 0xA000001F);
+
+	*r[1] = 0xC0000000;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, ASR, 31).m_val).execute();
+	assert(*r[0], 0xFFFFFFFF);
+	assert(cpsr.val, 0xA000001F);
+
+	//LSL tests RegisterWithRegisterShifter
+	*r[2] = 0;
+	*r[1] = 0xFFF;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
+	assert(*r[0], 0xFFF);
+	assert(cpsr.val, 0x1F);
+
+	*r[2] = 1;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
+	assert(*r[0], 0x1FFE);
+	assert(cpsr.val, 0x1F);
+
+	*r[1] = 0x3;
+	*r[2] = 31;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
+	assert(*r[0], 0x80000000);
+	assert(cpsr.val, 0xA000001F);
+
+	*r[2] = 32;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
+	assert(*r[0], 0);
+	assert(cpsr.val, 0x6000001F);
+
+	*r[2] = 33;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
+	assert(*r[0], 0);
+	assert(cpsr.val, 0x4000001F);
+
+	*r[2] = -1;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
+	assert(*r[0], 0);
+	assert(cpsr.val, 0x4000001F);
+
+	//lsr tests RegisterWithRegisterShifter
+	*r[1] = 0xFFF;
+	*r[2] = 0;	
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
+	assert(*r[0], 0xFFF);
+	assert(cpsr.val, 0x1F);
+
+	*r[2] = 1;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
+	assert(*r[0], 0x7FF);
+	assert(cpsr.val, 0x2000001F);
+
+	*r[1] = 0xC0000000;
+	*r[2] = 31;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
+	assert(*r[0], 0x1);
+	assert(cpsr.val, 0x2000001F);
+
+	*r[2] = 32;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
+	assert(*r[0], 0);
+	assert(cpsr.val, 0x6000001F);
+
+	*r[2] = 33;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
+	assert(*r[0], 0);
+	assert(cpsr.val, 0x4000001F);
+
+	*r[2] = -1;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
+	assert(*r[0], 0);
+	assert(cpsr.val, 0x4000001F);
+	 
+	//ASR tests RegisterWithRegisterShifter
+	*r[1] = 0x80000FFF;
+	*r[2] = 0;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
+	assert(*r[0], 0x80000FFF);
+	assert(cpsr.val, 0x8000001F);
+
+	*r[2] = 1;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
+	assert(*r[0], 0xC00007FF);
+	assert(cpsr.val, 0xA000001F);
+
+	*r[1] = 0xC0000000;
+	*r[2] = 31;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
+	assert(*r[0], 0xFFFFFFFF);
+	assert(cpsr.val, 0xA000001F);
+
+	*r[2] = 32;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
+	assert(*r[0], 0xFFFFFFFF);
+	assert(cpsr.val, 0xA000001F);
+
+	*r[2] = 33;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
+	assert(*r[0], 0xFFFFFFFF);
+	assert(cpsr.val, 0xA000001F);
+
+	*r[2] = -1;
+	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
+	assert(*r[0], 0xFFFFFFFF);
+	assert(cpsr.val, 0xA000001F);
 }

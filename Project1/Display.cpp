@@ -7,6 +7,10 @@
 #include "Constants.h"
 #include "memoryMappedIO.h"
 
+struct Display::OamSize shapes[3][4] = { { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
+										{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
+										{ { 8, 16 }, { 8, 32 }, { 16, 32 }, { 32, 64 } } };
+
 Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y), name(name){
 	display = new sf::RenderWindow(sf::VideoMode(res_x, res_y), name);
 	txtRing = (Ring*)malloc(sizeof(Ring));
@@ -53,40 +57,75 @@ Display::Display(int res_x, int res_y, char* name) : res_x(res_x), res_y(res_y),
 
 void Display::scanPalettes(){
 	int startAddr = 0;
+	int colorPtr = 0;
 	const int scalar = 255 / 31;
 
 	//for bg palettes
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 32; i++)
 		for (int k = 0; k < 16; k++){
 			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&PaletteRAM[startAddr];
 			int redScaled = colorPaletteRam->red * scalar;
 			int greenScaled = colorPaletteRam->green * scalar;
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
-			if (k == 0)
-				color.a = 0;
+			//if (k == 0)
+				//color.a = 0;
 			PaletteColors[16 * i + k] = color;
-			paletteTile.setPixel(k, i, color);
+			colors[colorPtr + 0] = color.r;
+			colors[colorPtr + 1] = color.g;
+			colors[colorPtr + 2] = color.b;
+			colors[colorPtr + 3] = color.a;
 			startAddr += 2;
+			colorPtr += 4;
 		}
 
-	//for fg palettes
-	for (int i = 0; i < 16; i++)
-		for (int k = 0; k < 16; k++){
-			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&PaletteRAM[startAddr];
-			int redScaled = colorPaletteRam->red * scalar;
-			int greenScaled = colorPaletteRam->green * scalar;
-			int blueScaled = colorPaletteRam->blue * scalar;
-			sf::Color color(redScaled, greenScaled, blueScaled);
-			if (k == 0)
-				color.a = 0;
-			PaletteColors[256 + 16 * i + k] = color;
-			paletteTile.setPixel(k, 16 + i, color);
-			startAddr += 2;
-		}
-
-	paletteTexture.update(paletteTile, 0, 0);
+	paletteTexture.update(colors);
 	display->draw(paletteSprite);
+}
+
+sf::Image& Display::calculate4BitTile(uint32_t base, BgTile* tile){
+	uint32_t pixeloffset = 0;
+	for (int y = 0; y < 8; y++){
+		int row = loadFromAddress32(0x6000000 + base + tile->tileNumber * 0x20 + pixeloffset, true);
+		for (int pixel = 0; pixel < 8; pixel++){
+			int color = (row & 0xf);
+			bgTile[4 * 8 * y + 4 * pixel + 0] = PaletteColors[16 * tile->paletteNum + color].r;
+			bgTile[4 * 8 * y + 4 * pixel + 1] = PaletteColors[16 * tile->paletteNum + color].g;
+			bgTile[4 * 8 * y + 4 * pixel + 2] = PaletteColors[16 * tile->paletteNum + color].b;
+			bgTile[4 * 8 * y + 4 * pixel + 3] = PaletteColors[16 * tile->paletteNum + color].a;
+			//tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
+			row >>= 4;
+		}
+		pixeloffset += 4;
+	}
+	tmpTile.create(8, 8, bgTile);
+	if (tile->horizontalFlip)
+		tmpTile.flipHorizontally();
+	if (tile->VerticalFlip)
+		tmpTile.flipVertically();
+
+	return tmpTile;
+}
+
+sf::Image& Display::calculate8BitTile(uint32_t base, BgTile* tile){
+	uint32_t offset = 0x6000000 + base + tile->tileNumber * 0x40;
+	for (int y = 0; y < 8; y++){
+		for (int pixel = 0; pixel < 8; pixel++){
+			int color = loadFromAddress(offset, true);
+			bgTile[4 * 8 * y + 4 * pixel + 0] = PaletteColors[color].r;
+			bgTile[4 * 8 * y + 4 * pixel + 1] = PaletteColors[color].g;
+			bgTile[4 * 8 * y + 4 * pixel + 2] = PaletteColors[color].b;
+			bgTile[4 * 8 * y + 4 * pixel + 3] = PaletteColors[color].a;
+			offset++;
+		}
+	}
+	tmpTile.create(8, 8, bgTile);
+	if (tile->horizontalFlip)
+		tmpTile.flipHorizontally();
+	if (tile->VerticalFlip)
+		tmpTile.flipVertically();
+
+	return tmpTile;
 }
 
 void Display::fillTiles(uint32_t regOffset){
@@ -143,23 +182,14 @@ void Display::fillBG(uint32_t regOffset){
 			for (int k = 0; k < 32; k++){
 				BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-				uint32_t pixeloffset = 0;
-				for (int y = 0; y < 8; y++){
-					int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber * 0x20 + pixeloffset, true);
-					for (int pixel = 0; pixel < 8; pixel++){
-						int color = (row & 0xf);
-						tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
-						row >>= 4;
-					}
-					pixeloffset += 4;
-				}
-				if (tile->horizontalFlip)
-					tmpTile.flipHorizontally();
-				if (tile->VerticalFlip)
-					tmpTile.flipVertically();
+				if (bgCnt->palettes == 0)
+					calculate4BitTile(tileBaseBlock, tile);
+				else
+					calculate8BitTile(tileBaseBlock, tile);
 
-				bgText[regOffset / 2].update(tmpTile, 8 * k, 8 * i);
 				startAddr += 2;
+				bgText[regOffset / 2].update(tmpTile, 8 * k, 8 * i);
+				
 			}
 		}
 
@@ -168,20 +198,10 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-					uint32_t pixeloffset = 0;
-					for (int y = 0; y < 8; y++){
-						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber * 0x20 + pixeloffset, true);
-						for (int pixel = 0; pixel < 8; pixel++){
-							int color = (row & 0xf);
-							tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
-							row >>= 4;
-						}
-						pixeloffset += 4;
-					}
-					if (tile->horizontalFlip)
-						tmpTile.flipHorizontally();
-					if (tile->VerticalFlip)
-						tmpTile.flipVertically();
+					if (bgCnt->palettes == 0)
+						calculate4BitTile(tileBaseBlock, tile);
+					else
+						calculate8BitTile(tileBaseBlock, tile);
 
 					bgText[regOffset / 2].update(tmpTile, 256 + 8 * k, 8 * i);
 					startAddr += 2;
@@ -193,20 +213,10 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-					uint32_t pixeloffset = 0;
-					for (int y = 0; y < 8; y++){
-						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber * 0x20 + pixeloffset, true);
-						for (int pixel = 0; pixel < 8; pixel++){
-							int color = (row & 0xf);
-							tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
-							row >>= 4;
-						}
-						pixeloffset += 4;
-					}
-					if (tile->horizontalFlip)
-						tmpTile.flipHorizontally();
-					if (tile->VerticalFlip)
-						tmpTile.flipVertically();
+					if (bgCnt->palettes == 0)
+						calculate4BitTile(tileBaseBlock, tile);
+					else
+						calculate8BitTile(tileBaseBlock, tile);
 
 					bgText[regOffset / 2].update(tmpTile, 8 * k, 256 + 8 * i);
 					startAddr += 2;
@@ -218,20 +228,10 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-					uint32_t pixeloffset = 0;
-					for (int y = 0; y < 8; y++){
-						int row = loadFromAddress32(0x6000000 + tileBaseBlock + tile->tileNumber * 0x20 + pixeloffset, true);
-						for (int pixel = 0; pixel < 8; pixel++){
-							int color = (row & 0xf);
-							tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
-							row >>= 4;
-						}
-						pixeloffset += 4;
-					}
-					if (tile->horizontalFlip)
-						tmpTile.flipHorizontally();
-					if (tile->VerticalFlip)
-						tmpTile.flipVertically();
+					if (bgCnt->palettes == 0)
+						calculate4BitTile(tileBaseBlock, tile);
+					else
+						calculate8BitTile(tileBaseBlock, tile);
 
 					bgText[regOffset / 2].update(tmpTile, 256 + 8 * k, 256 + 8 * i);
 					startAddr += 2;
@@ -239,8 +239,7 @@ void Display::fillBG(uint32_t regOffset){
 			}
 		}
 
-		sf::Sprite BG1Sprite;
-		BG1Sprite.setTexture(bgText[regOffset / 2], true);
+		sf::Sprite BG1Sprite(bgText[regOffset / 2], sf::IntRect(0, 0, size_x, size_y));
 		BG1Sprite.setPosition(514, 256 * (regOffset / 2));
 		BG1Sprite.setScale(256.0 / size_x, 256.0 / size_y);
 
@@ -317,29 +316,58 @@ void Display::appendBGs(){
 
 	std::vector<sf::Sprite> renderOrder[4];
 
+	uint16_t screenSizeX = 0;
+	uint16_t screenSizey = 0;
+
+	if (displayCtrl->bgMode == 0){
+		screenSizeX = 256;
+		screenSizey = 256;
+	}
+	else if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4){
+		screenSizeX = 240;
+		screenSizey = 160;
+	}
+
 	if (displayCtrl->bg3Display){
 		if (displayCtrl->bgMode == 0)
-			renderOrder[bgCnt3->priority].push_back(sf::Sprite(bgText[3], sf::IntRect(BG3HOFS->offset, BG3VOFS->offset, 240, 160)));
+			renderOrder[bgCnt3->priority].push_back(sf::Sprite(bgText[3], sf::IntRect(BG3HOFS->offset, BG3VOFS->offset, screenSizeX, screenSizey)));
 		else
 			renderOrder[bgCnt3->priority].push_back(sf::Sprite(bgText[3]));
 	}
 	if (displayCtrl->bg2Display){
 		if (displayCtrl->bgMode == 0)
-			renderOrder[bgCnt2->priority].push_back(sf::Sprite(bgText[2], sf::IntRect(BG2HOFS->offset, BG2VOFS->offset, 240, 160)));
+			renderOrder[bgCnt2->priority].push_back(sf::Sprite(bgText[2], sf::IntRect(BG2HOFS->offset, BG2VOFS->offset, screenSizeX, screenSizey)));
 		else
 			renderOrder[bgCnt2->priority].push_back(sf::Sprite(bgText[2]));
 	}
 	if (displayCtrl->bg1Display){
 		if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1)
-			renderOrder[bgCnt1->priority].push_back(sf::Sprite(bgText[1], sf::IntRect(BG1HOFS->offset, BG1VOFS->offset, 240, 160)));
+			renderOrder[bgCnt1->priority].push_back(sf::Sprite(bgText[1], sf::IntRect(BG1HOFS->offset, BG1VOFS->offset, screenSizeX, screenSizey)));
 		else
 			renderOrder[bgCnt1->priority].push_back(sf::Sprite(bgText[1]));
 	}
 	if (displayCtrl->bg0Display){
-		if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1)
-			renderOrder[bgCnt0->priority].push_back(sf::Sprite(bgText[0], sf::IntRect(BG0HOFS->offset, BG0VOFS->offset, 240, 160)));
+		if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1){
+			auto s = sf::Sprite(bgText[0], sf::IntRect(BG0HOFS->offset, BG0VOFS->offset, screenSizeX, screenSizey));
+			renderOrder[bgCnt0->priority].push_back(s);
+		}	
 		else
 			renderOrder[bgCnt0->priority].push_back(sf::Sprite(bgText[0]));
+	}
+
+	if (displayCtrl->objDisplay){
+		uint16_t startAddr = 0x3f8;
+		for (int object = 127; object >= 0; object--){
+			ObjReg1* objr1 = (ObjReg1*)&OAM[startAddr + 0];
+			ObjReg2* objr2 = (ObjReg2*)&OAM[startAddr + 4];
+			startAddr -= 8;
+			if (objr1->isDoubleOrNoDisplay == 0){
+				sf::Sprite s(objMapTexture, sf::IntRect((objr2->tileNumber % 32) * 8, (objr2->tileNumber / 32) * 8, shapes[objr1->shape][objr1->size].x, shapes[objr1->shape][objr1->size].y));
+				s.setPosition(objr1->xCoord, objr1->yCoord);
+
+				renderOrder[objr2->priority].push_back(s);
+			}
+		}
 	}
 	
 	for (int vec = 3; vec >= 0; vec--){
