@@ -7,11 +7,14 @@
 void(*dataOperationsC[0x10])(int&, int, int) = { And, Eor, Sub, Rsb,
 Add, Adc, Sbc, Rsc, Tst, Teq, Cmp, Cmn, Orr, Mov, Bic, Mvn };
 
+void(*dataOperationsCCond[0x10])(int&, int, int) = { Ands, Eors, Subs, Rsbs,
+Adds, Adcs, Sbcs, Rscs, Tst, Teq, Cmp, Cmn, Orrs, Movs, Bics, Mvns };
+
 class ShiferUnit {
 protected:
 	union CPSR& m_cpsr;
 
-	virtual void calcConditions(uint32_t result, uint32_t sourceValue, uint8_t shiftAmount) = 0;
+	virtual void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) = 0;
 	virtual void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) = 0;
 public:
 	ShiferUnit(union CPSR& programStatus): m_cpsr(programStatus) {}
@@ -24,7 +27,7 @@ public:
 
 class Lsl : public ShiferUnit {
 protected:
-	void calcConditions(uint32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
+	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
 		if (shiftAmount > 32)
 			m_cpsr.carry = 0;
 		else if (shiftAmount > 0)
@@ -34,7 +37,7 @@ protected:
 	}
 
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override {
-		uint64_t tmp = (unsigned)sourceValue;
+		uint64_t tmp = sourceValue;
 		destinationRegister = tmp << shiftAmount;
 	}
 
@@ -44,16 +47,17 @@ public:
 
 class Lsr : public ShiferUnit {
 protected:
-	void calcConditions(uint32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
-		if (sourceValue > 0)
-			m_cpsr.carry = (sourceValue >> (shiftAmount - 1) & 1);
+	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
+		uint64_t tmp = sourceValue;
+		if (shiftAmount > 0)
+			m_cpsr.carry = (tmp >> (shiftAmount - 1) & 1);
 		m_cpsr.negative = result < 0;
 		m_cpsr.zero = result == 0;
 	}
 
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override {
-		uint64_t tmp = (unsigned)sourceValue;
-		destinationRegister = tmp >> sourceValue;
+		uint64_t tmp = sourceValue;
+		destinationRegister = tmp >> shiftAmount;
 	}
 public:
 	Lsr(union CPSR& programStatus) : ShiferUnit(programStatus) {};
@@ -61,16 +65,16 @@ public:
 
 class Asr : public ShiferUnit {
 protected:
-	void calcConditions(uint32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
-		int64_t tmp = sourceValue;
-		if (sourceValue != 0)
-			m_cpsr.carry = (tmp >> (sourceValue - 1) & 1);
+	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
+		int64_t tmp = (signed)sourceValue;
+		if (shiftAmount != 0)
+			m_cpsr.carry = (tmp >> (shiftAmount - 1) & 1);
 		m_cpsr.negative = result < 0;
 		m_cpsr.zero = result == 0;
 	}
 
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override {
-		int64_t tmp = sourceValue;
+		int64_t tmp = (signed)sourceValue;
 		destinationRegister = tmp >> shiftAmount;
 	}
 public:
@@ -79,8 +83,8 @@ public:
 
 class Ror : public ShiferUnit {
 protected:
-	void calcConditions(uint32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
-		if (sourceValue > 0)
+	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
+		if (shiftAmount > 0)
 			m_cpsr.carry = (sourceValue >> (shiftAmount - 1) & 1);
 		m_cpsr.negative = result < 0;
 		m_cpsr.zero = result == 0;
@@ -91,7 +95,7 @@ protected:
 			shift(destinationRegister, sourceValue, shiftAmount - 32);
 		}
 		else{
-			destinationRegister = ((unsigned)sourceValue >> shiftAmount) | ((unsigned)sourceValue << (32 - shiftAmount));
+			destinationRegister = (sourceValue >> shiftAmount) | (sourceValue << (32 - shiftAmount));
 		}
 	}
 public:
@@ -100,7 +104,7 @@ public:
 
 class Rrx : ShiferUnit {
 protected:
-	void calcConditions(uint32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
+	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override {
 		m_cpsr.carry = sourceValue & 1;
 		m_cpsr.negative = result < 0;
 		m_cpsr.zero = result == 0;
@@ -227,10 +231,10 @@ public:
 	RotatorUnits* decode(DataProcessingOpcode& opCode){
 		if (opCode.m_opCode.isImmediate)
 			return new ImmediateRotater(opCode.m_opCode.immediate);
-		else if (opCode.m_opCode.immediate & 0x8)
-			return new RegisterWithImmediateShifter(opCode.m_opCode.immediate);
-		else
+		else if (opCode.m_opCode.immediate & 0x10)
 			return new RegisterWithRegisterShifter(opCode.m_opCode.immediate);
+		else
+			return new RegisterWithImmediateShifter(opCode.m_opCode.immediate);
 	}
 };
 
@@ -247,7 +251,10 @@ void DataProcessingOpcode::execute() {
 	shifter = BarrelShifterDecoder().decode(*this);
 	uint32_t secondOperand = static_cast<RotatorUnits*>(shifter)->calculate(m_opCode.setStatusCodes);
 
-	dataOperationsC[m_opCode.dataProcessingOpcode](*r[m_opCode.destinationRegister], *r[m_opCode.firstOperandRegister], secondOperand);
+	if (m_opCode.setStatusCodes)
+		dataOperationsCCond[m_opCode.dataProcessingOpcode](*r[m_opCode.destinationRegister], *r[m_opCode.firstOperandRegister], secondOperand);
+	else
+		dataOperationsC[m_opCode.dataProcessingOpcode](*r[m_opCode.destinationRegister], *r[m_opCode.firstOperandRegister], secondOperand);
 }
 
 DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint16_t imm){
@@ -260,10 +267,13 @@ DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataPro
 	m_opCode.immediate = imm;
 }
 
-void assert(uint32_t result, uint32_t expected){
-	if (result != expected){
-		std::cout << std::hex << result << " != " << expected << std::endl;
-		for (;;);
+void assert(uint32_t regVal, uint32_t regExpected, uint32_t cpsrVal, uint32_t cpsrExpected, uint32_t line){
+	if (regVal != regExpected || cpsrVal != cpsrExpected){
+		std::cout << "Line: " << line << std::endl;
+		std::cout << std::hex;
+		std::cout << "register got " << regVal << " expected " << regExpected << std::endl;
+		std::cout << "cpsr got " << cpsrVal << " expected " << cpsrExpected << std::endl;
+		std::cout << std::dec;
 	}
 }
 
@@ -272,158 +282,150 @@ void unitTestForTeppo(){
 	cpsr.val = 0x1F;
 	*r[0] = 0;
 	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0, 0).m_val).execute();
-	assert(*r[0], 0);
-	assert(cpsr.val, 0x4000001f);
+	assert(*r[0], 0, cpsr.val, 0x4000001f, __LINE__);
 	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0xFF, 0).m_val).execute();
-	assert(*r[0], 0xFF);
-	assert(cpsr.val, 0x0000001f);
+	assert(*r[0], 0xFF, cpsr.val, 0x0000001f, __LINE__);
 	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0xFF, 8).m_val).execute();
-	assert(*r[0], 0xFF000000);
-	assert(cpsr.val, 0xA000001f);
+	assert(*r[0], 0xFF000000, cpsr.val, 0xA000001f, __LINE__);
+	cpsr.val = 0x1F;
 	DataProcessingOpcode(MOV, SET, 0, 1, true, ImmediateRotater(0xFF, 4).m_val).execute();
-	assert(*r[0], 0xF000000F);
-	assert(cpsr.val, 0xA000001f);
+	assert(*r[0], 0xF000000F, cpsr.val, 0xA000001f, __LINE__);
+	cpsr.val = 0x1F;
 
 	//lsl tests RegisterWithImmediateShifter
 	*r[1] = 0xFFF;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSL, 0).m_val).execute();
-	assert(*r[0], 0xFFF);
-	assert(cpsr.val, 0x1F);
+	assert(*r[0], 0xFFF, cpsr.val, 0x1F, __LINE__);
 
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSL, 1).m_val).execute();
-	assert(*r[0], 0x1FFE);
-	assert(cpsr.val, 0x1F);
+	assert(*r[0], 0x1FFE, cpsr.val, 0x1F, __LINE__);
 
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSL, 31).m_val).execute();
-	assert(*r[0], 0x80000000);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0x80000000, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	//lsr tests RegisterWithImmediateShifter
 	*r[1] = 0xFFF;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSR, 0).m_val).execute();
-	assert(*r[0], 0xFFF);
-	assert(cpsr.val, 0x1F);
+	assert(*r[0], 0xFFF, cpsr.val, 0x1F, __LINE__);
 
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSR, 1).m_val).execute();
-	assert(*r[0], 0x7FF);
-	assert(cpsr.val, 0x2000001F);
+	assert(*r[0], 0x7FF, cpsr.val, 0x2000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[1] = 0xC0000000;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, LSR, 31).m_val).execute();
-	assert(*r[0], 0x1);
-	assert(cpsr.val, 0x2000001F);
+	assert(*r[0], 0x1, cpsr.val, 0x2000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	//asr tests RegisterWithImmediateShifter
 	*r[1] = 0x80000FFF;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, ASR, 0).m_val).execute();
-	assert(*r[0], 0x80000FFF);
-	assert(cpsr.val, 0x8000001F);
+	assert(*r[0], 0x80000FFF, cpsr.val, 0x8000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, ASR, 1).m_val).execute();
-	assert(*r[0], 0xC00007FF);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0xC00007FF, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[1] = 0xC0000000;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithImmediateShifter(1, ASR, 31).m_val).execute();
-	assert(*r[0], 0xFFFFFFFF);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0xFFFFFFFF, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	//LSL tests RegisterWithRegisterShifter
 	*r[2] = 0;
 	*r[1] = 0xFFF;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
-	assert(*r[0], 0xFFF);
-	assert(cpsr.val, 0x1F);
+	assert(*r[0], 0xFFF, cpsr.val, 0x1F, __LINE__);
 
 	*r[2] = 1;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
-	assert(*r[0], 0x1FFE);
-	assert(cpsr.val, 0x1F);
+	assert(*r[0], 0x1FFE, cpsr.val, 0x1F, __LINE__);
 
 	*r[1] = 0x3;
 	*r[2] = 31;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
-	assert(*r[0], 0x80000000);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0x80000000, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = 32;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
-	assert(*r[0], 0);
-	assert(cpsr.val, 0x6000001F);
+	assert(*r[0], 0, cpsr.val, 0x6000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = 33;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
-	assert(*r[0], 0);
-	assert(cpsr.val, 0x4000001F);
+	assert(*r[0], 0, cpsr.val, 0x4000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = -1;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSL, 2).m_val).execute();
-	assert(*r[0], 0);
-	assert(cpsr.val, 0x4000001F);
+	assert(*r[0], 0, cpsr.val, 0x4000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	//lsr tests RegisterWithRegisterShifter
 	*r[1] = 0xFFF;
 	*r[2] = 0;	
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
-	assert(*r[0], 0xFFF);
-	assert(cpsr.val, 0x1F);
+	assert(*r[0], 0xFFF, cpsr.val, 0x1F, __LINE__);
 
 	*r[2] = 1;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
-	assert(*r[0], 0x7FF);
-	assert(cpsr.val, 0x2000001F);
+	assert(*r[0], 0x7FF, cpsr.val, 0x2000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[1] = 0xC0000000;
 	*r[2] = 31;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
-	assert(*r[0], 0x1);
-	assert(cpsr.val, 0x2000001F);
+	assert(*r[0], 0x1, cpsr.val, 0x2000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = 32;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
-	assert(*r[0], 0);
-	assert(cpsr.val, 0x6000001F);
+	assert(*r[0], 0, cpsr.val, 0x6000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = 33;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
-	assert(*r[0], 0);
-	assert(cpsr.val, 0x4000001F);
+	assert(*r[0], 0, cpsr.val, 0x4000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = -1;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, LSR, 2).m_val).execute();
-	assert(*r[0], 0);
-	assert(cpsr.val, 0x4000001F);
+	assert(*r[0], 0, cpsr.val, 0x4000001F, __LINE__);
+	cpsr.val = 0x1F;
 	 
 	//ASR tests RegisterWithRegisterShifter
 	*r[1] = 0x80000FFF;
 	*r[2] = 0;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
-	assert(*r[0], 0x80000FFF);
-	assert(cpsr.val, 0x8000001F);
+	assert(*r[0], 0x80000FFF, cpsr.val, 0x8000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = 1;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
-	assert(*r[0], 0xC00007FF);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0xC00007FF, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[1] = 0xC0000000;
 	*r[2] = 31;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
-	assert(*r[0], 0xFFFFFFFF);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0xFFFFFFFF, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = 32;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
-	assert(*r[0], 0xFFFFFFFF);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0xFFFFFFFF, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = 33;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
-	assert(*r[0], 0xFFFFFFFF);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0xFFFFFFFF, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 
 	*r[2] = -1;
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
-	assert(*r[0], 0xFFFFFFFF);
-	assert(cpsr.val, 0xA000001F);
+	assert(*r[0], 0xFFFFFFFF, cpsr.val, 0xA000001F, __LINE__);
+	cpsr.val = 0x1F;
 }
