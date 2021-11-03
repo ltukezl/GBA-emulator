@@ -93,7 +93,6 @@ sf::Image& Display::calculate4BitTile(uint32_t base, BgTile* tile){
 			bgTile[4 * 8 * y + 4 * pixel + 1] = PaletteColors[16 * tile->paletteNum + color].g;
 			bgTile[4 * 8 * y + 4 * pixel + 2] = PaletteColors[16 * tile->paletteNum + color].b;
 			bgTile[4 * 8 * y + 4 * pixel + 3] = PaletteColors[16 * tile->paletteNum + color].a;
-			//tmpTile.setPixel(pixel, y, PaletteColors[16 * tile->paletteNum + color]);
 			row >>= 4;
 		}
 		pixeloffset += 4;

@@ -54,6 +54,18 @@
     <ClCompile Include="Timer\timers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cplusplusRewrite\AritmethicOps2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cplusplusRewrite\Shifts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cplusplusRewrite\dataProcessingOp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cplusplusRewrite\BarrelShifterDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBAcpu.h">
@@ -96,6 +108,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Timer\timers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cplusplusRewrite\Shifts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cplusplusRewrite\dataProcessingOp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cplusplusRewrite\BarrelShifterDecoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

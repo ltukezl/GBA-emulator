@@ -751,19 +751,12 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int shiftId = (opCode >> 5) & 3;
 	int tmpRegister = *r[rm];
 
-	if ((opCode >> 4) & 1){
-		std::cout << "TBD";
+	offset = (opCode >> 7) & 0x1F;
+	if (shiftId == 3 && offset == 0){
+		rrx(tmpRegister, tmpRegister);
 	}
-
 	else
-	{
-		offset = (opCode >> 7) & 0x1F;
-		if (shiftId == 3 && offset == 0){
-			rrx(tmpRegister, tmpRegister);
-		}
-		else
-			ARMshifts[shiftId](tmpRegister, *r[rm], offset);
-	}
+		ARMshifts[shiftId](tmpRegister, *r[rm], offset);
 
 	int oldReg = *r[rn];
 	switch (loadStore){

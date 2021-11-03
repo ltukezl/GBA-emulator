@@ -42,7 +42,7 @@ void Cmp(int& saveTo, int operand1, int operand2){
 void Cmn(int& saveTo, int operand1, int operand2){
 	zero(operand1 + operand2);
 	negative(operand1 + operand2);
-	addCarry(operand1, operand2, operand1 + operand2);
+	addCarry(operand1, operand2, 0);
 	addOverflow(operand1, operand2, operand1 + operand2);
 }
 

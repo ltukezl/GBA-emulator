@@ -12,7 +12,7 @@
 #include "Interrupt/interrupt.h"
 #include "Timer/timers.h"
 #include "Memory/memoryMappedIO.h"
-#include "cplusplusRewrite/barrelShifter.h"
+#include "cplusplusRewrite/dataProcessingOp.h"
 
 #define GPU 1
 #define BIOS_START 0
@@ -168,7 +168,7 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE* bios;
-	fopen_s(&file, "TestBinaries/arm.gba", "rb");
+	fopen_s(&file, "TestBinaries/program5.bin", "rb");
 	fopen_s(&bios, "GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
