@@ -2,6 +2,7 @@
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/Shifts.h"
+#include "cplusplusRewrite/MathOps.h"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
 #include <GBAcpu.h>
@@ -13,23 +14,46 @@ Add, Adc, Sbc, Rsc, Tst, Teq, Cmp, Cmn, Orr, Mov, Bic, Mvn };
 void(*dataOperationsCCond[0x10])(int&, int, int) = { Ands, Eors, Subs, Rsbs,
 Adds, Adcs, Sbcs, Rscs, Tst, Teq, Cmp, Cmn, Orrs, Movs, Bics, Mvns };
 
+void DataProcessingOpcode::initialize(){
+	tst[0] = new Addition(cpsr);
+	tst[1] = new Addition(cpsr);
+	tst[2] = new Substraction(cpsr);
+	tst[3] = new ReverseSubstraction(cpsr);
+	tst[4] = new Addition(cpsr);
+	tst[5] = new AddWithCarry(cpsr);
+	tst[6] = new BorrowSubstraction(cpsr);
+	tst[7] = new ReverseBorrowSubstraction(cpsr);
+	tst[8] = new Addition(cpsr);
+	tst[9] = new Addition(cpsr);
+	tst[10] = new Addition(cpsr);
+	tst[11] = new Addition(cpsr);
+	tst[12] = new Addition(cpsr);
+	tst[13] = new Addition(cpsr);
+	tst[14] = new Addition(cpsr);
+	tst[15] = new Addition(cpsr);
+}
+
 DataProcessingOpcode::DataProcessingOpcode(uint32_t opCode) {
 	m_opCode.val = opCode;
-	shifter = nullptr;
+	initialize();
 }
 
 DataProcessingOpcode::~DataProcessingOpcode(){
-	delete shifter;
+	for (int i = 0; i < 0x10; i++){
+		delete tst[i];
+		tst[i] = nullptr;
+	}
 }
 
 void DataProcessingOpcode::execute() {
-	shifter = BarrelShifterDecoder().decode(*this);
-	uint32_t secondOperand = shifter->calculate(m_opCode.setStatusCodes);
+	RotatorUnits* shifter = BarrelShifterDecoder().decode(*this);
 
-	if (m_opCode.setStatusCodes)
-		dataOperationsCCond[m_opCode.dataProcessingOpcode](*r[m_opCode.destinationRegister], *r[m_opCode.firstOperandRegister], secondOperand);
-	else
-		dataOperationsC[m_opCode.dataProcessingOpcode](*r[m_opCode.destinationRegister], *r[m_opCode.firstOperandRegister], secondOperand);
+	tst[m_opCode.dataProcessingOpcode]->execute((uint32_t&)*r[m_opCode.destinationRegister],
+												*r[m_opCode.firstOperandRegister],
+												*shifter, 
+												m_opCode.setStatusCodes);
+
+	delete shifter;
 }
 
 DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint16_t imm){
@@ -40,6 +64,8 @@ DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataPro
 	m_opCode.firstOperandRegister = firstOpReg;
 	m_opCode.destinationRegister = destReg;
 	m_opCode.immediate = imm;
+
+	initialize();
 }
 
 void assert(uint32_t regVal, uint32_t regExpected, uint32_t cpsrVal, uint32_t cpsrExpected, uint32_t line){

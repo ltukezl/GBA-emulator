@@ -80,7 +80,7 @@
   <ItemGroup>
     <ClCompile Include="CommonOperations\arithmeticOps.cpp" />
     <ClCompile Include="Arm\ARMOpcodes.cpp" />
-    <ClCompile Include="cplusplusRewrite\AritmethicOps2.cpp" />
+    <ClCompile Include="cplusplusRewrite\MathOps.cpp" />
     <ClCompile Include="cplusplusRewrite\barrelShifter.cpp" />
     <ClCompile Include="cplusplusRewrite\BarrelShifterDecoder.cpp" />
     <ClCompile Include="cplusplusRewrite\dataProcessingOp.cpp" />
@@ -103,6 +103,7 @@
     <ClInclude Include="CommonOperations\conditions.h" />
     <ClInclude Include="cplusplusRewrite\BarrelShifterDecoder.h" />
     <ClInclude Include="cplusplusRewrite\dataProcessingOp.h" />
+    <ClInclude Include="cplusplusRewrite\MathOps.h" />
     <ClInclude Include="cplusplusRewrite\Shifts.h" />
     <ClInclude Include="GBAcpu.h" />
     <ClInclude Include="Constants.h" />

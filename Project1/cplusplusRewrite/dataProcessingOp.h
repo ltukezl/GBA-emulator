@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/Shifts.h"
+#include "cplusplusRewrite/MathOps.h"
 
 enum DataProcessingOpCodes {
 	AND,
@@ -29,7 +30,8 @@ enum DataProcessingSetOpCodes{
 
 class DataProcessingOpcode {
 private:
-	RotatorUnits* shifter;
+	void initialize();
+	MathOp* tst[0x10];
 
 public:
 	union {
