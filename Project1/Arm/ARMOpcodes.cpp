@@ -312,7 +312,7 @@ void rrx(int& saveTo, uint32_t from){
 
 void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
 void(*ARMshiftsNoCond[4])(int&, int, int) = { lslNoCond, lsrNoCond, asrNoCond, rorNoCond };
-char* ARMshifts_s[4] = { "lsl", "lsr", "asr", "ror" };
+std::string ARMshifts_s[4] = { "lsl", "lsr", "asr", "ror" };
 
 void updateMode(){
 	//std::cout << "switched mode to " << mode << std::endl;
@@ -386,7 +386,7 @@ void(*dataOperations[0x20])(int&, int, int) = { And, Ands, Eor, Eors, Sub, Subs,
 Add, Adds, Adc, Adcs, Sbc, Sbcs, Rsc, Rscs, mrs, Tst, msr, Teq, mrs2,
 Cmp, msr2, Cmn, Orr, Orrs, Mov, Movs, Bic, Bics, Mvn, Mvns };
 
-char* dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb", "rsbs",
+std::string dataOperations_s[0x20] = { "and", "ands", "or", "ors", "sub", "subs", "rsb", "rsbs",
 "add", "adds", "adc", "adcs", "sbc", "sbcs", "rsc", "rscs", "tst", "tst", "msr", "teq", "cmp",
 "cmp", "msr", "cmn", "or", "ors", "mov", "movs", "bic", "bics", "mvn", "mvns" };
 

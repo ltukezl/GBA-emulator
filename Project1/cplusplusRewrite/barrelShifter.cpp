@@ -9,6 +9,7 @@ RotatorUnits::RotatorUnits(){
 	m_shifts[1] = new Lsr(cpsr);
 	m_shifts[2] = new Asr(cpsr);
 	m_shifts[3] = new Ror(cpsr);
+	m_val = 0;
 }
 RotatorUnits::~RotatorUnits(){
 	delete m_shifts[0];

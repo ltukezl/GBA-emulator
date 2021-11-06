@@ -2,6 +2,7 @@
 #define DISPLAY_H
 #include <SFML/Graphics.hpp>
 #include <stdint.h>
+#include <string.h>
 #include "Memory/memoryMappedIO.h"
 
 
@@ -13,14 +14,16 @@ struct Ring{
 class Display{
 	int res_x, res_y;
 	sf::RenderWindow* display;
-	char* name;
+	std::string name;
 
 	sf::Sprite paletteSprite;
 	sf::Color PaletteColors[256 * 2];
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
 	uint8_t colors[2 * 16 * 16 * 4];
-	uint8_t bgTile[8 * 8 * 4];
+	uint8_t localColors[8 * 8 * 4];
+	uint8_t localColors2[512][256][4];
+	uint8_t localColors3[512][512][4];
 
 	sf::Texture paletteTexture;
 	sf::Image paletteTile;
@@ -35,9 +38,12 @@ class Display{
 
 	sf::Texture bgText[4];
 
+	sf::RenderTexture tileTxt;
 	sf::RenderTexture gameTXT;
 
-	
+	sf::Sprite bgSprite[4];
+
+	sf::Texture tmp3;
 
 public:
 
@@ -46,7 +52,7 @@ public:
 	bool VRAMupdated = false;
 	bool OBJupdated = false;
 
-	Display(int, int, char*);
+	Display(int, int, std::string&);
 
 	void updatePalettes();
 
@@ -60,7 +66,7 @@ public:
 
 	void fillBG(uint32_t regOffset);
 
-	void fillTiles(uint32_t regOffset);
+	void fillTiles();
 
 	void fillObjects(uint32_t regOffset);
 
@@ -70,8 +76,8 @@ private:
 	int cnt;
 	Ring* txtRing;
 
-	sf::Image& calculate4BitTile(uint32_t base, BgTile* tile);
-	sf::Image& calculate8BitTile(uint32_t base, BgTile* tile);
+	void calculate4BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile);
+	void calculate8BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile);
 };
 
 extern Display* debugView;

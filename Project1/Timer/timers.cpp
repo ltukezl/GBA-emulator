@@ -108,7 +108,7 @@ void updateTimers(uint32_t cycles) {
 
 				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
 					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
-					*(unsigned short*)&(unsigned char)memoryLayout[4][0x100 + 4 * (i + 1)] = oldVal + 1;
+					reinterpret_cast<uint16_t**>(memoryLayout)[4][0x100 + 4 * (i + 1)] = oldVal + 1;
 				}
 
 				timerCtrl->counterVal = reloads[i];

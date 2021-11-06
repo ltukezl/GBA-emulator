@@ -1,7 +1,7 @@
 #ifndef TOC_H
 #define TOC_H
 
-int thumbExecute(uint16_t);
+void thumbExecute(uint16_t);
 
 union moveShiftedRegisterOp{
 	uint16_t op;

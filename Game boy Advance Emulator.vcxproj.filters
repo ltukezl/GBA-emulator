@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="project1\GBAcpu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\arm\ARMOpcodes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\commonoperations\arithmeticOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\commonoperations\conditions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\commonoperations\logicalOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\cplusplusrewrite\barrelShifter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\cplusplusrewrite\BarrelShifterDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\cplusplusrewrite\dataProcessingOp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\cplusplusrewrite\LogicOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\cplusplusrewrite\MathOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\cplusplusrewrite\Shifts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\display\Display.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\dma\DMA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\interrupt\Interrupt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\memory\memoryMappedIO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\memory\MemoryOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\thumb\ThumbOpCodes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\timer\timers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project1\utilities\CpsrWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="project1\Constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\GBAcpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\arm\armopcodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\commonoperations\arithmeticOps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\commonoperations\conditions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\commonoperations\logicalOps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\cplusplusrewrite\barrelShifter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\cplusplusrewrite\BarrelShifterDecoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\cplusplusrewrite\dataProcessingOp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\cplusplusrewrite\LogicOps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\cplusplusrewrite\MathOps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\cplusplusrewrite\Shifts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\display\Display.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\dma\DMA.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\interrupt\interrupt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\memory\memoryMappedIO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\memory\MemoryOps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\thumb\ThumbOpCodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\timer\timers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project1\utilities\CpsrWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="project1\testbinaries\program2.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="project1\testbinaries\program3.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="project1\testbinaries\program4.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="project1\testbinaries\program5.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
+</Project>

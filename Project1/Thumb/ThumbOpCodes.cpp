@@ -27,11 +27,11 @@ void(*movCompIpaddIpsub[4])(int&, int, int) = { Movs, Cmp, Adds, Subs };
 void(*logicalOps[16])(int&, int, int) = { Ands, Eors, lslCond, lsrCond, asrCond, Adcs, Sbcs, rorCond, Tst, Neg, Cmp, Cmn, Orrs, mul, Bics, Mvns };
 void(*hlOps[4])(int&, int, int) = { Add, Cmp, Mov, bx };
 
-char* shifts_s[3] = { "lsl", "lsr", "asr" };
-char* arith_s[2] = { "add", "sub" };
-char* movCompIpaddIpsub_s[4] = { "mov", "cmp", "add", "sub" };
-char* logicalOps_s[16] = { "and", "xor", "lsl", "lsr", "asr", "adc", "sbc", "ror", "tst", "neg", "cmp", "cmn", "or", "mul", "bic", "mvn" };
-char* hlOps_s[4] = { "add", "cmp", "mov", "bx" };
+std::string shifts_s[3] = { "lsl", "lsr", "asr" };
+std::string arith_s[2] = { "add", "sub" };
+std::string movCompIpaddIpsub_s[4] = { "mov", "cmp", "add", "sub" };
+std::string logicalOps_s[16] = { "and", "xor", "lsl", "lsr", "asr", "adc", "sbc", "ror", "tst", "neg", "cmp", "cmn", "or", "mul", "bic", "mvn" };
+std::string hlOps_s[4] = { "add", "cmp", "mov", "bx" };
 
 void moveShiftedRegister(uint16_t opcode){
 	union moveShiftedRegisterOp op = { opcode };
@@ -97,7 +97,7 @@ void hiRegOperations(uint16_t opcode){
 
 	cycles += S_cycles;
 
-	if ((op.source == 15) | (newDestinationReg == 3))
+	if ((op.source == 15) || (newDestinationReg == 3))
 		cycles += N_cycles + 1;
 
 	if (debug)
@@ -386,7 +386,7 @@ void branchLink(uint16_t opcode){
 	}
 }
 
-int thumbExecute(uint16_t opcode){
+void thumbExecute(uint16_t opcode){
 	int subType;
 	int instruction;
 	*r[PC] += 2;
@@ -515,6 +515,5 @@ int thumbExecute(uint16_t opcode){
 		}
 		break;
 	}
-	return 0;
 }
 

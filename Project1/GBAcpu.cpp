@@ -125,11 +125,10 @@ int main(int argc, char *args[]){
 
 	rawWrite16(IoRAM, 0x130, 0xFFFF); // input register, 0 = pressed down, 1 = released
 
-#if GPU
-	debugView = new Display(1280, 496 * 2, "paletteWindow");
+	std::string windowName = "paletteWindow";
+	debugView = new Display(1280, 496 * 2, windowName);
 	//Display gameDisplay(240, 160, "game");
-#endif
-	std::cout << *(int*)argc << "\n";
+
 #if BIOS_START
 	r = usrSys;
 	*r[13] = SP_usr;
@@ -168,8 +167,8 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE* bios;
-	fopen_s(&file, "TestBinaries/program5.bin", "rb");
-	fopen_s(&bios, "GBA.BIOS", "rb");
+	fopen_s(&file, "Project1/TestBinaries/program3.bin", "rb");
+	fopen_s(&bios, "Project1/GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 
@@ -181,7 +180,7 @@ int main(int argc, char *args[]){
 	cycles = 0;
 	debug = false;
 
-	unitTestForTeppo();
+	//unitTestForTeppo();
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 100000)){
@@ -211,7 +210,7 @@ int main(int argc, char *args[]){
 
 		cycles = 1;
 
-		if (debug | (refreshRate > 100000)){
+		if (debug || (refreshRate > 100000)){
 			debugView->updatePalettes();
 			refreshRate = 0;
 		}

@@ -69,7 +69,7 @@ void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val){
 }
 
 void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val){
-	*(uint32_t*)&(uint8_t)arr[addr] = val; 
+	*(uint32_t*)&(uint8_t)arr[addr] = val;
 }
 
 uint8_t rawLoad8(uint8_t* arr, uint32_t addr){
@@ -134,7 +134,7 @@ void writeToAddress(uint32_t address, uint8_t value){
 	if (mask == 4 && address > memsizes[mask])
 		return;
 
-	else if ((mask == 5 || mask == 6 || mask == 7) & (displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
+	else if ((mask == 5 || mask == 6 || mask == 7) && (displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
 		return;
 
 	else if (mask == 0)
@@ -220,7 +220,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	if (!free)
 		calculateCycles(address, (previousAddress + 2) == address);
 
-	bool misaligned = address & 1;
+	bool misalignment = address & 1;
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 
@@ -229,9 +229,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 
 	address = clampAddress(mask, address);
 
-	if (misaligned)
-		return RORnoCond(*(uint16_t*)&(uint8_t)memoryLayout[mask][(address - 1)], 8);
-	return *(uint16_t*)&(uint8_t)memoryLayout[mask][address] & 0xFFFF;
+	return RORnoCond(rawLoad16(memoryLayout[mask],(address - misalignment)), 8 * misalignment);
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
