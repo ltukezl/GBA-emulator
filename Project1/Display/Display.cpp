@@ -227,9 +227,7 @@ void Display::fillBG(uint32_t regOffset){
 			}
 		}
 
-		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, size_x, size_y));
-		bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
 		display->draw(bgSprite[(regOffset / 2)]);
 	}
 
@@ -248,10 +246,9 @@ void Display::fillBG(uint32_t regOffset){
 				startAddr += 2;
 			}
 		sf::Sprite BG1Sprite;
-		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
+		
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
-		bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
-		display->draw(bgSprite[(regOffset / 2)]);
+		
 	}
 	else if (displayCtrl->bgMode == 4){
 		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
@@ -267,12 +264,12 @@ void Display::fillBG(uint32_t regOffset){
 				else
 					localColors3[k][i][3] = 0;
 			}
-		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
-		bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
-		display->draw(bgSprite[(regOffset / 2)]);
 	}
 
+	bgText[(regOffset / 2)].update((uint8_t*)localColors3);
+	bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
+	display->draw(bgSprite[(regOffset / 2)]);
 	VRAMupdated = false;
 }
 
@@ -287,27 +284,22 @@ void Display::fillObjects(uint32_t regOffset){
 	/*creates sprites 1 and 2*/
 	for (int tileY = 0; tileY < 32; tileY++)
 		for (int tileX = 0; tileX < 32; tileX++){
-			for (int y = 0; y < 8; y++){
+			for (int pixelY = 0; pixelY < 8; pixelY++) {
 				int row = loadFromAddress32(startAddr, true);
-				for (int pixel = 0; pixel < 8; pixel++){
+				for (int pixelX = 0; pixelX < 8; pixelX++) {
 					int color = (row & 0xf);
-					tmpTile.setPixel(pixel, y, PaletteColors[256 + color]);
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][0] = PaletteColors[256 + color].r;
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][1] = PaletteColors[256 + color].g;
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][2] = PaletteColors[256 + color].b;
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][3] = PaletteColors[256 + color].a;
 					row >>= 4;
 				}
 				startAddr += 4;
 			}
-			objMap[32 * tileY + tileX] = tmpTile;
 		}
-
+	objMapTexture.update((uint8_t*)localColors2, 256, 256, 0, 0);
 
 	/*draws sprites 1 and 2 to screen*/
-
-	for (int i = 0; i < 32; i++)
-		for (int k = 0; k < 32; k++){
-			sf::Image tile = objMap[32 * i + k];
-			objMapTexture.update(tile, 8 * k, 8 * i);
-		}
-
 	display->draw(objMapSprite);
 	OBJupdated = false;
 }

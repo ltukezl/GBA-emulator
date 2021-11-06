@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/Shifts.h"
-#include "cplusplusRewrite/MathOps.h"
+#include "cplusplusRewrite/operation.h"
 
 enum DataProcessingOpCodes {
 	AND,
@@ -21,6 +21,7 @@ enum DataProcessingOpCodes {
 	MOV,
 	BIC,
 	MVN,
+	LAST
 };
 
 enum DataProcessingSetOpCodes{
@@ -31,7 +32,7 @@ enum DataProcessingSetOpCodes{
 class DataProcessingOpcode {
 private:
 	void initialize();
-	MathOp* tst[0x10];
+	Operation* tst[0x10];
 
 public:
 	union {

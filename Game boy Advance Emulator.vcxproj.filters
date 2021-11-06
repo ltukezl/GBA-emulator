@@ -72,6 +72,9 @@
     <ClCompile Include="project1\utilities\CpsrWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Project1\cplusplusRewrite\Operation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project1\Constants.h">
@@ -132,6 +135,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="project1\utilities\CpsrWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\operation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

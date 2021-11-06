@@ -1,24 +1,8 @@
 #include <stdint.h>
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/MathOps.h"
+#include "cplusplusRewrite/operation.h"
 #include "GBAcpu.h"
-
-
-bool MathOp::isZero(uint32_t result){ return result == 0; }
-bool MathOp::isNegative(int32_t result){ return result < 0; }
-bool MathOp::additionCarry(uint64_t op1, uint64_t op2, uint64_t carry){
-	uint32_t res = op1 + op2 + carry;
-	return ((res >> 32) & 1) == 1;
-}
-bool MathOp::additionOverflow(uint64_t op1, uint64_t op2, uint64_t carry){
-	return cpsr.overflow = ((op1 & op2 & ~carry) | (~op1 & ~op2 & carry)) >> 31 & 1;
-}
-bool MathOp::substractionBorrow(uint64_t op1, uint64_t op2, uint64_t carry){
-	return ((op1 & ~op2) | (op1 & ~carry) | (~op2 & ~carry)) >> 31 & 1;
-}
-bool MathOp::substractionUnderflow(uint64_t op1, uint64_t op2, uint64_t carry){
-	return ((~op1 & op2 & carry) | (op1 & ~op2 & ~carry)) >> 31 & 1;
-}
 
 void MathOp::execute(uint32_t& destinationRegister, uint32_t operand1, RotatorUnits& rotation, bool setConditions){
 	uint32_t operand2 = rotation.calculate(false);
@@ -27,7 +11,7 @@ void MathOp::execute(uint32_t& destinationRegister, uint32_t operand1, RotatorUn
 		calcConditions(destinationRegister, operand1, operand2);
 }
 
-MathOp::MathOp(union CPSR& programStatus) : m_cpsr(programStatus) {}
+MathOp::MathOp(union CPSR& programStatus) : Operation(programStatus) {}
 
 //-------
 void Addition::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
@@ -94,7 +78,7 @@ void BorrowSubstraction::calcConditions(uint32_t result, uint32_t operand1, uint
 }
 
 void BorrowSubstraction::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = operand1 - operand2 - !m_cpsr.carry;
+	destinationRegister = operand1 - operand2 - ~m_cpsr.carry;
 }
 
 BorrowSubstraction::BorrowSubstraction(union CPSR& programStatus) : MathOp(programStatus){}

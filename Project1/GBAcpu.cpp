@@ -180,7 +180,7 @@ int main(int argc, char *args[]){
 	cycles = 0;
 	debug = false;
 
-	//unitTestForTeppo();
+	unitTestForTeppo();
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 100000)){

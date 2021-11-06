@@ -2,35 +2,29 @@
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/Shifts.h"
+#include "cplusplusRewrite/operation.h"
 #include "cplusplusRewrite/MathOps.h"
-#include "CommonOperations/arithmeticOps.h"
-#include "CommonOperations/logicalOps.h"
+#include "cplusplusRewrite/LogicOps.h"
 #include <GBAcpu.h>
 #include <iostream>
 
-void(*dataOperationsC[0x10])(int&, int, int) = { And, Eor, Sub, Rsb,
-Add, Adc, Sbc, Rsc, Tst, Teq, Cmp, Cmn, Orr, Mov, Bic, Mvn };
-
-void(*dataOperationsCCond[0x10])(int&, int, int) = { Ands, Eors, Subs, Rsbs,
-Adds, Adcs, Sbcs, Rscs, Tst, Teq, Cmp, Cmn, Orrs, Movs, Bics, Mvns };
-
 void DataProcessingOpcode::initialize(){
-	tst[0] = new Addition(cpsr);
-	tst[1] = new Addition(cpsr);
+	tst[0] = new And(cpsr);
+	tst[1] = new Or(cpsr);
 	tst[2] = new Substraction(cpsr);
 	tst[3] = new ReverseSubstraction(cpsr);
 	tst[4] = new Addition(cpsr);
 	tst[5] = new AddWithCarry(cpsr);
 	tst[6] = new BorrowSubstraction(cpsr);
 	tst[7] = new ReverseBorrowSubstraction(cpsr);
-	tst[8] = new Addition(cpsr);
-	tst[9] = new Addition(cpsr);
-	tst[10] = new Addition(cpsr);
-	tst[11] = new Addition(cpsr);
-	tst[12] = new Addition(cpsr);
-	tst[13] = new Addition(cpsr);
-	tst[14] = new Addition(cpsr);
-	tst[15] = new Addition(cpsr);
+	tst[8] = new Tst(cpsr);
+	tst[9] = new Teq(cpsr);
+	tst[10] = new Cmp(cpsr);
+	tst[11] = new Cmn(cpsr);
+	tst[12] = new Xor(cpsr);
+	tst[13] = new Mov(cpsr);
+	tst[14] = new Bic(cpsr);
+	tst[15] = new Mvn(cpsr);
 }
 
 DataProcessingOpcode::DataProcessingOpcode(uint32_t opCode) {
@@ -63,6 +57,7 @@ DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataPro
 	m_opCode.setStatusCodes = setStatus;
 	m_opCode.firstOperandRegister = firstOpReg;
 	m_opCode.destinationRegister = destReg;
+	m_opCode.unused = 0;
 	m_opCode.immediate = imm;
 
 	initialize();
@@ -70,6 +65,7 @@ DataProcessingOpcode::DataProcessingOpcode(DataProcessingOpCodes opCode, DataPro
 
 void assert(uint32_t regVal, uint32_t regExpected, uint32_t cpsrVal, uint32_t cpsrExpected, uint32_t line){
 	if (regVal != regExpected || cpsrVal != cpsrExpected){
+		std::cout << std::endl;
 		std::cout << "Line: " << line << std::endl;
 		std::cout << std::hex;
 		std::cout << "register got " << regVal << " expected " << regExpected << std::endl;
@@ -77,7 +73,7 @@ void assert(uint32_t regVal, uint32_t regExpected, uint32_t cpsrVal, uint32_t cp
 		std::cout << std::dec;
 	}
 }
-
+/*
 void unitTestForTeppo(){
 	//mov tests
 	cpsr.val = 0x1F;
@@ -229,4 +225,76 @@ void unitTestForTeppo(){
 	DataProcessingOpcode(MOV, SET, 0, 1, false, RegisterWithRegisterShifter(1, ASR, 2).m_val).execute();
 	assert(*r[0], 0xFFFFFFFF, cpsr.val, 0xA000001F, __LINE__);
 	cpsr.val = 0x1F;
+}
+*/
+
+uint32_t regs[] = {0,1,5,6,13,14,15};
+uint32_t randomVals[] = {0, 0xFFFFFFFF, 2, 0xC0000000, 0x34894dd, 0x382, 0x20, 0x19};
+
+#include "Arm/armopcodes.h"
+/*
+void unitTestForTeppo() {
+	debug = true;
+	for (uint8_t op = AND; op != LAST; op++)
+	for (auto reg1 : regs)
+	for (auto reg2 : regs)
+	for (auto rand1 : randomVals)
+	for (auto rand2 : randomVals)
+	{
+		*r[reg1] = rand1;
+		*r[reg2] = rand2;
+		cpsr.val = 0x1f;
+		auto c = DataProcessingOpcode(static_cast<DataProcessingOpCodes>(op), SET, reg1, reg2, true, ImmediateRotater(rand1, rand2).m_val);
+		ARMExecute(c.m_opCode.val);
+		std::cout << std::endl;
+		uint32_t expectedReg = *r[reg1];
+		uint32_t expectedCpsr = cpsr.val;
+
+		*r[reg1] = rand1;
+		*r[reg2] = rand2;
+		cpsr.val = 0x1f;
+		c.execute();
+		assert(*r[reg1], expectedReg, cpsr.val, expectedCpsr, 0);
+
+		*r[reg1] = rand1;
+		*r[reg2] = rand2;
+		cpsr.val = 0x1f;
+		cpsr.carry = 1;
+		ARMExecute(c.m_opCode.val);
+		std::cout << std::endl;
+		expectedReg = *r[reg1];
+		expectedCpsr = cpsr.val;
+
+		*r[reg1] = rand1;
+		*r[reg2] = rand2;
+		cpsr.val = 0x1f;
+		cpsr.carry = 1;
+		c.execute();
+		assert(*r[reg1], expectedReg, cpsr.val, expectedCpsr, 1);
+
+		auto c2 = DataProcessingOpcode(static_cast<DataProcessingOpCodes>(op), NO_SET, reg1, reg2, true, ImmediateRotater(rand1, rand2).m_val);
+		*r[reg1] = rand1;
+		*r[reg2] = rand2;
+		cpsr.val = 0x1f;
+		cpsr.carry = 1;
+		ARMExecute(c2.m_opCode.val);
+		std::cout << std::endl;
+		expectedReg = *r[reg1];
+		expectedCpsr = cpsr.val;
+
+		*r[reg1] = rand1;
+		*r[reg2] = rand2;
+		cpsr.val = 0x1f;
+		cpsr.carry = 1;
+		c2.execute();
+		assert(*r[reg1], expectedReg, cpsr.val, expectedCpsr, 2);
+
+	}
+}
+*/
+
+void unitTestForTeppo() {
+	auto c2 = DataProcessingOpcode(CMP, NO_SET, 0, 15, false, 0);
+	c2.execute();
+	ARMExecute(c2.m_opCode.val);
 }
