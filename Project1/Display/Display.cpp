@@ -232,7 +232,6 @@ void Display::fillBG(uint32_t regOffset){
 	}
 
 	else if (displayCtrl->bgMode == 3){
-		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 		for (int k = 0; k < 160; k++)
 			for (int i = 0; i < 240; i++){
 				ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
@@ -251,7 +250,6 @@ void Display::fillBG(uint32_t regOffset){
 		
 	}
 	else if (displayCtrl->bgMode == 4){
-		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 		sf::Image tile;
 		for (int k = 0; k < 160; k++)
 			for (int i = 0; i < 240; i++){

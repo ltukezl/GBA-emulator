@@ -193,7 +193,7 @@ int main(int argc, char *args[]){
 		step = false;
 
 		if (*r[PC] == 0x80019c4){ //0x8006668, 0x801d6a2
-			debug = true;
+			//debug = true;
 		}
 		//updateInstructionCycleTimings(*r[PC]);
 		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
