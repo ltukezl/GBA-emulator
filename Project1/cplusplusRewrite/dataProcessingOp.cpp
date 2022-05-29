@@ -235,6 +235,7 @@ uint32_t randomVals[] = {0, 0xFFFFFFFF, 2, 0xC0000000, 0x34894dd, 0x382, 0x20, 0
 /*
 void unitTestForTeppo() {
 	debug = true;
+	*r[16] = 0x11111111;
 	for (uint8_t op = AND; op != LAST; op++)
 	for (auto reg1 : regs)
 	for (auto reg2 : regs)
@@ -294,7 +295,22 @@ void unitTestForTeppo() {
 */
 
 void unitTestForTeppo() {
-	auto c2 = DataProcessingOpcode(CMP, NO_SET, 0, 15, false, 0);
-	c2.execute();
+	*r[16] = 0x11111111;
+	*r[7] = 0xB000001f;
+	auto c2 = DataProcessingOpcode(TEQ, NO_SET, 7, 8, false, 7);
+
+	*r[0] = 0;
+	*r[15] = 0;
+	cpsr.val = 0x1f;
 	ARMExecute(c2.m_opCode.val);
+
+	uint32_t expectedReg = *r[0];
+	uint32_t expectedCpsr = cpsr.val;
+
+	*r[0] = 0;
+	*r[15] = 0;
+	cpsr.val = 0x1f;
+	c2.execute();
+
+	assert(*r[0], expectedReg, cpsr.val, expectedCpsr, 2);
 }

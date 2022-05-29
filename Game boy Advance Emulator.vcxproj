@@ -138,6 +138,7 @@
     <ClCompile Include="project1\cplusplusrewrite\MathOps.cpp" />
     <ClCompile Include="Project1\cplusplusRewrite\Operation.cpp" />
     <ClCompile Include="project1\cplusplusrewrite\Shifts.cpp" />
+    <ClCompile Include="Project1\cplusplusRewrite\SingleDataTransfer.cpp" />
     <ClCompile Include="project1\display\Display.cpp" />
     <ClCompile Include="project1\dma\DMA.cpp" />
     <ClCompile Include="project1\GBAcpu.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="project1\cplusplusrewrite\MathOps.h" />
     <ClInclude Include="Project1\cplusplusRewrite\operation.h" />
     <ClInclude Include="project1\cplusplusrewrite\Shifts.h" />
+    <ClInclude Include="Project1\cplusplusRewrite\SingleDataTransfer.h" />
     <ClInclude Include="project1\display\Display.h" />
     <ClInclude Include="project1\dma\DMA.h" />
     <ClInclude Include="project1\GBAcpu.h" />

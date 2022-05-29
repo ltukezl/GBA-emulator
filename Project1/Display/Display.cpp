@@ -111,8 +111,8 @@ void Display::scanPalettes() {
 			int greenScaled = colorPaletteRam->green * scalar;
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
-			if (k == 0)
-				color.a = 0;
+			//if (k == 0)
+				//color.a = 0;
 			PaletteColors[16 * i + k] = color;
 			colors[colorPtr + 0] = color.r;
 			colors[colorPtr + 1] = color.g;
@@ -375,7 +375,6 @@ void Display::appendBGs(){
 	gameTXT.display();
 
 	sf::Sprite img = sf::Sprite(gameTXT.getTexture(), sf::IntRect(0, 0, 240, 160));
-	//sf::Sprite img = sf::Sprite(gameTXT.getTexture());
 	img.setPosition(0, 512);
 	img.scale(2, 2);
 	display->draw(img);

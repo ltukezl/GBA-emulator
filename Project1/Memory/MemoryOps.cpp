@@ -34,6 +34,10 @@ unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, Inter
 
 uint32_t previousAddress = 0;
 
+bool isInterrupt() {
+	return cpsr.mode == SUPER || cpsr.mode == IRQ;
+}
+
 void calculateCycles(uint32_t address, bool isSequental){
 	if (isSequental){
 		if (address >= 0xC000000){
@@ -117,13 +121,24 @@ bool specialReads(uint32_t addr, res& result, T func){
 }
 
 uint32_t clampAddress(uint32_t mask, uint32_t address){
-	if (mask == 5 && address == 2)
-		debug = false;
 	address %= memsizes[mask];
 	if (mask == 6 && address >= 0x18000)
 		address -= 0x8000;
 
 	return address;
+}
+
+void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
+	destination &= ~3;
+	source &= ~3;
+
+	uint32_t mask1 = (destination >> 24) & 15;
+	uint32_t mask2 = (source >> 24) & 15;
+
+	destination = clampAddress(mask1, destination);
+	source = clampAddress(mask2, source);
+
+	memcpy(&memoryLayout[mask1][destination], &memoryLayout[mask2][source], size * 4);
 }
 
 void writeToAddress(uint32_t address, uint8_t value){
@@ -220,16 +235,20 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	if (!free)
 		calculateCycles(address, (previousAddress + 2) == address);
 
-	bool misalignment = address & 1;
+	uint32_t misalignment = address & 1;
+
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	address = clampAddress(mask, address);
+	
 
-	return RORnoCond(rawLoad16(memoryLayout[mask],(address - misalignment)), 8 * misalignment);
+	address = clampAddress(mask, address);
+	uint32_t result = RORnoCond(rawLoad16(memoryLayout[mask], (address - misalignment)), 8 * misalignment);
+
+	return result;
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
@@ -240,6 +259,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	}
 
 	uint32_t misalignment = address & 3;
+
     uint32_t mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
 

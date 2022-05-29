@@ -5,7 +5,7 @@
 class LogicOp: public Operation {
 protected:
 	virtual void calcConditions(uint32_t op1, uint32_t op2) = 0;
-	virtual void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) = 0;
+	virtual void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) = 0;
 
 	bool isZero(uint32_t result);
 	bool isNegative(int32_t result);
@@ -18,7 +18,7 @@ public:
 class And : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	And(union CPSR& programStatus);
 };
@@ -28,7 +28,7 @@ public:
 class Or : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Or(union CPSR& programStatus);
 };
@@ -38,7 +38,7 @@ public:
 class Xor : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Xor(union CPSR& programStatus);
 };
@@ -48,7 +48,7 @@ public:
 class Tst : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Tst(union CPSR& programStatus);
 };
@@ -58,7 +58,7 @@ public:
 class Cmp : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Cmp(union CPSR& programStatus);
 };
@@ -68,7 +68,7 @@ public:
 class Cmn : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Cmn(union CPSR& programStatus);
 };
@@ -78,7 +78,7 @@ public:
 class Teq : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Teq(union CPSR& programStatus);
 };
@@ -88,7 +88,7 @@ public:
 class Mov : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Mov(union CPSR& programStatus);
 };
@@ -98,7 +98,7 @@ public:
 class Bic : public LogicOp {
 protected:
 	void calcConditions(uint32_t op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Bic(union CPSR& programStatus);
 };
@@ -108,7 +108,7 @@ public:
 class Mvn : public LogicOp {
 protected:
 	void calcConditions(uint32_t Op1, uint32_t op2) override;
-	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
+	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions) override;
 public:
 	Mvn(union CPSR& programStatus);
 };

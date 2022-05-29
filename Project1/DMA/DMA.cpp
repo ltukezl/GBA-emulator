@@ -5,23 +5,30 @@
 
 
 void doDMA(DMAcontrol* DMAControl, uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint32_t wordCount){
-	for (uint32_t k = 0; k < wordCount; k++){
-		if (DMAControl->transferType == 0){
-			writeToAddress16(destinationAddress & ~0x1, loadFromAddress16(sourceAddress & ~0x1));
-		}
-		else{
-			writeToAddress32(destinationAddress & ~0x3, loadFromAddress32(sourceAddress & ~0x3));
-		}
+	if ((DMAControl->transferType == 1) &&
+		(DMAControl->destCtrl == 0 || DMAControl->destCtrl == 3) &&
+		(DMAControl->sourceCtrl == 0) &&
+		(DMAControl->transferType == 1))
+		DmaIncreasing(destinationAddress, sourceAddress, wordCount);
+	else {
+		for (uint32_t k = 0; k < wordCount; k++) {
+			if (DMAControl->transferType == 0) {
+				writeToAddress16(destinationAddress & ~0x1, loadFromAddress16(sourceAddress & ~0x1));
+			}
+			else {
+				writeToAddress32(destinationAddress & ~0x3, loadFromAddress32(sourceAddress & ~0x3));
+			}
 
-		if (DMAControl->destCtrl == 0 || DMAControl->destCtrl == 3)
-			destinationAddress += DMAControl->transferType ? 4 : 2;
-		else if (DMAControl->destCtrl == 1)
-			destinationAddress -= DMAControl->transferType ? 4 : 2;
+			if (DMAControl->destCtrl == 0 || DMAControl->destCtrl == 3)
+				destinationAddress += DMAControl->transferType ? 4 : 2;
+			else if (DMAControl->destCtrl == 1)
+				destinationAddress -= DMAControl->transferType ? 4 : 2;
 
-		if (DMAControl->sourceCtrl == 0)
-			sourceAddress += DMAControl->transferType ? 4 : 2;
-		else if (DMAControl->sourceCtrl == 1)
-			sourceAddress -= DMAControl->transferType ? 4 : 2;
+			if (DMAControl->sourceCtrl == 0)
+				sourceAddress += DMAControl->transferType ? 4 : 2;
+			else if (DMAControl->sourceCtrl == 1)
+				sourceAddress -= DMAControl->transferType ? 4 : 2;
+		}
 	}
 	if (DMAControl->irq){
 		if (InterruptEnableRegister->DMA0 && i == 0)

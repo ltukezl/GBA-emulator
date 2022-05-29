@@ -16,6 +16,8 @@ extern uint8_t GamePak[0x2000000];
 extern uint8_t GamePakSRAM[0x10000];
 extern unsigned char* memoryLayout[16];
 
+void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size);
+
 void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val);
 void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val);
 void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val);

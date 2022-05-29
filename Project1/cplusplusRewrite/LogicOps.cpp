@@ -10,7 +10,7 @@ bool LogicOp::isNegative(int32_t result) { return result < 0; }
 
 void LogicOp::execute(uint32_t& destinationRegister, uint32_t operand1, RotatorUnits& rotation, bool setConditions) {
 	uint32_t operand2 = rotation.calculate(setConditions);
-	calculate(destinationRegister, operand1, operand2);
+	calculate(destinationRegister, operand1, operand2, setConditions);
 	if (setConditions)
 		calcConditions(operand1, operand2);
 }
@@ -23,7 +23,7 @@ void And::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(op1 & op2);
 }
 
-void And::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void And::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 	destinationRegister = operand1 & operand2;
 }
@@ -38,7 +38,7 @@ void Or::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(op1 | op2);
 }
 
-void Or::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Or::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 	destinationRegister = operand1 | operand2;
 }
@@ -53,7 +53,7 @@ void Xor::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(op1 ^ op2);
 }
 
-void Xor::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Xor::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 	destinationRegister = operand1 ^ operand2;
 }
@@ -68,8 +68,10 @@ void Tst::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(op1 & op2);
 }
 
-void Tst::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Tst::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
+	if (!setConditions)
+		destinationRegister = m_cpsr.val;
 }
 
 Tst::Tst(CPSR& programStatus) : LogicOp(programStatus) {}
@@ -84,8 +86,10 @@ void Cmp::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.overflow = substractionUnderflow(op1, op2, 0);
 }
 
-void Cmp::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Cmp::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
+	if(!setConditions)
+		destinationRegister = *r[16];
 }
 
 Cmp::Cmp(CPSR& programStatus) : LogicOp(programStatus) {}
@@ -100,7 +104,7 @@ void Cmn::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.overflow = additionOverflow(op1, op2, 0);
 }
 
-void Cmn::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Cmn::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 }
 
@@ -114,8 +118,12 @@ void Teq::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(op1 ^ op2);
 }
 
-void Teq::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Teq::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
+	if (!setConditions) {
+		m_cpsr.val = operand2;
+		//updateMode();
+	}
 }
 
 Teq::Teq(CPSR& programStatus) : LogicOp(programStatus) {}
@@ -128,7 +136,7 @@ void Mov::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(op2);
 }
 
-void Mov::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Mov::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 	destinationRegister = operand2;
 }
@@ -143,7 +151,7 @@ void Bic::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(op1 & ~op2);
 }
 
-void Bic::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Bic::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 	destinationRegister = operand1 & ~operand2;
 }
@@ -158,7 +166,7 @@ void Mvn::calcConditions(uint32_t op1, uint32_t op2)
 	m_cpsr.negative = isNegative(~op2);
 }
 
-void Mvn::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2)
+void Mvn::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 	destinationRegister = ~operand2;
 }
