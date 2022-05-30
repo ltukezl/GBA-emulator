@@ -167,7 +167,7 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE* bios;
-	fopen_s(&file, "Project1/TestBinaries/program4.bin", "rb");
+	fopen_s(&file, "Project1/TestBinaries/thumb.gba", "rb");
 	fopen_s(&bios, "Project1/GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -192,7 +192,7 @@ int main(int argc, char *args[]){
 		}
 		step = false;
 
-		if (*r[PC] == 0x80019c4){ //0x8006668, 0x801d6a2
+		if (*r[PC] == 0x8000954){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
 		//updateInstructionCycleTimings(*r[PC]);

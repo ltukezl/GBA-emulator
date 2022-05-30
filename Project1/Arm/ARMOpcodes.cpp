@@ -17,7 +17,7 @@ void ARMBranch(int opCode){
 	uint32_t tmp = signExtend<26>(location);
 	*r[PC] += tmp;
 	if (debug)
-		std::cout << conditions_s[opCode >> 28 & 0xF] << " " << r[PC] << " " << conditions[opCode >> 28 & 0xF]() << " ";
+		std::cout << conditions_s[opCode >> 28 & 0xF] << " " << *r[PC] << " " << conditions[opCode >> 28 & 0xF]() << " ";
 }
 
 void incrementBase(int& baseRegister, bool nullParameter = false){

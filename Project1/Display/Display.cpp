@@ -167,7 +167,7 @@ void Display::fillBG(uint32_t regOffset){
 	/*fills BG map*/
 	uint16_t size_x = bgCnt->hWide ? 512 : 256;
 	uint16_t size_y = bgCnt->vWide ? 512 : 256;
-
+	//std::cout << std::hex << displayCtrl->addr << " " << bgCnt->addr << " " << startAddr << " " << scalar << " " << size_x << " " << size_y << std::endl;
 	if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2){
 		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x4000;
@@ -250,7 +250,6 @@ void Display::fillBG(uint32_t regOffset){
 		
 	}
 	else if (displayCtrl->bgMode == 4){
-		sf::Image tile;
 		for (int k = 0; k < 160; k++)
 			for (int i = 0; i < 240; i++){
 				uint8_t colorIdx = loadFromAddress(0x6000000 + startAddr++);
@@ -258,14 +257,15 @@ void Display::fillBG(uint32_t regOffset){
 				localColors3[k][i][1] = PaletteColors[colorIdx].g;
 				localColors3[k][i][2] = PaletteColors[colorIdx].b;
 				if(colorIdx != 0)
-					localColors3[k][i][3] = 255;
-				else
 					localColors3[k][i][3] = 0;
+				else
+					localColors3[k][i][3] = 255;
 			}
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
 	}
 
 	bgText[(regOffset / 2)].update((uint8_t*)localColors3);
+
 	bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
 	display->draw(bgSprite[(regOffset / 2)]);
 	VRAMupdated = false;
@@ -386,18 +386,18 @@ void Display::updatePalettes(){
 	fillTiles();
 
 	if (displayCtrl->bg0Display) {
-		fillBG(0);
+		//fillBG(0);
 	}
 	if (displayCtrl->bg1Display) {
-		fillBG(2);
+		//fillBG(2);
 	}
 	if (displayCtrl->bg2Display) {
 		fillBG(4);
 	}
 	if (displayCtrl->bg3Display) {
-		fillBG(6);
+		//fillBG(6);
 	}
-
+	
 	appendBGs();
 
 	sf::Font font;
@@ -432,7 +432,7 @@ void Display::updatePalettes(){
 		text.setPosition(sf::Vector2f(850 + 256, 130 + 12 * i));
 		display->draw(text);
 	}
-
+	
 	display->display();
 }
 
@@ -497,7 +497,7 @@ void Display::handleEvents(){
 				if (debug)
 					step = true;
 			}
-
+			/*
 			if (keypadInterruptCtrl->IRQ_EN && InterruptEnableRegister->keyPad){
 				uint16_t tmp = ~((keyInput->addr) & 0x3FFF);
 				if (keypadInterruptCtrl->IRQ_cond){
@@ -511,6 +511,7 @@ void Display::handleEvents(){
 					}
 				}
 			}
+			*/
 		}
 
 		else if (event.type == sf::Event::KeyReleased)

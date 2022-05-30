@@ -20,10 +20,10 @@ class Display{
 	sf::Color PaletteColors[256 * 2];
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
-	uint8_t colors[2 * 16 * 16 * 4];
-	uint8_t localColors[8 * 8 * 4];
-	uint8_t localColors2[512][256][4];
-	uint8_t localColors3[512][512][4];
+	uint8_t colors[2 * 16 * 16 * 4] = { 0 };
+	uint8_t localColors[8 * 8 * 4] = { 0 };
+	uint8_t localColors2[512][256][4] = { 0 };
+	uint8_t localColors3[512][512][4] = { 0 };
 
 	sf::Texture paletteTexture;
 	sf::Image paletteTile;
