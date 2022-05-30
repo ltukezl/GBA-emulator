@@ -386,16 +386,16 @@ void Display::updatePalettes(){
 	fillTiles();
 
 	if (displayCtrl->bg0Display) {
-		//fillBG(0);
+		fillBG(0);
 	}
 	if (displayCtrl->bg1Display) {
-		//fillBG(2);
+		fillBG(2);
 	}
 	if (displayCtrl->bg2Display) {
 		fillBG(4);
 	}
 	if (displayCtrl->bg3Display) {
-		//fillBG(6);
+		fillBG(6);
 	}
 	
 	appendBGs();
