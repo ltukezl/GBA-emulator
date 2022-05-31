@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "Display/RgbaPalette.h"
 //----------------
 //Interrupts
 //----------------
@@ -275,3 +276,5 @@ extern union InterruptFlagRegister_t* InterruptFlagRegister;
 extern union InterruptMaster_t* InterruptMaster;
 
 extern union WAITCNT* waitStateControl;
+
+

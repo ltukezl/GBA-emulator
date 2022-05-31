@@ -7,6 +7,9 @@
 #include "Constants.h"
 #include "Memory/memoryMappedIO.h"
 
+extern RgbaPalette BGPalette;
+extern RgbaPalette FGPalette;
+
 struct Display::OamSize shapes[3][4] = { { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
 										{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
 										{ { 8, 16 }, { 8, 32 }, { 16, 32 }, { 32, 64 } } };
@@ -66,6 +69,12 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 
 	gameTXT.create(512, 512);
 	gameTXT.setRepeated(true);
+
+	font.loadFromFile("Project1/arial.ttf");
+
+	text.setFont(font);
+	text.setCharacterSize(15);
+	text.setStyle(sf::Text::Bold);
 }
 
 void Display::calculate4BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile){
@@ -100,7 +109,6 @@ void Display::calculate8BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* t
 
 void Display::scanPalettes() {
 	int startAddr = 0;
-	int colorPtr = 0;
 	const int scalar = 255 / 31;
 
 	//for bg palettes
@@ -111,18 +119,17 @@ void Display::scanPalettes() {
 			int greenScaled = colorPaletteRam->green * scalar;
 			int blueScaled = colorPaletteRam->blue * scalar;
 			sf::Color color(redScaled, greenScaled, blueScaled);
-			//if (k == 0)
-				//color.a = 0;
+			if (k == 0)
+				color.a = 0;
 			PaletteColors[16 * i + k] = color;
-			colors[colorPtr + 0] = color.r;
-			colors[colorPtr + 1] = color.g;
-			colors[colorPtr + 2] = color.b;
-			colors[colorPtr + 3] = color.a;
+			uint32_t tst = color.toInteger();
 			startAddr += 2;
-			colorPtr += 4;
 		}
+	BGPalette.updatePalette();
+	FGPalette.updatePalette();
+	paletteTexture.update(BGPalette.getPalette());
+	paletteTexture.update(FGPalette.getPalette(), 16, 16, 0, 16);
 
-	paletteTexture.update(colors);
 	display->draw(paletteSprite);
 }
 
@@ -364,7 +371,13 @@ void Display::appendBGs(){
 			}
 		}
 	}
-	
+
+	std::vector<sf::Sprite> linear;
+	for (int vec = 3; vec >= 0; vec--) {
+		for (auto& s : renderOrder[vec])
+			linear.push_back(s);
+	}
+
 	for (int vec = 3; vec >= 0; vec--){
 		for(auto& s: renderOrder[vec])
 			gameTXT.draw(s);
@@ -399,14 +412,6 @@ void Display::updatePalettes(){
 	}
 	
 	appendBGs();
-
-	sf::Font font;
-	font.loadFromFile("Project1/arial.ttf");
-
-	sf::Text text;
-	text.setFont(font);
-	text.setCharacterSize(15);
-	text.setStyle(sf::Text::Bold);
 
 	for (int i = 0; i < 10; i++){
 		char txt[16];

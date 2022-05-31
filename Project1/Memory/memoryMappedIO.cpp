@@ -1,5 +1,6 @@
 #include "memoryMappedIO.h"
 #include "MemoryOps.h"
+#include "Display/RgbaPalette.h"
 
 union DISPCNT* displayCtrl = (DISPCNT*)&IoRAM[0x0];
 union LCDstatus* LCDStatus = (LCDstatus*)&IoRAM[0x4];
@@ -23,4 +24,7 @@ union InterruptMaster_t* InterruptMaster = (InterruptMaster_t*)&IoRAM[0x208];
 union TIMERCNT* TIMERCNT;
 
 union DMAcontrol* DMAcontrol;
+
+RgbaPalette BGPalette((ColorPaletteRam*)&PaletteRAM[0]);
+RgbaPalette FGPalette((ColorPaletteRam*)&PaletteRAM[512]);
 

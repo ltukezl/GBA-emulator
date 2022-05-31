@@ -45,6 +45,9 @@ class Display{
 
 	sf::Texture tmp3;
 
+	sf::Font font;
+	sf::Text text;
+
 public:
 
 	struct OamSize{ uint8_t x; uint8_t y; };
