@@ -17,7 +17,6 @@ class Display{
 	std::string name;
 
 	sf::Sprite paletteSprite;
-	sf::Color PaletteColors[256 * 2];
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
 	uint8_t colors[2 * 16 * 16 * 4] = { 0 };

@@ -140,6 +140,7 @@
     <ClCompile Include="project1\cplusplusrewrite\Shifts.cpp" />
     <ClCompile Include="Project1\cplusplusRewrite\SingleDataTransfer.cpp" />
     <ClCompile Include="project1\display\Display.cpp" />
+    <ClCompile Include="Project1\Display\RgbaPalette.cpp" />
     <ClCompile Include="project1\dma\DMA.cpp" />
     <ClCompile Include="project1\GBAcpu.cpp" />
     <ClCompile Include="project1\interrupt\Interrupt.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="project1\cplusplusrewrite\Shifts.h" />
     <ClInclude Include="Project1\cplusplusRewrite\SingleDataTransfer.h" />
     <ClInclude Include="project1\display\Display.h" />
+    <ClInclude Include="Project1\Display\RgbaPalette.h" />
     <ClInclude Include="project1\dma\DMA.h" />
     <ClInclude Include="project1\GBAcpu.h" />
     <ClInclude Include="project1\interrupt\interrupt.h" />

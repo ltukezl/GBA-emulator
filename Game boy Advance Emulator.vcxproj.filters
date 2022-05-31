@@ -78,6 +78,9 @@
     <ClCompile Include="Project1\cplusplusRewrite\SingleDataTransfer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Project1\Display\RgbaPalette.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project1\Constants.h">
@@ -144,6 +147,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Project1\cplusplusRewrite\SingleDataTransfer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\Display\RgbaPalette.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

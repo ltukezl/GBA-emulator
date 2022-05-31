@@ -7,8 +7,7 @@
 #include "Constants.h"
 #include "Memory/memoryMappedIO.h"
 
-extern RgbaPalette BGPalette;
-extern RgbaPalette FGPalette;
+extern RgbaPalette PaletteColours;
 
 struct Display::OamSize shapes[3][4] = { { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
 										{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
@@ -83,10 +82,11 @@ void Display::calculate4BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* t
 		int row = loadFromAddress32(0x6000000 + base + tile->tileNumber * 0x20 + pixeloffset, true);
 		for (int pixelX = 0; pixelX < 8; pixelX++) {
 			int color = (row & 0xf);
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][0] = PaletteColors[16 * tile->paletteNum + color].r;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][1] = PaletteColors[16 * tile->paletteNum + color].g;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][2] = PaletteColors[16 * tile->paletteNum + color].b;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][3] = PaletteColors[16 * tile->paletteNum + color].a;
+			auto paletteColor = PaletteColours.colorFromIndex(16 * tile->paletteNum + color);
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][0] = paletteColor.r;
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][1] = paletteColor.g;
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][2] = paletteColor.b;
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][3] = paletteColor.a;
 			row >>= 4;
 		}
 		pixeloffset += 4;
@@ -98,37 +98,20 @@ void Display::calculate8BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* t
 	for (int pixelY = 0; pixelY < 8; pixelY++) {
 		for (int pixelX = 0; pixelX < 8; pixelX++) {
 			int color = loadFromAddress(offset, true);
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][0] = PaletteColors[color].r;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][1] = PaletteColors[color].g;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][2] = PaletteColors[color].b;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][3] = PaletteColors[color].a;
+			auto paletteColor = PaletteColours.colorFromIndex(color);
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][0] = paletteColor.r;
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][1] = paletteColor.g;
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][2] = paletteColor.b;
+			localColors3[y * 8 + pixelY][x * 8 + pixelX][3] = paletteColor.a;
 			offset++;
 		}
 	}
 }
 
 void Display::scanPalettes() {
-	int startAddr = 0;
-	const int scalar = 255 / 31;
 
-	//for bg palettes
-	for (int i = 0; i < 32; i++)
-		for (int k = 0; k < 16; k++) {
-			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&PaletteRAM[startAddr];
-			int redScaled = colorPaletteRam->red * scalar;
-			int greenScaled = colorPaletteRam->green * scalar;
-			int blueScaled = colorPaletteRam->blue * scalar;
-			sf::Color color(redScaled, greenScaled, blueScaled);
-			if (k == 0)
-				color.a = 0;
-			PaletteColors[16 * i + k] = color;
-			uint32_t tst = color.toInteger();
-			startAddr += 2;
-		}
-	BGPalette.updatePalette();
-	FGPalette.updatePalette();
-	paletteTexture.update(BGPalette.getPalette());
-	paletteTexture.update(FGPalette.getPalette(), 16, 16, 0, 16);
+	PaletteColours.updatePalette();
+	paletteTexture.update(PaletteColours.getPalette());
 
 	display->draw(paletteSprite);
 }
@@ -146,11 +129,11 @@ void Display::fillTiles(){
 				int row = rawLoad32(VRAM, startAddr);
 				for (int pixel = 0; pixel < 8; pixel++) {
 					int color = (row & 0xf);
-					auto clr = PaletteColors[color];
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][0] = clr.r;
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][1] = clr.g;
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][2] = clr.b;
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][3] = clr.a;
+					auto paletteColor = PaletteColours.colorFromIndex(color);
+					localColors2[tileY * 8 + y][tileX * 8 + pixel][0] = paletteColor.r;
+					localColors2[tileY * 8 + y][tileX * 8 + pixel][1] = paletteColor.g;
+					localColors2[tileY * 8 + y][tileX * 8 + pixel][2] = paletteColor.b;
+					localColors2[tileY * 8 + y][tileX * 8 + pixel][3] = paletteColor.a;
 					row >>= 4;
 				}
 				startAddr += 4;
@@ -260,9 +243,10 @@ void Display::fillBG(uint32_t regOffset){
 		for (int k = 0; k < 160; k++)
 			for (int i = 0; i < 240; i++){
 				uint8_t colorIdx = loadFromAddress(0x6000000 + startAddr++);
-				localColors3[k][i][0] = PaletteColors[colorIdx].r;
-				localColors3[k][i][1] = PaletteColors[colorIdx].g;
-				localColors3[k][i][2] = PaletteColors[colorIdx].b;
+				auto paletteColor = PaletteColours.colorFromIndex(colorIdx);
+				localColors3[k][i][0] = paletteColor.r;
+				localColors3[k][i][1] = paletteColor.g;
+				localColors3[k][i][2] = paletteColor.b;
 				if(colorIdx != 0)
 					localColors3[k][i][3] = 0;
 				else
@@ -293,10 +277,11 @@ void Display::fillObjects(uint32_t regOffset){
 				int row = loadFromAddress32(startAddr, true);
 				for (int pixelX = 0; pixelX < 8; pixelX++) {
 					int color = (row & 0xf);
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][0] = PaletteColors[256 + color].r;
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][1] = PaletteColors[256 + color].g;
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][2] = PaletteColors[256 + color].b;
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][3] = PaletteColors[256 + color].a;
+					auto paletteColor = PaletteColours.colorFromIndex(256 + color);
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][0] = paletteColor.r;
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][1] = paletteColor.g;
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][2] = paletteColor.b;
+					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][3] = paletteColor.a;
 					row >>= 4;
 				}
 				startAddr += 4;

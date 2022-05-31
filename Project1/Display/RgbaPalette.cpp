@@ -23,8 +23,17 @@ void RgbaPalette::updatePalette() {
 			paletteColorArray[i][k].g = greenScaled;
 			paletteColorArray[i][k].b = blueScaled;
 			paletteColorArray[i][k].a = 255;
+			//if(k == 0)
+				//paletteColorArray[i][k].a = 0;
 			colorPtr++;
 		}
+}
+
+RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t index) {
+	return paletteColorArray[index/16][index%16];
+}
+RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t y, uint32_t x) {
+	return paletteColorArray[y][x];
 }
 
 uint8_t* RgbaPalette::getPalette() {
@@ -33,5 +42,5 @@ uint8_t* RgbaPalette::getPalette() {
 
 bool RgbaPalette::isInMemoryRange(uint8_t* testedAddress)
 {
-	return testedAddress >= (uint8_t*)_colorStartAddress && testedAddress < ((uint8_t*)_colorStartAddress + 512);
+	return testedAddress >= (uint8_t*)_colorStartAddress && testedAddress < ((uint8_t*)_colorStartAddress + 1024);
 }

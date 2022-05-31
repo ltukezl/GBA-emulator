@@ -276,5 +276,3 @@ extern union InterruptFlagRegister_t* InterruptFlagRegister;
 extern union InterruptMaster_t* InterruptMaster;
 
 extern union WAITCNT* waitStateControl;
-
-

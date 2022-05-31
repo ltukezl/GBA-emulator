@@ -25,6 +25,4 @@ union TIMERCNT* TIMERCNT;
 
 union DMAcontrol* DMAcontrol;
 
-RgbaPalette BGPalette((ColorPaletteRam*)&PaletteRAM[0]);
-RgbaPalette FGPalette((ColorPaletteRam*)&PaletteRAM[512]);
-
+RgbaPalette PaletteColours((ColorPaletteRam*)&PaletteRAM[0]);
