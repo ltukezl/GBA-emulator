@@ -181,6 +181,11 @@ int main(int argc, char *args[]){
 	debug = false;
 
 	//unitTestForTeppo();
+
+	auto f = freopen("Project1/op_codes.txt", "r", stdin);
+
+	vector<int> nums;
+
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 100000)){
@@ -197,13 +202,15 @@ int main(int argc, char *args[]){
 		}
 		//updateInstructionCycleTimings(*r[PC]);
 		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
+		cin >> opCode;
 
 		if (debug){
 			cout << hex << *r[15] << " opCode: " << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
 			cout << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16]<< " ";
 		}
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
-
+		if (opCode == 0xFF000F0)
+			break;
 		if (debug){
 			cout << endl;
 		}

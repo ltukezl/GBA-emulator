@@ -822,94 +822,122 @@ void ARMExecute(int opCode){
 	int condition = (opCode >> 28) & 0xF;
 	*r[PC] += 4;
 	cycles += 1;
-	if (conditions[condition]()) //condition true
-	{
+	//if (conditions[condition]()) //condition true
+	//{
 		int opCodeType = (opCode >> 24) & 0xF;
 		int subType;
+		std::cout << std::hex << opCode << " ";
 		switch (opCodeType){
 		case 15:
-			interruptController();
+			std::cout << "SWI" << " ";
+			//interruptController();
 			break;
 		case 14: //coProcessor data ops / register transfer, not used in GBA
+			std::cout << "Illegal" << " ";
 			break;
 		case 13: case 12: //co processor data transfer, not used in GBA
+			std::cout << "Illegal" << " ";
 			break;
 		case 11: //branch with link 
 			*r[LR] = *r[PC];
 			*r[LR] &= ~3; //bits 1-0 should always be cleared, but you never know
 		case 10://branch 
-			ARMBranch(opCode);
+			std::cout << "ARMBranch" << " ";
+			//ARMBranch(opCode);
 			break;
 		case 9: //block data transfer pre offset. maybe implement S bits
 			subType = (opCode >> 20) & 0xB;
+			std::cout << "BlockDataTransfer" << " ";
 			switch (subType){
 			case 10: case 8: //writeback / no writeback, pre offset, add offset
-				BlockDataTransferSave(opCode, incrementBase, writeToAddress32);
+				//BlockDataTransferSave(opCode, incrementBase, writeToAddress32);
 				break;
 			case 2: case 0: //writeback / no writeback, pre offset, sub offset
-				BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
+				//BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
 				break;
 			case 11: case 9: //writeback / no writeback, post offset, add offset
-				BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
+				//BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
 				break;
 			case 3: case 1: //writeback / no writeback, post offset, sub offset
-				BlockDataTransferLoadPre(opCode, decrementBase, loadFromAddress32);
+				//BlockDataTransferLoadPre(opCode, decrementBase, loadFromAddress32);
 				break;
 			}
 			break;
 		case 8: //block data transfer post offset
 			subType = (opCode >> 20) & 0xB;
+			std::cout << "BlockDataTransfer" << " ";
 			switch (subType){
 			case 10: case 8: //writeback / no writeback, post offset, add offset
-				BlockDataTransferSave(opCode, writeToAddress32, incrementBase);
+				//BlockDataTransferSave(opCode, writeToAddress32, incrementBase);
 				break;
 			case 2: case 0: //writeback / no writeback, post offset, sub offset
-				BlockDataTransferSave(opCode, writeToAddress32, decrementBase);
+				//BlockDataTransferSave(opCode, writeToAddress32, decrementBase);
 				break;
 			case 11: case 9: //writeback / no writeback, post offset, add offset
-				BlockDataTransferLoadPost(opCode, loadFromAddress32, incrementBase);
+				//BlockDataTransferLoadPost(opCode, loadFromAddress32, incrementBase);
 				break;
 			case 3: case 1: //writeback / no writeback, post offset, sub offset
-				BlockDataTransferLoadPost(opCode, loadFromAddress32, decrementBase);
+				//BlockDataTransferLoadPost(opCode, loadFromAddress32, decrementBase);
 				break;
 			}
 			break;
 		case 7:// single data transfer, register pre offset 
-			singleDataTrasnferRegisterPre(opCode);
+			std::cout << "SingleDataTransfer" << " ";
+			//singleDataTrasnferRegisterPre(opCode);
 			break;
 		case 6:// single data transfer, register, post offset
-			singleDataTrasnferRegisterPost(opCode);
+			std::cout << "SingleDataTransfer" << " ";
+			//singleDataTrasnferRegisterPost(opCode);
 			break;
 		case 5:// single data transfer, immediate pre offset
-			singleDataTrasnferImmediatePre(opCode);
+			std::cout << "SingleDataTransfer" << " ";
+			//singleDataTrasnferImmediatePre(opCode);
 			break;
 		case 4: // single data transfer, immediate post offset
-			singleDataTrasnferImmediatePost(opCode);
+			std::cout << "SingleDataTransfer" << " ";
+			//singleDataTrasnferImmediatePost(opCode);
 			break;
 		case 3: case 2: //data processing, immediate check msr?
-			if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0))
-				MSR(opCode);//<-
-			else
-				dataProcessingImmediate(opCode);
+			std::cout << "dataProcessing" << " ";
+			if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0)) {
+				//MSR(opCode);//<-
+			}
+			else {
+				//dataProcessingImmediate(opCode);
+			}
 			break;
 		case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange
-			if (((opCode >> 4) & 0x12FFF1) == 0x12FFF1)
-				branchAndExhange(opCode);
-			else if (((opCode >> 4) & 1) == 0){ //data processing
-				//DataProcessingOpcode(opCode).execute();
-				immediateRotate(opCode);//<-
+			if (((opCode >> 4) & 0x12FFF1) == 0x12FFF1) {
+				std::cout << "dataProcessing" << " ";
+				//branchAndExhange(opCode);
 			}
-			else if (((opCode >> 7) & 1) == 0) //data processing
-				registerRotate(opCode);  //<-
-			else if ((((opCode >> 23) & 0x1F) == 2) && (((opCode >> 4) & 0xFF) == 9))
-				singleDataSwap(opCode);
-			else if (((opCode >> 23) & 0x1F) == 0 && (((opCode >> 4) & 0xF) == 9))
-				multiply(opCode);
-			else if (((opCode >> 23) & 0x1F) == 1 && (((opCode >> 4) & 0xF) == 9))
-				multiplyLong(opCode);
-			else
-				halfDataTransfer(opCode);
+			else if (((opCode >> 4) & 1) == 0){ //data processing
+				std::cout << "dataProcessing" << " ";
+				//DataProcessingOpcode(opCode).execute();
+				//immediateRotate(opCode);//<-
+			}
+			else if (((opCode >> 7) & 1) == 0) { //data processing
+				std::cout << "dataProcessing" << " ";
+				//registerRotate(opCode);  //<-
+			}
+			else if ((((opCode >> 23) & 0x1F) == 2) && (((opCode >> 4) & 0xFF) == 9)) {
+				std::cout << "SingleDataTransfer" << " ";
+				//singleDataSwap(opCode);
+			}
+			else if (((opCode >> 23) & 0x1F) == 0 && (((opCode >> 4) & 0xF) == 9)) {
+				std::cout << "multiply" << " ";
+				//multiply(opCode);
+			}
+			else if (((opCode >> 23) & 0x1F) == 1 && (((opCode >> 4) & 0xF) == 9)) {
+				std::cout << "multiplyLong" << " ";
+				//multiplyLong(opCode);
+			}
+			else {
+				std::cout << "halfDataTransfer" << " ";
+				//halfDataTransfer(opCode);
+			}
 			break;
 		}
-	}
+		std::cout << std::endl;
+	//}
 }

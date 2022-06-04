@@ -205,6 +205,7 @@ void Display::fillBG(uint32_t regOffset){
 		}
 
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, size_x, size_y));
+		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 		display->draw(bgSprite[(regOffset / 2)]);
 	}
 
@@ -224,6 +225,7 @@ void Display::fillBG(uint32_t regOffset){
 		sf::Sprite BG1Sprite;
 		
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
+		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 		
 	}
 	else if (displayCtrl->bgMode == 4){
@@ -240,9 +242,8 @@ void Display::fillBG(uint32_t regOffset){
 					localColors3[k][i][3] = 255;
 			}
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
+		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 	}
-
-	bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 
 	bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
 	display->draw(bgSprite[(regOffset / 2)]);
