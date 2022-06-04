@@ -149,6 +149,8 @@
     <ClCompile Include="project1\thumb\ThumbOpCodes.cpp" />
     <ClCompile Include="project1\timer\timers.cpp" />
     <ClCompile Include="project1\utilities\CpsrWriter.cpp" />
+    <ClCompile Include="Project1\Display\Tile.cpp" />
+    <ClCompile Include="Project1\Display\Tileset.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project1\arm\armopcodes.h" />
@@ -174,6 +176,8 @@
     <ClInclude Include="project1\thumb\ThumbOpCodes.h" />
     <ClInclude Include="project1\timer\timers.h" />
     <ClInclude Include="project1\utilities\CpsrWriter.h" />
+    <ClInclude Include="Project1\Display\Tile.h" />
+    <ClInclude Include="Project1\Display\Tileset.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

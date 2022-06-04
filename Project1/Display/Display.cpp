@@ -6,6 +6,8 @@
 #include "GBAcpu.h"
 #include "Constants.h"
 #include "Memory/memoryMappedIO.h"
+#include "Display/Tile.h"
+#include "Display/Tileset.h"
 
 extern RgbaPalette PaletteColours;
 
@@ -74,6 +76,8 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 	text.setFont(font);
 	text.setCharacterSize(15);
 	text.setStyle(sf::Text::Bold);
+
+	
 }
 
 void Display::calculate4BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile){
@@ -119,29 +123,12 @@ void Display::scanPalettes() {
 void Display::fillTiles(){
 	if (!VRAMupdated){
 		display->draw(tilemapSprite);
-		return;
+		return;  
 	}
+	
+	t.update();
+	tmp3.update(t.getTileset(false));
 
-	int startAddr = 0;
-	for (int tileY = 0; tileY < 64; tileY++){
-		for (int tileX = 0; tileX < 32; tileX++) {
-			for (int y = 0; y < 8; y++) {
-				int row = rawLoad32(VRAM, startAddr);
-				for (int pixel = 0; pixel < 8; pixel++) {
-					int color = (row & 0xf);
-					auto paletteColor = PaletteColours.colorFromIndex(color);
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][0] = paletteColor.r;
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][1] = paletteColor.g;
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][2] = paletteColor.b;
-					localColors2[tileY * 8 + y][tileX * 8 + pixel][3] = paletteColor.a;
-					row >>= 4;
-				}
-				startAddr += 4;
-			}
-		}
-	}
-
-	tmp3.update((uint8_t*)localColors2);
 	display->draw(tilemapSprite);
 }
 

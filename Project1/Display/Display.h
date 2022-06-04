@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "Memory/memoryMappedIO.h"
+#include "Display/Tileset.h"
 
 
 struct Ring{
@@ -46,6 +47,8 @@ class Display{
 
 	sf::Font font;
 	sf::Text text;
+
+	Tileset t;
 
 public:
 
