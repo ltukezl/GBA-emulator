@@ -10,6 +10,7 @@
 #include "Display/Tileset.h"
 
 extern RgbaPalette PaletteColours;
+extern Tileset tileset;
 
 struct Display::OamSize shapes[3][4] = { { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
 										{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
@@ -126,8 +127,8 @@ void Display::fillTiles(){
 		return;  
 	}
 	
-	t.update();
-	tmp3.update(t.getTileset(false));
+	tileset.update();
+	tmp3.update(tileset.getTileset(false));
 
 	display->draw(tilemapSprite);
 }

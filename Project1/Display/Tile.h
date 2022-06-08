@@ -11,11 +11,13 @@ public:
 		uint8_t linear[8 * 8 * 4];
 	};
 
+	GBATile paletteColored[16] = { 0 };
+
 	Tile(uint32_t addr);
 	Tile(GBATile tile, bool is8Bit);
 	Tile flipVertical(bool is8Bit, bool flip);
 	Tile flipHorizontal(bool is8Bit, bool flip);
-	GBATile getTile(bool is8Bit);
+	GBATile getTile(bool is8Bit, uint8_t palette);
 
 private:
 

@@ -1,6 +1,7 @@
 #include "memoryMappedIO.h"
 #include "MemoryOps.h"
 #include "Display/RgbaPalette.h"
+#include "Display/Tileset.h"
 
 union DISPCNT* displayCtrl = (DISPCNT*)&IoRAM[0x0];
 union LCDstatus* LCDStatus = (LCDstatus*)&IoRAM[0x4];
@@ -26,3 +27,4 @@ union TIMERCNT* TIMERCNT;
 union DMAcontrol* DMAcontrol;
 
 RgbaPalette PaletteColours((ColorPaletteRam*)&PaletteRAM[0]);
+Tileset tileset;

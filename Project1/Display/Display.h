@@ -48,8 +48,6 @@ class Display{
 	sf::Font font;
 	sf::Text text;
 
-	Tileset t;
-
 public:
 
 	struct OamSize{ uint8_t x; uint8_t y; };
