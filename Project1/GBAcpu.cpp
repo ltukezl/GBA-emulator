@@ -13,6 +13,7 @@
 #include "Timer/timers.h"
 #include "Memory/memoryMappedIO.h"
 #include "cplusplusRewrite/dataProcessingOp.h"
+#include "cplusplusRewrite/tests/allTests.h"
 
 #define GPU 1
 #define BIOS_START 0
@@ -115,6 +116,10 @@ NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in us
 otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
+
+	runAllTests();
+
+
 #if BIOS_START
 	cpsr.FIQDisable = 1;
 	cpsr.IRQDisable = 1;
@@ -167,7 +172,7 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE* bios;
-	fopen_s(&file, "Project1/TestBinaries/program3.bin", "rb");
+	fopen_s(&file, "Project1/TestBinaries/program4.bin", "rb");
 	fopen_s(&bios, "Project1/GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -202,8 +207,9 @@ int main(int argc, char *args[]){
 			cout << hex << *r[15] << " opCode: " << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
 			cout << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16]<< " ";
 		}
+		*r[15] += 4;  // == Registers::nextProgramCounter();  // FIXME: Tuomolla paremmat nimet
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
-
+		*r[15] -= 4;  // == Registers::prevProgramCounter();
 		if (debug){
 			cout << endl;
 		}

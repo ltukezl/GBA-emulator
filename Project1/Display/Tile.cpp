@@ -1,23 +1,34 @@
 #include "Tile.h"
 #include "Memory/MemoryOps.h"
 #include "Memory/memoryMappedIO.h"
+#include <iostream>
 
 extern RgbaPalette PaletteColours;
 
 Tile::Tile(uint32_t addr) {
 	
 	int startAddr = 0;
-
-	for (int palette = 0; palette < 16; palette++) {
-		for (int y = 0; y < 8; y++) {
-			int row = rawLoad32(VRAM, addr + startAddr);
+	uint8_t offset = 0;
+	
+	for (int y = 0; y < 8; y++) {
+		int row = rawLoad32(VRAM, addr + startAddr);
+		for (int palette = 0; palette < 16; palette++) {
 			for (int pixel = 0; pixel < 8; pixel++) {
 				int color = (row & 0xf);
-				auto paletteColor = PaletteColours.colorFromIndex(32 * palette + color);
+				auto paletteColor = PaletteColours.colorFromIndex(palette, color);
 				paletteColored[palette].grid[y][pixel] = paletteColor;
 				row >>= 4;
 			}
-			startAddr += 4;
+		}
+		startAddr += 4;
+	}
+
+	for (int y = 0; y < 8; y++) {
+		for (int pixel = 0; pixel < 8; pixel++) {
+			int color = rawLoad8(VRAM, addr*2 + offset);
+			auto paletteColor = PaletteColours.colorFromIndex(color);
+			eightBitTile.grid[y][pixel] = paletteColor;
+			offset++;
 		}
 	}
 }
@@ -57,7 +68,7 @@ Tile Tile::flipHorizontal(bool is8Bit, bool flip){
 	return Tile(flippedTile, is8Bit);
 }
 
-Tile::GBATile Tile::getTile(bool is8Bit, uint8_t palette) {
+Tile::GBATile& Tile::getTile(bool is8Bit, uint8_t palette) {
 	if (is8Bit)
 		return eightBitTile;
 	return paletteColored[palette];

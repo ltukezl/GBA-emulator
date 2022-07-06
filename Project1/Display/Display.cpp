@@ -8,6 +8,7 @@
 #include "Memory/memoryMappedIO.h"
 #include "Display/Tile.h"
 #include "Display/Tileset.h"
+#include "Display/Rendermodes/TextMode.h"
 
 extern RgbaPalette PaletteColours;
 extern Tileset tileset;
@@ -77,8 +78,6 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 	text.setFont(font);
 	text.setCharacterSize(15);
 	text.setStyle(sf::Text::Bold);
-
-	
 }
 
 void Display::calculate4BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile){
@@ -123,14 +122,14 @@ void Display::scanPalettes() {
 
 void Display::fillTiles(){
 	if (!VRAMupdated){
-		display->draw(tilemapSprite);
+		//display->draw(tilemapSprite);
 		return;  
 	}
 	
-	tileset.update();
-	tmp3.update(tileset.getTileset(false));
+	//tileset.update();
+	//tmp3.update(tileset.getTileset(false));
 
-	display->draw(tilemapSprite);
+	//display->draw(tilemapSprite);
 }
 
 void Display::fillBG(uint32_t regOffset){
@@ -153,7 +152,7 @@ void Display::fillBG(uint32_t regOffset){
 			for (int k = 0; k < 32; k++){
 				BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-				if (bgCnt->palettes == 0)
+				if (bgCnt->is8Bit == 0)
 					calculate4BitTile(i, k, tileBaseBlock, tile);
 				else
 					calculate8BitTile(i, k, tileBaseBlock, tile);
@@ -167,7 +166,7 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-					if (bgCnt->palettes == 0)
+					if (bgCnt->is8Bit == 0)
 						calculate4BitTile(i, 32 + k, tileBaseBlock, tile);
 					else
 						calculate8BitTile(i, 32 + k, tileBaseBlock, tile);
@@ -181,7 +180,7 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-					if (bgCnt->palettes == 0)
+					if (bgCnt->is8Bit == 0)
 						calculate4BitTile(32 + i, k, tileBaseBlock, tile);
 					else
 						calculate8BitTile(32 + i, k, tileBaseBlock, tile);
@@ -195,7 +194,7 @@ void Display::fillBG(uint32_t regOffset){
 				for (int k = 0; k < 32; k++){
 					BgTile* tile = (BgTile*)&VRAM[startAddr];
 
-					if (bgCnt->palettes == 0)
+					if (bgCnt->is8Bit == 0)
 						calculate4BitTile(32 + i, 32 + k, tileBaseBlock, tile);
 					else
 						calculate8BitTile(32 + i, 32 + k, tileBaseBlock, tile);
@@ -205,8 +204,12 @@ void Display::fillBG(uint32_t regOffset){
 			}
 		}
 
+		//textMode.draw(regOffset);
+		//bgText[(regOffset / 2)].update((uint8_t*)textMode.getBG());
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, size_x, size_y));
-		display->draw(bgSprite[(regOffset / 2)]);
+		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
+		
+		//display->draw(bgSprite[(regOffset / 2)]);
 	}
 
 	else if (displayCtrl->bgMode == 3){
@@ -225,6 +228,7 @@ void Display::fillBG(uint32_t regOffset){
 		sf::Sprite BG1Sprite;
 		
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
+		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 		
 	}
 	else if (displayCtrl->bgMode == 4){
@@ -241,9 +245,10 @@ void Display::fillBG(uint32_t regOffset){
 					localColors3[k][i][3] = 255;
 			}
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
+		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 	}
 
-	bgText[(regOffset / 2)].update((uint8_t*)localColors3);
+	
 
 	bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
 	display->draw(bgSprite[(regOffset / 2)]);

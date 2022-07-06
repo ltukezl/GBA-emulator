@@ -176,6 +176,21 @@
     <ClInclude Include="Project1\Display\Rendermodes\TextMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\HwRegisters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\tests\HwRegisterTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\tests\allTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\tests\dataProcessingTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\tests\shifterTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="project1\testbinaries\program2.bin">

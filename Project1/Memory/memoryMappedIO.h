@@ -91,7 +91,7 @@ union BgCnt{
 		uint16_t tileBaseBlock : 2;
 	    uint16_t :2;
 		uint16_t mosaic : 1;
-		uint16_t palettes : 1;
+		uint16_t is8Bit : 1;
 		uint16_t bgBaseblock : 5;
 		uint16_t overflow : 1;
 		uint16_t hWide : 1;

@@ -818,10 +818,19 @@ void singleDataTrasnferRegisterPost(int opCode){
 	cycles += S_cycles + N_cycles + 1;
 }
 
+enum ProcessingUnits {
+	EDataProcessing,
+};
+#include "cplusplusRewrite//dataProcessingOp.h"
+DataProcessingOpcode* units[10] = {};
+
+
 void ARMExecute(int opCode){
 	int condition = (opCode >> 28) & 0xF;
 	*r[PC] += 4;
 	cycles += 1;
+	//units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr, Registers());
+
 	if (conditions[condition]()) //condition true
 	{
 		int opCodeType = (opCode >> 24) & 0xF;
@@ -887,20 +896,28 @@ void ARMExecute(int opCode){
 			singleDataTrasnferImmediatePost(opCode);
 			break;
 		case 3: case 2: //data processing, immediate check msr?
-			if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0))
+			if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0)) {
 				MSR(opCode);//<-
-			else
+				//units[ProcessingUnits::EDataProcessing]->execute(opCode);
+			}
+			else {
 				dataProcessingImmediate(opCode);
+				//units[ProcessingUnits::EDataProcessing]->execute(opCode);
+			}
 			break;
 		case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange
-			if (((opCode >> 4) & 0x12FFF1) == 0x12FFF1)
+			if (((opCode >> 4) & 0x12FFF1) == 0x12FFF1) {
+				//units[ProcessingUnits::EDataProcessing]->execute();
 				branchAndExhange(opCode);
+			}
 			else if (((opCode >> 4) & 1) == 0){ //data processing
-				//DataProcessingOpcode(opCode).execute();
+				//units[ProcessingUnits::EDataProcessing]->execute(opCode);
 				immediateRotate(opCode);//<-
 			}
-			else if (((opCode >> 7) & 1) == 0) //data processing
+			else if (((opCode >> 7) & 1) == 0){ //data processing
+				//units[ProcessingUnits::EDataProcessing]->execute(opCode);
 				registerRotate(opCode);  //<-
+				}
 			else if ((((opCode >> 23) & 0x1F) == 2) && (((opCode >> 4) & 0xFF) == 9))
 				singleDataSwap(opCode);
 			else if (((opCode >> 23) & 0x1F) == 0 && (((opCode >> 4) & 0xF) == 9))

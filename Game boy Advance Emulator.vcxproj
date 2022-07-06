@@ -163,11 +163,16 @@
     <ClInclude Include="project1\cplusplusrewrite\barrelShifter.h" />
     <ClInclude Include="project1\cplusplusrewrite\BarrelShifterDecoder.h" />
     <ClInclude Include="project1\cplusplusrewrite\dataProcessingOp.h" />
+    <ClInclude Include="Project1\cplusplusRewrite\HwRegisters.h" />
     <ClInclude Include="project1\cplusplusrewrite\LogicOps.h" />
     <ClInclude Include="project1\cplusplusrewrite\MathOps.h" />
     <ClInclude Include="Project1\cplusplusRewrite\operation.h" />
     <ClInclude Include="project1\cplusplusrewrite\Shifts.h" />
     <ClInclude Include="Project1\cplusplusRewrite\SingleDataTransfer.h" />
+    <ClInclude Include="Project1\cplusplusRewrite\tests\allTests.h" />
+    <ClInclude Include="Project1\cplusplusRewrite\tests\dataProcessingTests.h" />
+    <ClInclude Include="Project1\cplusplusRewrite\tests\HwRegisterTests.h" />
+    <ClInclude Include="Project1\cplusplusRewrite\tests\shifterTests.h" />
     <ClInclude Include="project1\display\Display.h" />
     <ClInclude Include="Project1\Display\Rendermodes\RenderMode3.h" />
     <ClInclude Include="Project1\Display\Rendermodes\TextMode.h" />

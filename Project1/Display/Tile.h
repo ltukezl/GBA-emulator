@@ -13,11 +13,12 @@ public:
 
 	GBATile paletteColored[16] = { 0 };
 
+	Tile() = default;
 	Tile(uint32_t addr);
 	Tile(GBATile tile, bool is8Bit);
 	Tile flipVertical(bool is8Bit, bool flip);
 	Tile flipHorizontal(bool is8Bit, bool flip);
-	GBATile getTile(bool is8Bit, uint8_t palette);
+	GBATile& getTile(bool is8Bit, uint8_t palette);
 
 private:
 

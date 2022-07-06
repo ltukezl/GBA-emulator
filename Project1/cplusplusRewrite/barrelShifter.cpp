@@ -9,6 +9,7 @@ RotatorUnits::RotatorUnits(){
 	m_shifts[1] = new Lsr(cpsr);
 	m_shifts[2] = new Asr(cpsr);
 	m_shifts[3] = new Ror(cpsr);
+	m_shifts[4] = new Rrx(cpsr);
 	m_val = 0;
 }
 RotatorUnits::~RotatorUnits(){
@@ -16,11 +17,13 @@ RotatorUnits::~RotatorUnits(){
 	delete m_shifts[1];
 	delete m_shifts[2];
 	delete m_shifts[3];
+	delete m_shifts[4];
 
 	m_shifts[0] = nullptr;
 	m_shifts[1] = nullptr;
 	m_shifts[2] = nullptr;
 	m_shifts[3] = nullptr;
+	m_shifts[4] = nullptr;
 }
 
 //------------
@@ -60,7 +63,9 @@ RegisterWithImmediateShifter::RegisterWithImmediateShifter(uint16_t sourceRegist
 	
 uint32_t RegisterWithImmediateShifter::calculate(bool setStatus) {
 	uint32_t tmpResult = 0;
-	m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], registerRotaterFields.shiftAmount, setStatus);
+	
+	m_shifts[shifter()]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], registerRotaterFields.shiftAmount, setStatus);
+
 	return tmpResult;
 }
 

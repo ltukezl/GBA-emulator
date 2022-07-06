@@ -3,6 +3,7 @@
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/operation.h"
+#include "cplusplusRewrite/HwRegisters.h"
 
 enum DataProcessingOpCodes {
 	AND,
@@ -31,11 +32,12 @@ enum DataProcessingSetOpCodes{
 
 class DataProcessingOpcode {
 private:
-	void initialize();
+	void initialize(union CPSR& cpsr, Registers& regs);
+	Registers& regs;
 	Operation* tst[0x10];
 
 public:
-	union {
+	union OpCodeFields{
 		uint32_t val;
 		struct{
 			uint32_t immediate : 12;
@@ -49,12 +51,12 @@ public:
 		};
 	}m_opCode;
 
-	DataProcessingOpcode(uint32_t opCode);
+	DataProcessingOpcode(union CPSR& cpsr, Registers& regs);
 	~DataProcessingOpcode();
 
-	DataProcessingOpcode(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint16_t imm);
+	static uint32_t fromFields(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint16_t imm);
 
-	void execute();
+	void execute(uint32_t opCode);
 };
 
 void unitTestForTeppo();

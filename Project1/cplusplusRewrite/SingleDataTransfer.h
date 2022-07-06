@@ -16,6 +16,7 @@ public:
 			uint32_t byteTransfer : 1;
 			uint32_t addOffset : 1;
 			uint32_t preIndexing : 1;
+			uint32_t immediateOffset : 1;
 			uint32_t unused : 2;
 			uint32_t executionCondition : 4;
 		};

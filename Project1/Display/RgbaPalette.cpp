@@ -23,8 +23,8 @@ void RgbaPalette::updatePalette() {
 			paletteColorArray[i][k].g = greenScaled;
 			paletteColorArray[i][k].b = blueScaled;
 			paletteColorArray[i][k].a = 255;
-			//if(k == 0)
-				//paletteColorArray[i][k].a = 0;
+			if(k == 0)
+				paletteColorArray[i][k].a = 255;
 			colorPtr++;
 		}
 }

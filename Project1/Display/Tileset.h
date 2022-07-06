@@ -5,12 +5,13 @@
 class Tileset
 {
 public:
-	Tile::GBATile tileset[16][64][32] = { 0 };
+	Tile tileset[64][32];
 
 	Tileset();
 	void update();
 	uint8_t* getTileset(bool is8bit);
-	Tile::GBATile Tileset::getTile(uint8_t x, uint8_t y, uint8_t palette);
+	Tile::GBATile getTile(uint8_t y, uint8_t x, uint8_t palette, bool is8Bit);
+	Tile::GBATile getTile(uint32_t index, uint8_t palette, bool is8Bit);
 private:
 	
 	uint32_t fullTileset = { 0 };

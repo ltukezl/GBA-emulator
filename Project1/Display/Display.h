@@ -5,6 +5,7 @@
 #include <string.h>
 #include "Memory/memoryMappedIO.h"
 #include "Display/Tileset.h"
+#include "Display/Rendermodes/TextMode.h"
 
 
 struct Ring{
@@ -47,6 +48,7 @@ class Display{
 
 	sf::Font font;
 	sf::Text text;
+	TextMode textMode;
 
 public:
 

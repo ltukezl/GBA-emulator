@@ -4,16 +4,20 @@
 #include "cplusplusRewrite/barrelShifter.h"
 
 
-enum Rotation{
-	LSL,
-	LSR,
-	ASR,
-	ROR,
+enum Rotation : uint16_t{
+	LSL = 0,
+	LSR = 1,
+	ASR = 2,
+	ROR = 3,
+	RRX = 4,
 };
 
 class RotatorUnits{
+protected:
+	uint8_t m_offset;
+
 public:
-	ShiferUnit* m_shifts[4];
+	ShiferUnit* m_shifts[5];
 	uint16_t m_val;
 
 	RotatorUnits();
@@ -52,6 +56,7 @@ public:
 	RegisterWithImmediateShifter(uint16_t val);
 	RegisterWithImmediateShifter(uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount);
 
+	uint16_t shifter() const { return ((registerRotaterFields.shiftCode == ROR) && (registerRotaterFields.shiftAmount == 0)) ? RRX : registerRotaterFields.shiftCode; }
 	uint32_t calculate(bool setStatus) override;
 };
 
