@@ -1,10 +1,11 @@
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/dataProcessingOp.h"
+#include "cplusplusRewrite/HwRegisters.h"
 #include "GBAcpu.h"
 #include <iostream>
 
-RotatorUnits::RotatorUnits(){
+RotatorUnits::RotatorUnits(Registers& registers) : m_registers(registers) {
 	m_shifts[0] = new Lsl(cpsr);
 	m_shifts[1] = new Lsr(cpsr);
 	m_shifts[2] = new Asr(cpsr);
@@ -28,11 +29,12 @@ RotatorUnits::~RotatorUnits(){
 
 //------------
 
-ImmediateRotater::ImmediateRotater(uint16_t immediate) {
+ImmediateRotater::ImmediateRotater(Registers& registers, uint16_t immediate) : RotatorUnits(registers) {
 	immediateRotaterFields.val = immediate;
 	m_val = immediate;
 }
-ImmediateRotater::ImmediateRotater(uint16_t immediate, uint16_t rotateAmount) {
+
+ImmediateRotater::ImmediateRotater(Registers& registers, uint16_t immediate, uint16_t rotateAmount) : RotatorUnits(registers) {
 	immediateRotaterFields.immediate = immediate;
 	immediateRotaterFields.rotateAmount = rotateAmount;
 	m_val = immediateRotaterFields.val;
@@ -48,36 +50,35 @@ uint32_t ImmediateRotater::calculate(bool setStatus) {
 
 //------------
 
-RegisterWithImmediateShifter::RegisterWithImmediateShifter(uint16_t val) { 
+RegisterWithImmediateShifter::RegisterWithImmediateShifter(Registers& registers, uint16_t val) : RotatorUnits(registers) {
 	registerRotaterFields.val = val;
 	m_val = val; 
 }
 
-RegisterWithImmediateShifter::RegisterWithImmediateShifter(uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount) {
+RegisterWithImmediateShifter::RegisterWithImmediateShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount) : RotatorUnits(registers) {
 	registerRotaterFields.sourceRegister = sourceRegister;
 	registerRotaterFields.type = 0;
 	registerRotaterFields.shiftCode = rotation;
 	registerRotaterFields.shiftAmount = shiftAmount;
 	m_val = registerRotaterFields.val;
-}
+}  
 	
 uint32_t RegisterWithImmediateShifter::calculate(bool setStatus) {
-	uint32_t tmpResult = 0;
-	
-	m_shifts[shifter()]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], registerRotaterFields.shiftAmount, setStatus);
-
+	uint32_t tmpResult = 0;	
+	// TODO: registerRotaterFields -> m_opcodeRotaterField   // päätä itse mutta jos et tätä muuta, mass replace!!
+	m_shifts[shifter()]->execute(tmpResult, m_registers[registerRotaterFields.sourceRegister], registerRotaterFields.shiftAmount, setStatus);
 	return tmpResult;
 }
 
 //------------
 
 
-RegisterWithRegisterShifter::RegisterWithRegisterShifter(uint16_t val) { 
+RegisterWithRegisterShifter::RegisterWithRegisterShifter(Registers& registers, uint16_t val) : RotatorUnits(registers) {
 	registerRotaterFields.val = val; 
 	m_val = val; 
 }
 
-RegisterWithRegisterShifter::RegisterWithRegisterShifter(uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister) {
+RegisterWithRegisterShifter::RegisterWithRegisterShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister) : RotatorUnits(registers) {
 	registerRotaterFields.sourceRegister = sourceRegister;
 	registerRotaterFields.type = 1;
 	registerRotaterFields.shiftCode = rotation;
@@ -87,7 +88,10 @@ RegisterWithRegisterShifter::RegisterWithRegisterShifter(uint16_t sourceRegister
 
 uint32_t RegisterWithRegisterShifter::calculate(bool setStatus) {
 	uint32_t tmpResult = 0;
-	m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, *r[registerRotaterFields.sourceRegister], *r[registerRotaterFields.shiftRegister], setStatus);
+	// If a register is used to specify the shift amount the PC will be 4 bytes ahead.
+	m_registers[EProgramCounter] += 4;
+	m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, m_registers[registerRotaterFields.sourceRegister], m_registers[registerRotaterFields.shiftRegister], setStatus);
+	m_registers[EProgramCounter] -= 4;
 	return tmpResult;
 }
 

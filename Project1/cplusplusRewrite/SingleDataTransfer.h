@@ -1,8 +1,11 @@
 #pragma once
 #include <stdint.h>
+#include "cplusplusRewrite/HwRegisters.h"
 
 class SingleDataTransfer {
 private:
+
+	Registers& m_regs;
 
 public:
 	union {
@@ -22,7 +25,9 @@ public:
 		};
 	}m_opCode;
 
-	SingleDataTransfer(uint32_t opCode);
+
+
+	SingleDataTransfer(Registers& m_regs, uint32_t opCode);
 	~SingleDataTransfer();
 
 	//SingleDataTransfer(DataProcessingOpCodes opCode, DataProcessingSetOpCodes setStatus, uint32_t destReg, uint32_t firstOpReg, bool immediateFlg, uint16_t imm);

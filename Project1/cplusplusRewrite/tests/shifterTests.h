@@ -1,53 +1,11 @@
 #pragma once
 
 #include <cassert>
-
+#include <iostream>
 #include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/barrelShifter.h"
 #include "GBAcpu.h"
-/*
-tests = [
-	(0x1F, ImmediateRotater(0, 0), true, 0xFF, 0x4000001F),
-	(0x1F, ImmediateRotater(0, 0), true, 0, 0x4000001F),
-	(0x1F, ImmediateRotater(0xFF, 0), true, 0xFF, 0x0000001F),
-	(0x1F, ImmediateRotater(0xFF, 8), true, 0xFF00'0000, 0xA000001F),
-	(0x1F, ImmediateRotater(0xFF, 4), true, 0xF000'000F, 0xA000001F),
-]
 
-void loadStoreImmediateValues() {
-	results = [];
-	for (int i=0; i<len(tests); i++) {
-		bool result = test_it(**tests[i])
-		results.append(result)
-	}
-
-	if results:
-		assert(false);
-}
-
-
-void test_it(
-	uint32_t cpsr_val,
-	LogicOp& op,
-	bool arg,
-	uint32_t expected_result,
-	uint32_t expected_cpsr_val,
-	) {
-	union CPSR expectedCPSR = {};
-	cpsr.val = cpsr_val;
-
-	uint32_t actual_result = op.calculate(arg);
-	if (actual_result != expected_result) {
-		return false;
-	}
-
-	expectedCPSR.val = expected_cpsr_val;
-	if (cpsr.val != expectedCPSR.val) {
-		return false;
-	}
-}
-*/
-/*
 struct Expected {
 	uint32_t result;
 	uint32_t cpsr;
@@ -62,473 +20,167 @@ struct test {
 	struct Expected expected;
 };
 
-static struct test immediateTests[]{
-	{"...", 0, 0, 0x1F, LSL, { 0, 0x1F } },
-	{"...", 0, 0, 0x1F, LSL, {0xFF, 0x4000001F}},
-	{"...", 0, 0, 0x1F, LSL, {0, 0x4000001F}},
-	{"...", 0xFF, 0, 0x1F, LSL, {0xFF, 0x0000001F}},
-	{"...", 0xFF, 8, 0x1F, LSL, {0xFF00'0000, 0xA000001F}},
-	{"...", 0xFF, 4, 0x1F, LSL, {0xF000'000F, 0xA000001F}},	
+static struct test regImmediateValueTests[]{
+	{"mov #0"          , 0   , 0, 0x1F, LSL, { 0          , 0x4000001F }},
+	{"mov #0xFF"       , 0xFF, 0, 0x1F, LSL, { 0xFF       , 0x1F }},
+	{"mov #0xFF00'0000", 0xFF, 8, 0x1F, LSL, { 0xFF00'0000, 0xA000001F }},
+	{"mov #0xF000'000F", 0xFF, 4, 0x1F, LSL, { 0xF000'000F, 0xA000001F }},
 };
 
-void asd() {
+static struct test regImmediateShifterTests[]{
+	{"r0 LSL #0" , 0xFFF     , 0  , 0x1F, LSL, { 0xFFF      , 0x1F }},
+	{"r0 LSL #1" , 0xFFF     , 1  , 0x1F, LSL, { 0x1FFE     , 0x1F }},
+	{"r0 LSL #31", 0x3       , 31 , 0x1F, LSL, { 0x8000'0000, 0xA000001F }},
+	{"r0 LSR #0" , 0xFFF     , 0  , 0x1F, LSR, { 0xFFF      , 0x1F }},
+	{"r0 LSR #1" , 0xFFF     , 1  , 0x1F, LSR, { 0x7FF      , 0x2000001F }},
+	{"r0 LSR #31", 0xC0000000, 31 , 0x1F, LSR, { 0x1        , 0x2000001F }},
+	{"r0 ASR #0" , 0x80000FFF, 0  , 0x1F, ASR, { 0x8000'0FFF, 0x8000001F }},
+	{"r0 ASR #1" , 0x80000FFF, 1  , 0x1F, ASR, { 0xC000'07FF, 0xA000001F }},
+	{"r0 ASR #31", 0xC0000000, 31 , 0x1F, ASR, { 0xFFFF'FFFF, 0xA000001F }},
+	{"r0 ROR #1" , 0x12345678, 1  , 0x1F, ROR, { 0x091A'2B3C, 0x1F }},
+	{"r0 ROR #31", 0x12345678, 31 , 0x1F, ROR, { 0x2468'ACF0, 0x1F }},
+	{"r0 ROR #0" , 0x12345678, 0  , 0x1F, ROR, { 0x091A'2B3C, 0x1F }},
+	{"r0 ROR #0" , 0x87654321, 0  , 0x1F, ROR, { 0x43B2'A190, 0x2000001F }},
+};
+
+static struct test regRegisterShifterTests[]{
+	{"r0 LSL r1", 0 , 0xFFF     , 0x1F, LSL, { 0xFFF     , 0x1F }},
+	{"r0 LSL r1", 1 , 0xFFF     , 0x1F, LSL, { 0x1FFE    , 0x1F }},
+	{"r0 LSL r1", 31, 3         , 0x1F, LSL, { 0x80000000, 0xA000001F }},
+	{"r0 LSL r1", 32, 3         , 0x1F, LSL, { 0         , 0x6000001F }},
+	{"r0 LSL r1", 33, 3         , 0x1F, LSL, { 0         , 0x4000001F }},
+	{"r0 LSL r1", -1, 3         , 0x1F, LSL, { 0         , 0x4000001F }},
+	{"r0 LSR r1", 0 , 0xFFF     , 0x1F, LSR, { 0xFFF     , 0x1F }},
+	{"r0 LSR r1", 1 , 0xFFF     , 0x1F, LSR, { 0x7FF     , 0x2000001F }},
+	{"r0 LSR r1", 31, 0xC0000000, 0x1F, LSR, { 0x1       , 0x2000001F }},
+	{"r0 LSR r1", 32, 0xC0000000, 0x1F, LSR, { 0         , 0x6000001F }},
+	{"r0 LSR r1", 33, 0xC0000000, 0x1F, LSR, { 0         , 0x4000001F }},
+	{"r0 LSR r1", -1, 0xC0000000, 0x1F, LSR, { 0         , 0x4000001F }},
+	{"r0 ASR r1", 0 , 0x80000FFF, 0x1F, ASR, { 0x80000FFF, 0x8000001F }},
+	{"r0 ASR r1", 1 , 0x80000FFF, 0x1F, ASR, { 0xC00007FF, 0xA000001F }},
+	{"r0 ASR r1", 31, 0xC0000000, 0x1F, ASR, { 0xFFFFFFFF, 0xA000001F }},
+	{"r0 ASR r1", 32, 0xC0000000, 0x1F, ASR, { 0xFFFFFFFF, 0xA000001F }},
+	{"r0 ASR r1", 33, 0xC0000000, 0x1F, ASR, { 0xFFFFFFFF, 0xA000001F }},
+	{"r0 ASR r1", -1, 0xC0000000, 0x1F, ASR, { 0xFFFFFFFF, 0xA000001F }},
+	{"r0 ROR r1", 0 , 0x12345678, 0x1F, ROR, { 0x12345678, 0x1F }},
+	{"r0 ROR r1", 1 , 0x12345678, 0x1F, ROR, { 0x091A2B3C, 0x1F }},
+	{"r0 ROR r1", 31, 0x12345678, 0x1F, ROR, { 0x2468ACF0, 0x1F }},
+	{"r0 ROR r1", 32, 0x12345678, 0x1F, ROR, { 0x12345678, 0x1F }},
+	{"r0 ROR r1", 33, 0x12345678, 0x1F, ROR, { 0x091A2B3C, 0x1f }},
+	{"r0 ROR r1", -1, 0x12345678, 0x1F, ROR, { 0x2468ACF0, 0x1F }},
+};
+
+static struct test PCTestsIMM[]{
+	{"PC LSL #0" , 0x800120 , 0  , 0x1F, LSL, { 0x800120 , 0x1F }},
+	{"PC LSL #31", 0x800120 , 31 , 0x1F, LSL, { 0        , 0x4000001F }},
+	{"PC LSR #0" , 0x800120 , 0  , 0x1F, LSR, { 0x800120 , 0x1F }},
+	{"PC LSR #31", 0x800120 , 31 , 0x1F, LSR, { 0        , 0x4000001F }},
+	{"PC ASR #0" , 0x800120 , 0  , 0x1F, ASR, { 0x800120 , 0x1F }},
+	{"PC ASR #31", 0x800120 , 31 , 0x1F, ASR, { 0        , 0x4000001F }},
+};
+
+static struct test PCTestsREG[]{
+	{"PC LSL r1", 0 , 0x8000120, 0x1F, LSL, { 0x8000124, 0x1F }},
+	{"PC LSR r1", 0 , 0x8000120, 0x1F, LSR, { 0x8000124, 0x1F }},
+	{"PC LSR r1", 24, 0x8000120, 0x1F, LSR, { 8        , 0x1F }},
+	{"PC ASR r1", 0 , 0x8000120, 0x1F, ASR, { 0x8000124, 0x1F }},
+	{"PC ASR r1", 24, 0x8000120, 0x1F, ASR, { 8        , 0x1F }},
+};
+
+void loadStoreImmediateValues() {
 	bool failed = false;
-	for (auto& test_arr : immediateTests) {
-		uint32_t result = RegisterWithImmediateShifter(test_arr.in0, test_arr.rotation, test_arr.in1).calculate(true);
+	for (auto& test_arr : regImmediateValueTests) {
+		Registers testRegs = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+		cpsr.val = test_arr.inCpsr;
+		uint32_t result = ImmediateRotater(testRegs, test_arr.in0, test_arr.in1).calculate(true);
 		if (result != test_arr.expected.result) {
-			cout << "result for test" << test_arr.name << " failed!";			
+			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
 			failed = true;
 		}
 		if (cpsr.val != test_arr.expected.cpsr) {
-			cout << "cpsr for test" << test_arr.name << " failed!";
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n\n" << std::dec;
 			failed = true;
 		}
 	}
 	assert(!failed);
 }
-*/
-void loadStoreImmediateValues() {
-	uint32_t result = 0;
-	union CPSR expectedCPSR;
-	
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = ImmediateRotater(0, 0).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
 
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = ImmediateRotater(0xFF, 0).calculate(true);
-	assert(result == 0xFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = ImmediateRotater(0xFF, 8).calculate(true);
-	assert(result == 0xFF00'0000);
-	assert(cpsr.val == expectedCPSR.val);
-
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = ImmediateRotater(0xFF, 4).calculate(true);
-	assert(result == 0xF000'000F);
-	assert(cpsr.val == expectedCPSR.val);
+void registerImmediateShifterTests() {
+	bool failed = false;
+	for (auto& test_arr : regImmediateShifterTests) {
+		Registers testRegs = { test_arr.in0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+		cpsr.val = test_arr.inCpsr;
+		uint32_t result = RegisterWithImmediateShifter(testRegs, 0, test_arr.rotation, test_arr.in1).calculate(true);
+		if (result != test_arr.expected.result) {
+			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
+			failed = true;
+		}
+		if (cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+			failed = true;
+		}
+	}
+	assert(!failed);
 }
 
-void testLslImm() {
-	uint32_t result = 0;
-	union CPSR expectedCPSR = {};
-
-	*r[0] = 0x0;
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithImmediateShifter(1, LSL, 0).calculate(true);
-	assert(result == 0xFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 0x0;
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithImmediateShifter(1, LSL, 1).calculate(true);
-	assert(result == 0x1FFE);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 0x0;
-	*r[1] = 0x3;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithImmediateShifter(1, LSL, 31).calculate(true);
-	assert(result == 0x80000000);
-	assert(cpsr.val == expectedCPSR.val);
-
-	//_-------------------------------_
-
-	*r[0] = 0;
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(1, LSL, 0).calculate(true);
-	assert(result == 0xFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 1;
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(1, LSL, 0).calculate(true);
-	assert(result == 0x1FFE);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 31;
-	*r[1] = 0x3;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithRegisterShifter(1, LSL, 0).calculate(true);
-	assert(result == 0x80000000);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 32;
-	*r[1] = 0x3;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x6000001F;
-	result = RegisterWithRegisterShifter(1, LSL, 0).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 33;
-	*r[1] = 0x3;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = RegisterWithRegisterShifter(1, LSL, 0).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = -1;
-	*r[1] = 0x3;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = RegisterWithRegisterShifter(1, LSL, 0).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
+void registerRegisterShifterTests() {
+	bool failed = false;
+	for (auto& test_arr : regRegisterShifterTests) {
+		Registers testRegs = { test_arr.in0,test_arr.in1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+		cpsr.val = test_arr.inCpsr;
+		uint32_t result = RegisterWithRegisterShifter(testRegs, 1, test_arr.rotation, 0).calculate(true);
+		if (result != test_arr.expected.result) {
+			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
+			failed = true;
+		}
+		if (cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+			failed = true;
+		}
+	}
+	assert(!failed);
 }
 
-void testLsrImm() {
-	uint32_t result = 0;
-	union CPSR expectedCPSR = {};
-
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithImmediateShifter(1, LSR, 0).calculate(true);
-	assert(result == 0xFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x2000001F;
-	result = RegisterWithImmediateShifter(1, LSR, 1).calculate(true);
-	assert(result == 0x7FF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x2000001F;
-	result = RegisterWithImmediateShifter(1, LSR, 31).calculate(true);
-	assert(result == 0x1);
-	assert(cpsr.val == expectedCPSR.val);
-
-	//_-------------------------------_
-
-	*r[0] = 0;
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(1, LSR, 0).calculate(true);
-	assert(result == 0xFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 1;
-	*r[1] = 0xFFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x2000001F;
-	result = RegisterWithRegisterShifter(1, LSR, 0).calculate(true);
-	assert(result == 0x7FF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 31;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x2000001F;
-	result = RegisterWithRegisterShifter(1, LSR, 0).calculate(true);
-	assert(result == 0x1);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 32;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x6000001F;
-	result = RegisterWithRegisterShifter(1, LSR, 0).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 33;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = RegisterWithRegisterShifter(1, LSR, 0).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = -1;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = RegisterWithRegisterShifter(1, LSR, 0).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
+void PCOperandTestsIMM() {
+	bool failed = false;
+	for (auto& test_arr : PCTestsIMM) {
+		Registers testRegs = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,test_arr.in0,0,0 };
+		cpsr.val = test_arr.inCpsr;
+		uint32_t result = RegisterWithImmediateShifter(testRegs, 15, test_arr.rotation, test_arr.in1).calculate(true);
+		if (result != test_arr.expected.result) {
+			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
+			failed = true;
+		}
+		if (cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+			failed = true;
+		}
+	}
+	assert(!failed);
 }
 
-void testAsrImm() {
-	uint32_t result = 0;
-	union CPSR expectedCPSR = {};
-
-	*r[1] = 0x80000FFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x8000001F;
-	result = RegisterWithImmediateShifter(1, ASR, 0).calculate(true);
-	assert(result == 0x80000FFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[1] = 0x80000FFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithImmediateShifter(1, ASR, 1).calculate(true);
-	assert(result == 0xC00007FF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithImmediateShifter(1, ASR, 31).calculate(true);
-	assert(result == 0xFFFFFFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	//_-------------------------------_
-
-	*r[0] = 0;
-	*r[1] = 0x80000FFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x8000001F;
-	result = RegisterWithRegisterShifter(1, ASR, 0).calculate(true);
-	assert(result == 0x80000FFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 1;
-	*r[1] = 0x80000FFF;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithRegisterShifter(1, ASR, 0).calculate(true);
-	assert(result == 0xC00007FF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 31;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithRegisterShifter(1, ASR, 0).calculate(true);
-	assert(result == 0xFFFFFFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 32;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithRegisterShifter(1, ASR, 0).calculate(true);
-	assert(result == 0xFFFFFFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 33;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithRegisterShifter(1, ASR, 0).calculate(true);
-	assert(result == 0xFFFFFFFF);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = -1;
-	*r[1] = 0xC0000000;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0xA000001F;
-	result = RegisterWithRegisterShifter(1, ASR, 0).calculate(true);
-	assert(result == 0xFFFFFFFF);
-	assert(cpsr.val == expectedCPSR.val);
-}
-
-void testRorImm() {
-	uint32_t result = 0;
-	union CPSR expectedCPSR = {};
-
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithImmediateShifter(1, ROR, 1).calculate(true);
-	assert(result == 0x091A2B3C);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithImmediateShifter(1, ROR, 31).calculate(true);
-	assert(result == 0x2468ACF0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	//_-------------------------------_
-
-	*r[0] = 0;
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithRegisterShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x12345678);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 1;
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithRegisterShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x091A2B3C);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 31;
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithRegisterShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x2468ACF0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 32;
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithRegisterShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x12345678);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 33;
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithRegisterShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x091A2B3C);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = -1;
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithRegisterShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x2468ACF0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	//---------------------------------------
-
-	*r[1] = 0x12345678;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x0000001F;
-	result = RegisterWithImmediateShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x091A2B3C);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[1] = 0x87654321;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x2000001F;
-	result = RegisterWithImmediateShifter(1, ROR, 0).calculate(true);
-	assert(result == 0x43B2A190);
-	assert(cpsr.val == expectedCPSR.val);
-}
-
-void testPCreg() {
-	uint32_t result = 0;
-	union CPSR expectedCPSR = {};
-
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithImmediateShifter(15, LSL, 0).calculate(true);
-	assert(result == 0x800128);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = RegisterWithImmediateShifter(15, LSL, 31).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 0;
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(15, LSL, 0).calculate(true);
-	assert(result == 0x80012C);
-	assert(cpsr.val == expectedCPSR.val);
-	//--------------------------
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithImmediateShifter(15, LSR, 0).calculate(true);
-	assert(result == 0x800128);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = RegisterWithImmediateShifter(15, LSR, 31).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 0;
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(15, LSR, 0).calculate(true);
-	assert(result == 0x80012C);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 24;
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(15, LSR, 0).calculate(true);
-	assert(result == 8);
-	assert(cpsr.val == expectedCPSR.val);
-
-	//--------------------------
-
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithImmediateShifter(15, ASR, 0).calculate(true);
-	assert(result == 0x800128);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x4000001F;
-	result = RegisterWithImmediateShifter(15, ASR, 31).calculate(true);
-	assert(result == 0);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 0;
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(15, ASR, 0).calculate(true);
-	assert(result == 0x80012C);
-	assert(cpsr.val == expectedCPSR.val);
-
-	*r[0] = 24;
-	*r[EProgramCounter] = 0x800120;
-	cpsr.val = 0x1F;
-	expectedCPSR.val = 0x1F;
-	result = RegisterWithRegisterShifter(15, ASR, 0).calculate(true);
-	assert(result == 8);
-	assert(cpsr.val == expectedCPSR.val);
-
-	//--------------------------
+void PCOperandTestsREG() {
+	bool failed = false;
+	for (auto& test_arr : PCTestsREG) {
+		Registers testRegs = { test_arr.in0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,test_arr.in1,0,0 };
+		cpsr.val = test_arr.inCpsr;
+		uint32_t result = RegisterWithRegisterShifter(testRegs, 15, test_arr.rotation, 0).calculate(true);
+		if (result != test_arr.expected.result) {
+			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
+			failed = true;
+		}
+		if (cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+			failed = true;
+		}
+	}
+	assert(!failed);
 }
 
 void testShifter() {
-	r = usrSys;
 	loadStoreImmediateValues();
-	testLslImm();
-	testLsrImm();
-	testAsrImm();
-	testRorImm();
-	testPCreg();
+	registerImmediateShifterTests();
+	registerRegisterShifterTests();
+	PCOperandTestsIMM();
+	PCOperandTestsREG();
 }

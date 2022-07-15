@@ -2,9 +2,10 @@
 #include <stdint.h>
 #include "cplusplusRewrite/SingleDataTransfer.h"
 #include "cplusplusRewrite/barrelShifterDecoder.h"
+#include "cplusplusRewrite/HwRegisters.h"
 
 
-SingleDataTransfer::SingleDataTransfer(uint32_t opCode) {
+SingleDataTransfer::SingleDataTransfer(Registers& regs, uint32_t opCode) : m_regs(regs) {
 	m_opCode.val = opCode;
 }
 
@@ -15,11 +16,8 @@ void SingleDataTransfer::execute() {
 	if (m_opCode.immediateOffset)
 		operand1 = m_opCode.offset;
 	else {
-		RotatorUnits* shifter = BarrelShifterDecoder().decode(*this); //TODO: move to constructor
+		RotatorUnits* shifter = BarrelShifterDecoder(m_regs).decode(*this); //TODO: move to constructor
 		operand1 = shifter->calculate(true);
 		delete shifter;
 	}
-
-
-	
 }

@@ -55,7 +55,7 @@ void Ror::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmou
 
 void Ror::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
 	if (shiftAmount > 32){
-		shift(destinationRegister, sourceValue, shiftAmount - 32);
+		shift(destinationRegister, sourceValue, shiftAmount % 32);
 	}
 	else{
 		destinationRegister = (sourceValue >> shiftAmount) | (sourceValue << (32 - shiftAmount));

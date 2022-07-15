@@ -185,7 +185,6 @@ int main(int argc, char *args[]){
 	cycles = 0;
 	debug = false;
 
-	//unitTestForTeppo();
 	while (true){
 #if GPU
 		if (debug || (refreshRate > 100000)){
@@ -207,9 +206,9 @@ int main(int argc, char *args[]){
 			cout << hex << *r[15] << " opCode: " << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
 			cout << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16]<< " ";
 		}
-		*r[15] += 4;  // == Registers::nextProgramCounter();  // FIXME: Tuomolla paremmat nimet
+
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
-		*r[15] -= 4;  // == Registers::prevProgramCounter();
+
 		if (debug){
 			cout << endl;
 		}

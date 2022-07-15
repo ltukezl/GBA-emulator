@@ -18,7 +18,7 @@ void interruptController(){
 	cpsr.thumb = 0;
 	cpsr.mode = SUPER;
 
-	*r[PC] = 0x8;
+	*r[PC] = 0xC;
 #endif
 }
 

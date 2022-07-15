@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -163,6 +163,7 @@
     <ClInclude Include="project1\cplusplusrewrite\barrelShifter.h" />
     <ClInclude Include="project1\cplusplusrewrite\BarrelShifterDecoder.h" />
     <ClInclude Include="project1\cplusplusrewrite\dataProcessingOp.h" />
+    <ClInclude Include="Project1\cplusplusRewrite\Emulator.h" />
     <ClInclude Include="Project1\cplusplusRewrite\HwRegisters.h" />
     <ClInclude Include="project1\cplusplusrewrite\LogicOps.h" />
     <ClInclude Include="project1\cplusplusrewrite\MathOps.h" />

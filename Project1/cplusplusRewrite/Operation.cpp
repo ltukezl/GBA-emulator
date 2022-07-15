@@ -6,7 +6,7 @@
 bool Operation::isZero(uint32_t result) { return result == 0; }
 bool Operation::isNegative(int32_t result) { return result < 0; }
 bool Operation::additionCarry(uint64_t op1, uint64_t op2, uint64_t carry) {
-	uint32_t res = op1 + op2 + carry;
+	uint64_t res = op1 + op2 + carry;
 	return ((res >> 32) & 1) == 1;
 }
 bool Operation::additionOverflow(uint64_t op1, uint64_t op2, uint64_t carry) {

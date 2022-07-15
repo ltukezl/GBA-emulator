@@ -4,6 +4,7 @@
 #include "cplusplusRewrite/operation.h"
 #include "GBAcpu.h"
 
+
 void MathOp::execute(uint32_t& destinationRegister, uint32_t operand1, RotatorUnits& rotation, bool setConditions){
 	uint32_t operand2 = rotation.calculate(false);
 	calculate(destinationRegister, operand1, operand2);

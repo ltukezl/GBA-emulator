@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <memory>
 #include <initializer_list>
+#include "GBAcpu.h"
 
 //-------------------------------
 
@@ -37,33 +38,7 @@ constexpr uint8_t REG_LEN = 17;
 
 class Registers {
 private:
-	enum CpuModes_r {
-		USRr = 0x10,
-		FIQq = 0x11,
-		IRQq = 0x12,
-		SUPERr = 0x13,
-		ABORTt = 0x17,
-		UNDEFf = 0x1B,
-		SYSs = 0x1F
-	};
-
-
-	union CPSR_r {
-		struct {
-			uint32_t mode : 5;
-			uint32_t thumb : 1;
-			uint32_t FIQDisable : 1;
-			uint32_t IRQDisable : 1;
-			uint32_t unused : 20;
-			uint32_t overflow : 1;
-			uint32_t carry : 1;
-			uint32_t zero : 1;
-			uint32_t negative : 1;
-		};
-		uint32_t val;
-	}cpsr_r;
-
-	TCPUMode m_offset;
+	TCPUMode m_offset = EArm;
     uint32_t** r;
 
 	uint32_t sharedRegs[9];
@@ -104,9 +79,9 @@ private:
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8], &sprs_udf };
 
 public:	
-	uint32_t currentMode = 0;
+	CpuModes currentMode = SUPER;
 
-	void updateMode(uint32_t mode) {
+	void updateMode(CpuModes mode) {
 		//std::cout << "switched mode to " << mode << std::endl;
 		currentMode = mode;
 		// FIXME: use returns!!!
@@ -121,7 +96,7 @@ public:
 		}
 	}
 
-	void reset(const uint32_t mode) {
+	void reset(const CpuModes mode) {
 		updateMode(mode);
 		memset(sharedRegs, 0, sizeof(sharedRegs));
 		memset(extRegisters, 0, sizeof(extRegisters));
@@ -133,11 +108,11 @@ public:
 		memset(undBanked, 0, sizeof(undBanked));
 	};
 
-	Registers(const uint32_t mode = SUPER) {
+	Registers(const CpuModes mode = SUPER) {
 		reset(mode);
 	};
 
-	Registers(const std::initializer_list<uint32_t> list, const uint32_t mode = SUPER) {
+	Registers(const std::initializer_list<uint32_t> list, const CpuModes mode = SUPER) {
 		reset(mode);
 		for (uint32_t i = 0; i < REG_LEN; i++) {
 			*r[i] = list.begin()[i];

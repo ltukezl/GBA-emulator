@@ -28,7 +28,7 @@ void DataProcessingOpcode::initialize(union CPSR& cpsr, Registers& regs){
 	tst[15] = new Mvn(cpsr);
 }
 
-DataProcessingOpcode::DataProcessingOpcode(union CPSR& cpsr, Registers& regs) : regs(regs) {
+DataProcessingOpcode::DataProcessingOpcode(union CPSR& cpsr, Registers& regs) : m_regs(regs) {
 	initialize(cpsr, regs);
 }
 
@@ -41,15 +41,15 @@ DataProcessingOpcode::~DataProcessingOpcode(){
 
 void DataProcessingOpcode::execute(uint32_t opCode) {
 	m_opCode.val = opCode;
-	RotatorUnits* shifter = BarrelShifterDecoder().decode(*this);
+	RotatorUnits* shifter = BarrelShifterDecoder(m_regs).decode(*this);
 
 	//{RD, RS, RM, RN} == 15, PC =+ 4 | PC =+ 8
 	//if (((opCode >> 4) & 0x12FFF1) == 0x12FFF1) => branch link
 	//MRS, MSR, 
 	// TODO: Mieluummin näin
 	// tst[m_opCode.dataProcessingOpcode]->execute(m_opCode, *shifter);
-	tst[m_opCode.dataProcessingOpcode]->execute(regs[m_opCode.destinationRegister],
-												regs[m_opCode.firstOperandRegister],
+	tst[m_opCode.dataProcessingOpcode]->execute(m_regs[m_opCode.destinationRegister],
+												m_regs[m_opCode.firstOperandRegister],
 												*shifter, 
 												m_opCode.setStatusCodes);
 

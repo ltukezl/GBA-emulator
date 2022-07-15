@@ -33,7 +33,7 @@ enum DataProcessingSetOpCodes{
 class DataProcessingOpcode {
 private:
 	void initialize(union CPSR& cpsr, Registers& regs);
-	Registers& regs;
+	Registers& m_regs;
 	Operation* tst[0x10];
 
 public:
@@ -50,6 +50,8 @@ public:
 			uint32_t executionCondition : 4;
 		};
 	}m_opCode;
+
+
 
 	DataProcessingOpcode(union CPSR& cpsr, Registers& regs);
 	~DataProcessingOpcode();

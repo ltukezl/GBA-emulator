@@ -6,6 +6,6 @@
 
 void runAllTests() {
 	testRegister();
-	//testDataProcessingAndOpSunnyDay();
 	testShifter();
+	dataProcessingTests();
 }

@@ -1,0 +1,67 @@
+@startuml
+title Class Diagram
+
+class Emulator {
+    registers: Registers
+''memory: Memory
+    video: Video
+    sound: Sound
+    timers: Timer
+    intterupt: Intterupt
+    dma: Dma
+    units: Units
+}
+
+class Memory {
+    start
+    stop
+
+    write8()
+    write16()
+
+    directWrite8(): free action
+    
+}
+
+class Timer {
+    emulator: Emulator
+}
+
+class Register {
+
+}
+
+class RotatorUnits {
+    calculate(BoundedContext bc)
+}
+
+class IORegisters {
+    memory: Memory
+}
+
+class DMA {
+    timer: Timers
+}
+
+class Sound {
+    timer: Timer
+    dma: DMA
+    memory: Memory
+
+    void playSound()
+}
+
+class BoundedContext {
+    opCode: OpCode
+    emulator: Emulator
+}
+
+
+Emulator *--> Register
+DMA o--> Timer: Triggers
+DMA *--> Memory
+Timer *--> Memory
+
+RotatorUnits o--> Emulator
+
+@enduml

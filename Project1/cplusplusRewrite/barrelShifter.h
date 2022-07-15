@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/barrelShifter.h"
+#include "cplusplusRewrite/HwRegisters.h"
 
 
 enum Rotation : uint16_t{
@@ -13,14 +14,12 @@ enum Rotation : uint16_t{
 };
 
 class RotatorUnits{
-protected:
-	uint8_t m_offset;
-
 public:
 	ShiferUnit* m_shifts[5];
 	uint16_t m_val;
+	Registers& m_registers;
 
-	RotatorUnits();
+	RotatorUnits(Registers& registers);
 	~RotatorUnits();
 	virtual uint32_t calculate(bool setStatus) = 0;
 };
@@ -35,8 +34,8 @@ public:
 		};
 	}immediateRotaterFields;
 
-	ImmediateRotater(uint16_t immediate);
-	ImmediateRotater(uint16_t immediate, uint16_t rotateAmount);
+	ImmediateRotater(Registers& registers, uint16_t immediate);
+	ImmediateRotater(Registers& registers, uint16_t immediate, uint16_t rotateAmount);
 
 	uint32_t calculate(bool setStatus) override;
 };
@@ -53,8 +52,8 @@ public:
 		};
 	}registerRotaterFields;
 
-	RegisterWithImmediateShifter(uint16_t val);
-	RegisterWithImmediateShifter(uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount);
+	RegisterWithImmediateShifter(Registers& registers, uint16_t val);
+	RegisterWithImmediateShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount);
 
 	uint16_t shifter() const { return ((registerRotaterFields.shiftCode == ROR) && (registerRotaterFields.shiftAmount == 0)) ? RRX : registerRotaterFields.shiftCode; }
 	uint32_t calculate(bool setStatus) override;
@@ -72,8 +71,9 @@ public:
 			uint16_t shiftRegister : 5;
 		};
 	}registerRotaterFields;
-	RegisterWithRegisterShifter(uint16_t val);
-	RegisterWithRegisterShifter(uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister);
+	
+	RegisterWithRegisterShifter(Registers& registers, uint16_t val);
+	RegisterWithRegisterShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister);
 
 	uint32_t calculate(bool setStatus) override;
 };
