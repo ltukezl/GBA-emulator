@@ -51,8 +51,6 @@ public:
 		};
 	}m_opCode;
 
-
-
 	DataProcessingOpcode(union CPSR& cpsr, Registers& regs);
 	~DataProcessingOpcode();
 

@@ -20,7 +20,7 @@ public:
 	Registers& m_registers;
 
 	RotatorUnits(Registers& registers);
-	~RotatorUnits();
+	virtual ~RotatorUnits() = 0;
 	virtual uint32_t calculate(bool setStatus) = 0;
 };
 
@@ -33,6 +33,8 @@ public:
 			uint16_t rotateAmount : 4;
 		};
 	}immediateRotaterFields;
+
+	~ImmediateRotater() override;
 
 	ImmediateRotater(Registers& registers, uint16_t immediate);
 	ImmediateRotater(Registers& registers, uint16_t immediate, uint16_t rotateAmount);
@@ -51,6 +53,8 @@ public:
 			uint16_t shiftAmount : 5;
 		};
 	}registerRotaterFields;
+
+	~RegisterWithImmediateShifter() override;
 
 	RegisterWithImmediateShifter(Registers& registers, uint16_t val);
 	RegisterWithImmediateShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount);
@@ -74,6 +78,7 @@ public:
 	
 	RegisterWithRegisterShifter(Registers& registers, uint16_t val);
 	RegisterWithRegisterShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister);
+	~RegisterWithRegisterShifter() override ;
 
 	uint32_t calculate(bool setStatus) override;
 };

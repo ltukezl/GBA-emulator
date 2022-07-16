@@ -4,14 +4,10 @@
 #include <iostream>
 #include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/barrelShifter.h"
+#include "cplusplusRewrite/tests/testUtils.h"
 #include "GBAcpu.h"
 
-struct Expected {
-	uint32_t result;
-	uint32_t cpsr;
-};
-
-struct test {
+struct shifterTest {
 	char* name;
 	uint32_t in0;
 	uint32_t in1;
@@ -20,14 +16,14 @@ struct test {
 	struct Expected expected;
 };
 
-static struct test regImmediateValueTests[]{
+static struct shifterTest regImmediateValueTests[]{
 	{"mov #0"          , 0   , 0, 0x1F, LSL, { 0          , 0x4000001F }},
 	{"mov #0xFF"       , 0xFF, 0, 0x1F, LSL, { 0xFF       , 0x1F }},
 	{"mov #0xFF00'0000", 0xFF, 8, 0x1F, LSL, { 0xFF00'0000, 0xA000001F }},
 	{"mov #0xF000'000F", 0xFF, 4, 0x1F, LSL, { 0xF000'000F, 0xA000001F }},
 };
 
-static struct test regImmediateShifterTests[]{
+static struct shifterTest regImmediateShifterTests[]{
 	{"r0 LSL #0" , 0xFFF     , 0  , 0x1F, LSL, { 0xFFF      , 0x1F }},
 	{"r0 LSL #1" , 0xFFF     , 1  , 0x1F, LSL, { 0x1FFE     , 0x1F }},
 	{"r0 LSL #31", 0x3       , 31 , 0x1F, LSL, { 0x8000'0000, 0xA000001F }},
@@ -43,7 +39,7 @@ static struct test regImmediateShifterTests[]{
 	{"r0 ROR #0" , 0x87654321, 0  , 0x1F, ROR, { 0x43B2'A190, 0x2000001F }},
 };
 
-static struct test regRegisterShifterTests[]{
+static struct shifterTest regRegisterShifterTests[]{
 	{"r0 LSL r1", 0 , 0xFFF     , 0x1F, LSL, { 0xFFF     , 0x1F }},
 	{"r0 LSL r1", 1 , 0xFFF     , 0x1F, LSL, { 0x1FFE    , 0x1F }},
 	{"r0 LSL r1", 31, 3         , 0x1F, LSL, { 0x80000000, 0xA000001F }},
@@ -70,7 +66,7 @@ static struct test regRegisterShifterTests[]{
 	{"r0 ROR r1", -1, 0x12345678, 0x1F, ROR, { 0x2468ACF0, 0x1F }},
 };
 
-static struct test PCTestsIMM[]{
+static struct shifterTest PCTestsIMM[]{
 	{"PC LSL #0" , 0x800120 , 0  , 0x1F, LSL, { 0x800120 , 0x1F }},
 	{"PC LSL #31", 0x800120 , 31 , 0x1F, LSL, { 0        , 0x4000001F }},
 	{"PC LSR #0" , 0x800120 , 0  , 0x1F, LSR, { 0x800120 , 0x1F }},
@@ -79,7 +75,7 @@ static struct test PCTestsIMM[]{
 	{"PC ASR #31", 0x800120 , 31 , 0x1F, ASR, { 0        , 0x4000001F }},
 };
 
-static struct test PCTestsREG[]{
+static struct shifterTest PCTestsREG[]{
 	{"PC LSL r1", 0 , 0x8000120, 0x1F, LSL, { 0x8000124, 0x1F }},
 	{"PC LSR r1", 0 , 0x8000120, 0x1F, LSR, { 0x8000124, 0x1F }},
 	{"PC LSR r1", 24, 0x8000120, 0x1F, LSR, { 8        , 0x1F }},

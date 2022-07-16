@@ -191,6 +191,12 @@
     <ClInclude Include="Project1\cplusplusRewrite\tests\shifterTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\Emulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\cplusplusRewrite\tests\testUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="project1\testbinaries\program2.bin">

@@ -134,6 +134,10 @@ public:
         return true;
     }
 
+	bool operator!=(const Registers& other) const {
+		return !(* this == other);
+	}
+
 	void nextProgramCounter() {
 		*r[EProgramCounter] += m_offset;
 	}

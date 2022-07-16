@@ -29,6 +29,8 @@ RotatorUnits::~RotatorUnits(){
 
 //------------
 
+ImmediateRotater::~ImmediateRotater() {}
+
 ImmediateRotater::ImmediateRotater(Registers& registers, uint16_t immediate) : RotatorUnits(registers) {
 	immediateRotaterFields.val = immediate;
 	m_val = immediate;
@@ -49,6 +51,8 @@ uint32_t ImmediateRotater::calculate(bool setStatus) {
 }
 
 //------------
+
+RegisterWithImmediateShifter::~RegisterWithImmediateShifter() {}
 
 RegisterWithImmediateShifter::RegisterWithImmediateShifter(Registers& registers, uint16_t val) : RotatorUnits(registers) {
 	registerRotaterFields.val = val;
@@ -72,10 +76,14 @@ uint32_t RegisterWithImmediateShifter::calculate(bool setStatus) {
 
 //------------
 
+RegisterWithRegisterShifter::~RegisterWithRegisterShifter() {
+	m_registers[EProgramCounter] -= 4;
+}
 
 RegisterWithRegisterShifter::RegisterWithRegisterShifter(Registers& registers, uint16_t val) : RotatorUnits(registers) {
 	registerRotaterFields.val = val; 
 	m_val = val; 
+	m_registers[EProgramCounter] += 4;
 }
 
 RegisterWithRegisterShifter::RegisterWithRegisterShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister) : RotatorUnits(registers) {
@@ -84,14 +92,15 @@ RegisterWithRegisterShifter::RegisterWithRegisterShifter(Registers& registers, u
 	registerRotaterFields.shiftCode = rotation;
 	registerRotaterFields.shiftRegister = shiftRegister;
 	m_val = registerRotaterFields.val;
+	m_registers[EProgramCounter] += 4;
 }
 
 uint32_t RegisterWithRegisterShifter::calculate(bool setStatus) {
 	uint32_t tmpResult = 0;
 	// If a register is used to specify the shift amount the PC will be 4 bytes ahead.
-	m_registers[EProgramCounter] += 4;
+	
 	m_shifts[registerRotaterFields.shiftCode]->execute(tmpResult, m_registers[registerRotaterFields.sourceRegister], m_registers[registerRotaterFields.shiftRegister], setStatus);
-	m_registers[EProgramCounter] -= 4;
+	
 	return tmpResult;
 }
 
