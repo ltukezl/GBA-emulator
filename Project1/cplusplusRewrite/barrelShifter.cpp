@@ -2,15 +2,14 @@
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/dataProcessingOp.h"
 #include "cplusplusRewrite/HwRegisters.h"
-#include "GBAcpu.h"
 #include <iostream>
 
 RotatorUnits::RotatorUnits(Registers& registers) : m_registers(registers) {
-	m_shifts[0] = new Lsl(cpsr);
-	m_shifts[1] = new Lsr(cpsr);
-	m_shifts[2] = new Asr(cpsr);
-	m_shifts[3] = new Ror(cpsr);
-	m_shifts[4] = new Rrx(cpsr);
+	m_shifts[0] = new Lsl(m_registers.m_cpsr);
+	m_shifts[1] = new Lsr(m_registers.m_cpsr);
+	m_shifts[2] = new Asr(m_registers.m_cpsr);
+	m_shifts[3] = new Ror(m_registers.m_cpsr);
+	m_shifts[4] = new Rrx(m_registers.m_cpsr);
 	m_val = 0;
 }
 RotatorUnits::~RotatorUnits(){
@@ -44,7 +43,7 @@ ImmediateRotater::ImmediateRotater(Registers& registers, uint16_t immediate, uin
 
 uint32_t ImmediateRotater::calculate(bool setStatus) {
 	uint32_t tempResult = 0;
-	auto ror = Ror(cpsr);
+	auto ror = Ror(m_registers.m_cpsr);
 	ror.execute(tempResult, immediateRotaterFields.immediate, immediateRotaterFields.rotateAmount, setStatus);
 	ror.execute(tempResult, immediateRotaterFields.immediate, immediateRotaterFields.rotateAmount, setStatus);
 	return tempResult;
@@ -70,7 +69,11 @@ RegisterWithImmediateShifter::RegisterWithImmediateShifter(Registers& registers,
 uint32_t RegisterWithImmediateShifter::calculate(bool setStatus) {
 	uint32_t tmpResult = 0;	
 	// TODO: registerRotaterFields -> m_opcodeRotaterField   // päätä itse mutta jos et tätä muuta, mass replace!!
-	m_shifts[shifter()]->execute(tmpResult, m_registers[registerRotaterFields.sourceRegister], registerRotaterFields.shiftAmount, setStatus);
+	uint32_t tmpOperand = m_registers[registerRotaterFields.sourceRegister];
+	if((registerRotaterFields.shiftAmount == 0) && (shifter() != LSL))
+		m_shifts[shifter()]->execute(tmpResult, m_registers[registerRotaterFields.sourceRegister], 0x20, setStatus);
+	else
+		m_shifts[shifter()]->execute(tmpResult, m_registers[registerRotaterFields.sourceRegister], registerRotaterFields.shiftAmount, setStatus);
 	return tmpResult;
 }
 

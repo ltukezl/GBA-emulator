@@ -1,6 +1,6 @@
 #pragma once
 #include "cplusplusRewrite/operation.h"
-#include "GBAcpu.h"
+#include "cplusplusRewrite/HwRegisters.h"
 
 class MathOp: public Operation {
 protected:
@@ -9,7 +9,7 @@ protected:
 
 public:
 	void execute(uint32_t& destinationRegister, uint32_t operand1, RotatorUnits& rotation, bool setConditions) override;
-	MathOp(union CPSR& programStatus);
+	MathOp(union CPSR_t& programStatus);
 };
 
 class Addition : public MathOp {
@@ -17,7 +17,7 @@ protected:
 	void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) override;
 	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
 public:
-	Addition(union CPSR& programStatus);
+	Addition(union CPSR_t& programStatus);
 };
 
 class Substraction : public MathOp {
@@ -25,7 +25,7 @@ protected:
 	void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) override;
 	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
 public:
-	Substraction(union CPSR& programStatus);
+	Substraction(union CPSR_t& programStatus);
 };
 
 class ReverseSubstraction : public MathOp {
@@ -33,7 +33,7 @@ protected:
 	void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) override;
 	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
 public:
-	ReverseSubstraction(union CPSR& programStatus);
+	ReverseSubstraction(union CPSR_t& programStatus);
 };
 
 class AddWithCarry : public MathOp {
@@ -41,7 +41,7 @@ protected:
 	void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) override;
 	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
 public:
-	AddWithCarry(union CPSR& programStatus);
+	AddWithCarry(union CPSR_t& programStatus);
 };
 
 class BorrowSubstraction : public MathOp {
@@ -49,7 +49,7 @@ protected:
 	void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) override;
 	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
 public:
-	BorrowSubstraction(union CPSR& programStatus);
+	BorrowSubstraction(union CPSR_t& programStatus);
 };
 
 class ReverseBorrowSubstraction : public MathOp {
@@ -57,7 +57,7 @@ protected:
 	void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) override;
 	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
 public:
-	ReverseBorrowSubstraction(union CPSR& programStatus);
+	ReverseBorrowSubstraction(union CPSR_t& programStatus);
 };
 
 class Negation : public MathOp {
@@ -65,5 +65,5 @@ protected:
 	void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) override;
 	void calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) override;
 public:
-	Negation(union CPSR& programStatus);
+	Negation(union CPSR_t& programStatus);
 };

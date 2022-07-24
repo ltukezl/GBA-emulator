@@ -2,8 +2,6 @@
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/operation.h"
 #include "cplusplusRewrite/LogicOps.h"
-#include "GBAcpu.h"
-
 
 bool LogicOp::isZero(uint32_t result) { return result == 0; }
 bool LogicOp::isNegative(int32_t result) { return result < 0; }
@@ -15,7 +13,7 @@ void LogicOp::execute(uint32_t& destinationRegister, uint32_t operand1, RotatorU
 		calcConditions(operand1, operand2);
 }
 
-LogicOp::LogicOp(union CPSR& programStatus) : Operation(programStatus) {}
+LogicOp::LogicOp(union CPSR_t& programStatus) : Operation(programStatus) {}
 
 void And::calcConditions(uint32_t op1, uint32_t op2)
 {
@@ -28,7 +26,7 @@ void And::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 	destinationRegister = operand1 & operand2;
 }
 
-And::And(CPSR& programStatus) : LogicOp(programStatus) {}
+And::And(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -43,7 +41,7 @@ void Or::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t op
 	destinationRegister = operand1 | operand2;
 }
 
-Or::Or(CPSR& programStatus) : LogicOp(programStatus) {}
+Or::Or(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -58,7 +56,7 @@ void Xor::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 	destinationRegister = operand1 ^ operand2;
 }
 
-Xor::Xor(CPSR& programStatus) : LogicOp(programStatus) {}
+Xor::Xor(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -74,8 +72,31 @@ void Tst::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 		destinationRegister = m_cpsr.val;
 }
 
-Tst::Tst(CPSR& programStatus) : LogicOp(programStatus) {}
+Tst::Tst(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
+// --------
+
+//Mrs.calculate(m_cpsr.m_val, XXX, 0, 0);
+/*
+void Mrs::calcConditions(uint32_t op1, uint32_t op2)
+{
+	
+}
+
+void Mrs::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
+{
+	if (specialBit)
+		destinationRegister = registers[ECPSR];
+	else
+		destinationRegister = registers[ESavedStatusRegister];
+}
+
+void Msr::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
+{
+	if (!setConditions)
+		destinationRegister = m_cpsr.val;
+}
+*/
 //----------
 
 void Cmp::calcConditions(uint32_t op1, uint32_t op2)
@@ -88,11 +109,10 @@ void Cmp::calcConditions(uint32_t op1, uint32_t op2)
 
 void Cmp::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
-	if(!setConditions)
-		destinationRegister = *r[16];
+
 }
 
-Cmp::Cmp(CPSR& programStatus) : LogicOp(programStatus) {}
+Cmp::Cmp(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -108,7 +128,7 @@ void Cmn::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 {
 }
 
-Cmn::Cmn(CPSR& programStatus) : LogicOp(programStatus) {}
+Cmn::Cmn(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -126,7 +146,7 @@ void Teq::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 	}
 }
 
-Teq::Teq(CPSR& programStatus) : LogicOp(programStatus) {}
+Teq::Teq(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -141,7 +161,7 @@ void Mov::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 	destinationRegister = operand2;
 }
 
-Mov::Mov(CPSR& programStatus) : LogicOp(programStatus) {}
+Mov::Mov(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -156,7 +176,7 @@ void Bic::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 	destinationRegister = operand1 & ~operand2;
 }
 
-Bic::Bic(CPSR& programStatus) : LogicOp(programStatus) {}
+Bic::Bic(CPSR_t& programStatus) : LogicOp(programStatus) {}
 
 //----------
 
@@ -171,4 +191,4 @@ void Mvn::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 	destinationRegister = ~operand2;
 }
 
-Mvn::Mvn(CPSR& programStatus) : LogicOp(programStatus) {}
+Mvn::Mvn(CPSR_t& programStatus) : LogicOp(programStatus) {}

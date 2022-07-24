@@ -821,9 +821,6 @@ void singleDataTrasnferRegisterPost(int opCode){
 enum ProcessingUnits {
 	EDataProcessing,
 };
-#include "cplusplusRewrite//dataProcessingOp.h"
-DataProcessingOpcode* units[10] = {};
-
 
 void ARMExecute(int opCode){
 	int condition = (opCode >> 28) & 0xF;

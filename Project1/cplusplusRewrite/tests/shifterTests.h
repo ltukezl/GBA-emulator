@@ -5,7 +5,6 @@
 #include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/tests/testUtils.h"
-#include "GBAcpu.h"
 
 struct shifterTest {
 	char* name;
@@ -27,10 +26,10 @@ static struct shifterTest regImmediateShifterTests[]{
 	{"r0 LSL #0" , 0xFFF     , 0  , 0x1F, LSL, { 0xFFF      , 0x1F }},
 	{"r0 LSL #1" , 0xFFF     , 1  , 0x1F, LSL, { 0x1FFE     , 0x1F }},
 	{"r0 LSL #31", 0x3       , 31 , 0x1F, LSL, { 0x8000'0000, 0xA000001F }},
-	{"r0 LSR #0" , 0xFFF     , 0  , 0x1F, LSR, { 0xFFF      , 0x1F }},
+	{"r0 LSR #0" , 0x80000FFF, 0  , 0x1F, LSR, { 0          , 0x6000001F }},
 	{"r0 LSR #1" , 0xFFF     , 1  , 0x1F, LSR, { 0x7FF      , 0x2000001F }},
 	{"r0 LSR #31", 0xC0000000, 31 , 0x1F, LSR, { 0x1        , 0x2000001F }},
-	{"r0 ASR #0" , 0x80000FFF, 0  , 0x1F, ASR, { 0x8000'0FFF, 0x8000001F }},
+	{"r0 ASR #0" , 0x80000FFF, 0  , 0x1F, ASR, { 0xFFFF'FFFF, 0xA000001F }},
 	{"r0 ASR #1" , 0x80000FFF, 1  , 0x1F, ASR, { 0xC000'07FF, 0xA000001F }},
 	{"r0 ASR #31", 0xC0000000, 31 , 0x1F, ASR, { 0xFFFF'FFFF, 0xA000001F }},
 	{"r0 ROR #1" , 0x12345678, 1  , 0x1F, ROR, { 0x091A'2B3C, 0x1F }},
@@ -69,9 +68,9 @@ static struct shifterTest regRegisterShifterTests[]{
 static struct shifterTest PCTestsIMM[]{
 	{"PC LSL #0" , 0x800120 , 0  , 0x1F, LSL, { 0x800120 , 0x1F }},
 	{"PC LSL #31", 0x800120 , 31 , 0x1F, LSL, { 0        , 0x4000001F }},
-	{"PC LSR #0" , 0x800120 , 0  , 0x1F, LSR, { 0x800120 , 0x1F }},
+	{"PC LSR #0" , 0x800120 , 0  , 0x1F, LSR, { 0        , 0x4000001F }},
 	{"PC LSR #31", 0x800120 , 31 , 0x1F, LSR, { 0        , 0x4000001F }},
-	{"PC ASR #0" , 0x800120 , 0  , 0x1F, ASR, { 0x800120 , 0x1F }},
+	{"PC ASR #0" , 0x800120 , 0  , 0x1F, ASR, { 0        , 0x4000001F }},
 	{"PC ASR #31", 0x800120 , 31 , 0x1F, ASR, { 0        , 0x4000001F }},
 };
 
@@ -87,14 +86,14 @@ void loadStoreImmediateValues() {
 	bool failed = false;
 	for (auto& test_arr : regImmediateValueTests) {
 		Registers testRegs = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-		cpsr.val = test_arr.inCpsr;
+		testRegs.m_cpsr.val = test_arr.inCpsr;
 		uint32_t result = ImmediateRotater(testRegs, test_arr.in0, test_arr.in1).calculate(true);
 		if (result != test_arr.expected.result) {
 			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
 			failed = true;
 		}
-		if (cpsr.val != test_arr.expected.cpsr) {
-			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n\n" << std::dec;
+		if (testRegs.m_cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << testRegs.m_cpsr.val << " expected: " << test_arr.expected.cpsr << "\n\n" << std::dec;
 			failed = true;
 		}
 	}
@@ -105,14 +104,14 @@ void registerImmediateShifterTests() {
 	bool failed = false;
 	for (auto& test_arr : regImmediateShifterTests) {
 		Registers testRegs = { test_arr.in0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-		cpsr.val = test_arr.inCpsr;
+		testRegs.m_cpsr.val = test_arr.inCpsr;
 		uint32_t result = RegisterWithImmediateShifter(testRegs, 0, test_arr.rotation, test_arr.in1).calculate(true);
 		if (result != test_arr.expected.result) {
 			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
 			failed = true;
 		}
-		if (cpsr.val != test_arr.expected.cpsr) {
-			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+		if (testRegs.m_cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << testRegs.m_cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
 			failed = true;
 		}
 	}
@@ -123,14 +122,14 @@ void registerRegisterShifterTests() {
 	bool failed = false;
 	for (auto& test_arr : regRegisterShifterTests) {
 		Registers testRegs = { test_arr.in0,test_arr.in1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-		cpsr.val = test_arr.inCpsr;
+		testRegs.m_cpsr.val = test_arr.inCpsr;
 		uint32_t result = RegisterWithRegisterShifter(testRegs, 1, test_arr.rotation, 0).calculate(true);
 		if (result != test_arr.expected.result) {
 			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
 			failed = true;
 		}
-		if (cpsr.val != test_arr.expected.cpsr) {
-			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+		if (testRegs.m_cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << testRegs.m_cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
 			failed = true;
 		}
 	}
@@ -141,14 +140,14 @@ void PCOperandTestsIMM() {
 	bool failed = false;
 	for (auto& test_arr : PCTestsIMM) {
 		Registers testRegs = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,test_arr.in0,0,0 };
-		cpsr.val = test_arr.inCpsr;
+		testRegs.m_cpsr.val = test_arr.inCpsr;
 		uint32_t result = RegisterWithImmediateShifter(testRegs, 15, test_arr.rotation, test_arr.in1).calculate(true);
 		if (result != test_arr.expected.result) {
 			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
 			failed = true;
 		}
-		if (cpsr.val != test_arr.expected.cpsr) {
-			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+		if (testRegs.m_cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << testRegs.m_cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
 			failed = true;
 		}
 	}
@@ -159,14 +158,14 @@ void PCOperandTestsREG() {
 	bool failed = false;
 	for (auto& test_arr : PCTestsREG) {
 		Registers testRegs = { test_arr.in0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,test_arr.in1,0,0 };
-		cpsr.val = test_arr.inCpsr;
+		testRegs.m_cpsr.val = test_arr.inCpsr;
 		uint32_t result = RegisterWithRegisterShifter(testRegs, 15, test_arr.rotation, 0).calculate(true);
 		if (result != test_arr.expected.result) {
 			std::cout << std::hex << "result for test " << test_arr.name << " failed! - got: " << result << " expected: " << test_arr.expected.result << "\n" << std::dec;
 			failed = true;
 		}
-		if (cpsr.val != test_arr.expected.cpsr) {
-			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
+		if (testRegs.m_cpsr.val != test_arr.expected.cpsr) {
+			std::cout << std::hex << "cpsr for test " << test_arr.name << " failed! - got: " << testRegs.m_cpsr.val << " expected: " << test_arr.expected.cpsr << "\n" << std::dec;
 			failed = true;
 		}
 	}

@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <memory>
 #include <initializer_list>
-#include "GBAcpu.h"
 
 //-------------------------------
 
@@ -25,11 +24,37 @@ enum TRegisters {
 	ELinkRegisterLR,
 	EProgramCounter,
 	ESavedStatusRegister,
+	ECPSR,
+};
+
+enum CpuModes_t {
+	EUSR = 0x10,
+	EFIQ = 0x11,
+	EIRQ = 0x12,
+	ESUPER = 0x13,
+	EABORT = 0x17,
+	EUNDEF = 0x1B,
+	ESYS = 0x1F
 };
 
 enum TCPUMode {
 	EThumb = 4,
 	EArm = 8
+};
+
+union CPSR_t {
+	struct {
+		uint32_t mode : 5;
+		uint32_t thumb : 1;
+		uint32_t FIQDisable : 1;
+		uint32_t IRQDisable : 1;
+		uint32_t unused : 20;
+		uint32_t overflow : 1;
+		uint32_t carry : 1;
+		uint32_t zero : 1;
+		uint32_t negative : 1;
+	};
+	uint32_t val;
 };
 
 
@@ -79,24 +104,25 @@ private:
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8], &sprs_udf };
 
 public:	
-	CpuModes currentMode = SUPER;
 
-	void updateMode(CpuModes mode) {
+	union CPSR_t m_cpsr;
+
+	void updateMode(CpuModes_t mode) {
 		//std::cout << "switched mode to " << mode << std::endl;
-		currentMode = mode;
+		m_cpsr.mode = mode;
 		// FIXME: use returns!!!
 		switch (mode) {
-			case USR:    r = usrSys;  break;
-			case FIQ:    r = fiq;  	  break;
-			case IRQ:    r = irq;  	  break;
-			case SUPER:  r = svc;  	  break;
-			case ABORT:  r = abt;  	  break;
-			case UNDEF:  r = undef;   break;
-			case SYS:    r = usrSys;  break;
+			case EUSR:    r = usrSys;  break;
+			case EFIQ:    r = fiq;  	  break;
+			case EIRQ:    r = irq;  	  break;
+			case ESUPER:  r = svc;  	  break;
+			case EABORT:  r = abt;  	  break;
+			case EUNDEF:  r = undef;   break;
+			case ESYS:    r = usrSys;  break;
 		}
 	}
 
-	void reset(const CpuModes mode) {
+	void reset(const CpuModes_t mode) {
 		updateMode(mode);
 		memset(sharedRegs, 0, sizeof(sharedRegs));
 		memset(extRegisters, 0, sizeof(extRegisters));
@@ -108,11 +134,11 @@ public:
 		memset(undBanked, 0, sizeof(undBanked));
 	};
 
-	Registers(const CpuModes mode = SUPER) {
+	Registers(const CpuModes_t mode = ESUPER) {
 		reset(mode);
 	};
 
-	Registers(const std::initializer_list<uint32_t> list, const CpuModes mode = SUPER) {
+	Registers(const std::initializer_list<uint32_t> list, const CpuModes_t mode = ESUPER) {
 		reset(mode);
 		for (uint32_t i = 0; i < REG_LEN; i++) {
 			*r[i] = list.begin()[i];

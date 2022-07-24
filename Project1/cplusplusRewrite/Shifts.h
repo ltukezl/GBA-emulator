@@ -1,14 +1,15 @@
 #pragma once
 #include <stdint.h>
+#include "cplusplusRewrite/HwRegisters.h"
 
 class ShiferUnit {
 protected:
-	union CPSR& m_cpsr;
+	union CPSR_t& m_cpsr;
 
 	virtual void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) = 0;
 	virtual void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) = 0;
 public:
-	ShiferUnit(union CPSR& programStatus) : m_cpsr(programStatus) {}
+	ShiferUnit(union CPSR_t& programStatus) : m_cpsr(programStatus) {}
 	void execute(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount, bool setStatus){
 		shift(destinationRegister, sourceValue, shiftAmount);
 		if (setStatus)
@@ -22,7 +23,7 @@ protected:
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
 
 public:
-	Lsl(union CPSR& programStatus);
+	Lsl(union CPSR_t& programStatus);
 };
 
 class Lsr : public ShiferUnit {
@@ -31,7 +32,7 @@ protected:
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
 
 public:
-	Lsr(union CPSR& programStatus);
+	Lsr(union CPSR_t& programStatus);
 };
 
 class Asr : public ShiferUnit {
@@ -40,7 +41,7 @@ protected:
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
 
 public:
-	Asr(union CPSR& programStatus);
+	Asr(union CPSR_t& programStatus);
 };
 
 class Ror : public ShiferUnit {
@@ -49,7 +50,7 @@ protected:
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
 
 public:
-	Ror(union CPSR& programStatus);
+	Ror(union CPSR_t& programStatus);
 };
 
 class Rrx : public ShiferUnit {
@@ -58,5 +59,5 @@ protected:
 	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
 
 public:
-	Rrx(union CPSR& programStatus);
+	Rrx(union CPSR_t& programStatus);
 };
