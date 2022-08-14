@@ -33,6 +33,7 @@ uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000
 unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
 
 uint32_t previousAddress = 0;
+extern RgbaPalette PaletteColours;
 
 bool isInterrupt() {
 	return cpsr.mode == SUPER || cpsr.mode == IRQ;
@@ -88,6 +89,10 @@ uint32_t rawLoad32(uint8_t* arr, uint32_t addr){
 	return *(uint32_t*)&(uint8_t)arr[addr];
 }
 
+void isVideoMemModification(uint32_t addr) {
+	PaletteColours.paletteMemChanged(addr);
+}
+
 bool specialWrites(uint32_t mask, uint32_t addr, uint32_t val){
 	if (mask == 4 && addr == 0x202) {//iinterrupt flag clear
 		uint16_t tmp = rawLoad16(IoRAM, 0x202);
@@ -132,6 +137,7 @@ uint32_t clampAddress(uint32_t mask, uint32_t address){
 }
 
 void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
+	isVideoMemModification(destination);
 	destination &= ~3;
 	source &= ~3;
 
@@ -145,6 +151,7 @@ void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
 }
 
 void writeToAddress(uint32_t address, uint8_t value){
+	isVideoMemModification(address);
 	calculateCycles(address, (previousAddress + 1) == address);
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
@@ -179,6 +186,7 @@ void writeToAddress(uint32_t address, uint8_t value){
 }
 
 void writeToAddress16(uint32_t address, uint16_t value){
+	isVideoMemModification(address);
 	calculateCycles(address, (previousAddress + 2) == address);
 	int mask = (address >> 24) & 15;
 	address &= ~0xFF000000;
@@ -198,6 +206,7 @@ void writeToAddress16(uint32_t address, uint16_t value){
 }
 
 void writeToAddress32(uint32_t address, uint32_t value){
+	isVideoMemModification(address);
 	calculateCycles(address, (previousAddress + 4) == address);
 	calculateCycles(address, true);
 	cycles += 1;

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "RgbaPalette.h"
 #include "Memory/memoryMappedIO.h"
+#include "Display/Display.h"
 
 RgbaPalette::RgbaPalette(ColorPaletteRam* startAddr): _colorStartAddress(startAddr) {
 
@@ -24,9 +25,12 @@ void RgbaPalette::updatePalette() {
 			paletteColorArray[i][k].b = blueScaled;
 			paletteColorArray[i][k].a = 255;
 			if(k == 0)
-				paletteColorArray[i][k].a = 255;
+				paletteColorArray[i][k].a = 0;
 			colorPtr++;
 		}
+
+	palettesUpdated = false;
+	debugView->VRAMupdated = true;
 }
 
 RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t index) {
@@ -40,7 +44,8 @@ uint8_t* RgbaPalette::getPalette() {
 	return (uint8_t*)paletteColorArray;
 }
 
-bool RgbaPalette::isInMemoryRange(uint8_t* testedAddress)
+void RgbaPalette::paletteMemChanged(uint32_t testedAddress)
 {
-	return testedAddress >= (uint8_t*)_colorStartAddress && testedAddress < ((uint8_t*)_colorStartAddress + 1024);
+	if (testedAddress >= _paletteStart && testedAddress <= _paletteEnd)
+		palettesUpdated = true;
 }

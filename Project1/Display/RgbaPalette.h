@@ -24,7 +24,7 @@ public:
 	uint8_t* getPalette();
 	GBAColor colorFromIndex(uint32_t index);
 	GBAColor colorFromIndex(uint32_t y, uint32_t x);
-	bool isInMemoryRange(uint8_t* testedAddress);
+	void paletteMemChanged(uint32_t testedAddress);
 
 private:
 	const int _scalar = 255 / 31;
@@ -32,6 +32,9 @@ private:
 	static const int _colorsLength = 16;
 	static const int _colorChannels = 4;
 	union ColorPaletteRam* _colorStartAddress = nullptr;
+
+	uint32_t _paletteStart = 0x5000000;
+	uint32_t _paletteEnd = 0x5FFFFFF;
 	
 	GBAColor paletteColorArray[_colorsWidth][_colorsLength] = { 0 };
 

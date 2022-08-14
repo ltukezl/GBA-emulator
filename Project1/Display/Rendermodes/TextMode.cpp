@@ -18,9 +18,6 @@ void TextMode::draw(uint8_t regOffset) {
 
 	for (int i = 0; i < 32; i++) {
 		for (int k = 0; k < 32; k++) {
-			//if (k == 0x15 && i == 6)
-			if (k == 0x5 && i == 9)
-				std::cout << "";
 			BgTile* tileCtrl = (BgTile*)&VRAM[startAddr];
 			auto t = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
 			backgroundTiles[i][k] = t;
@@ -32,7 +29,7 @@ void TextMode::draw(uint8_t regOffset) {
 		for (int i = 0; i < 32; i++) {
 			for (int k = 0; k < 32; k++) {
 				BgTile* tileCtrl = (BgTile*)&VRAM[startAddr];
-				backgroundTiles[i][k+32] = tileset.getTile(tileStartRow + tileCtrl->tileNumber, tileCtrl->paletteNum, bgCnt->is8Bit);
+				backgroundTiles[i][k+32] = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
 				startAddr += 2;
 			}
 		}
@@ -41,7 +38,7 @@ void TextMode::draw(uint8_t regOffset) {
 		for (int i = 0; i < 32; i++) {
 			for (int k = 0; k < 32; k++) {
 				BgTile* tileCtrl = (BgTile*)&VRAM[startAddr];
-				backgroundTiles[i+32][k] = tileset.getTile(tileStartRow + tileCtrl->tileNumber, tileCtrl->paletteNum, bgCnt->is8Bit);
+				backgroundTiles[i+32][k] = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
 				startAddr += 2;
 			}
 		}
@@ -50,7 +47,7 @@ void TextMode::draw(uint8_t regOffset) {
 		for (int i = 0; i < 32; i++) {
 			for (int k = 0; k < 32; k++) {
 				BgTile* tileCtrl = (BgTile*)&VRAM[startAddr];
-				backgroundTiles[i+32][k+32] = tileset.getTile(tileStartRow + tileCtrl->tileNumber, tileCtrl->paletteNum, bgCnt->is8Bit);
+				backgroundTiles[i+32][k+32] = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
 				startAddr += 2;
 			}
 		}

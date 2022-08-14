@@ -12,13 +12,13 @@ Tile::Tile(uint32_t addr) {
 	
 	for (int y = 0; y < 8; y++) {
 		int row = rawLoad32(VRAM, addr + startAddr);
-		for (int palette = 0; palette < 16; palette++) {
-			for (int pixel = 0; pixel < 8; pixel++) {
+		for (int pixel = 0; pixel < 8; pixel++) {
+			for (int palette = 0; palette < 16; palette++) {
 				int color = (row & 0xf);
 				auto paletteColor = PaletteColours.colorFromIndex(palette, color);
-				paletteColored[palette].grid[y][pixel] = paletteColor;
-				row >>= 4;
+				paletteColored[palette].grid[y][pixel] = paletteColor;	
 			}
+			row >>= 4;
 		}
 		startAddr += 4;
 	}
@@ -35,7 +35,7 @@ Tile::Tile(uint32_t addr) {
 
 Tile::Tile(GBATile tile, bool is8Bit) {
 	if (is8Bit) {
-
+		fourBitTile = tile;
 	}
 	else {
 		fourBitTile = tile;

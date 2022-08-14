@@ -122,14 +122,15 @@ void Display::scanPalettes() {
 
 void Display::fillTiles(){
 	if (!VRAMupdated){
-		//display->draw(tilemapSprite);
+		display->draw(tilemapSprite);
 		return;  
 	}
+	BgCnt* bgCnt = (BgCnt*)&IoRAM[8];
 	
-	//tileset.update();
-	//tmp3.update(tileset.getTileset(false));
+	tileset.update();
+	tmp3.update(tileset.getTileset(bgCnt->is8Bit));
 
-	//display->draw(tilemapSprite);
+	display->draw(tilemapSprite);
 }
 
 void Display::fillBG(uint32_t regOffset){
@@ -146,6 +147,7 @@ void Display::fillBG(uint32_t regOffset){
 	uint16_t size_y = bgCnt->vWide ? 512 : 256;
 	//std::cout << std::hex << displayCtrl->addr << " " << bgCnt->addr << " " << startAddr << " " << scalar << " " << size_x << " " << size_y << std::endl;
 	if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2){
+		/*
 		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
 		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x4000;
 		for (int i = 0; i < 32; i++){
@@ -203,11 +205,11 @@ void Display::fillBG(uint32_t regOffset){
 				}
 			}
 		}
-
-		//textMode.draw(regOffset);
-		//bgText[(regOffset / 2)].update((uint8_t*)textMode.getBG());
-		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, size_x, size_y));
-		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
+		*/
+		textMode.draw(regOffset);
+		bgText[(regOffset / 2)].update((uint8_t*)textMode.getBG());
+		//bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, size_x, size_y));
+		//bgText[(regOffset / 2)].update((uint8_t*)localColors3);
 		
 		//display->draw(bgSprite[(regOffset / 2)]);
 	}
