@@ -9,6 +9,7 @@
 #include "Display/Tile.h"
 #include "Display/Tileset.h"
 #include "Display/Rendermodes/TextMode.h"
+#include "Display/Rendermodes/RenderMode3.h"
 
 extern RgbaPalette PaletteColours;
 extern Tileset tileset;
@@ -145,94 +146,18 @@ void Display::fillBG(uint32_t regOffset){
 	/*fills BG map*/
 	uint16_t size_x = bgCnt->hWide ? 512 : 256;
 	uint16_t size_y = bgCnt->vWide ? 512 : 256;
-	//std::cout << std::hex << displayCtrl->addr << " " << bgCnt->addr << " " << startAddr << " " << scalar << " " << size_x << " " << size_y << std::endl;
+
 	if (displayCtrl->bgMode == 0 || displayCtrl->bgMode == 1 || displayCtrl->bgMode == 2){
-		/*
-		uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
-		uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x4000;
-		for (int i = 0; i < 32; i++){
-			for (int k = 0; k < 32; k++){
-				BgTile* tile = (BgTile*)&VRAM[startAddr];
-
-				if (bgCnt->is8Bit == 0)
-					calculate4BitTile(i, k, tileBaseBlock, tile);
-				else
-					calculate8BitTile(i, k, tileBaseBlock, tile);
-
-				startAddr += 2;
-			}
-		}
-
-		if (bgCnt->hWide){
-			for (int i = 0; i < 32; i++){
-				for (int k = 0; k < 32; k++){
-					BgTile* tile = (BgTile*)&VRAM[startAddr];
-
-					if (bgCnt->is8Bit == 0)
-						calculate4BitTile(i, 32 + k, tileBaseBlock, tile);
-					else
-						calculate8BitTile(i, 32 + k, tileBaseBlock, tile);
-
-					startAddr += 2;
-				}
-			}
-		}
-		if (bgCnt->vWide){
-			for (int i = 0; i < 32; i++){
-				for (int k = 0; k < 32; k++){
-					BgTile* tile = (BgTile*)&VRAM[startAddr];
-
-					if (bgCnt->is8Bit == 0)
-						calculate4BitTile(32 + i, k, tileBaseBlock, tile);
-					else
-						calculate8BitTile(32 + i, k, tileBaseBlock, tile);
-
-					startAddr += 2;
-				}
-			}
-		}
-		if (bgCnt->vWide && bgCnt->hWide){
-			for (int i = 0; i < 32; i++){
-				for (int k = 0; k < 32; k++){
-					BgTile* tile = (BgTile*)&VRAM[startAddr];
-
-					if (bgCnt->is8Bit == 0)
-						calculate4BitTile(32 + i, 32 + k, tileBaseBlock, tile);
-					else
-						calculate8BitTile(32 + i, 32 + k, tileBaseBlock, tile);
-
-					startAddr += 2;
-				}
-			}
-		}
-		*/
 		textMode.draw(regOffset);
 		bgText[(regOffset / 2)].update((uint8_t*)textMode.getBG());
-		//bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, size_x, size_y));
-		//bgText[(regOffset / 2)].update((uint8_t*)localColors3);
-		
-		//display->draw(bgSprite[(regOffset / 2)]);
 	}
 
 	else if (displayCtrl->bgMode == 3){
-		for (int k = 0; k < 160; k++)
-			for (int i = 0; i < 240; i++){
-				ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
-				int redScaled = colorPaletteRam->red * scalar;
-				int greenScaled = colorPaletteRam->green * scalar;
-				int blueScaled = colorPaletteRam->blue * scalar;
-				localColors3[k][i][0] = redScaled;
-				localColors3[k][i][1] = greenScaled;
-				localColors3[k][i][2] = blueScaled;
-				localColors3[k][i][3] = 255;
-				startAddr += 2;
-			}
-		sf::Sprite BG1Sprite;
-		
+		renderMode3.draw();
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
-		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
-		
+		bgText[(regOffset / 2)].update((uint8_t*)renderMode3.getBG());
 	}
+
 	else if (displayCtrl->bgMode == 4){
 		for (int k = 0; k < 160; k++)
 			for (int i = 0; i < 240; i++){

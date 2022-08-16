@@ -26,7 +26,7 @@ uint8_t IoRAM[0x801] = { 0 };
 uint8_t PaletteRAM[0x400] = { 0 };
 uint8_t VRAM[0x18000] = { 0 };
 uint8_t OAM[0x400] = { 0 };
-uint8_t GamePak[0x2000000] = { 0 };
+uint8_t* GamePak;
 uint8_t GamePakSRAM[0x10000] = { 0 };
 
 uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x10000, 0x10000 };
@@ -298,4 +298,12 @@ unsigned __int32 POP(){
 void memoryInits(){
 	//writeToAddress32(0, 0xe129f000);
 	rawWrite32(IoRAM, 0x800, 0x0D000020);
+	GamePak = new uint8_t[0x2000000];
+	memset(GamePak, 0, sizeof(uint8_t) * 0x2000000);
+	memoryLayout[8] = GamePak;
+	memoryLayout[9] = &GamePak[0x1000000];
+	memoryLayout[10] = GamePak;
+	memoryLayout[11] = &GamePak[0x1000000];
+	memoryLayout[12] = GamePak;
+	memoryLayout[13] = &GamePak[0x1000000];
 }

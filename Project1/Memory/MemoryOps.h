@@ -12,7 +12,7 @@ extern uint8_t IoRAM[0x801];
 extern uint8_t PaletteRAM[0x400];
 extern uint8_t VRAM[0x18000];
 extern uint8_t OAM[0x400];
-extern uint8_t GamePak[0x2000000];
+extern uint8_t* GamePak;
 extern uint8_t GamePakSRAM[0x10000];
 extern unsigned char* memoryLayout[16];
 

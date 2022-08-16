@@ -169,15 +169,17 @@ int main(int argc, char *args[]){
 #else
 	memoryLayout[4][6] = 0x9A; //Vcount initializtion use 7e when cycle counting is ready
 #endif
+	memoryInits();
 
 	FILE *file;
-	FILE* bios;
-	fopen_s(&file, "Project1/TestBinaries/program3.bin", "rb");
+	FILE *bios;
+	//fopen_s(&file, "Project1/TestBinaries/program3.bin", "rb");
+	fopen_s(&file, "Project1/TestBinaries/tonc/m3_demo.gba", "rb");
 	fopen_s(&bios, "Project1/GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 
-	memoryInits();
+	
 
 	int refreshRate = 0;
 	int vCounterDrawCycles = 0;

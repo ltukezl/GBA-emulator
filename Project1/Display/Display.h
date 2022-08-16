@@ -6,6 +6,7 @@
 #include "Memory/memoryMappedIO.h"
 #include "Display/Tileset.h"
 #include "Display/Rendermodes/TextMode.h"
+#include "Display/Rendermodes/RenderMode3.h"
 
 
 struct Ring{
@@ -21,8 +22,6 @@ class Display{
 	sf::Sprite paletteSprite;
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
-	uint8_t colors[2 * 16 * 16 * 4] = { 0 };
-	uint8_t localColors[8 * 8 * 4] = { 0 };
 	uint8_t localColors2[512][256][4] = { 0 };
 	uint8_t localColors3[512][512][4] = { 0 };
 
@@ -49,6 +48,7 @@ class Display{
 	sf::Font font;
 	sf::Text text;
 	TextMode textMode;
+	RenderMode3 renderMode3;
 
 public:
 
