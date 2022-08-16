@@ -11,7 +11,7 @@ public:
 		uint8_t linear[8 * 8 * 4];
 	};
 
-	GBATile paletteColored[16] = { 0 };
+	GBATile paletteColored[16] = {};
 
 	Tile() = default;
 	Tile(uint32_t addr);
@@ -21,6 +21,8 @@ public:
 	GBATile& getTile(bool is8Bit, uint8_t palette);
 
 private:
+
+	RgbaPalette::GBAColor transparentColors[16] = {};
 
 	GBATile fourBitTile = { 0 };
 	GBATile eightBitTile = { 0 };

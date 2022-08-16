@@ -3,7 +3,7 @@
 #include "Display/Tile.h"
 #include "Display/RgbaPalette.h"
 
-class RenderMode3
+class RenderMode5
 {
 private:
 	const int _scalar = 255 / 31;
@@ -14,7 +14,7 @@ private:
 
 
 public:
-	RenderMode3();
+	RenderMode5();
 	void draw();
 	uint32_t* getBG();
 };

@@ -81,38 +81,6 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 	text.setStyle(sf::Text::Bold);
 }
 
-void Display::calculate4BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile){
-	uint32_t pixeloffset = 0;
-	for (int pixelY = 0; pixelY < 8; pixelY++) {
-		int row = loadFromAddress32(0x6000000 + base + tile->tileNumber * 0x20 + pixeloffset, true);
-		for (int pixelX = 0; pixelX < 8; pixelX++) {
-			int color = (row & 0xf);
-			auto paletteColor = PaletteColours.colorFromIndex(16 * tile->paletteNum + color);
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][0] = paletteColor.r;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][1] = paletteColor.g;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][2] = paletteColor.b;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][3] = paletteColor.a;
-			row >>= 4;
-		}
-		pixeloffset += 4;
-	}
-}
-
-void Display::calculate8BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile){
-	uint32_t offset = 0x6000000 + base + tile->tileNumber * 0x40;
-	for (int pixelY = 0; pixelY < 8; pixelY++) {
-		for (int pixelX = 0; pixelX < 8; pixelX++) {
-			int color = loadFromAddress(offset, true);
-			auto paletteColor = PaletteColours.colorFromIndex(color);
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][0] = paletteColor.r;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][1] = paletteColor.g;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][2] = paletteColor.b;
-			localColors3[y * 8 + pixelY][x * 8 + pixelX][3] = paletteColor.a;
-			offset++;
-		}
-	}
-}
-
 void Display::scanPalettes() {
 
 	PaletteColours.updatePalette();
@@ -159,22 +127,16 @@ void Display::fillBG(uint32_t regOffset){
 	}
 
 	else if (displayCtrl->bgMode == 4){
-		for (int k = 0; k < 160; k++)
-			for (int i = 0; i < 240; i++){
-				uint8_t colorIdx = loadFromAddress(0x6000000 + startAddr++);
-				auto paletteColor = PaletteColours.colorFromIndex(colorIdx);
-				localColors3[k][i][0] = paletteColor.r;
-				localColors3[k][i][1] = paletteColor.g;
-				localColors3[k][i][2] = paletteColor.b;
-				if(colorIdx != 0)
-					localColors3[k][i][3] = 0;
-				else
-					localColors3[k][i][3] = 255;
-			}
+		renderMode4.draw();
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
-		bgText[(regOffset / 2)].update((uint8_t*)localColors3);
+		bgText[(regOffset / 2)].update((uint8_t*)renderMode4.getBG());
 	}
 
+	else if (displayCtrl->bgMode == 5) {
+		renderMode5.draw();
+		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
+		bgText[(regOffset / 2)].update((uint8_t*)renderMode5.getBG());
+	}
 	
 
 	bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);

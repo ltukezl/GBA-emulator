@@ -31,6 +31,10 @@ Tile::Tile(uint32_t addr) {
 			offset++;
 		}
 	}
+
+	for (int palette = 0; palette < 16; palette++) {
+		transparentColors[palette] = PaletteColours.colorFromIndex(palette, 0);
+	}
 }
 
 Tile::Tile(GBATile tile, bool is8Bit) {

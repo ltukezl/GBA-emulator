@@ -3,10 +3,9 @@
 #include "Display/Tile.h"
 #include "Display/RgbaPalette.h"
 
-class RenderMode3
+class RenderMode4
 {
 private:
-	const int _scalar = 255 / 31;
 	struct BGPixels {
 		RgbaPalette::GBAColor grid[512][512]; //consider of changing to 160x240
 	};
@@ -14,7 +13,7 @@ private:
 
 
 public:
-	RenderMode3();
+	RenderMode4();
 	void draw();
 	uint32_t* getBG();
 };

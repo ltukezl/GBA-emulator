@@ -141,6 +141,8 @@
     <ClCompile Include="Project1\cplusplusRewrite\SingleDataTransfer.cpp" />
     <ClCompile Include="project1\display\Display.cpp" />
     <ClCompile Include="Project1\Display\Rendermodes\RenderMode3.cpp" />
+    <ClCompile Include="Project1\Display\Rendermodes\RenderMode4.cpp" />
+    <ClCompile Include="Project1\Display\Rendermodes\RenderMode5.cpp" />
     <ClCompile Include="Project1\Display\Rendermodes\TextMode.cpp" />
     <ClCompile Include="Project1\Display\RgbaPalette.cpp" />
     <ClCompile Include="project1\dma\DMA.cpp" />
@@ -177,6 +179,8 @@
     <ClInclude Include="Project1\cplusplusRewrite\tests\testUtils.h" />
     <ClInclude Include="project1\display\Display.h" />
     <ClInclude Include="Project1\Display\Rendermodes\RenderMode3.h" />
+    <ClInclude Include="Project1\Display\Rendermodes\RenderMode4.h" />
+    <ClInclude Include="Project1\Display\Rendermodes\RenderMode5.h" />
     <ClInclude Include="Project1\Display\Rendermodes\TextMode.h" />
     <ClInclude Include="Project1\Display\RgbaPalette.h" />
     <ClInclude Include="project1\dma\DMA.h" />

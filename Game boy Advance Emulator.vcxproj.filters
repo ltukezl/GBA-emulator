@@ -93,6 +93,12 @@
     <ClCompile Include="Project1\Display\Rendermodes\TextMode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Project1\Display\Rendermodes\RenderMode4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Project1\Display\Rendermodes\RenderMode5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project1\Constants.h">
@@ -195,6 +201,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Project1\cplusplusRewrite\tests\testUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\Display\Rendermodes\RenderMode4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\Display\Rendermodes\RenderMode5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,7 +7,8 @@
 #include "Display/Tileset.h"
 #include "Display/Rendermodes/TextMode.h"
 #include "Display/Rendermodes/RenderMode3.h"
-
+#include "Display/Rendermodes/RenderMode4.h"
+#include "Display/Rendermodes/RenderMode5.h"
 
 struct Ring{
 	char state[512];
@@ -22,8 +23,7 @@ class Display{
 	sf::Sprite paletteSprite;
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
-	uint8_t localColors2[512][256][4] = { 0 };
-	uint8_t localColors3[512][512][4] = { 0 };
+	uint8_t localColors2[512][256][4] = {};
 
 	sf::Texture paletteTexture;
 	sf::Image paletteTile;
@@ -49,6 +49,8 @@ class Display{
 	sf::Text text;
 	TextMode textMode;
 	RenderMode3 renderMode3;
+	RenderMode4 renderMode4;
+	RenderMode5 renderMode5;
 
 public:
 
@@ -80,9 +82,6 @@ public:
 private:
 	int cnt;
 	Ring* txtRing;
-
-	void calculate4BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile);
-	void calculate8BitTile(uint32_t y, uint32_t x, uint32_t base, BgTile* tile);
 };
 
 extern Display* debugView;
