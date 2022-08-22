@@ -2,6 +2,8 @@
 #include "Memory/MemoryOps.h"
 #include "Display/RgbaPalette.h"
 
+extern RgbaPalette PaletteColours;
+
 RenderMode5::RenderMode5()
 {
 	background = (BGPixels*) new BGPixels;
@@ -28,6 +30,15 @@ void RenderMode5::draw()
 			background->grid[k][i].g = greenScaled;
 			background->grid[k][i].a = 255;
 			startAddr += 2;
+		}
+		for (int i = 160; i < 240; i++) {
+			background->grid[k][i] = PaletteColours.colorFromIndex(0);
+		}
+	}
+
+	for (int k = 128; k < 160; k++) {
+		for (int i = 0; i < 240; i++) {
+			background->grid[k][i] = PaletteColours.colorFromIndex(0);
 		}
 	}
 }

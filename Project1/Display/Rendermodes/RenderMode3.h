@@ -17,4 +17,5 @@ public:
 	RenderMode3();
 	void draw();
 	uint32_t* getBG();
+	void fillBg(uint32_t* imageBG);
 };

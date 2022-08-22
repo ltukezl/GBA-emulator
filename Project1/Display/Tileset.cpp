@@ -8,7 +8,7 @@ void Tileset::update() {
 	uint32_t startAddr = 0;
 	for (int tileY = 0; tileY < 64; tileY++) {
 		for (int tileX = 0; tileX < 32; tileX++) {
-			Tile t(startAddr);
+			Tile t(startAddr, false);
 			tileset[tileY][tileX] = t;
 
 			startAddr += 32;

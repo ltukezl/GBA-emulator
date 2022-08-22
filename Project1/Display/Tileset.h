@@ -14,8 +14,8 @@ public:
 	Tile::GBATile getTile(uint32_t index, uint8_t palette, bool is8Bit);
 private:
 	
-	uint32_t fullTileset = { 0 };
-	uint32_t manyTiles[64*8][32*8] = { 0 };
+	uint32_t fullTileset = {};
+	uint32_t manyTiles[64*8][32*8] = {};
 };
 
 

@@ -140,6 +140,7 @@
     <ClCompile Include="project1\cplusplusrewrite\Shifts.cpp" />
     <ClCompile Include="Project1\cplusplusRewrite\SingleDataTransfer.cpp" />
     <ClCompile Include="project1\display\Display.cpp" />
+    <ClCompile Include="Project1\Display\SpriteGenerator.cpp" />
     <ClCompile Include="Project1\Display\Rendermodes\RenderMode3.cpp" />
     <ClCompile Include="Project1\Display\Rendermodes\RenderMode4.cpp" />
     <ClCompile Include="Project1\Display\Rendermodes\RenderMode5.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="project1\utilities\CpsrWriter.cpp" />
     <ClCompile Include="Project1\Display\Tile.cpp" />
     <ClCompile Include="Project1\Display\Tileset.cpp" />
+    <ClCompile Include="Project1\Display\Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project1\arm\armopcodes.h" />
@@ -178,6 +180,7 @@
     <ClInclude Include="Project1\cplusplusRewrite\tests\shifterTests.h" />
     <ClInclude Include="Project1\cplusplusRewrite\tests\testUtils.h" />
     <ClInclude Include="project1\display\Display.h" />
+    <ClInclude Include="Project1\Display\SpriteGenerator.h" />
     <ClInclude Include="Project1\Display\Rendermodes\RenderMode3.h" />
     <ClInclude Include="Project1\Display\Rendermodes\RenderMode4.h" />
     <ClInclude Include="Project1\Display\Rendermodes\RenderMode5.h" />
@@ -193,6 +196,7 @@
     <ClInclude Include="project1\utilities\CpsrWriter.h" />
     <ClInclude Include="Project1\Display\Tile.h" />
     <ClInclude Include="Project1\Display\Tileset.h" />
+    <ClInclude Include="Project1\Display\Sprite.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

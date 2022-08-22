@@ -9,6 +9,7 @@
 #include "Display/Rendermodes/RenderMode3.h"
 #include "Display/Rendermodes/RenderMode4.h"
 #include "Display/Rendermodes/RenderMode5.h"
+#include "Display/SpriteGenerator.h"
 
 struct Ring{
 	char state[512];
@@ -23,7 +24,6 @@ class Display{
 	sf::Sprite paletteSprite;
 	sf::Image tileMap[32 * 32 * 2];
 	sf::Image objMap[32 * 32 * 2];
-	uint8_t localColors2[512][256][4] = {};
 
 	sf::Texture paletteTexture;
 	sf::Image paletteTile;
@@ -47,6 +47,9 @@ class Display{
 
 	sf::Font font;
 	sf::Text text;
+
+	SpriteGenerator spriteObjects;
+
 	TextMode textMode;
 	RenderMode3 renderMode3;
 	RenderMode4 renderMode4;

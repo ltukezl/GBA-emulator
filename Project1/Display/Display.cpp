@@ -149,33 +149,17 @@ void Display::fillObjects(uint32_t regOffset){
 		display->draw(objMapSprite);
 		return;
 	}
+
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
-	int startAddr = 0x06010000;
+	spriteObjects.update();
+	objMapTexture.update((uint8_t*)spriteObjects.getTileset(bgCnt->is8Bit), 256, 256, 0, 0);
 
-	/*creates sprites 1 and 2*/
-	for (int tileY = 0; tileY < 32; tileY++)
-		for (int tileX = 0; tileX < 32; tileX++){
-			for (int pixelY = 0; pixelY < 8; pixelY++) {
-				int row = loadFromAddress32(startAddr, true);
-				for (int pixelX = 0; pixelX < 8; pixelX++) {
-					int color = (row & 0xf);
-					auto paletteColor = PaletteColours.colorFromIndex(256 + color);
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][0] = paletteColor.r;
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][1] = paletteColor.g;
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][2] = paletteColor.b;
-					localColors2[tileY * 8 + pixelY][tileX * 8 + pixelX][3] = paletteColor.a;
-					row >>= 4;
-				}
-				startAddr += 4;
-			}
-		}
-	objMapTexture.update((uint8_t*)localColors2, 256, 256, 0, 0);
-
-	/*draws sprites 1 and 2 to screen*/
 	display->draw(objMapSprite);
 	OBJupdated = false;
 }
 
+#include "Sprite.h"
+/*
 void Display::appendBGs(){
 	BgCnt* bgCnt0 = (BgCnt*)&IoRAM[0x8];
 	BgCnt* bgCnt1 = (BgCnt*)&IoRAM[0xA];
@@ -225,18 +209,17 @@ void Display::appendBGs(){
 	}
 
 	if (displayCtrl->objDisplay){
-		uint16_t startAddr = 0x3f8;
-		for (int object = 127; object >= 0; object--){
-			ObjReg1* objr1 = (ObjReg1*)&OAM[startAddr + 0];
-			ObjReg2* objr2 = (ObjReg2*)&OAM[startAddr + 4];
-			startAddr -= 8;
-			if (objr1->isDoubleOrNoDisplay == 0){
-				sf::Sprite s(objMapTexture, sf::IntRect((objr2->tileNumber % 32) * 8, (objr2->tileNumber / 32) * 8, shapes[objr1->shape][objr1->size].x, shapes[objr1->shape][objr1->size].y));
-				s.setPosition(objr1->xCoord, objr1->yCoord);
 
-				renderOrder[objr2->priority].push_back(s);
-			}
-		}
+
+		Sprite s(spriteObjects, 0);
+		sf::Texture te;
+		te.create(s.sizeY * 8, s.sizeX * 8);
+		te.update(s.getSpriteTiles());
+		sf::Sprite sprit(te);
+		sprit.setPosition(s.objr1->xCoord, s.objr1->yCoord);
+		gameTXT.draw(sprit);
+		renderOrder[s.objr2->priority].push_back(sprit);
+
 	}
 
 	std::vector<sf::Sprite> linear;
@@ -246,7 +229,7 @@ void Display::appendBGs(){
 	}
 
 	for (int vec = 3; vec >= 0; vec--){
-		for(auto& s: renderOrder[vec])
+		for (auto& s : renderOrder[vec]);
 			gameTXT.draw(s);
 	}
 
@@ -256,6 +239,74 @@ void Display::appendBGs(){
 	img.setPosition(0, 512);
 	img.scale(2, 2);
 	display->draw(img);
+}
+*/
+void Display::appendBGs() {
+	
+	BgCnt* bgCnt0 = (BgCnt*)&IoRAM[0x8];
+	BgCnt* bgCnt1 = (BgCnt*)&IoRAM[0xA];
+	BgCnt* bgCnt2 = (BgCnt*)&IoRAM[0xC];
+	BgCnt* bgCnt3 = (BgCnt*)&IoRAM[0xE];
+	gameTXT.clear(sf::Color(0, 0, 0));
+
+	std::vector<uint8_t> bgOrder[4];
+	uint32_t* imgBG = (uint32_t*)new uint32_t[512][512];
+	memset(imgBG, 0, sizeof(uint32_t) * 512 * 512);
+
+	uint16_t screenSizeX = 0;
+	uint16_t screenSizey = 0;
+
+	if (displayCtrl->bgMode == 0) {
+		screenSizeX = 256;
+		screenSizey = 256;
+	}
+	else if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4) {
+		screenSizeX = 240;
+		screenSizey = 160;
+	}
+
+	if (displayCtrl->bg3Display) {
+			bgOrder[bgCnt3->priority].push_back(6);
+	}
+	if (displayCtrl->bg2Display) {
+			bgOrder[bgCnt2->priority].push_back(4);
+	}
+	if (displayCtrl->bg1Display) {
+			bgOrder[bgCnt1->priority].push_back(2);
+	}
+	if (displayCtrl->bg0Display) {
+			bgOrder[bgCnt0->priority].push_back(0);
+	}
+
+	sf::Texture te;
+	te.create(512, 512);
+
+	for (int vec = 3; vec >= 0; vec--) {
+		for (auto& offset : bgOrder[vec]) {
+			if (displayCtrl->bgMode == 0) {
+				textMode.draw(offset);
+				textMode.fillImage(imgBG, offset);
+			}
+			else if (displayCtrl->bgMode == 3) {
+				renderMode3.draw();
+				renderMode3.fillBg(imgBG);
+			}
+		}
+	}
+	te.update((uint8_t*)imgBG);
+	sf::Sprite sprit(te);
+	sprit.setPosition(0, 0);
+	gameTXT.draw(sprit);
+
+	gameTXT.display();
+
+	sf::Sprite img = sf::Sprite(gameTXT.getTexture(), sf::IntRect(0, 0, 240, 160));
+	img.setPosition(0, 512);
+	img.scale(2, 2);
+	display->draw(img);
+
+	delete[] imgBG;
+	
 }
 
 void Display::updatePalettes(){
@@ -360,6 +411,16 @@ void Display::handleEvents(){
 				keyInput->btn_r = 0;
 			}
 
+			if (event.key.code == sf::Keyboard::Q)
+			{
+				keyInput->btn_start = 0;
+			}
+
+			if (event.key.code == sf::Keyboard::W)
+			{
+				keyInput->btn_select = 0;
+			}
+
 			if (event.key.code == sf::Keyboard::F)
 			{
 				debug = !debug;
@@ -426,6 +487,16 @@ void Display::handleEvents(){
 			if (event.key.code == sf::Keyboard::S)
 			{
 				keyInput->btn_r = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::Q)
+			{
+				keyInput->btn_start = 1;
+			}
+
+			if (event.key.code == sf::Keyboard::W)
+			{
+				keyInput->btn_select = 1;
 			}
 		}
 	}

@@ -99,6 +99,12 @@
     <ClCompile Include="Project1\Display\Rendermodes\RenderMode5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Project1\Display\SpriteGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Project1\Display\Sprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project1\Constants.h">
@@ -207,6 +213,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Project1\Display\Rendermodes\RenderMode5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\Display\SpriteGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Project1\Display\Sprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

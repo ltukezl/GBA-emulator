@@ -61,6 +61,28 @@ void TextMode::draw(uint8_t regOffset) {
 	}
 }
 
+void TextMode::fillImage(uint32_t* imageBase, uint32_t offset)
+{
+	union Helper {
+		uint32_t arr[64][64][8][8];
+		uint32_t* raw;
+	}helper;
+	(uint32_t*)helper.raw = imageBase;
+	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + offset];
+	uint8_t sizeX = 64;
+	uint8_t sizeY = 64;
+	for (int tileY = 0; tileY < sizeY; tileY++)
+	for (int pixelY = 0; pixelY < 8; pixelY++)
+	for (int tileX = 0; tileX < sizeX; tileX++)
+	for (int pixelX = 0; pixelX < 8; pixelX++) {
+		uint32_t clr = backgroundTiles[tileY][tileX].grid[pixelY][pixelX].rawColor;
+		if (clr == backgroundTiles[tileY][tileX].transparent.rawColor && imageBase[tileY * sizeX * 8 * 8 + 8 * sizeX * pixelY + tileX * 8 + pixelX] && 0xFF00'0000 == 0xFF00'0000) {
+			clr = imageBase[tileY * sizeX * 8 * 8 + 8 * sizeX * pixelY + tileX * 8 + pixelX];
+		}
+		imageBase[tileY * sizeX * 8 * 8 + 8 * sizeX * pixelY + tileX * 8 + pixelX] = clr;
+	}
+}
+
 uint32_t* TextMode::getBG() {
 	return (uint32_t*)background;
 }

@@ -26,6 +26,15 @@ RenderMode3::RenderMode3()
 	memset(background, 0, sizeof(BGPixels));
 }
 
+void RenderMode3::fillBg(uint32_t* imageBG)
+{
+	for (int k = 0; k < 160; k++) {
+		for (int i = 0; i < 240; i++) {
+			imageBG[512 * k + i] = background->grid[k][i].rawColor;
+		}
+	}
+}
+
 uint32_t* RenderMode3::getBG()
 {
 	return (uint32_t*)&background->grid;
