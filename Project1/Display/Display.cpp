@@ -250,20 +250,14 @@ void Display::appendBGs() {
 	gameTXT.clear(sf::Color(0, 0, 0));
 
 	std::vector<uint8_t> bgOrder[4];
-	uint32_t* imgBG = (uint32_t*)new uint32_t[512][512];
-	memset(imgBG, 0, sizeof(uint32_t) * 512 * 512);
+	uint32_t* imgBG = (uint32_t*)new uint32_t[160][240];
+	memset(imgBG, 0, sizeof(uint32_t) * 160 * 240);
 
 	uint16_t screenSizeX = 0;
 	uint16_t screenSizey = 0;
 
-	if (displayCtrl->bgMode == 0) {
-		screenSizeX = 256;
-		screenSizey = 256;
-	}
-	else if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4) {
-		screenSizeX = 240;
-		screenSizey = 160;
-	}
+	screenSizeX = 240;
+	screenSizey = 160;
 
 	if (displayCtrl->bg3Display) {
 			bgOrder[bgCnt3->priority].push_back(6);
@@ -279,7 +273,7 @@ void Display::appendBGs() {
 	}
 
 	sf::Texture te;
-	te.create(512, 512);
+	te.create(240, 160);
 
 	for (int vec = 3; vec >= 0; vec--) {
 		for (auto& offset : bgOrder[vec]) {
@@ -289,7 +283,7 @@ void Display::appendBGs() {
 			}
 			else if (displayCtrl->bgMode == 3) {
 				renderMode3.draw();
-				renderMode3.fillBg(imgBG);
+				renderMode3.fillToDisplay(imgBG);
 			}
 		}
 	}

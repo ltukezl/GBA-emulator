@@ -49,32 +49,6 @@ Tile::Tile(GBATile tile, bool is8Bit) {
 	}
 }
 
-
-Tile Tile::flipVertical(bool is8Bit, bool flip) {
-	if (!flip)
-		return Tile(getTile(is8Bit, 0), is8Bit);
-	GBATile tmpTile = getTile(is8Bit, 0);
-	for (int i = 0; i < 8; i++) {
-		for (int k = 0; k < 8; k++) {
-			flippedTile.grid[i][k] = tmpTile.grid[i][7 - k];
-		}
-	}
-	return Tile(flippedTile, is8Bit);
-}
-
-Tile Tile::flipHorizontal(bool is8Bit, bool flip){
-	if (!flip)
-		return Tile(getTile(is8Bit, 0), is8Bit);
-
-	GBATile tmpTile = getTile(is8Bit, 0);
-	for (int i = 0; i < 8; i++) {
-		for (int k = 0; k < 8; k++) {
-			flippedTile.grid[i][k] = tmpTile.grid[7 - i][k];
-		}
-	}
-	return Tile(flippedTile, is8Bit);
-}
-
 Tile::GBATile& Tile::getTile(bool is8Bit, uint8_t palette) {
 	if (is8Bit)
 		return eightBitTile;

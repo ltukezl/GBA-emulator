@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <memory>
 #include "Display/RgbaPalette.h"
 
 class Tile
@@ -12,14 +13,38 @@ public:
 			uint8_t linear[8 * 8 * 4];
 		};
 		RgbaPalette::GBAColor transparent;
+
+		GBATile& flipVertical(bool flip) {
+			if (flip) {
+				struct GBATile tmp = {};
+				memcpy(tmp.linear, linear, sizeof(uint8_t) * 8 * 8 * 4);
+				for (int i = 0; i < 8; i++) {
+					for (int k = 0; k < 8; k++) {
+						grid[i][k] = tmp.grid[7 - i][k];
+					}
+				}
+			}
+			return *this;
+		}
+
+		GBATile& flipHorizontal(bool flip) {
+			if (flip) {
+				struct GBATile tmp = {};
+				memcpy(tmp.linear, linear, sizeof(uint8_t) * 8 * 8 * 4);
+				for (int i = 0; i < 8; i++) {
+					for (int k = 0; k < 8; k++) {
+						grid[i][k] = tmp.grid[i][7 - k];
+					}
+				}
+			}
+			return *this;
+		}
 	};
 
 	GBATile paletteColored[16] = {};
 	Tile() = default;
 	Tile(uint32_t addr, bool isObj);
 	Tile(GBATile tile, bool is8Bit);
-	Tile flipVertical(bool is8Bit, bool flip);
-	Tile flipHorizontal(bool is8Bit, bool flip);
 	GBATile& getTile(bool is8Bit, uint8_t palette);
 
 private:

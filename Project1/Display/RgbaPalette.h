@@ -15,6 +15,8 @@ public:
 			uint32_t a : 8;
 		};
 		uint32_t rawColor;
+
+		bool operator==(GBAColor& other) { return rawColor == other.rawColor; }
 	};
 
 	bool palettesUpdated = true;
