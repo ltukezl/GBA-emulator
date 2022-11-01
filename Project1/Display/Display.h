@@ -22,13 +22,9 @@ class Display{
 	std::string name;
 
 	sf::Sprite paletteSprite;
-	sf::Image tileMap[32 * 32 * 2];
-	sf::Image objMap[32 * 32 * 2];
 
 	sf::Texture paletteTexture;
-	sf::Image paletteTile;
 
-	sf::Image tmpTile;
 	sf::Sprite tilemapSprite;
 
 	sf::Texture tileMap1Texture;
@@ -44,6 +40,8 @@ class Display{
 	sf::Sprite bgSprite[4];
 
 	sf::Texture tmp3;
+	sf::Texture gameScreen;
+	sf::Sprite gameScreen_s;
 
 	sf::Font font;
 	sf::Text text;
@@ -54,6 +52,12 @@ class Display{
 	RenderMode3 renderMode3;
 	RenderMode4 renderMode4;
 	RenderMode5 renderMode5;
+
+	union FinalImage{
+		Tile::BitmapBit finalImagePalette[160][240];
+		RgbaPalette::GBAColor finalImageColors[160][240];
+	} finalImage;
+
 
 public:
 
@@ -81,6 +85,8 @@ public:
 	void fillObjects(uint32_t regOffset);
 
 	void appendBGs();
+
+	void realizePalettes(RgbaPalette& palette, FinalImage& finalImage);
 
 private:
 	int cnt;

@@ -2,12 +2,18 @@
 #include <stdint.h>
 #include <vector>
 #include "Memory/memoryMappedIO.h"
-#include "Display/SpriteGenerator.h"
+#include "Display/Tile.h"
+#include "Display/RgbaPalette.h"
+#include <set>
+#include <tuple>
+
+extern class SpriteGenerator;
 
 class Sprite
 {
 private:
 
+	uint8_t _index;
 	SpriteGenerator& _tileset;
 	
 	std::vector<Tile> tiles;
@@ -15,8 +21,8 @@ private:
 	void create1DSprite();
 	void create2DSprite();
 
-	uint32_t* pixels;
-	uint32_t* tmpBuffer;
+	Tile::BitmapBit* pixels;
+	Tile::BitmapBit* tmpBuffer;
 
 public:
 	ObjReg1* objr1;
@@ -26,7 +32,25 @@ public:
 	uint8_t sizeY;
 
 	Sprite(SpriteGenerator& tileset, uint32_t address);
+	void update();
 	~Sprite();
 	uint8_t* getSpriteTiles();
+	void fillToImg(Tile::BitmapBit* imageBase);
+
+	auto operator<(const Sprite& other) {	
+		if (objr2->priority == other.objr2->priority)
+			return _index < other._index;
+		return objr2->priority < other.objr2->priority;
+	}
+
+	auto operator>(const Sprite& other) {
+		if (objr2->priority == other.objr2->priority)
+			return _index > other._index;
+		return objr2->priority > other.objr2->priority;
+	}
+
+	auto operator==(const Sprite& other) {
+		return objr2->priority == other.objr2->priority;
+	}
 };
 

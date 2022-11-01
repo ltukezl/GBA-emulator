@@ -1012,45 +1012,45 @@ struct dataProcessingTest psrTests[]{
 		"mrs r0 cpsr",
 		DataProcessingOpcode::fromFields(TST, NO_SET, ER0, EProgramCounter, false, 0),
 		Registers({ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR),
-		0x5000001F,
+		0x50000010,
 		{
-			Registers({ 0x5000001F,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x5000001F
+			Registers({ 0x50000010,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x50000010
 		}
 	},
 	{
 		"msr cpsr_all, r4, usrMode",
 		DataProcessingOpcode::fromFields(TEQ, NO_SET, EProgramCounter, ER9, false, 4),
 		Registers({ 0,0,0,0,0x50000000,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR),
-		0x01F,
+		0x010,
 		{
-			Registers({ 0,0,0,0,0x50000000,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x5000001F
+			Registers({ 0,0,0,0,0x50000000,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x50000010
 		}
 	},
 	{
 		"msr cpsr_all, r4, usrMode, masked",
 		DataProcessingOpcode::fromFields(TEQ, NO_SET, EProgramCounter, ER9, false, 4),
 		Registers({ 0,0,0,0,0x50000012,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR),
-		0x01F,
+		0x010,
 		{
-			Registers({ 0,0,0,0,0x5000001F,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x5000001F
+			Registers({ 0,0,0,0,0x50000012,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x50000010
 		}
 	},
 	{
 		"msr cpsr_flags, r4, usrMode",
 		DataProcessingOpcode::fromFields(TEQ, NO_SET, EProgramCounter, ER8, false, 4),
 		Registers({ 0,0,0,0,0x50000012,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR),
-		0x01F,
+		0x010,
 		{
-			Registers({ 0,0,0,0,0x5000001F,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x5000001F
+			Registers({ 0,0,0,0,0x50000012,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0x50000010
 		}
 	},
 	{
 		"msr cpsr_flags, 0xF000'0000, usrMode",
 		DataProcessingOpcode::fromFields(TEQ, NO_SET, EProgramCounter, ER8, true, ImmediateRotater(mockReg, 0xF, 4).m_val),
 		Registers({ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR),
-		0x01F,
+		0x010,
 		{
-			Registers({ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0xF000001F
+			Registers({ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, EUSR), 0xF0000010
 		}
 	},
 	{

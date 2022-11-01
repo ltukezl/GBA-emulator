@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include "cplusplusRewrite/HwRegisters.h"
 
+/**
+ * @brief 
+ * 
+ * 
+ */
 class SingleDataTransfer {
 private:
 
@@ -11,7 +16,7 @@ public:
 	union {
 		uint32_t val;
 		struct {
-			uint32_t offset : 12;
+			uint32_t offset : 12; //barrel shifter
 			uint32_t destinationRegister : 4;
 			uint32_t baseRegister : 4;
 			uint32_t loadBit : 1;
@@ -25,7 +30,21 @@ public:
 		};
 	}m_opCode;
 
+	//loadbit
+	//ldr r0, [0x0] 
+	//str [0x0], r0
 
+	//byteTrasfer
+	//ldrb r0, [0x0] 
+	//strb [0x0], r0
+
+	//writeback
+	// str r1, [r2,r4]! => [r2+r4], r2 = r2+r4
+
+	//immediateOffset
+	// str r1, [r2], 0x20 => [r2+0x20]
+
+	//LDREQB R1, [R2, R3]! 
 
 	SingleDataTransfer(Registers& m_regs, uint32_t opCode);
 	~SingleDataTransfer();

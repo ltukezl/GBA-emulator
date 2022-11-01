@@ -150,7 +150,7 @@ extern union BGoffset* BG3VOFS;
 
 union ObjReg1{
 	struct{
-		uint32_t yCoord : 8;
+		int32_t yCoord : 8;
 		uint32_t RotOrScale : 1;
 		uint32_t isDoubleOrNoDisplay : 1;
 		uint32_t objMode : 2;
@@ -158,7 +158,7 @@ union ObjReg1{
 		uint32_t colorMode : 1;
 		uint32_t shape : 2;
 
-		uint32_t xCoord : 9;
+		int32_t xCoord : 9;
 		uint32_t parameter : 5;
 		uint32_t size : 2;
 	};

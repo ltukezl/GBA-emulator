@@ -1,6 +1,8 @@
 #include "Display/Tileset.h"
+#include "Display/RgbaPalette.h"
 #include <iostream>
 
+extern RgbaPalette PaletteColours;
 
 Tileset::Tileset() {}
 
@@ -21,9 +23,11 @@ uint8_t* Tileset::getTileset(bool is8bit) {
 	for (int pixelY = 0; pixelY < 8; pixelY++)
 	for (int tileX = 0; tileX < 32; tileX++)
 	for (int pixelX = 0; pixelX < 8; pixelX++) {
-		manyTiles[8 * tileY + pixelY][8 * tileX + pixelX] = tileset[tileY][tileX].getTile(is8bit, 0).grid[pixelY][pixelX].rawColor;
+		auto tile = tileset[tileY][tileX].getTile(is8bit, 0).grid[pixelY][pixelX];
+		auto clr = PaletteColours.colorFromIndex(tile.palette, tile.index);
+		fullTileset[8 * tileY + pixelY][8 * tileX + pixelX] = clr.rawColor;
 	}
-	return (uint8_t*)manyTiles;
+	return (uint8_t*)fullTileset;
 }
 
 Tile::GBATile Tileset::getTile(uint8_t y, uint8_t x, uint8_t palette, bool is8Bit) {

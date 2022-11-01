@@ -55,6 +55,38 @@ union CPSR_t {
 		uint32_t negative : 1;
 	};
 	uint32_t val;
+
+	void updateAll(uint32_t newVal) {
+		if (mode == EUSR) {
+			updateFlags(newVal);
+		}
+		else {
+			val = newVal;
+		}
+	}
+
+	void updateFlags(uint32_t newVal) {
+		CPSR_t tmp = {};
+		tmp.val = newVal;
+		negative = tmp.negative;
+		zero = tmp.zero;
+		carry = tmp.carry;
+		overflow = tmp.overflow;
+	}
+
+	void saveAll(uint32_t& dest) {
+		if (mode == EUSR) {
+			saveFlags(dest);
+		}
+		else {
+			dest = val;
+		}
+	}
+
+	void saveFlags(uint32_t& dest) {
+		uint32_t tmp = val & 0xF000'0000;
+		dest = tmp;
+	}
 };
 
 

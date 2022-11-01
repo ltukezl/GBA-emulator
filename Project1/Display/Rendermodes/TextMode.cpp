@@ -7,6 +7,7 @@
 #include <iostream>
 
 extern Tileset tileset;
+extern RgbaPalette PaletteColours;
 
 void TextMode::draw(uint8_t regOffset) {
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
@@ -21,6 +22,7 @@ void TextMode::draw(uint8_t regOffset) {
 			BgTile* tileCtrl = (BgTile*)&VRAM[startAddr];
 			auto t = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
 			backgroundTiles[i][k] = t.flipVertical(tileCtrl->VerticalFlip).flipHorizontal(tileCtrl->horizontalFlip);
+			//backgroundTiles[i][k] = t;
 			startAddr += 2;
 		}
 	}
@@ -57,11 +59,12 @@ void TextMode::draw(uint8_t regOffset) {
 	for (int pixelY = 0; pixelY < 8; pixelY++)
 	for (int tileX = 0; tileX < sizeX; tileX++)
 	for (int pixelX = 0; pixelX < 8; pixelX++) {
-		background[8 * tileY + pixelY][8 * tileX + pixelX] = backgroundTiles[tileY][tileX].grid[pixelY][pixelX].rawColor;
+		auto tile = backgroundTiles[tileY][tileX].grid[pixelY][pixelX];
+		background[8 * tileY + pixelY][8 * tileX + pixelX] = tile;
 	}
 }
 
-void TextMode::fillImage(uint32_t* imageBase, uint32_t offset)
+void TextMode::fillImage(Tile::BitmapBit* imageBase, uint32_t offset)
 {
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + offset];
 	uint8_t sizeX = bgCnt->hWide ? 64 : 32;
@@ -73,40 +76,20 @@ void TextMode::fillImage(uint32_t* imageBase, uint32_t offset)
 		for (int i = 0; i < 240; i++) {
 			auto tile = backgroundTiles[((k + offsetY) / 8) % sizeY][((i + offsetX) / 8) % sizeX];
 			auto clr = tile.grid[(k + offsetY) % 8][(i + offsetX) % 8];
-			if (clr == tile.transparent && imageBase[240 * k + i] && 0xFF00'0000 == 0xFF00'0000) {
+			if (imageBase[240 * k + i].index != 0xFFFF && clr.index == 0)
+				continue;
+			imageBase[240 * k + i] = clr;
 
-			}
-			else {
-				imageBase[240 * k + i] = tile.grid[(k + offsetY) % 8][(i + offsetX) % 8].rawColor;
-			}
 		}
 	}
 }
 
-/*
-void TextMode::fillImage(uint32_t* imageBase, uint32_t offset)
-{
-	struct Helper {
-		uint32_t arr[64][64][8][8];
-	};
-	uint32_t tst = 0;
-	Helper* tmp = (Helper*)imageBase;
-	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + offset];
-	uint8_t sizeX = 64;
-	uint8_t sizeY = 64;
-	for (int tileY = 0; tileY < sizeY; tileY++)
-	for (int pixelY = 0; pixelY < 8; pixelY++)
-	for (int tileX = 0; tileX < sizeX; tileX++)
-	for (int pixelX = 0; pixelX < 8; pixelX++) {
-		uint32_t clr = backgroundTiles[tileY][tileX].grid[pixelY][pixelX].rawColor;
-		if (clr == backgroundTiles[tileY][tileX].transparent.rawColor && imageBase[tileY * sizeX * 8 * 8 + 8 * sizeX * pixelY + tileX * 8 + pixelX] && 0xFF00'0000 == 0xFF00'0000) {
-			clr = imageBase[tst];
-		}
-		imageBase[tst++] = clr;
-		//tmp->arr[tileY][tileX][pixelY][pixelX] = clr;
-	}
-}
-*/
 uint32_t* TextMode::getBG() {
-	return (uint32_t*)background;
+	for (int pixelY = 0; pixelY < 64*8; pixelY++)
+	for (int pixelX = 0; pixelX < 64*8; pixelX++) {
+		auto t = background[pixelY][pixelX];
+		auto clr = PaletteColours.colorFromIndex(t.palette, t.index);
+		backgroundColored[pixelY][pixelX] = clr.rawColor;
+	}
+	return (uint32_t*)backgroundColored;
 }

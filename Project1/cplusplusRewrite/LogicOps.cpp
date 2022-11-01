@@ -141,8 +141,8 @@ void Teq::calcConditions(uint32_t op1, uint32_t op2)
 void Teq::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2, bool setConditions)
 {
 	if (!setConditions) {
-		m_cpsr.val = operand2;
-		//updateMode();
+		m_cpsr.updateAll(operand2);
+		//updateMode(); 
 	}
 }
 

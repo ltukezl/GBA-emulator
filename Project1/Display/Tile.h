@@ -7,13 +7,17 @@ class Tile
 {
 public:
 
+	struct BitmapBit {
+		uint16_t palette;
+		uint16_t index;
+	};
+
 	struct GBATile {
 		union {
-			RgbaPalette::GBAColor grid[8][8];
+			BitmapBit grid[8][8];
 			uint8_t linear[8 * 8 * 4];
 		};
-		RgbaPalette::GBAColor transparent;
-
+		
 		GBATile& flipVertical(bool flip) {
 			if (flip) {
 				struct GBATile tmp = {};
@@ -39,23 +43,16 @@ public:
 			}
 			return *this;
 		}
+		
 	};
 
-	GBATile paletteColored[16] = {};
 	Tile() = default;
 	Tile(uint32_t addr, bool isObj);
 	Tile(GBATile tile, bool is8Bit);
 	GBATile& getTile(bool is8Bit, uint8_t palette);
 
 private:
-
-	RgbaPalette::GBAColor transparentColors[16] = {};
-
-	GBATile fourBitTile = {};
-	GBATile eightBitTile = {};
-	GBATile flippedTile = {};
-
-	uint32_t trasparentColor = 0;
-
+	GBATile _tile = {};
+	GBATile _tile8bit = {};
 };
 
