@@ -59,10 +59,15 @@ void Sprite::fillToImg(Tile::BitmapBit* imageBase) {
 	auto asd = 0;
 	for (int k = 0; k < sizeY; k++) {
 		for (int i = 0; i < sizeX; i++) {
-			//if ((objr1->xCoord + i) > 240 || (objr1->xCoord + i) < 0) {
-			//	asd++;
-			//	continue;
-			//}
+			if ((objr1->xCoord + i) >= 240 || (objr1->xCoord + i) < 0) {
+				asd++;
+				continue;
+			}
+			if ((objr1->yCoord + k) >= 160) {
+				asd++;
+				continue;
+			}
+
 			auto xpos = (objr1->xCoord + i);
 			auto ypos = 240 * (objr1->yCoord + k);
 			auto paletteInfo = pixels[asd++];
