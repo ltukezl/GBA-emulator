@@ -30,14 +30,14 @@ public:
 
 private:
 	const int _scalar = 255 / 31;
-	static const int _colorsWidth = 32;
-	static const int _colorsLength = 16;
-	static const int _colorChannels = 4;
+	static constexpr int _colorsWidth = 32;
+	static constexpr int _colorsLength = 16;
+	static constexpr int _colorChannels = 4;
 	union ColorPaletteRam* _colorStartAddress = nullptr;
 
-	uint32_t _paletteStart = 0x5000000;
-	uint32_t _paletteEnd = 0x5FFFFFF;
+	const uint32_t _paletteStart = 0x5000000;
+	const uint32_t _paletteEnd = 0x5FFFFFF;
 	
-	GBAColor paletteColorArray[_colorsWidth][_colorsLength] = { 0 };
+	GBAColor paletteColorArray[_colorsWidth][_colorsLength] = {};
 
 };

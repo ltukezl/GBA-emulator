@@ -226,7 +226,6 @@ void Display::appendBGs() {
 
 void Display::realizePalettes(RgbaPalette& palette, FinalImage& finalImage)
 {
-
 	for(int y = 0; y < 160; y++)
 		for (int x = 0; x < 240; x++) {
 			auto bitmapInfo = finalImage.finalImagePalette[y][x];

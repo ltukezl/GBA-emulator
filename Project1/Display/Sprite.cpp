@@ -29,7 +29,7 @@ uint8_t* Sprite::getSpriteTiles() {
 	
 	if (objr1->RotOrScale == 0) {
 		if (objr1->parameter & (1 << 3)) { //horizontal flip
-			memcpy(tmpBuffer, pixels, sizeof(uint32_t) * sizeX * 8 * sizeY * 8);
+			memcpy(tmpBuffer, pixels, sizeof(uint8_t) * sizeX * 8 * sizeY * 8);
 			for (uint16_t y = 0; y < sizeY; y++) {
 				for (uint16_t x = 0; x < sizeX; x++) {
 					pixels[sizeX * y + sizeX - x - 1] = tmpBuffer[sizeX * y + x];
@@ -39,7 +39,7 @@ uint8_t* Sprite::getSpriteTiles() {
 		}
 		if (objr1->parameter & (1 << 4)) { //vertical flip
 
-			memcpy(tmpBuffer, pixels, sizeof(uint32_t) * sizeX * 8 * sizeY * 8);
+			memcpy(tmpBuffer, pixels, sizeof(uint8_t) * sizeX * 8 * sizeY * 8);
 			for (uint16_t y = 0; y < sizeY; y++) {
 				for (uint16_t x = 0; x < sizeX; x++) {
 					pixels[sizeX * y + x] = tmpBuffer[sizeX * (sizeY - y - 1) + x];
