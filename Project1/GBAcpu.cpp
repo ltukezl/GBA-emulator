@@ -12,6 +12,7 @@
 #include "Interrupt/interrupt.h"
 #include "Timer/timers.h"
 #include "Memory/memoryMappedIO.h"
+#include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/dataProcessingOp.h"
 #include "cplusplusRewrite/tests/allTests.h"
 
@@ -67,7 +68,7 @@ __int32* irq[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs
 __int32* undef[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 &extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8], &sprs_udf };
 
-__int32** r;	//used register
+Registers r;
 
 union CPSR cpsr;
 bool step = false;
@@ -139,28 +140,27 @@ int main(int argc, char *args[]){
 	*r[13] = SP_usr;
 	*r[16] = 0x10;
 #else
-	r = svc;
-	*r[13] = 0x3007FE0;
-	*r[16] = 0x10;
+	r.updateMode(CpuModes_t::ESUPER);
+	r[TRegisters::EStackPointer] = 0x3007FE0;
+	r[16] = 0x10;
 #endif
-	r = irq;
-	*r[13] = SP_irq;
-	*r[16] = 0x10;
-
+	r.updateMode(CpuModes_t::EIRQ);
+	r[TRegisters::EStackPointer] = SP_irq;
+	r[16] = 0x10;
 
 #if BIOS_START
 	r = svc;
 	*r[13] = SP_svc;
 	cpsr.mode = SUPER;
 #else
-	r = usrSys;
-	*r[13] = SP_usr;
+	r.updateMode(CpuModes_t::EUSR);
+	r[13] = SP_usr;
 #endif
 
 #if BIOS_START
 	*r[PC] = 0;
 #else
-	*r[PC] = 0x08000000;
+	r[TRegisters::EProgramCounter] = 0x0800'0000;
 #endif
 
 
@@ -173,9 +173,9 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE *bios;
-	//fopen_s(&file, "Project1/TestBinaries/program4.bin", "rb");
+	fopen_s(&file, "Project1/TestBinaries/program4.bin", "rb");
 	//fopen_s(&file, "Project1/TestBinaries/tonc/bigmap.gba", "rb");
-	fopen_s(&file, "Project1/TestBinaries/tonc/obj_demo.gba", "rb");
+	//fopen_s(&file, "Project1/TestBinaries/tonc/obj_demo.gba", "rb");
 	fopen_s(&bios, "Project1/GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
@@ -199,15 +199,15 @@ int main(int argc, char *args[]){
 		}
 		step = false;
 
-		if (*r[PC] == 0x8000954){ //0x8006668, 0x801d6a2
+		if (r[TRegisters::EProgramCounter] == 0x8000954){ //0x8006668, 0x801d6a2
 			//debug = true;
 		}
 		//updateInstructionCycleTimings(*r[PC]);
-		uint32_t opCode = cpsr.thumb ? loadFromAddress16(*r[PC], true) : loadFromAddress32(*r[PC], true);
+		uint32_t opCode = cpsr.thumb ? loadFromAddress16(r[TRegisters::EProgramCounter], true) : loadFromAddress32(r[TRegisters::EProgramCounter], true);
 
 		if (debug){
-			cout << hex << *r[15] << " opCode: " << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
-			cout << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16]<< " ";
+			cout << hex << r[15] << " opCode: " << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
+			cout << "r0: " << r[0] << " r1: " << r[1] << " r2: " << r[2] << " r3: " << r[3] << " r4: " << r[4] << " r5: " << r[5] << " r6: " << r[6] << " r7: " << r[7] << " r8: " << r[8] << " r9: " << r[9] << " r10: " << r[10] << " FP (r11): " << r[11] << " IP (r12): " << r[12] << " SP: " << r[13] << " LR: " << r[14] << " CPRS: " << cpsr.val << " SPRS: " << r[16]<< " ";
 		}
 
 		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);

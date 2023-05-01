@@ -154,6 +154,10 @@ public:
 		}
 	}
 
+	auto getMode() {
+		return static_cast<CpuModes_t>(m_cpsr.mode);
+	}
+
 	void reset(const CpuModes_t mode) {
 		updateMode(mode);
 		memset(sharedRegs, 0, sizeof(sharedRegs));

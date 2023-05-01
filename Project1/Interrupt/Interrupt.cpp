@@ -10,20 +10,20 @@ bool IRQMode = false;
 void interruptController(){
 #if ENABLED
 	//debug = true;
-	r = svc;
-	*r[14] = *r[PC];
-	*r[16] = cpsr.val;
+	r.updateMode(CpuModes_t::ESUPER);
+	r[14] = r[TRegisters::EProgramCounter];
+	r[16] = cpsr.val;
 	//svc mode
 	cpsr.IRQDisable = 1;
 	cpsr.thumb = 0;
 	cpsr.mode = SUPER;
 
-	*r[PC] = 0x8;
+	r[TRegisters::EProgramCounter] = 0x8;
 #endif
 }
 
-bool timerCountHappened[4] = { false };
-uint8_t timerCount[4] = { 0 };
+bool timerCountHappened[4] = {};
+uint8_t timerCount[4] = {};
 
 void HWInterrupts(int cycles){
 #if ENABLED
@@ -52,13 +52,13 @@ void HWInterrupts(int cycles){
 
 	if (InterruptFlagRegister->addr != 0){
 		if (debug)
-			std::cout << "entered interuut from 0x" << std::hex << *r[PC] << " saving LR " << (cpsr.thumb ? *r[PC] + 4 : *r[PC]) << " " << std::dec << std::endl;
+			std::cout << "entered interuut from 0x" << std::hex << r[TRegisters::EProgramCounter] << " saving LR " << (cpsr.thumb ? r[PC] + 4 : r[PC]) << " " << std::dec << std::endl;
 		//debug = true;
-		r = irq;
-		*r[16] = cpsr.val;
+		r.updateMode(CpuModes_t::EIRQ);
+		r[16] = cpsr.val;
 
-		*r[LR] = *r[PC] + 4;
-		*r[PC] = 0x18;
+		r[LR] = r[TRegisters::EProgramCounter] + 4;
+		r[TRegisters::EProgramCounter] = 0x18;
 
 		cpsr.thumb = 0;
 		cpsr.IRQDisable = 1;

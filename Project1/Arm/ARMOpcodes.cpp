@@ -11,13 +11,13 @@
 #include <stdint.h>
 
 void ARMBranch(int opCode){
-	*r[PC] += 4;
+	r[TRegisters::EProgramCounter] += 4;
 	int location = opCode & 0xFFFFFF; //24 bits
 	location = (location << 2);
 	uint32_t tmp = signExtend<26>(location);
-	*r[PC] += tmp;
+	r[TRegisters::EProgramCounter] += tmp;
 	if (debug)
-		std::cout << conditions_s[opCode >> 28 & 0xF] << " " << *r[PC] << " " << conditions[opCode >> 28 & 0xF]() << " ";
+		std::cout << conditions_s[opCode >> 28 & 0xF] << " " << r[PC] << " " << conditions[opCode >> 28 & 0xF]() << " ";
 }
 
 void incrementBase(int& baseRegister, bool nullParameter = false){
@@ -35,32 +35,32 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 	int writeBack = (opCode >> 21) & 1;
 	int usrMode = (opCode >> 22) & 1;
 	__int16 regList = opCode & 0xFFFF;
-	int oldBase = *r[baseReg];
+	int oldBase = r[baseReg];
 
-	__int32** currentMode = r;
+	auto currentMode = r.getMode();
 
 	if (usrMode && !((opCode >> 15) & 1)){
-		r = usrSys;
+		r.updateMode(CpuModes_t::EUSR);
 	}
 
 	if (debug)
 		std::cout << "push ";
 
 	if (((opCode >> 15) & 1) & ~upDownBit){
-		a(*r[baseReg], *r[15] + 8);
-		b(*r[baseReg], *r[15] + 8);
+		a((int&)r[baseReg], r[15] + 8);
+		b((int&)r[baseReg], r[15] + 8);
 	}
 
 	for (int i = 0; i < 15; i++){
 		if (upDownBit){
 			if (regList & 1){
 				if (i == 13 && baseReg == 13){
-					a(*r[baseReg], oldBase);
-					b(*r[baseReg], oldBase);
+					a((int&)r[baseReg], oldBase);
+					b((int&)r[baseReg], oldBase);
 				}
 				else{
-					a(*r[baseReg], *r[i]);
-					b(*r[baseReg], *r[i]);
+					a((int&)r[baseReg], r[i]);
+					b((int&)r[baseReg], r[i]);
 				}
 				if (debug)
 					std::cout << "r" << i << " ";
@@ -71,12 +71,12 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 		else if (~upDownBit){
 			if (regList & 0x4000){
 				if (i == 1 && baseReg == 13){
-					a(*r[baseReg], oldBase);
-					b(*r[baseReg], oldBase);
+					a((int&)r[baseReg], oldBase);
+					b((int&)r[baseReg], oldBase);
 				}
 				else{
-					a(*r[baseReg], *r[14 - i]);
-					b(*r[baseReg], *r[14 - i]);
+					a((int&)r[baseReg], r[14 - i]);
+					b((int&)r[baseReg], r[14 - i]);
 				}
 				if (debug)
 					std::cout << "r" << 14 - i << " ";
@@ -86,15 +86,15 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b){
 	}
 
 	if (((opCode >> 15) & 1) & upDownBit){
-		a(*r[baseReg], *r[15] + 8);
-		b(*r[baseReg], *r[15] + 8);
+		a((int&)r[baseReg], r[15] + 8);
+		b((int&)r[baseReg], r[15] + 8);
 	}
 
 	if (usrMode){
-		r = currentMode;
+		r.updateMode(currentMode);
 	}
 
-	*r[baseReg] = writeBack ? *r[baseReg] : oldBase;
+	r[baseReg] = writeBack ? r[baseReg] : oldBase;
 }
 
 template <typename function1, typename function2>
@@ -104,20 +104,20 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	int writeBack = (opCode >> 21) & 1;
 	int usrMode = (opCode >> 22) & 1;
 	int regList = opCode & 0xFFFF;
-	int oldBase = *r[baseReg];
+	int oldBase = r[baseReg];
 	int memAddress = oldBase & ~0x3;
 	bool baseInRList = regList & (1 << baseReg);
 
-	__int32** currentMode = r;
+	auto currentMode = r.getMode();
 
 	if (regList == 0){
-		*r[PC] = loadFromAddress32(*r[baseReg]);
-		*r[baseReg] += 0x40;
+		r[PC] = loadFromAddress32(r[baseReg]);
+		r[baseReg] += 0x40;
 		return;
 	}
 
 	if (usrMode && !((opCode >> 15) & 1)){
-		r = usrSys;
+		r.updateMode(CpuModes_t::EUSR);
 	}
 
 	if (debug)
@@ -126,7 +126,7 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	for (int i = 0; i < 16; i++){
 		if (upDownBit){
 			if (regList & 1){
-				*r[i] = a(memAddress, false);
+				r[i] = a(memAddress, false);
 				b(memAddress, false);
 				if (debug)
 					std::cout << "r" << i << " ";
@@ -135,7 +135,7 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 		}
 		else if (~upDownBit){
 			if (regList & 0x8000){
-				*r[15 - i] = a(memAddress, false);
+				r[15 - i] = a(memAddress, false);
 				b(memAddress, false);
 				if (debug)
 					std::cout << "r" << 14 - i << " ";
@@ -145,11 +145,11 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b){ // not tes
 	}
 
 	if (usrMode && !((opCode >> 15) & 1)){
-		r = currentMode;
+		r.updateMode(currentMode);
 	}
 
 	if (!baseInRList)
-		*r[baseReg] = writeBack ? memAddress : oldBase;
+		r[baseReg] = writeBack ? memAddress : oldBase;
 }
 
 template <typename function1, typename function2>
@@ -159,49 +159,49 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 	int writeBack = (opCode >> 21) & 1;
 	bool usrMode = (opCode >> 20) & 1;
 	int regList = opCode & 0xFFFF;
-	int oldBase = *r[baseReg];
+	int oldBase = r[baseReg];
 	int memAddress = oldBase & ~0x3;
 	bool baseInRList = regList & (1 << baseReg);
 
-	__int32** currentMode = r;
+	auto currentMode = r.getMode();
 
 	if (regList == 0){
-		*r[PC] = loadFromAddress32(*r[baseReg]);
-		*r[baseReg] += 0x40;
+		r[PC] = loadFromAddress32(r[baseReg]);
+		r[baseReg] += 0x40;
 		return;
 	}
 
 	if (usrMode && !((opCode >> 15) & 1)){
-		r = usrSys;
+		r.updateMode(CpuModes_t::EUSR);
 	}
 
 	for (int i = 0; i < 16; i++){
 		if (upDownBit){
 			if (regList & 1){
 				a(memAddress, false);
-				*r[i] = b(memAddress, false);
+				r[i] = b(memAddress, false);
 				if (i == 15)
-					*r[16] = cpsr.val;
+					r[16] = cpsr.val;
 			}
 			regList >>= 1;
 		}
 		else if (~upDownBit){
 			if (regList & 0x8000){
 				a(memAddress, false);
-				*r[15 - i] = b(memAddress, false);
+				r[15 - i] = b(memAddress, false);
 				if (i == 0)
-					*r[16] = cpsr.val;
+					r[16] = cpsr.val;
 			}
 			regList <<= 1;
 		}
 	}
 
 	if (usrMode && !((opCode >> 15) & 1)){
-		r = currentMode;
+		r.updateMode(currentMode);
 	}
 
 	if (!baseInRList)
-		*r[baseReg] = writeBack ? memAddress : oldBase;
+		r[baseReg] = writeBack ? memAddress : oldBase;
 }
 
 
@@ -211,20 +211,20 @@ void singleDataSwap(int opCode){
 	uint32_t rn = (opCode >> 16) & 0xF;
 	bool byteFlag = (opCode >> 22) & 1;
 
-	uint32_t tmp = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
-	byteFlag ? writeToAddress(*r[rn], *r[rm]) : writeToAddress32(*r[rn], *r[rm]);
-	*r[rd] = tmp;
+	uint32_t tmp = byteFlag ? loadFromAddress(r[rn]) : loadFromAddress32(r[rn]);
+	byteFlag ? writeToAddress(r[rn], r[rm]) : writeToAddress32(r[rn], r[rm]);
+	r[rd] = tmp;
 
 	if (debug)
 		std::cout << "swp r" << +rd << " r" << +rm << " r[" << +rn << "] ";
 }
 
 void branchAndExhange(int opCode){
-	*r[15] = *r[opCode & 15];
-	cpsr.thumb = (*r[15] & 1);
-	*r[15] = (*r[15] & ~1);
+	r[TRegisters::EProgramCounter] = r[opCode & 15];
+	cpsr.thumb = (r[TRegisters::EProgramCounter] & 1);
+	r[TRegisters::EProgramCounter] = (r[TRegisters::EProgramCounter] & ~1);
 	if (debug)
-		std::cout << "bx " << *r[15] << " ";
+		std::cout << "bx " << r[TRegisters::EProgramCounter] << " ";
 }
 
 void lslCond(int &saveTo, int from, int immidiate) {
@@ -318,25 +318,25 @@ void updateMode(){
 	//std::cout << "switched mode to " << mode << std::endl;
 	switch (cpsr.mode){
 	case USR:
-		r = usrSys;
+		r.updateMode(CpuModes_t::EUSR);
 		break;
 	case FIQ:
-		r = fiq;
+		r.updateMode(CpuModes_t::EFIQ);
 		break;
 	case IRQ:
-		r = irq;
+		r.updateMode(CpuModes_t::EIRQ);
 		break;
 	case SUPER:
-		r = svc;
+		r.updateMode(CpuModes_t::ESUPER);
 		break;
 	case ABORT:
-		r = abt;
+		r.updateMode(CpuModes_t::EABORT);
 		break;
 	case UNDEF:
-		r = undef;
+		r.updateMode(CpuModes_t::EUNDEF);
 		break;
 	case SYS:
-		r = usrSys;
+		r.updateMode(CpuModes_t::EUSR);
 		break;
 	}
 }
@@ -347,7 +347,7 @@ void msr(int& saveTo, int operand1, int operand2){
 }
 
 void msr2(int& saveTo, int operand1, int operand2){
-	*r[16] = operand2;
+	r[16] = operand2;
 	updateMode();
 }
 
@@ -361,7 +361,7 @@ void MSR(uint32_t opCode){
 	tmp_cpsr.val = shiftedImm;
 
 	if (SPSR)
-		*r[16] = shiftedImm;
+		r[16] = shiftedImm;
 	else {
 		cpsr.zero = tmp_cpsr.zero;
 		cpsr.overflow = tmp_cpsr.overflow;
@@ -379,7 +379,7 @@ void mrs(int& saveTo, int operand1, int operand2){
 }
 
 void mrs2(int& saveTo, int operand1, int operand2){
-	saveTo = *r[16];
+	saveTo = r[16];
 }
 
 void(*dataOperations[0x20])(int&, int, int) = { And, Ands, Eor, Eors, Sub, Subs, Rsb, Rsbs,
@@ -399,12 +399,12 @@ void immediateRotate(int opCode){
 
 		if (sprs){
 			int tmp = cpsr.val & 0xFFFFFFF;
-			tmp |= *r[rm] & 0xF0000000;
-			*r[16] = tmp;
+			tmp |= r[rm] & 0xF0000000;
+			r[16] = tmp;
 		}
 		else{
 			int tmp = cpsr.val & 0xFFFFFFF;
-			tmp |= *r[rm] & 0xF0000000;
+			tmp |= r[rm] & 0xF0000000;
 			cpsr.val = tmp;
 		}
 		codeExecuted = true;
@@ -414,12 +414,12 @@ void immediateRotate(int opCode){
 		int rd = (opCode >> 12) & 15; //destination
 		int rs = (opCode >> 16) & 15; //first operand
 		int rn = opCode & 15; //2nd operand
-		int tmpRegister = *r[rn];
+		int tmpRegister = r[rn];
 		int immediate = (opCode >> 7) & 0x1F;
 		int shiftId = (opCode >> 5) & 3;
 		int operationID = (opCode >> 20) & 0x1F;
 		int conditions = (opCode >> 20) & 1;
-		int operand1 = *r[rs];
+		int operand1 = r[rs];
 
 		if (rn == 15)
 			tmpRegister += 4;
@@ -440,10 +440,10 @@ void immediateRotate(int opCode){
 				ARMshiftsNoCond[shiftId](tmpRegister, tmpRegister, immediate);
 		}
 
-		dataOperations[operationID](*r[rd], operand1, tmpRegister);
+		dataOperations[operationID]((int&)r[rd], operand1, tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
-			cpsr.val = *r[16];
+			cpsr.val = r[16];
 			updateMode();
 		}
 
@@ -459,27 +459,27 @@ void registerRotate(int opCode){
 	int rm = opCode & 0xF;
 	int rs = (opCode >> 8) & 0xF;
 	int shiftId = (opCode >> 5) & 3;
-	int shiftAmount = *r[rs] & 0xFF;
+	int shiftAmount = r[rs] & 0xFF;
 	int tmpResult = 0;
 	int operationID = (opCode >> 20) & 0x1F;
 	int conditions = (opCode >> 20) & 1;
 
 	if (rm == 15)
-		*r[rm] += 8;
+		r[rm] += 8;
 	else if (rn == 15)
-		*r[rn] += 8;
+		r[rn] += 8;
 
 	if (conditions && (((operationID > 3) && (operationID < 16)) || ((operationID > 21) && (operationID < 24))))
-		ARMshiftsNoCond[shiftId](tmpResult, *r[rm], shiftAmount);
+		ARMshiftsNoCond[shiftId](tmpResult, r[rm], shiftAmount);
 	else if (conditions)
-		ARMshifts[shiftId](tmpResult, *r[rm], shiftAmount);
+		ARMshifts[shiftId](tmpResult, r[rm], shiftAmount);
 	else
-		ARMshiftsNoCond[shiftId](tmpResult, *r[rm], shiftAmount);
+		ARMshiftsNoCond[shiftId](tmpResult, r[rm], shiftAmount);
 
-	dataOperations[operationID](*r[rd], *r[rn], tmpResult);
+	dataOperations[operationID]((int&)r[rd], r[rn], tmpResult);
 
-	if (rd == 15 && (opCode >> 20) & 1){
-		cpsr.val = *r[16];
+	if (rd == TRegisters::EProgramCounter && (opCode >> 20) & 1){
+		cpsr.val = r[16];
 		updateMode();
 	}
 
@@ -491,9 +491,9 @@ void registerRotate(int opCode){
 void dataProcessingImmediate(int opCode){
 	int rd = (opCode >> 12) & 0xF; //destination
 	int rs = (opCode >> 16) & 0xF; //first operand
-	int operand1 = *r[rs];
+	int operand1 = r[rs];
 	int immediate = opCode & 0xFF;
-	if (rs == 15)
+	if (rs == TRegisters::EProgramCounter)
 		operand1 += 4;
 	int shift = (opCode >> 8) & 0xF;
 	int shiftedImm = 0;
@@ -513,10 +513,10 @@ void dataProcessingImmediate(int opCode){
 		rorNoCond(shiftedImm, shiftedImm, shift);
 	}
 
-	dataOperations[operationID](*r[rd], operand1, shiftedImm);
+	dataOperations[operationID]((int&)r[rd], operand1, shiftedImm);
 
 	if (rd == 15 && conditions){
-		cpsr.val = *r[16];
+		cpsr.val = r[16];
 		updateMode();
 	}
 
@@ -535,52 +535,52 @@ void halfDataTransfer(int opCode){
 	int rd = (opCode >> 12) & 0xF;
 	int offset = (opCode >> 4) & 0xF0 | opCode & 0xF;
 	offset += (rn == 15) ? 8 : 0;
-	int calculated = (rd == 15) ? (*r[rn] + 8) : *r[rn];
+	int calculated = (rd == 15) ? (r[rn] + 8) : r[rn];
 
 	switch (func){
 	case 0:
 		if (lFlag){
 			if (pFlag)
-				calculated += uFlag ? *r[offset] : -*r[offset];
+				calculated += uFlag ? r[offset] : -r[offset];
 			if (shFlag == 1)
-				*r[rd] = loadFromAddress16(calculated);
+				r[rd] = loadFromAddress16(calculated);
 			else if (shFlag == 2)
-				*r[rd] = signExtend<8>(loadFromAddress(calculated));
+				r[rd] = signExtend<8>(loadFromAddress(calculated));
 			else
 				if (calculated & 1){
-					*r[rd] = loadFromAddress16(calculated);
-					if (*r[rd] & 0x80) //sign bit on
-						*r[rd] |= 0xFFFFFF00;
+					r[rd] = loadFromAddress16(calculated);
+					if (r[rd] & 0x80) //sign bit on
+						r[rd] |= 0xFFFFFF00;
 					else
-						*r[rd] &= 0xFFFF;
+						r[rd] &= 0xFFFF;
 				}
 				else
-					*r[rd] = signExtend<16>(loadFromAddress16(calculated));
+					r[rd] = signExtend<16>(loadFromAddress16(calculated));
 			if (!pFlag)
-				calculated += uFlag ? *r[offset] : -*r[offset];
+				calculated += uFlag ? r[offset] : -r[offset];
 		}
 		else{
 			if (pFlag)
-				calculated += uFlag ? *r[offset] : -*r[offset];
+				calculated += uFlag ? r[offset] : -r[offset];
 			if (shFlag == 1)
-				writeToAddress16(calculated, *r[rd]);
+				writeToAddress16(calculated, r[rd]);
 			else if (shFlag == 2)
-				writeToAddress(calculated, signExtend<8>(*r[rd]));
+				writeToAddress(calculated, signExtend<8>(r[rd]));
 			else
-				writeToAddress16(calculated, signExtend<16>(*r[rd]));
+				writeToAddress16(calculated, signExtend<16>(r[rd]));
 			if (!pFlag)
-				calculated += uFlag ? *r[offset] : -*r[offset];
+				calculated += uFlag ? r[offset] : -r[offset];
 		}
-		*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
+		r[rn] = (wFlag || !pFlag) ? calculated : r[rn];
 		break;
 	case 1:
 		if (lFlag){
 			if (pFlag)
 				calculated += uFlag ? offset : -offset;
 			if (shFlag == 1)
-				*r[rd] = loadFromAddress16(calculated);
+				r[rd] = loadFromAddress16(calculated);
 			else if (shFlag == 2)
-				*r[rd] = signExtend<8>(loadFromAddress(calculated));
+				r[rd] = signExtend<8>(loadFromAddress(calculated));
 			else {
 				uint32_t res = loadFromAddress16(calculated);
 				res = signExtend<16>(res);
@@ -590,25 +590,25 @@ void halfDataTransfer(int opCode){
 					else
 						res &= 0xFFFF;
 				}
-				*r[rd] = res;
+				r[rd] = res;
 			}
 			if (!pFlag)
 				calculated += uFlag ? offset : offset;
 			if (rn != rd)
-				*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
+				r[rn] = (wFlag || !pFlag) ? calculated : r[rn];
 		}
 		else{
 			if (pFlag)
 				calculated += uFlag ? offset : -offset;
 			if (shFlag == 1)
-				writeToAddress16(calculated, *r[rd]);
+				writeToAddress16(calculated, r[rd]);
 			else if (shFlag == 2)
-				writeToAddress(calculated, signExtend<8>(*r[rd]));
+				writeToAddress(calculated, signExtend<8>(r[rd]));
 			else
-				writeToAddress16(calculated, signExtend<16>(*r[rd]));
+				writeToAddress16(calculated, signExtend<16>(r[rd]));
 			if (!pFlag)
 				calculated += uFlag ? offset : -offset;
-			*r[rn] = (wFlag || !pFlag) ? calculated : *r[rn];
+			r[rn] = (wFlag || !pFlag) ? calculated : r[rn];
 		}
 		break;
 	}
@@ -621,10 +621,10 @@ void multiply(int opCode){
 	int rn = (opCode >> 12) & 0xF;
 	int rs = (opCode >> 8) & 0xF;
 	int rm = opCode & 0xF;
-	*r[rd] = accumulateBit ? *r[rm] * *r[rs] + *r[rn] : *r[rm] * *r[rs];
+	r[rd] = accumulateBit ? r[rm] * r[rs] + r[rn] : r[rm] * r[rs];
 	if (setBit){
-		negative(*r[rd]);
-		zero(*r[rd]);
+		negative(r[rd]);
+		zero(r[rd]);
 	}
 	if (debug)
 		std::cout << "mult ";
@@ -640,27 +640,27 @@ void multiplyLong(int opCode){
 	uint32_t Rs = (opCode >> 8) & 0xF;
 	uint32_t Rm = opCode & 0xF;
 	uint64_t tmp = 0;
-	uint64_t tmp4 = (((uint64_t)*r[rdHi] & 0xFFFFFFFF) << 32) | (*r[rdLo] & 0xFFFFFFFF);
+	uint64_t tmp4 = (((uint64_t)r[rdHi] & 0xFFFFFFFF) << 32) | (r[rdLo] & 0xFFFFFFFF);
 	if (sign){
-		int64_t tmp2 = *r[Rs];
-		int64_t tmp3 = *r[Rm];
+		int64_t tmp2 = r[Rs];
+		int64_t tmp3 = r[Rm];
 		tmp = tmp2 * tmp3;
 		if (accumulate)
 			tmp = tmp + tmp4;
 	}
 	else{
-		uint64_t tmp2 = *r[Rs] & 0xFFFFFFFF;
-		uint64_t tmp3 = *r[Rm] & 0xFFFFFFFF;
+		uint64_t tmp2 = r[Rs] & 0xFFFFFFFF;
+		uint64_t tmp3 = r[Rm] & 0xFFFFFFFF;
 		tmp = (uint64_t)tmp2 * (uint64_t)tmp3;
 		if (accumulate)
 			tmp = (uint64_t)tmp + (uint64_t)tmp4;
 	}
 
-	*r[rdHi] = (tmp >> 32) & 0xFFFFFFFF;
-	*r[rdLo] = tmp & 0xFFFFFFFF;
+	r[rdHi] = (tmp >> 32) & 0xFFFFFFFF;
+	r[rdLo] = tmp & 0xFFFFFFFF;
 
 	if (setConditions){
-		negative(*r[rdHi]);
+		negative(r[rdHi]);
 		zero(tmp);
 	}
 	if (debug)
@@ -677,27 +677,27 @@ void singleDataTrasnferImmediatePre(int opCode){
 	int destinationReg = (opCode >> 12) & 15;
 	int offset = opCode & 0xFFF;
 	offset += (baseReg == 15) ? 4 : 0;
-	int oldReg = *r[baseReg];
+	int oldReg = r[baseReg];
 	switch (loadStore){
 	case 0:
-		*r[baseReg] += upDownBit ? offset : -offset;
-		calculated = *r[baseReg];
-		*r[baseReg] = (writeBack) ? *r[baseReg] : oldReg;
+		r[baseReg] += upDownBit ? offset : -offset;
+		calculated = r[baseReg];
+		r[baseReg] = (writeBack) ? r[baseReg] : oldReg;
 		if (destinationReg == 15)
-			*r[destinationReg] += 8;
+			r[destinationReg] += 8;
 		if (destinationReg == baseReg)
-			*r[destinationReg] -= offset;
-		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
+			r[destinationReg] -= offset;
+		byteFlag ? writeToAddress(calculated, r[destinationReg]) : writeToAddress32(calculated, r[destinationReg]);
 		if (destinationReg == 15)
-			*r[destinationReg] -= 8;
+			r[destinationReg] -= 8;
 		if (destinationReg == baseReg)
-			*r[destinationReg] += offset;
+			r[destinationReg] += offset;
 		break;
 	case 1:
-		*r[baseReg] += upDownBit ? offset : -offset;
-		calculated = *r[baseReg];
-		*r[baseReg] = (writeBack) ? *r[baseReg] : oldReg;
-		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
+		r[baseReg] += upDownBit ? offset : -offset;
+		calculated = r[baseReg];
+		r[baseReg] = (writeBack) ? r[baseReg] : oldReg;
+		r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 		break;
 	}
 
@@ -717,24 +717,24 @@ void singleDataTrasnferImmediatePost(int opCode){
 	int destinationReg = (opCode >> 12) & 15;
 	int offset = opCode & 0xFFF;
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
-	int calculated = *r[baseReg];
+	int calculated = r[baseReg];
 	cycles += S_cycles + N_cycles + 1;
 	switch (loadStore){
 	case 0:
 		if (destinationReg == 15)
-			*r[destinationReg] += 8;
-		byteFlag ? writeToAddress(calculated, *r[destinationReg]) : writeToAddress32(calculated, *r[destinationReg]);
+			r[destinationReg] += 8;
+		byteFlag ? writeToAddress(calculated, r[destinationReg]) : writeToAddress32(calculated, r[destinationReg]);
 		calculated += upDownBit ? offset : -offset;
 		if (destinationReg == 15)
-			*r[destinationReg] -= 8;
-		*r[baseReg] = calculated;
+			r[destinationReg] -= 8;
+		r[baseReg] = calculated;
 		return;
 		break;
 	case 1:
-		*r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
+		r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
 		calculated += upDownBit ? offset : -offset;
 		if (destinationReg != baseReg)
-			*r[baseReg] = calculated;
+			r[baseReg] = calculated;
 		return;
 		break;
 	}
@@ -754,29 +754,29 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int loadStore = (opCode >> 20) & 1;
 
 	int shiftId = (opCode >> 5) & 3;
-	int tmpRegister = *r[rm];
+	int tmpRegister = r[rm];
 
 	offset = (opCode >> 7) & 0x1F;
 	if (shiftId == 3 && offset == 0){
 		rrx(tmpRegister, tmpRegister);
 	}
 	else
-		ARMshifts[shiftId](tmpRegister, *r[rm], offset);
+		ARMshifts[shiftId](tmpRegister, r[rm], offset);
 
-	int oldReg = *r[rn];
+	int oldReg = r[rn];
 	switch (loadStore){
 	case 0:
 		if (rd == 15)
-			*r[rd] += 8;
-		*r[rn] += upDownBit ? tmpRegister : -tmpRegister;
-		byteFlag ? writeToAddress(*r[rn], *r[rd]) : writeToAddress32(*r[rn], *r[rd]);
-		*r[rn] = (writeBack) ? *r[rn] : oldReg;
+			r[rd] += 8;
+		r[rn] += upDownBit ? tmpRegister : -tmpRegister;
+		byteFlag ? writeToAddress(r[rn], r[rd]) : writeToAddress32(r[rn], r[rd]);
+		r[rn] = (writeBack) ? r[rn] : oldReg;
 		break;
 
 	case 1:
-		*r[rn] += upDownBit ? tmpRegister : -tmpRegister;
-		*r[rd] = byteFlag ? loadFromAddress(*r[rn]) : loadFromAddress32(*r[rn]);
-		*r[rn] = (writeBack) ? *r[rn] : oldReg;
+		r[rn] += upDownBit ? tmpRegister : -tmpRegister;
+		r[rd] = byteFlag ? loadFromAddress(r[rn]) : loadFromAddress32(r[rn]);
+		r[rn] = (writeBack) ? r[rn] : oldReg;
 		if (debug && byteFlag)
 			std::cout << "ldrb r" << +rd << ", [r" << +rn << " r" << +rm << "] ";
 		else if (debug && !byteFlag)
@@ -795,23 +795,23 @@ void singleDataTrasnferRegisterPost(int opCode){
 	int baseReg = (opCode >> 16) & 15;
 	int destinationReg = (opCode >> 12) & 15;
 	int shiftAmount = (opCode >> 4) & 0xFF;
-	int offset = *r[(opCode & 0xF)] << shiftAmount;
+	int offset = r[(opCode & 0xF)] << shiftAmount;
 	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
 
-	int oldReg = *r[baseReg];
+	int oldReg = r[baseReg];
 
 	switch (loadStore){
 	case 0:
 		if (destinationReg == 15)
-			*r[destinationReg] += 8;
-		byteFlag ? writeToAddress(*r[baseReg], *r[destinationReg]) : writeToAddress32(*r[baseReg], *r[destinationReg]);
-		*r[baseReg] += upDownBit ? offset : -offset;
+			r[destinationReg] += 8;
+		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
+		r[baseReg] += upDownBit ? offset : -offset;
 		if (destinationReg == 15)
-			*r[destinationReg] -= 8;
+			r[destinationReg] -= 8;
 		break;
 	case 1:
-		*r[destinationReg] = byteFlag ? loadFromAddress(*r[baseReg]) : loadFromAddress32(*r[baseReg]);
-		*r[baseReg] += upDownBit ? offset : -offset;
+		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
+		r[baseReg] += upDownBit ? offset : -offset;
 		break;
 	}
 
@@ -824,7 +824,7 @@ enum ProcessingUnits {
 
 void ARMExecute(int opCode){
 	int condition = (opCode >> 28) & 0xF;
-	*r[PC] += 4;
+	r[TRegisters::EProgramCounter] += 4;
 	cycles += 1;
 	//units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr, Registers());
 
@@ -841,8 +841,8 @@ void ARMExecute(int opCode){
 		case 13: case 12: //co processor data transfer, not used in GBA
 			break;
 		case 11: //branch with link 
-			*r[LR] = *r[PC];
-			*r[LR] &= ~3; //bits 1-0 should always be cleared, but you never know
+			r[LR] = r[TRegisters::EProgramCounter];
+			r[LR] &= ~3; //bits 1-0 should always be cleared, but you never know
 		case 10://branch 
 			ARMBranch(opCode);
 			break;

@@ -284,14 +284,14 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 }
 
 void PUSH(int value){
-    *r[SP] -= 4;
-	writeToAddress32(*r[SP], value);
+    r[SP] -= 4;
+	writeToAddress32(r[SP], value);
 }
 
 unsigned __int32 POP(){
 
-    int value = loadFromAddress32(*r[SP]);
-    *r[SP] += 4;
+    int value = loadFromAddress32(r[SP]);
+    r[SP] += 4;
     return value;
 }
 

@@ -1,6 +1,7 @@
 #ifndef GBACPU_H
 #define GBACPU_H
 #include <stdint.h>
+#include "cplusplusRewrite/HwRegisters.h"
 
 extern __int32* usrSys[17];
 extern __int32* abt[17];
@@ -9,7 +10,7 @@ extern __int32* fiq[17];
 extern __int32* irq[17];
 extern __int32* svc[17];
 
-extern __int32** r;
+extern Registers r;
 
 enum CpuModes{
 	USR = 0x10,
