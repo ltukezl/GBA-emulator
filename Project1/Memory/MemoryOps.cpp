@@ -19,17 +19,17 @@ uint32_t SP_svc = 0x03007F00;
 uint32_t SP_irq = 0x03007FA0;
 uint32_t SP_usr = 0x03007F00;
 
-uint8_t systemROM[0x4000] = { 0 };
-uint8_t ExternalWorkRAM[0x40000] = { 0 };
-uint8_t InternalWorkRAM[0x8000] = { 0 };
-uint8_t IoRAM[0x801] = { 0 };
-uint8_t PaletteRAM[0x400] = { 0 };
-uint8_t VRAM[0x18000] = { 0 };
-uint8_t OAM[0x400] = { 0 };
+uint8_t systemROM[0x4000] = {};
+uint8_t ExternalWorkRAM[0x40000] = {};
+uint8_t InternalWorkRAM[0x8000] = {};
+uint8_t IoRAM[0x801] = {};
+uint8_t PaletteRAM[0x400] = {};
+uint8_t VRAM[0x18000] = {};
+uint8_t OAM[0x400] = {};
 uint8_t* GamePak;
-uint8_t GamePakSRAM[0x10000] = { 0 };
+uint8_t GamePakSRAM[0x10000] = {};
 
-uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x10000, 0x10000 };
+const uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x10000, 0x10000 };
 unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
 
 uint32_t previousAddress = 0;
@@ -144,6 +144,11 @@ void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
 	uint32_t mask1 = (destination >> 24) & 15;
 	uint32_t mask2 = (source >> 24) & 15;
 
+	if (mask1 >= 8 && mask1 < 0xD)
+		return;
+	if (mask1 == 0)
+		return;
+
 	destination = clampAddress(mask1, destination);
 	source = clampAddress(mask2, source);
 
@@ -163,6 +168,9 @@ void writeToAddress(uint32_t address, uint8_t value){
 		return;
 
 	else if (mask == 0)
+		return;
+
+	else if (mask >= 8 && mask <= 0xd)
 		return;
 
 	address = clampAddress(mask, address);
@@ -196,6 +204,8 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		return;
 	else if (mask == 0)
 		return;
+	else if (mask >= 8 && mask <= 0xd)
+		return;
 
 	address = clampAddress(mask, address);
 
@@ -218,6 +228,9 @@ void writeToAddress32(uint32_t address, uint32_t value){
 		return;
 
 	else if (mask == 0)
+		return;
+
+	else if (mask >= 8 && mask <= 0xd)
 		return;
 
 	address = clampAddress(mask, address);
@@ -280,6 +293,8 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 
 	address = clampAddress(mask, address);
 
+	if (r[15] < 0x4000)
+		return rawLoad32(memoryLayout[mask], address - misalignment);
 	return RORnoCond(rawLoad32(memoryLayout[mask], address - misalignment), (8 * misalignment));
 }
 

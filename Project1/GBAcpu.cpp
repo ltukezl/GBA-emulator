@@ -29,16 +29,6 @@ __int64 hBlankCounter = 0;
 
 bool hBlankHappened = false;
 bool vBlankHappened = false;
-/*Registers*/
-/*prepare register ranges for banks*/
-__int32 sharedRegs[9];
-__int32 extRegisters[5];
-__int32 usrBanked[2];
-__int32 fiqBanked[7];
-__int32 svcBanked[2];
-__int32 abtBanked[2];
-__int32 irqBanked[2];
-__int32 undBanked[2];
 
 __int32 sprs_usr = 0;
 __int32 sprs_svc = 0;
@@ -46,27 +36,6 @@ __int32 sprs_abt = 0;
 __int32 sprs_irq = 0;
 __int32 sprs_fiq = 0;
 __int32 sprs_udf = 0;
-
-//__int32 r[16];	//used register
-
-/*prepare complete banks for modes*/
-__int32* usrSys[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
-&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &usrBanked[0], &usrBanked[1], &sharedRegs[8], &sprs_usr };
-
-__int32* svc[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
-&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &svcBanked[0], &svcBanked[1], &sharedRegs[8], &sprs_svc };
-
-__int32* abt[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
-&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &abtBanked[0], &abtBanked[1], &sharedRegs[8], &sprs_abt };
-
-__int32* fiq[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
-&fiqBanked[0], &fiqBanked[1], &fiqBanked[2], &fiqBanked[3], &fiqBanked[4], &fiqBanked[5], &fiqBanked[6], &sharedRegs[8], &sprs_fiq };
-
-__int32* irq[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
-&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &irqBanked[0], &irqBanked[1], &sharedRegs[8], &sprs_irq };
-
-__int32* undef[17] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
-&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8], &sprs_udf };
 
 Registers r;
 
@@ -173,7 +142,7 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE *bios;
-	fopen_s(&file, "Project1/TestBinaries/program4.bin", "rb");
+	fopen_s(&file, "Project1/TestBinaries/program6.bin", "rb");
 	//fopen_s(&file, "Project1/TestBinaries/tonc/bigmap.gba", "rb");
 	//fopen_s(&file, "Project1/TestBinaries/tonc/obj_demo.gba", "rb");
 	fopen_s(&bios, "Project1/GBA.BIOS", "rb");

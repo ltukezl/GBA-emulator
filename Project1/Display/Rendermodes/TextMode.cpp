@@ -12,7 +12,6 @@ extern RgbaPalette PaletteColours;
 void TextMode::draw(uint8_t regOffset) {
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
-	//uint32_t tileBaseBlock = bgCnt->tileBaseBlock * 0x4000;
 	uint32_t tileStartRow = bgCnt->is8Bit ? bgCnt->tileBaseBlock * 8 : bgCnt->tileBaseBlock * 16;
 	uint8_t sizeX = bgCnt->hWide ? 64 : 32;
 	uint8_t sizeY = bgCnt->vWide ? 64 : 32;
@@ -22,7 +21,6 @@ void TextMode::draw(uint8_t regOffset) {
 			BgTile* tileCtrl = (BgTile*)&VRAM[startAddr];
 			auto t = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
 			backgroundTiles[i][k] = t.flipVertical(tileCtrl->VerticalFlip).flipHorizontal(tileCtrl->horizontalFlip);
-			//backgroundTiles[i][k] = t;
 			startAddr += 2;
 		}
 	}

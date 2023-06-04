@@ -145,10 +145,10 @@ public:
 		// FIXME: use returns!!!
 		switch (mode) {
 			case EUSR:    r = usrSys;  break;
-			case EFIQ:    r = fiq;  	  break;
-			case EIRQ:    r = irq;  	  break;
-			case ESUPER:  r = svc;  	  break;
-			case EABORT:  r = abt;  	  break;
+			case EFIQ:    r = fiq;     break;
+			case EIRQ:    r = irq;     break;
+			case ESUPER:  r = svc;     break;
+			case EABORT:  r = abt;     break;
 			case EUNDEF:  r = undef;   break;
 			case ESYS:    r = usrSys;  break;
 		}
@@ -180,8 +180,6 @@ public:
 			*r[i] = list.begin()[i];
 		}
 	};
-
-	~Registers() = default;
 
     uint32_t& operator[](const uint32_t index) const {
         return *r[index];

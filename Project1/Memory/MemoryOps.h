@@ -2,8 +2,6 @@
 #define MEMORYOPS_H
 
 #include <stdint.h>
-#include <map>
-#include <tuple>
 
 extern uint8_t systemROM[0x4000];
 extern uint8_t ExternalWorkRAM[0x40000];
