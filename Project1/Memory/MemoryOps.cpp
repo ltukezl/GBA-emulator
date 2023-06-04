@@ -206,6 +206,11 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		return;
 	else if (mask >= 8 && mask <= 0xd)
 		return;
+	else if (mask == 0xe)
+	{
+		//sram writes are 8 bits
+		value = ((value & 0xFF) << 8) | (value & 0xFF);
+	}
 
 	address = clampAddress(mask, address);
 
@@ -232,6 +237,11 @@ void writeToAddress32(uint32_t address, uint32_t value){
 
 	else if (mask >= 8 && mask <= 0xd)
 		return;
+	else if (mask == 0xe)
+	{
+		//sram writes are 8 bits
+		value = ((value & 0xFF) << 24) | ((value & 0xFF) << 16) | ((value & 0xFF) << 8) | (value & 0xFF);
+	}
 
 	address = clampAddress(mask, address);
 
@@ -268,12 +278,15 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
-	
-
 	address = clampAddress(mask, address);
-	uint32_t result = RORnoCond(rawLoad16(memoryLayout[mask], (address - misalignment)), 8 * misalignment);
+	uint16_t tmpResult = rawLoad16(memoryLayout[mask], (address - misalignment));
+	if (mask == 0xe)
+	{
+		//sram writes are 8 bits
+		tmpResult = ((tmpResult & 0xFF) << 8) | (tmpResult & 0xFF);
+	}
 
-	return result;
+	return RORnoCond(tmpResult, 8 * misalignment);
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
@@ -293,9 +306,20 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 
 	address = clampAddress(mask, address);
 
+	uint32_t result = 0;
+
 	if (r[15] < 0x4000)
-		return rawLoad32(memoryLayout[mask], address - misalignment);
-	return RORnoCond(rawLoad32(memoryLayout[mask], address - misalignment), (8 * misalignment));
+		result = rawLoad32(memoryLayout[mask], address - misalignment);
+	else
+		result = RORnoCond(rawLoad32(memoryLayout[mask], address - misalignment), (8 * misalignment));
+
+	if (mask == 0xe)
+	{
+		//sram writes are 8 bits
+		result = ((result & 0xFF) << 24) | ((result & 0xFF) << 16) | ((result & 0xFF) << 8) | (result & 0xFF);
+	}
+
+	return result;
 }
 
 void PUSH(int value){
