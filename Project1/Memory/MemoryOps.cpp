@@ -6,9 +6,9 @@
 #include "Timer/timers.h"
 #include "memoryMappedIO.h"
 #include "Display/Display.h"
+#include "Memory/MemoryAreas.h"
 
 uint32_t systemROMStart = 0x00000000;
-uint32_t ExternalWorkRAMStart = 0x02000000;
 uint32_t InternalWorkRAMStart = 0x03000000;
 uint32_t IoRAMStart = 0x04000000;
 uint32_t PaletteRAMStart = 0x05000000;
@@ -20,17 +20,18 @@ uint32_t SP_irq = 0x03007FA0;
 uint32_t SP_usr = 0x03007F00;
 
 uint8_t systemROM[0x4000] = {};
-uint8_t ExternalWorkRAM[0x40000] = {};
 uint8_t InternalWorkRAM[0x8000] = {};
 uint8_t IoRAM[0x801] = {};
 uint8_t PaletteRAM[0x400] = {};
 uint8_t VRAM[0x18000] = {};
 uint8_t OAM[0x400] = {};
 uint8_t* GamePak;
-uint8_t GamePakSRAM[0x10000] = {};
 
-const uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x10000, 0x10000 };
-unsigned char *memoryLayout[16] = { systemROM, systemROM, ExternalWorkRAM, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePakSRAM, GamePakSRAM };
+Sram sram;
+ExternalWorkRAM ewram;
+
+const uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x400000, 0x400000 };
+unsigned char *memoryLayout[16] = { systemROM, systemROM, nullptr, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], nullptr, nullptr };
 
 uint32_t previousAddress = 0;
 extern RgbaPalette PaletteColours;
@@ -156,49 +157,69 @@ void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
 }
 
 void writeToAddress(uint32_t address, uint8_t value){
-	isVideoMemModification(address);
-	calculateCycles(address, (previousAddress + 1) == address);
-	int mask = (address >> 24) & 15;
-	address &= ~0xFF000000;
+	MemoryAddress memDecoder{ address };
+	isVideoMemModification(memDecoder.address);
+	calculateCycles(memDecoder.address, (previousAddress + 1) == memDecoder.address);
 
-	if (mask == 4 && address > memsizes[mask])
-		return;
-
-	else if ((mask == 5 || mask == 6 || mask == 7) && (displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
-		return;
-
-	else if (mask == 0)
-		return;
-
-	else if (mask >= 8 && mask <= 0xd)
-		return;
-
-	address = clampAddress(mask, address);
-
-	if (mask == 7 
-		|| (displayCtrl->bgMode == 7 && mask == 6 && address >= 0x10000)
-		|| (displayCtrl->bgMode == 4 && mask == 6 && address >= 0x10000))
-		return;
-
-	if ((displayCtrl->bgMode == 4 && mask == 6 && address < 0x10000)
-		|| mask == 5){
-		memoryLayout[mask][address] = value;
-		memoryLayout[mask][address + 1] = value;
+	if (memDecoder.mask == 0x2){
+		ewram.write8(memDecoder, value);
 		return;
 	}
 
-	if (specialWrites(mask, address, value))
+	if (memDecoder.mask == 0xe || memDecoder.mask == 0xf){
+		sram.write8(memDecoder, value);
+		return;
+	}
+
+	if (memDecoder.mask == 4 && memDecoder.address > memsizes[memDecoder.mask])
 		return;
 
-	memoryLayout[mask][address] = value;
+	else if ((memDecoder.mask == 5 || memDecoder.mask == 6 || memDecoder.mask == 7) && (displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
+		return;
+
+	else if (memDecoder.mask == 0)
+		return;
+
+	else if (memDecoder.mask >= 8 && memDecoder.mask <= 0xd)
+		return;
+	address = clampAddress(memDecoder.mask, memDecoder.address);
+
+	if (memDecoder.mask == 7
+		|| (displayCtrl->bgMode == 7 && memDecoder.mask == 6 && address >= 0x10000)
+		|| (displayCtrl->bgMode == 4 && memDecoder.mask == 6 && address >= 0x10000))
+		return;
+
+	if ((displayCtrl->bgMode == 4 && memDecoder.mask == 6 && address < 0x10000)
+		|| memDecoder.mask == 5){
+		memoryLayout[memDecoder.mask][address] = value;
+		memoryLayout[memDecoder.mask][address + 1] = value;
+		return;
+	}
+
+	if (specialWrites(memDecoder.mask, address, value))
+		return;
+
+	memoryLayout[memDecoder.mask][address] = value;
 }
 
 void writeToAddress16(uint32_t address, uint16_t value){
 	isVideoMemModification(address);
 	calculateCycles(address, (previousAddress + 2) == address);
-	int mask = (address >> 24) & 15;
+	MemoryAddress memDecoder{ address };
+	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 1;
+
+	if (memDecoder.mask == 0x2){
+		ewram.write16(memDecoder, value);
+		return;
+	}
+	
+	if (mask == 0xe || mask == 0xf)
+	{
+		sram.write16(memDecoder, value);
+		return;
+	}
 
 	if (mask == 4 && address > memsizes[mask])
 		return;
@@ -206,11 +227,6 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		return;
 	else if (mask >= 8 && mask <= 0xd)
 		return;
-	else if (mask == 0xe)
-	{
-		//sram writes are 8 bits
-		value = ((value & 0xFF) << 8) | (value & 0xFF);
-	}
 
 	address = clampAddress(mask, address);
 
@@ -225,9 +241,21 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	calculateCycles(address, (previousAddress + 4) == address);
 	calculateCycles(address, true);
 	cycles += 1;
-	int mask = (address >> 24) & 15;
+	MemoryAddress memDecoder{ address };
+	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 3;
+
+	if (memDecoder.mask == 0x2) {
+		ewram.write32(memDecoder, value);
+		return;
+	}
+
+	if (mask == 0xe || mask == 0xf)
+	{
+		sram.write32(memDecoder, value);
+		return;
+	}
 
 	if (mask == 4 && address > memsizes[mask])
 		return;
@@ -237,11 +265,7 @@ void writeToAddress32(uint32_t address, uint32_t value){
 
 	else if (mask >= 8 && mask <= 0xd)
 		return;
-	else if (mask == 0xe)
-	{
-		//sram writes are 8 bits
-		value = ((value & 0xFF) << 24) | ((value & 0xFF) << 16) | ((value & 0xFF) << 8) | (value & 0xFF);
-	}
+	
 
 	address = clampAddress(mask, address);
 
@@ -255,13 +279,24 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 	if (!free)
 		calculateCycles(address, (previousAddress + 1) == address);
 
-	int mask = (address >> 24) & 15;
+	MemoryAddress memDecoder{ address };
+	uint32_t mask = memDecoder.mask;
+
+	if (memDecoder.mask == 0x2){
+		return ewram.read8(memDecoder);
+	}
+
+	if (mask == 0xe || mask == 0xf){
+		return sram.read8(memDecoder);
+	}
+
 	address &= ~0xFF000000;
 
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
 	address = clampAddress(mask, address);
+
 
 	return memoryLayout[mask][address];
 }
@@ -272,21 +307,25 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 
 	uint32_t misalignment = address & 1;
 
-	int mask = (address >> 24) & 15;
+	MemoryAddress memDecoder{ address };
+	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
+
+	if (memDecoder.mask == 0x2){
+		return ewram.read16(memDecoder);
+	}
+	if (mask == 0xe || mask == 0xf){
+		return sram.read16(memDecoder);
+	}
 
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
 	address = clampAddress(mask, address);
 	uint16_t tmpResult = rawLoad16(memoryLayout[mask], (address - misalignment));
-	if (mask == 0xe)
-	{
-		//sram writes are 8 bits
-		tmpResult = ((tmpResult & 0xFF) << 8) | (tmpResult & 0xFF);
-	}
 
-	return RORnoCond(tmpResult, 8 * misalignment);
+	auto tmp = RORnoCond(tmpResult, 8 * misalignment);
+	return tmp;
 }
 
 uint32_t loadFromAddress32(uint32_t address, bool free){
@@ -298,7 +337,17 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 
 	uint32_t misalignment = address & 3;
 
-    uint32_t mask = (address >> 24) & 15;
+	MemoryAddress memDecoder{ address };
+	uint32_t mask = memDecoder.mask;
+
+	if (memDecoder.mask == 0x2){
+		return ewram.read32(memDecoder);
+	}
+
+	if (mask == 0xe || mask == 0xf){
+		return sram.read32(memDecoder);
+	}
+
 	address &= ~0xFF000000;
 
 	if (mask == 4 && address > memsizes[mask])
@@ -312,12 +361,6 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 		result = rawLoad32(memoryLayout[mask], address - misalignment);
 	else
 		result = RORnoCond(rawLoad32(memoryLayout[mask], address - misalignment), (8 * misalignment));
-
-	if (mask == 0xe)
-	{
-		//sram writes are 8 bits
-		result = ((result & 0xFF) << 24) | ((result & 0xFF) << 16) | ((result & 0xFF) << 8) | (result & 0xFF);
-	}
 
 	return result;
 }
@@ -339,10 +382,13 @@ void memoryInits(){
 	rawWrite32(IoRAM, 0x800, 0x0D000020);
 	GamePak = new uint8_t[0x2000000];
 	memset(GamePak, 0, sizeof(uint8_t) * 0x2000000);
+	memoryLayout[2] = ewram.getMemoryPtr();
 	memoryLayout[8] = GamePak;
 	memoryLayout[9] = &GamePak[0x1000000];
 	memoryLayout[10] = GamePak;
 	memoryLayout[11] = &GamePak[0x1000000];
 	memoryLayout[12] = GamePak;
 	memoryLayout[13] = &GamePak[0x1000000];
+	memoryLayout[14] = sram.getMemoryPtr();
+	memoryLayout[15] = sram.getMemoryPtr();
 }

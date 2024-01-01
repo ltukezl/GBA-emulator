@@ -4,14 +4,12 @@
 #include <stdint.h>
 
 extern uint8_t systemROM[0x4000];
-extern uint8_t ExternalWorkRAM[0x40000];
 extern uint8_t InternalWorkRAM[0x8000];
 extern uint8_t IoRAM[0x801];
 extern uint8_t PaletteRAM[0x400];
 extern uint8_t VRAM[0x18000];
 extern uint8_t OAM[0x400];
 extern uint8_t* GamePak;
-extern uint8_t GamePakSRAM[0x10000];
 extern unsigned char* memoryLayout[16];
 
 void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size);

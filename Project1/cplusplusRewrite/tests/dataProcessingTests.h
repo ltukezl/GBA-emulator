@@ -8,7 +8,7 @@
 #include <iostream>
 
 struct dataProcessingTest {
-	char* name;
+	const char* name;
 	uint32_t opCode;
 	Registers registersIn;
 	uint32_t cpsrIn;

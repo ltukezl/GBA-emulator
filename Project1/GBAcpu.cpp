@@ -65,7 +65,7 @@ int swapEndianess32(int num){
 }
 
 void updateInstructionCycleTimings(uint32_t address){
-	if (address >= 0xC000000){
+	if (address >= 0xC00'0000){
 		N_cycles = firstAccessCycles[waitStateControl->waitstate2First];
 		S_cycles = WS2Second[waitStateControl->waitstate2Second];
 	}
@@ -87,7 +87,7 @@ otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
 
-	//runAllTests();
+	runAllTests();
 
 
 #if BIOS_START

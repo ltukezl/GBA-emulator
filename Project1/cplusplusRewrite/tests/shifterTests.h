@@ -7,7 +7,7 @@
 #include "cplusplusRewrite/tests/testUtils.h"
 
 struct shifterTest {
-	char* name;
+	const char* name;
 	uint32_t in0;
 	uint32_t in1;
 	uint32_t inCpsr;

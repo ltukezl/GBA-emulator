@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 extern uint32_t systemROMStart;
-extern uint32_t ExternalWorkRAMStart;
 extern uint32_t InternalWorkRAMStart;
 extern uint32_t IoRAMStart;
 extern uint32_t PaletteRAMStart;
