@@ -92,7 +92,7 @@ public:
 	void clearAccess() { m_accessed = false; }
 
 	template<typename T>
-	constexpr T& as(uint32_t addr) { return *reinterpret_cast<T*>(get()->m_memoryArea.data() + addr); }
+	constexpr T& as(const uint32_t addr) { return *reinterpret_cast<T*>(get()->m_memoryArea.data() + addr); }
 
 private:
 	
@@ -116,9 +116,11 @@ public:
 		return RORnoCond(tmpResult, 8 * address.alignment16b());
 	}
 
-	uint32_t read32(const MemoryAddress address) {
+	uint32_t read32(const Registers& registers, const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
+		if (r[15] < 0x4000)
+			return tmpResult;
 		return RORnoCond(tmpResult, 8 * address.alignment32b());
 	}
 
@@ -142,6 +144,50 @@ public:
 	uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
 
 	static constexpr uint32_t m_memorySize = 0x4'0000;
+	std::array<uint8_t, m_memorySize> m_memoryArea = {};
+};
+
+class InternalWorkRAM : public IMemoryArea<InternalWorkRAM> {
+public:
+	uint32_t read8(const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		return m_memoryArea[newAddress.address];
+	}
+
+	uint32_t read16(const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
+		return RORnoCond(tmpResult, 8 * address.alignment16b());
+	}
+
+	uint32_t read32(const Registers& registers, const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
+		if (r[15] < 0x4000)
+			return tmpResult;
+		return RORnoCond(tmpResult, 8 * address.alignment32b());
+	}
+
+	void write8(const MemoryAddress address, const uint8_t value) {
+		auto newAddress = address % m_memorySize;
+		m_memoryArea[newAddress.address] = value;
+	}
+
+	void write16(const MemoryAddress address, const uint16_t value) {
+		auto newAddress = address % m_memorySize;
+		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
+		memAddr = value;
+	}
+
+	void write32(const MemoryAddress address, const uint32_t value) {
+		auto newAddress = address % m_memorySize;
+		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
+		memAddr = value;
+	}
+
+	uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
+
+	static constexpr uint32_t m_memorySize = 0x8000;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
 };
 

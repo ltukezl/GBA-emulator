@@ -9,7 +9,6 @@
 #include "Memory/MemoryAreas.h"
 
 uint32_t systemROMStart = 0x00000000;
-uint32_t InternalWorkRAMStart = 0x03000000;
 uint32_t IoRAMStart = 0x04000000;
 uint32_t PaletteRAMStart = 0x05000000;
 uint32_t VRAMStart = 0x06000000;
@@ -20,7 +19,6 @@ uint32_t SP_irq = 0x03007FA0;
 uint32_t SP_usr = 0x03007F00;
 
 uint8_t systemROM[0x4000] = {};
-uint8_t InternalWorkRAM[0x8000] = {};
 uint8_t IoRAM[0x801] = {};
 uint8_t PaletteRAM[0x400] = {};
 uint8_t VRAM[0x18000] = {};
@@ -29,9 +27,10 @@ uint8_t* GamePak;
 
 Sram sram;
 ExternalWorkRAM ewram;
+InternalWorkRAM iwram;
 
 const uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x400000, 0x400000 };
-unsigned char *memoryLayout[16] = { systemROM, systemROM, nullptr, InternalWorkRAM, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], nullptr, nullptr };
+unsigned char *memoryLayout[16] = { systemROM, systemROM, nullptr, nullptr, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], nullptr, nullptr };
 
 uint32_t previousAddress = 0;
 extern RgbaPalette PaletteColours;
@@ -166,6 +165,11 @@ void writeToAddress(uint32_t address, uint8_t value){
 		return;
 	}
 
+	if (memDecoder.mask == 0x3) {
+		iwram.write8(memDecoder, value);
+		return;
+	}
+
 	if (memDecoder.mask == 0xe || memDecoder.mask == 0xf){
 		sram.write8(memDecoder, value);
 		return;
@@ -214,6 +218,11 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		ewram.write16(memDecoder, value);
 		return;
 	}
+
+	if (memDecoder.mask == 0x3) {
+		iwram.write16(memDecoder, value);
+		return;
+	}
 	
 	if (mask == 0xe || mask == 0xf)
 	{
@@ -248,6 +257,11 @@ void writeToAddress32(uint32_t address, uint32_t value){
 
 	if (memDecoder.mask == 0x2) {
 		ewram.write32(memDecoder, value);
+		return;
+	}
+
+	if (memDecoder.mask == 0x3) {
+		iwram.write32(memDecoder, value);
 		return;
 	}
 
@@ -286,6 +300,10 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 		return ewram.read8(memDecoder);
 	}
 
+	if (memDecoder.mask == 0x3) {
+		return iwram.read8(memDecoder);
+	}
+
 	if (mask == 0xe || mask == 0xf){
 		return sram.read8(memDecoder);
 	}
@@ -314,6 +332,9 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	if (memDecoder.mask == 0x2){
 		return ewram.read16(memDecoder);
 	}
+	if (memDecoder.mask == 0x3) {
+		return iwram.read16(memDecoder);
+	}
 	if (mask == 0xe || mask == 0xf){
 		return sram.read16(memDecoder);
 	}
@@ -341,7 +362,11 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	uint32_t mask = memDecoder.mask;
 
 	if (memDecoder.mask == 0x2){
-		return ewram.read32(memDecoder);
+		return ewram.read32(r, memDecoder);
+	}
+
+	if (memDecoder.mask == 0x3) {
+		return iwram.read32(r, memDecoder);
 	}
 
 	if (mask == 0xe || mask == 0xf){
@@ -383,6 +408,7 @@ void memoryInits(){
 	GamePak = new uint8_t[0x2000000];
 	memset(GamePak, 0, sizeof(uint8_t) * 0x2000000);
 	memoryLayout[2] = ewram.getMemoryPtr();
+	memoryLayout[3] = iwram.getMemoryPtr();
 	memoryLayout[8] = GamePak;
 	memoryLayout[9] = &GamePak[0x1000000];
 	memoryLayout[10] = GamePak;

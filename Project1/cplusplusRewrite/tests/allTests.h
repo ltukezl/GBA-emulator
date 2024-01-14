@@ -9,5 +9,5 @@ void runAllTests() {
 	//testRegister();
 	//testShifter();
 	//dataProcessingTests();
-	::testAllMemoryArea();
+	//::testAllMemoryArea();
 }

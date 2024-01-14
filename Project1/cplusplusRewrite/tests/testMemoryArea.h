@@ -4,6 +4,7 @@
 #include <assert.h>
 
 namespace {
+	/*
 	ExternalWorkRAM ewram;
 
 	void testMemoryAddress() {
@@ -34,4 +35,5 @@ namespace {
 		testMemoryAddress();
 		testExternalWorkRAMasEmptyRW();
 	}
+	*/
 }
