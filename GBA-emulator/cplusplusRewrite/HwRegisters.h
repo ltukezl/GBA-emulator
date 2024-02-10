@@ -139,7 +139,7 @@ public:
 
 	union CPSR_t m_cpsr;
 
-	void updateMode(CpuModes_t mode) {
+	void updateMode(const CpuModes_t mode) {
 		//std::cout << "switched mode to " << mode << std::endl;
 		m_cpsr.mode = mode;
 		// FIXME: use returns!!!

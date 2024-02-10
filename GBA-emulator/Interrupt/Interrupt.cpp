@@ -23,7 +23,7 @@ void interruptController(){
 }
 
 bool timerCountHappened[4] = {};
-uint8_t timerCount[4] = {};
+uint64_t timerCount[4] = {};
 
 void HWInterrupts(uint64_t cycles){
 #if ENABLED

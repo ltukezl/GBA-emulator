@@ -103,6 +103,8 @@ public:
 	template<typename T>
 	constexpr T& as(const uint32_t addr) { return *reinterpret_cast<T*>(get()->m_memoryArea.data() + addr); }
 
+	constexpr uint8_t* getMemoryPtr() { return get()->m_memoryArea.data(); }
+
 private:
 	
 	constexpr Derived* get() {
@@ -150,8 +152,6 @@ public:
 		memAddr = value;
 	}
 
-	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
-
 	static constexpr uint32_t m_memorySize = 0x4'0000;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
 };
@@ -193,8 +193,6 @@ public:
 		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
 		memAddr = value;
 	}
-
-	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
 
 	static constexpr uint32_t m_memorySize = 0x8000;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
@@ -239,8 +237,6 @@ public:
 		memAddr = value;
 	}
 
-	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
-
 	static constexpr uint32_t m_memorySize = 0x400;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
 };
@@ -280,8 +276,6 @@ public:
 		memAddr = value;
 	}
 
-	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
-
 	static constexpr uint32_t m_memorySize = 0x400;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
 };
@@ -318,10 +312,6 @@ public:
 		write8(address.address + 3, value);
 	}
 
-
-	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
-
-private:
 	static constexpr uint32_t m_memorySize = 0x1'0000;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
 };

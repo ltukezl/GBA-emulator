@@ -15,224 +15,224 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="project1\GBAcpu.cpp">
+    <ClCompile Include="GBA-emulator\GBAcpu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\arm\ARMOpcodes.cpp">
+    <ClCompile Include="GBA-emulator\Arm\ARMOpcodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\commonoperations\arithmeticOps.cpp">
+    <ClCompile Include="GBA-emulator\CommonOperations\arithmeticOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\commonoperations\conditions.cpp">
+    <ClCompile Include="GBA-emulator\CommonOperations\conditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\commonoperations\logicalOps.cpp">
+    <ClCompile Include="GBA-emulator\CommonOperations\logicalOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\cplusplusrewrite\barrelShifter.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\barrelShifter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\cplusplusrewrite\BarrelShifterDecoder.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\BarrelShifterDecoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\cplusplusrewrite\dataProcessingOp.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\dataProcessingOp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\cplusplusrewrite\LogicOps.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\LogicOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\cplusplusrewrite\MathOps.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\MathOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\cplusplusrewrite\Shifts.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\Shifts.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\display\Display.cpp">
+    <ClCompile Include="GBA-emulator\Display\Display.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\dma\DMA.cpp">
+    <ClCompile Include="GBA-emulator\DMA\DMA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\interrupt\Interrupt.cpp">
+    <ClCompile Include="GBA-emulator\Interrupt\Interrupt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\memory\memoryMappedIO.cpp">
+    <ClCompile Include="GBA-emulator\Memory\memoryMappedIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\memory\MemoryOps.cpp">
+    <ClCompile Include="GBA-emulator\Memory\MemoryOps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\thumb\ThumbOpCodes.cpp">
+    <ClCompile Include="GBA-emulator\Thumb\ThumbOpCodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\timer\timers.cpp">
+    <ClCompile Include="GBA-emulator\Timer\timers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project1\utilities\CpsrWriter.cpp">
+    <ClCompile Include="GBA-emulator\Utilities\CpsrWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\cplusplusRewrite\Operation.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\Operation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\cplusplusRewrite\SingleDataTransfer.cpp">
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\RgbaPalette.cpp">
+    <ClCompile Include="GBA-emulator\Display\RgbaPalette.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\Tile.cpp">
+    <ClCompile Include="GBA-emulator\Display\Tile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\Tileset.cpp">
+    <ClCompile Include="GBA-emulator\Display\Tileset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\Rendermodes\RenderMode3.cpp">
+    <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\Rendermodes\TextMode.cpp">
+    <ClCompile Include="GBA-emulator\Display\Rendermodes\TextMode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\Rendermodes\RenderMode4.cpp">
+    <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\Rendermodes\RenderMode5.cpp">
+    <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\SpriteGenerator.cpp">
+    <ClCompile Include="GBA-emulator\Display\SpriteGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Project1\Display\Sprite.cpp">
+    <ClCompile Include="GBA-emulator\Display\Sprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="project1\Constants.h">
+    <ClInclude Include="GBA-emulator\Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\GBAcpu.h">
+    <ClInclude Include="GBA-emulator\GBAcpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\arm\armopcodes.h">
+    <ClInclude Include="GBA-emulator\Arm\armopcodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\commonoperations\arithmeticOps.h">
+    <ClInclude Include="GBA-emulator\CommonOperations\arithmeticOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\commonoperations\conditions.h">
+    <ClInclude Include="GBA-emulator\CommonOperations\conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\commonoperations\logicalOps.h">
+    <ClInclude Include="GBA-emulator\CommonOperations\logicalOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\cplusplusrewrite\barrelShifter.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\barrelShifter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\cplusplusrewrite\BarrelShifterDecoder.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\BarrelShifterDecoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\cplusplusrewrite\dataProcessingOp.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\dataProcessingOp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\cplusplusrewrite\LogicOps.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\LogicOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\cplusplusrewrite\MathOps.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\MathOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\cplusplusrewrite\Shifts.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\Shifts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\display\Display.h">
+    <ClInclude Include="GBA-emulator\Display\Display.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\dma\DMA.h">
+    <ClInclude Include="GBA-emulator\DMA\DMA.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\interrupt\interrupt.h">
+    <ClInclude Include="GBA-emulator\Interrupt\interrupt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\memory\memoryMappedIO.h">
+    <ClInclude Include="GBA-emulator\Memory\memoryMappedIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\memory\MemoryOps.h">
+    <ClInclude Include="GBA-emulator\Memory\MemoryOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\thumb\ThumbOpCodes.h">
+    <ClInclude Include="GBA-emulator\Thumb\ThumbOpCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\timer\timers.h">
+    <ClInclude Include="GBA-emulator\Timer\timers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project1\utilities\CpsrWriter.h">
+    <ClInclude Include="GBA-emulator\Utilities\CpsrWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\operation.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\operation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\SingleDataTransfer.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\RgbaPalette.h">
+    <ClInclude Include="GBA-emulator\Display\RgbaPalette.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\Tile.h">
+    <ClInclude Include="GBA-emulator\Display\Tile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\Tileset.h">
+    <ClInclude Include="GBA-emulator\Display\Tileset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\Rendermodes\RenderMode3.h">
+    <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\Rendermodes\TextMode.h">
+    <ClInclude Include="GBA-emulator\Display\Rendermodes\TextMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\HwRegisters.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\HwRegisters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\tests\HwRegisterTests.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\HwRegisterTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\tests\allTests.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\allTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\tests\dataProcessingTests.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\dataProcessingTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\tests\shifterTests.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\shifterTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\Emulator.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\Emulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\cplusplusRewrite\tests\testUtils.h">
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\testUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\Rendermodes\RenderMode4.h">
+    <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\Rendermodes\RenderMode5.h">
+    <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\SpriteGenerator.h">
+    <ClInclude Include="GBA-emulator\Display\SpriteGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Project1\Display\Sprite.h">
+    <ClInclude Include="GBA-emulator\Display\Sprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="project1\testbinaries\program2.bin">
+    <None Include="GBA-emulator\TestBinaries\program2.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="project1\testbinaries\program3.bin">
+    <None Include="GBA-emulator\TestBinaries\program3.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="project1\testbinaries\program4.bin">
+    <None Include="GBA-emulator\TestBinaries\program4.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="project1\testbinaries\program5.bin">
+    <None Include="GBA-emulator\TestBinaries\program5.bin">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="ClassDiagram.cd" />

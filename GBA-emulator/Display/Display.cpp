@@ -71,7 +71,7 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 	gameTXT.create(512, 512);
 	gameTXT.setRepeated(true);
 
-	font.loadFromFile("Project1/arial.ttf");
+	font.loadFromFile("GBA-emulator/arial.ttf");
 
 	text.setFont(font);
 	text.setCharacterSize(15);

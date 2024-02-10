@@ -142,11 +142,11 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE *bios;
-	fopen_s(&file, "Project1/TestBinaries/program6.bin", "rb");
-	//fopen_s(&file, "Project1/TestBinaries/tonc/bigmap.gba", "rb");
-	//fopen_s(&file, "Project1/TestBinaries/tonc/obj_demo.gba", "rb");
-	//fopen_s(&file, "Project1/TestBinaries/tonc/brin_demo.gba", "rb");
-	fopen_s(&bios, "Project1/GBA.BIOS", "rb");
+	fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/brin_demo.gba", "rb");
+	fopen_s(&bios, "GBA-emulator/GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 

@@ -3,8 +3,8 @@
 Debug/
 *.vcxproj.user
 *.sdf
-Project1/*.gba
-Project1/*.bin
+GBA-emulator/*.gba
+GBA-emulator/*.bin
 *.pyc
 *.pyo
 *.cd
@@ -13,4 +13,4 @@ Project1/*.bin
 *.psess
 *.opensdf
 Release/
-Project1/TestBinaries/
+GBA-emulator/TestBinaries/

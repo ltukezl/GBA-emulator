@@ -13,7 +13,7 @@ Tile::Tile(uint32_t addr, bool isObj) {
 	uint8_t paletteBase8bit = isObj ? 256 : 0;
 	
 	for (int y = 0; y < 8; y++) {
-		int row = rawLoad32(VRAM, addr + startAddr);
+		uint32_t row = rawLoad32(VRAM, addr + startAddr);
 		for (int pixel = 0; pixel < 8; pixel++) {
 			uint16_t color = (row & 0xf);
 			_tile.grid[y][pixel].index = color;
@@ -22,10 +22,10 @@ Tile::Tile(uint32_t addr, bool isObj) {
 		startAddr += 4;
 	}
 	
-	if (!isObj) {
+	if (!isObj && addr < 0xC000) {
 		for (int y = 0; y < 8; y++) {
 			for (int pixel = 0; pixel < 8; pixel++) {
-				uint8_t color = rawLoad8(VRAM, addr + offset * 2);
+				uint8_t color = rawLoad8(VRAM, addr * 2 + offset  );
 				auto paletteColor = PaletteColours.colorFromIndex(color);
 				auto palette = color / 16;
 				auto index = color % 16;
