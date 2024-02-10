@@ -1,6 +1,6 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
-#include <stdint.h>
+#include <cstdint>
 
 extern uint32_t systemROMStart;
 extern uint32_t InternalWorkRAMStart;

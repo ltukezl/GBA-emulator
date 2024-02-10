@@ -1,6 +1,6 @@
 #ifndef GBACPU_H
 #define GBACPU_H
-#include <stdint.h>
+#include <cstdint>
 #include "cplusplusRewrite/HwRegisters.h"
 
 extern __int32* usrSys[17];

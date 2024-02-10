@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Display/Tile.h"
+#include "Gba-Graphics/Tile/Tile.h"
 
 class Tileset
 {

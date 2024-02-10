@@ -1,4 +1,4 @@
-#include "Display/SpriteGenerator.h"
+#include "Gba-Graphics/sprites/SpriteGenerator.h"
 #include <iostream>
 #include <algorithm>
 extern RgbaPalette PaletteColours;

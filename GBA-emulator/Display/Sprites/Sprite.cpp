@@ -1,8 +1,8 @@
-#include "Sprite.h"
-#include "Tile.h"
+#include "Gba-Graphics/Sprites/Sprite.h"
+#include "Gba-Graphics/Tile/Tile.h"
 #include "Memory/memoryMappedIO.h"
 #include "Memory/MemoryOps.h"
-#include "Display/SpriteGenerator.h"
+#include "Gba-Graphics/sprites/SpriteGenerator.h"
 #include <iostream>
 
 constexpr std::pair<uint8_t, uint8_t> shapes[3][4] =	{ { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },

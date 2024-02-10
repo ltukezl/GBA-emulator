@@ -1,5 +1,5 @@
 #include <cstdint>
-#include "RgbaPalette.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 #include "Memory/memoryMappedIO.h"
 #include "Display/Display.h"
 
@@ -17,9 +17,9 @@ void RgbaPalette::updatePalette() {
 	for (int i = 0; i < _colorsWidth; i++)
 		for (int k = 0; k < _colorsLength; k++) {
 			ColorPaletteRam* colorPaletteRam = &_colorStartAddress[colorPtr];
-			int redScaled = colorPaletteRam->red * _scalar;
-			int greenScaled = colorPaletteRam->green * _scalar;
-			int blueScaled = colorPaletteRam->blue * _scalar;
+			uint32_t redScaled = colorPaletteRam->red * _scalar;
+			uint32_t greenScaled = colorPaletteRam->green * _scalar;
+			uint32_t blueScaled = colorPaletteRam->blue * _scalar;
 			paletteColorArray[i][k].r = redScaled;
 			paletteColorArray[i][k].g = greenScaled;
 			paletteColorArray[i][k].b = blueScaled;

@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/HwRegisters.h"

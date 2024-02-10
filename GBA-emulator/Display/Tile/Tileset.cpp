@@ -1,5 +1,5 @@
-#include "Display/Tileset.h"
-#include "Display/RgbaPalette.h"
+#include "Gba-Graphics/Tile/Tileset.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 #include <iostream>
 
 extern RgbaPalette PaletteColours;

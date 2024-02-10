@@ -1,9 +1,9 @@
-#include "TextMode.h"
+#include "Gba-Graphics/Rendermodes/TextMode.h"
 #include "Memory/MemoryOps.h"
 #include "Memory/memoryMappedIO.h"
-#include "Display/Tileset.h"
-#include "Display/Rendermodes/TextMode.h"
-#include <stdint.h>
+#include "Gba-Graphics/Tile/Tileset.h"
+#include "Gba-Graphics/Rendermodes/TextMode.h"
+#include <cstdint>
 #include <iostream>
 
 extern Tileset tileset;

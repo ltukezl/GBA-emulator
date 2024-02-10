@@ -1,14 +1,14 @@
 #include "iostream"
 #include "GBAcpu.h"
 #include "Thumb/ThumbOpCodes.h"
-#include "armopcodes.h"
+#include "Arm/armopcodes.h"
 #include "Memory/MemoryOps.h"
 #include "Constants.h"
 #include "Interrupt/interrupt.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
-#include <stdint.h>
+#include <cstdint>
 
 void ARMBranch(int opCode){
 	r[TRegisters::EProgramCounter] += 4;

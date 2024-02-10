@@ -1,6 +1,6 @@
-#include "RenderMode5.h"
+#include "Gba-Graphics/Rendermodes/RenderMode5.h"
 #include "Memory/MemoryOps.h"
-#include "Display/RgbaPalette.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 
 extern RgbaPalette PaletteColours;
 

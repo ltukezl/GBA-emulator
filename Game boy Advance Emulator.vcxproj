@@ -76,7 +76,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;C:\Users\tuomo-pc\Desktop\github\GBA-emulator\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -93,7 +93,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;C:\Users\tuomo-pc\Desktop\github\GBA-emulator\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <SupportJustMyCode>false</SupportJustMyCode>
@@ -112,7 +112,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;C:\Users\tuomo-pc\Desktop\github\GBA-emulator\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -122,7 +122,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;C:\Users\tuomo-pc\Desktop\github\GBA-emulator\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -145,12 +145,12 @@
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Shifts.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.cpp" />
     <ClCompile Include="GBA-emulator\Display\Display.cpp" />
-    <ClCompile Include="GBA-emulator\Display\SpriteGenerator.cpp" />
+    <ClCompile Include="GBA-emulator\Display\Sprites\SpriteGenerator.cpp" />
     <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode3.cpp" />
     <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode4.cpp" />
     <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode5.cpp" />
     <ClCompile Include="GBA-emulator\Display\Rendermodes\TextMode.cpp" />
-    <ClCompile Include="GBA-emulator\Display\RgbaPalette.cpp" />
+    <ClCompile Include="GBA-emulator\Display\Palette\RgbaPalette.cpp" />
     <ClCompile Include="GBA-emulator\DMA\DMA.cpp" />
     <ClCompile Include="GBA-emulator\GBAcpu.cpp" />
     <ClCompile Include="GBA-emulator\Interrupt\Interrupt.cpp" />
@@ -158,17 +158,16 @@
     <ClCompile Include="GBA-emulator\Memory\MemoryOps.cpp" />
     <ClCompile Include="GBA-emulator\Thumb\ThumbOpCodes.cpp" />
     <ClCompile Include="GBA-emulator\Timer\timers.cpp" />
-    <ClCompile Include="GBA-emulator\Utilities\CpsrWriter.cpp" />
-    <ClCompile Include="GBA-emulator\Display\Tile.cpp" />
-    <ClCompile Include="GBA-emulator\Display\Tileset.cpp" />
-    <ClCompile Include="GBA-emulator\Display\Sprite.cpp" />
+    <ClCompile Include="GBA-emulator\Display\Tile\Tile.cpp" />
+    <ClCompile Include="GBA-emulator\Display\Tile\Tileset.cpp" />
+    <ClCompile Include="GBA-emulator\Display\Sprites\Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GBA-emulator\Arm\armopcodes.h" />
-    <ClInclude Include="GBA-emulator\CommonOperations\arithmeticOps.h" />
-    <ClInclude Include="GBA-emulator\CommonOperations\conditions.h" />
-    <ClInclude Include="GBA-emulator\CommonOperations\logicalOps.h" />
-    <ClInclude Include="GBA-emulator\Constants.h" />
+    <ClInclude Include="GBA-emulator\Include\Arm\armopcodes.h" />
+    <ClInclude Include="GBA-emulator\Include\CommonOperations\arithmeticOps.h" />
+    <ClInclude Include="GBA-emulator\Include\CommonOperations\conditions.h" />
+    <ClInclude Include="GBA-emulator\Include\CommonOperations\logicalOps.h" />
+    <ClInclude Include="GBA-emulator\Include\Constants.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\barrelShifter.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\BarrelShifterDecoder.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\dataProcessingOp.h" />
@@ -184,24 +183,23 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\HwRegisterTests.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\shifterTests.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\testUtils.h" />
-    <ClInclude Include="GBA-emulator\Display\Display.h" />
-    <ClInclude Include="GBA-emulator\Display\SpriteGenerator.h" />
+    <ClInclude Include="GBA-emulator\Include\Display\Display.h" />
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Sprites\SpriteGenerator.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode3.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode4.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode5.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\TextMode.h" />
-    <ClInclude Include="GBA-emulator\Display\RgbaPalette.h" />
-    <ClInclude Include="GBA-emulator\DMA\DMA.h" />
-    <ClInclude Include="GBA-emulator\GBAcpu.h" />
-    <ClInclude Include="GBA-emulator\Interrupt\interrupt.h" />
-    <ClInclude Include="GBA-emulator\Memory\memoryMappedIO.h" />
-    <ClInclude Include="GBA-emulator\Memory\MemoryOps.h" />
-    <ClInclude Include="GBA-emulator\Thumb\ThumbOpCodes.h" />
-    <ClInclude Include="GBA-emulator\Timer\timers.h" />
-    <ClInclude Include="GBA-emulator\Utilities\CpsrWriter.h" />
-    <ClInclude Include="GBA-emulator\Display\Tile.h" />
-    <ClInclude Include="GBA-emulator\Display\Tileset.h" />
-    <ClInclude Include="GBA-emulator\Display\Sprite.h" />
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Palette\RgbaPalette.h" />
+    <ClInclude Include="GBA-emulator\Include\DMA\DMA.h" />
+    <ClInclude Include="GBA-emulator\Include\GBAcpu.h" />
+    <ClInclude Include="GBA-emulator\Include\Interrupt\interrupt.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\memoryMappedIO.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\memoryOps.h" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h" />
+    <ClInclude Include="GBA-emulator\Include\Timer\timers.h" />
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tile.h" />
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tileset.h" />
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Sprites\Sprite.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

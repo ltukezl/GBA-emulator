@@ -1,16 +1,17 @@
 #include <SFML/Graphics.hpp>
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
-#include "Display.h"
+
+#include "Display/Display.h"
 #include "Memory/MemoryOps.h"
 #include "GBAcpu.h"
 #include "Constants.h"
 #include "Memory/memoryMappedIO.h"
-#include "Display/Tile.h"
-#include "Display/Tileset.h"
-#include "Display/Rendermodes/TextMode.h"
-#include "Display/Rendermodes/RenderMode3.h"
-#include "Display/Sprite.h"
+#include "Gba-Graphics/Tile/Tile.h"
+#include "Gba-Graphics/Tile/Tileset.h"
+#include "Gba-Graphics/Rendermodes/TextMode.h"
+#include "Gba-Graphics/Rendermodes/RenderMode3.h"
+#include "Gba-Graphics/Sprites/Sprite.h"
 
 extern RgbaPalette PaletteColours;
 extern Tileset tileset;

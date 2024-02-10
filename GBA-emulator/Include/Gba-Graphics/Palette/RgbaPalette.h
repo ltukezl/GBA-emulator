@@ -29,14 +29,14 @@ public:
 	void paletteMemChanged(uint32_t testedAddress);
 
 private:
-	const int _scalar = 255 / 31;
-	static constexpr int _colorsWidth = 32;
-	static constexpr int _colorsLength = 16;
-	static constexpr int _colorChannels = 4;
+	static constexpr uint32_t _scalar = 255 / 31;
+	static constexpr uint8_t _colorsWidth = 32;
+	static constexpr uint8_t _colorsLength = 16;
+	static constexpr uint8_t _colorChannels = 4;
 	union ColorPaletteRam* _colorStartAddress = nullptr;
 
-	const uint32_t _paletteStart = 0x5000000;
-	const uint32_t _paletteEnd = 0x5FFFFFF;
+	const uint32_t _paletteStart = 0x500'0000;
+	const uint32_t _paletteEnd = 0x5FF'FFFF;
 	
 	GBAColor paletteColorArray[_colorsWidth][_colorsLength] = {};
 	

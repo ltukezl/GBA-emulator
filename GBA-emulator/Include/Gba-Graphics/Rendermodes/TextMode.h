@@ -1,7 +1,7 @@
 #pragma once
-#include <stdint.h>
-#include "Display/Tileset.h"
-#include "Display/Tile.h"
+#include <cstdint>
+#include "Gba-Graphics/Tile/Tileset.h"
+#include "Gba-Graphics/Tile/Tile.h"
 
 class TextMode
 {

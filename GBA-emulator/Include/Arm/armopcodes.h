@@ -1,7 +1,7 @@
 #ifndef ARMOPCODES
 #define ARMOPCODES
 
-#include <stdio.h>
+#include <cstdio>
 
 uint32_t RORnoCond(uint32_t immediate, uint32_t by);
 

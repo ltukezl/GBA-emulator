@@ -1,6 +1,6 @@
-#include "RenderMode3.h"
+#include "Gba-Graphics/Rendermodes/RenderMode3.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 #include "Memory/MemoryOps.h"
-#include "Display/RgbaPalette.h"
 
 void RenderMode3::draw()
 {
@@ -8,9 +8,9 @@ void RenderMode3::draw()
 	for (int k = 0; k < 160; k++){
 		for (int i = 0; i < 240; i++) {
 			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
-			int redScaled = colorPaletteRam->red * _scalar;
-			int greenScaled = colorPaletteRam->green * _scalar;
-			int blueScaled = colorPaletteRam->blue * _scalar;
+			uint32_t redScaled = colorPaletteRam->red * _scalar;
+			uint32_t greenScaled = colorPaletteRam->green * _scalar;
+			uint32_t blueScaled = colorPaletteRam->blue * _scalar;
 			background->grid[k][i].r = redScaled;
 			background->grid[k][i].b = blueScaled;
 			background->grid[k][i].g = greenScaled;

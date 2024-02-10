@@ -69,22 +69,19 @@
     <ClCompile Include="GBA-emulator\Timer\timers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\Utilities\CpsrWriter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Operation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\Display\RgbaPalette.cpp">
+    <ClCompile Include="GBA-emulator\Display\Palette\RgbaPalette.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\Display\Tile.cpp">
+    <ClCompile Include="GBA-emulator\Display\Tile\Tile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\Display\Tileset.cpp">
+    <ClCompile Include="GBA-emulator\Display\Tile\Tileset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode3.cpp">
@@ -99,30 +96,30 @@
     <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\Display\SpriteGenerator.cpp">
+    <ClCompile Include="GBA-emulator\Display\Sprites\SpriteGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\Display\Sprite.cpp">
+    <ClCompile Include="GBA-emulator\Display\Sprites\Sprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GBA-emulator\Constants.h">
+    <ClInclude Include="GBA-emulator\Include\Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\GBAcpu.h">
+    <ClInclude Include="GBA-emulator\Include\GBAcpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\Arm\armopcodes.h">
+    <ClInclude Include="GBA-emulator\Include\Arm\armopcodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\CommonOperations\arithmeticOps.h">
+    <ClInclude Include="GBA-emulator\Include\CommonOperations\arithmeticOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\CommonOperations\conditions.h">
+    <ClInclude Include="GBA-emulator\Include\CommonOperations\conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\CommonOperations\logicalOps.h">
+    <ClInclude Include="GBA-emulator\Include\CommonOperations\logicalOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\cplusplusRewrite\barrelShifter.h">
@@ -143,43 +140,25 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\Shifts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\Display\Display.h">
+    <ClInclude Include="GBA-emulator\Include\DMA\DMA.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\DMA\DMA.h">
+    <ClInclude Include="GBA-emulator\Include\Interrupt\interrupt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\Interrupt\interrupt.h">
+    <ClInclude Include="GBA-emulator\Include\Memory\memoryMappedIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\Memory\memoryMappedIO.h">
+    <ClInclude Include="GBA-emulator\Include\Memory\memoryOps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\Memory\MemoryOps.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GBA-emulator\Thumb\ThumbOpCodes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GBA-emulator\Timer\timers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GBA-emulator\Utilities\CpsrWriter.h">
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\cplusplusRewrite\operation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GBA-emulator\Display\RgbaPalette.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GBA-emulator\Display\Tile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GBA-emulator\Display\Tileset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode3.h">
@@ -215,10 +194,25 @@
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\Display\SpriteGenerator.h">
+    <ClInclude Include="GBA-emulator\Include\Display\Display.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\Display\Sprite.h">
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Sprites\SpriteGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Palette\RgbaPalette.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Timer\timers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tileset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Sprites\Sprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

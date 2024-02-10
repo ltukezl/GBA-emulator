@@ -1,9 +1,10 @@
-#include "timers.h"
+#include <cstdint>
+#include <iostream>
+
+#include "Timer/timers.h"
 #include "Memory/memoryMappedIO.h"
 #include "Memory/MemoryOps.h"
 #include "GBAcpu.h"
-#include <stdint.h>
-#include <iostream>
 
 enum prescaler {
 	ONE_TO_ONE,

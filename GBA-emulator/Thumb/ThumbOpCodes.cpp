@@ -1,10 +1,10 @@
 #include <iostream>
-#include <string>
+#include <cstring>
 #include "GBAcpu.h"
 #include "Memory/MemoryOps.h"
 #include "Interrupt/interrupt.h"
 #include "Constants.h"
-#include "ThumbOpCodes.h"
+#include "Thumb/ThumbOpCodes.h"
 #include "Arm/armopcodes.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/arithmeticOps.h"

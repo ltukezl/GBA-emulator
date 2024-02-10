@@ -1,4 +1,4 @@
-#include "Tile.h"
+#include "Gba-Graphics/Tile/Tile.h"
 #include "Memory/MemoryOps.h"
 #include "Memory/memoryMappedIO.h"
 #include <iostream>

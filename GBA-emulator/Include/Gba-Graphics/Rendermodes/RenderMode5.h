@@ -1,12 +1,12 @@
 #pragma once
-#include <stdint.h>
-#include "Display/Tile.h"
-#include "Display/RgbaPalette.h"
+#include <cstdint>
+#include "Gba-Graphics/Tile/Tile.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 
-class RenderMode3
+class RenderMode5
 {
 private:
-	const int _scalar = 255 / 31;
+	static constexpr uint32_t _scalar = 255 / 31;
 	struct BGPixels {
 		RgbaPalette::GBAColor grid[512][512]; //consider of changing to 160x240
 	};
@@ -14,8 +14,7 @@ private:
 
 
 public:
-	RenderMode3();
+	RenderMode5();
 	void draw();
 	uint32_t* getBG();
-	void fillToDisplay(uint32_t* imageBG);
 };

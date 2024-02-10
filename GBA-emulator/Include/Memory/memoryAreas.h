@@ -3,7 +3,6 @@
 #include <cstring>
 #include <cstdint>
 #include <array>
-#include <cstring>
 
 #include "Arm/armopcodes.h"
 #include "cplusplusRewrite/HwRegisters.h"

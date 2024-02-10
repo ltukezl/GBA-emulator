@@ -1,7 +1,8 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
-#include "Display/RgbaPalette.h"
+
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 
 class Tile
 {

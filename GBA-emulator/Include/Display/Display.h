@@ -1,15 +1,15 @@
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#pragma once
 #include <SFML/Graphics.hpp>
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
+#include <cstring>
+
 #include "Memory/memoryMappedIO.h"
-#include "Display/Tileset.h"
-#include "Display/Rendermodes/TextMode.h"
-#include "Display/Rendermodes/RenderMode3.h"
-#include "Display/Rendermodes/RenderMode4.h"
-#include "Display/Rendermodes/RenderMode5.h"
-#include "Display/SpriteGenerator.h"
+#include "Gba-Graphics/Tile/Tileset.h"
+#include "Gba-Graphics/Rendermodes/TextMode.h"
+#include "Gba-Graphics/Rendermodes/RenderMode3.h"
+#include "Gba-Graphics/Rendermodes/RenderMode4.h"
+#include "Gba-Graphics/Rendermodes/RenderMode5.h"
+#include "Gba-Graphics/sprites/SpriteGenerator.h"
 
 struct Ring{
 	char state[512];
@@ -94,5 +94,3 @@ private:
 };
 
 extern Display* debugView;
-
-#endif

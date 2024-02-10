@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include "cplusplusRewrite/SingleDataTransfer.h"
 #include "cplusplusRewrite/barrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"

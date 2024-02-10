@@ -1,9 +1,9 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include "Memory/memoryMappedIO.h"
-#include "Display/Tile.h"
-#include "Display/RgbaPalette.h"
+#include "Gba-Graphics/Tile/Tile.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 #include <set>
 #include <tuple>
 

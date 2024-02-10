@@ -1,4 +1,4 @@
-#include "DMA.h"
+#include "DMA/DMA.h"
 #include "Memory/MemoryOps.h"
 #include "Memory/memoryMappedIO.h"
 #include "iostream"

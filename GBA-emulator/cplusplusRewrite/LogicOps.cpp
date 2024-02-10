@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <cstdint>
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/operation.h"
 #include "cplusplusRewrite/LogicOps.h"

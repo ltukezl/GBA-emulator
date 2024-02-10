@@ -1,6 +1,6 @@
 #pragma once
-#include <stdint.h>
-#include "Display/RgbaPalette.h"
+#include <cstdint>
+#include "Gba-Graphics/Palette/RgbaPalette.h"
 //----------------
 //Interrupts
 //----------------

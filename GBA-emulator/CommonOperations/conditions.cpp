@@ -1,6 +1,5 @@
-#include "conditions.h"
+#include "CommonOperations/conditions.h"
 #include "GBAcpu.h"
-#include <string>
 
 int BEQ(){
 	return cpsr.zero;

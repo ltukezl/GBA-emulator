@@ -1,10 +1,10 @@
 #include "Constants.h"
-#include "MemoryOps.h"
+#include "memory/memoryOps.h"
 #include "GBAcpu.h"
 #include "Arm/armopcodes.h"
 #include "iostream"
 #include "Timer/timers.h"
-#include "memoryMappedIO.h"
+#include "Memory/memoryMappedIO.h"
 #include "Display/Display.h"
 
 uint32_t systemROMStart = 0x00000000;

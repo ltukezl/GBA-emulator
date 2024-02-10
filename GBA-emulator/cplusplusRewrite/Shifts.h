@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include "cplusplusRewrite/HwRegisters.h"
 
 class ShiferUnit {
