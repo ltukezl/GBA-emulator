@@ -6,7 +6,6 @@
 #include "Timer/timers.h"
 #include "memoryMappedIO.h"
 #include "Display/Display.h"
-#include "Memory/memoryAreas.h"
 
 uint32_t systemROMStart = 0x00000000;
 uint32_t IoRAMStart = 0x04000000;
@@ -25,19 +24,20 @@ extern RgbaPalette PaletteColours;
 uint8_t systemROM[0x4000] = {};
 uint8_t IoRAM[0x801] = {};
 uint8_t VRAM[0x18000] = {};
-uint8_t OAM[0x400] = {};
 uint8_t* GamePak = nullptr;
 
 static Sram sram;
 static PaletteRAM paletteram;
 static ExternalWorkRAM ewram;
 static InternalWorkRAM iwram;
+static OAMRAM oamRam;
 
 std::array<unsigned char*, 16> memoryLayout = { []() constexpr {
-	std::array<unsigned char*, 16> retArray { systemROM, systemROM, nullptr, nullptr, IoRAM, nullptr, VRAM, OAM, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	std::array<unsigned char*, 16> retArray { systemROM, systemROM, nullptr, nullptr, IoRAM, nullptr, VRAM, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	retArray[EExternalWorkRAM] = ewram.getMemoryPtr();
 	retArray[EInternalWorkRAM] = iwram.getMemoryPtr();
 	retArray[EPaletteRAM] = paletteram.getMemoryPtr();
+	retArray[EOAM] = oamRam.getMemoryPtr();
 	retArray[ESRAM_L] = sram.getMemoryPtr();
 	retArray[ESRAM_H] = sram.getMemoryPtr();
 
@@ -184,6 +184,11 @@ void writeToAddress(uint32_t address, uint8_t value){
 		return;
 	}
 
+	if (memDecoder.mask == EOAM) {
+		oamRam.write8(memDecoder, value);
+		return;
+	}
+
 	if (memDecoder.mask == 0xe || memDecoder.mask == 0xf){
 		sram.write8(memDecoder, value);
 		return;
@@ -242,6 +247,11 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		paletteram.write16(memDecoder, value);
 		return;
 	}
+
+	if (memDecoder.mask == EOAM) {
+		oamRam.write16(memDecoder, value);
+		return;
+	}
 	
 	if (mask == 0xe || mask == 0xf)
 	{
@@ -289,6 +299,11 @@ void writeToAddress32(uint32_t address, uint32_t value){
 		return;
 	}
 
+	if (memDecoder.mask == EOAM) {
+		oamRam.write32(memDecoder, value);
+		return;
+	}
+
 	if (mask == 0xe || mask == 0xf)
 	{
 		sram.write32(memDecoder, value);
@@ -332,6 +347,10 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 		return paletteram.read8(memDecoder);
 	}
 
+	if (memDecoder.mask == EOAM) {
+		return oamRam.read8(memDecoder);
+	}
+
 	if (mask == 0xe || mask == 0xf){
 		return sram.read8(memDecoder);
 	}
@@ -365,6 +384,10 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	}
 	if (memDecoder.mask == 0x5) {
 		return paletteram.read16(memDecoder);
+	}
+
+	if (memDecoder.mask == EOAM) {
+		return oamRam.read16(memDecoder);
 	}
 
 	if (mask == 0xe || mask == 0xf){
@@ -403,6 +426,10 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 
 	if (memDecoder.mask == 0x5) {
 		return paletteram.read32(r, memDecoder);
+	}
+
+	if (memDecoder.mask == EOAM) {
+		return oamRam.read32(r, memDecoder);
 	}
 	
 	if (mask == 0xe || mask == 0xf){

@@ -25,7 +25,7 @@ Tile::Tile(uint32_t addr, bool isObj) {
 	if (!isObj) {
 		for (int y = 0; y < 8; y++) {
 			for (int pixel = 0; pixel < 8; pixel++) {
-				int color = rawLoad8(VRAM, addr * 2 + offset);
+				uint8_t color = rawLoad8(VRAM, addr + offset * 2);
 				auto paletteColor = PaletteColours.colorFromIndex(color);
 				auto palette = color / 16;
 				auto index = color % 16;

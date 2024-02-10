@@ -7,7 +7,7 @@
 #include <set>
 #include <tuple>
 
-extern class SpriteGenerator;
+class SpriteGenerator;
 
 class Sprite
 {

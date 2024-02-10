@@ -37,8 +37,8 @@ enum MemoryAreas {
 	EInternalWorkRAM = 3,
 	EIoRAM = 4,
 	EPaletteRAM = 5,
-	EVRAM = 5,
-	EOAM = 6,
+	EVRAM = 6,
+	EOAM = 7,
 	EGamePak1 = 8,
 	EGamePak2 = 9,
 	EGamePak3 = 10,
@@ -226,6 +226,47 @@ public:
 		m_memoryArea[newAddress.address] = value;
 		m_memoryArea[newAddress.address + 1] = value;
 	}
+
+	void write16_impl(const MemoryAddress address, const uint16_t value) {
+		auto newAddress = address % m_memorySize;
+		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
+		memAddr = value;
+	}
+
+	void write32_impl(const MemoryAddress address, const uint32_t value) {
+		auto newAddress = address % m_memorySize;
+		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
+		memAddr = value;
+	}
+
+	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
+
+	static constexpr uint32_t m_memorySize = 0x400;
+	std::array<uint8_t, m_memorySize> m_memoryArea = {};
+};
+
+class OAMRAM : public IMemoryArea<OAMRAM> {
+public:
+	uint32_t read8_impl(const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		return m_memoryArea[newAddress.address];
+	}
+
+	uint32_t read16_impl(const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
+		return RORnoCond(tmpResult, 8 * address.alignment16b());
+	}
+
+	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
+		if (registers[15] < 0x4000)
+			return tmpResult;
+		return RORnoCond(tmpResult, 8 * address.alignment32b());
+	}
+
+	void write8_impl(const MemoryAddress address, const uint8_t value) {}
 
 	void write16_impl(const MemoryAddress address, const uint16_t value) {
 		auto newAddress = address % m_memorySize;

@@ -5,9 +5,9 @@
 #include "Display/SpriteGenerator.h"
 #include <iostream>
 
-std::pair<uint8_t, uint8_t> shapes[3][4] =	{ { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
-											{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
-											{ { 8, 16 }, { 8, 32 }, { 16, 32 }, { 32, 64 } } };
+constexpr std::pair<uint8_t, uint8_t> shapes[3][4] =	{ { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
+														{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
+														{ { 8, 16 }, { 8, 32 }, { 16, 32 }, { 32, 64 } } };
 
 uint8_t* Sprite::getSpriteTiles() {
 	uint16_t tilenum = 0;
@@ -119,8 +119,8 @@ void Sprite::update() {
 
 Sprite::Sprite(SpriteGenerator& tileset, uint32_t address): _tileset(tileset), _index(address/8)
 {
-	objr1 = (ObjReg1*)&OAM[address + 0];
-	objr2 = (ObjReg2*)&OAM[address + 4];
+	objr1 = (ObjReg1*)&(memoryLayout[EOAM][address + 0]);
+	objr2 = (ObjReg2*)&(memoryLayout[EOAM][address + 4]);
 	auto dimensions = shapes[objr1->shape][objr1->size];
 	sizeX = dimensions.first;
 	sizeY = dimensions.second;

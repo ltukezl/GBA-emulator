@@ -4,8 +4,6 @@
 
 extern RgbaPalette PaletteColours;
 
-Tileset::Tileset() {}
-
 void Tileset::update() {
 	uint32_t startAddr = 0;
 	for (int tileY = 0; tileY < 64; tileY++) {
@@ -14,6 +12,10 @@ void Tileset::update() {
 			tileset[tileY][tileX] = t;
 
 			startAddr += 32;
+			if (startAddr == 0xdd00)
+			{
+				continue;
+			}
 		}
 	}
 }
