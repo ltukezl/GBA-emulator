@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 
 #include "Display/MemoryViewer.h"
 #include "Memory/memoryOps.h"
@@ -33,13 +34,13 @@ void MemoryViewer::renderMemory() {
 	createColumnsHeader();
 
 	sf::RectangleShape line(sf::Vector2f(1000, 3));
-	line.setPosition(sf::Vector2f(0, 63));
+	line.setPosition(sf::Vector2f(0, 64));
 	m_display->draw(line);
 
 	// mem select box
 	for (uint32_t i = 0; i < 16; i++) {
 		sf::RectangleShape memArea(sf::Vector2f(62, 62));
-		memArea.setPosition(sf::Vector2f(63*i, 0));
+		memArea.setPosition(sf::Vector2f(63*i, 1));
 		if (i == m_selectIndex)
 		{
 			memArea.setFillColor(sf::Color(0, 255, 0));
@@ -47,18 +48,24 @@ void MemoryViewer::renderMemory() {
 		m_display->draw(memArea);
 	}
 
-	m_text.setString("Bios");
+	sf::RectangleShape textBox(sf::Vector2f(80, 25));
+	textBox.setPosition(sf::Vector2f(20, 105));
+	m_display->draw(textBox);
+
 	m_text.setColor(sf::Color::Black);
+	m_text.setString(m_input);
+	m_text.setPosition(sf::Vector2f(25, 107));
+	m_display->draw(m_text);
+
+	m_text.setString("Bios");
 	m_text.setPosition(sf::Vector2f(16, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("Bios");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(78, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("EWRAM");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(130, 21));
 	m_display->draw(m_text);
 
@@ -68,62 +75,50 @@ void MemoryViewer::renderMemory() {
 	m_display->draw(m_text);
 
 	m_text.setString("IORAM");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(260, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("Palette");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(322, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("VRAM");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(388, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("OAM");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(453, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("GPAK");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(514, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("GPAK");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(576, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("GPAK");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(638, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("GPAK");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(700, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("GPAK");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(762, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("GPAK");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(824, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("SRAM");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(890, 21));
 	m_display->draw(m_text);
 
 	m_text.setString("SRAM");
-	m_text.setColor(sf::Color::Black);
 	m_text.setPosition(sf::Vector2f(954, 21));
 	m_display->draw(m_text);
 	
@@ -175,7 +170,6 @@ void MemoryViewer::handleEvents() {
 			if (My < 63) {
 				m_selectIndex = Mx / 63;
 			}
-			std::cout << Mx << " " << My << "\n";
 		}
 
 		if (event.type == sf::Event::MouseWheelMoved)
@@ -195,9 +189,34 @@ void MemoryViewer::handleEvents() {
 		if (event.type == sf::Event::Closed)
 			m_display->close();
 
+		if (event.type == sf::Event::TextEntered) {
+			if (m_input.size() > 7) {}
+			else if(event.text.unicode > 0x2f && event.text.unicode < 0x3a) {
+				m_input += static_cast<char>(event.text.unicode);
+				std::cout << m_input << "\n";
+			}
+			else if (event.text.unicode > 0x60 && event.text.unicode < 0x67) {
+				m_input += static_cast<char>(event.text.unicode);
+				std::cout << m_input << "\n";
+			}
+		}
+
 		if (event.type == sf::Event::KeyPressed)
 		{
+			if (event.key.code == sf::Keyboard::Enter)
+			{
+				m_memAddressStartOffset = std::stoul(m_input, nullptr, 16);
+				m_input = "";
+				std::cout << m_input << "\n";
+			}
 
+			if (event.key.code == sf::Keyboard::Backspace)
+			{
+				if (m_input.size() > 0) {
+					m_input = m_input.substr(0, m_input.size() - 1);
+				}
+				std::cout << m_input << "\n";
+			}
 		}
 
 		else if (event.type == sf::Event::KeyReleased)

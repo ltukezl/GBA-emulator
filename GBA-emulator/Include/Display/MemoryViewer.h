@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <cstring>
 
 class MemoryViewer
 {
@@ -20,4 +21,5 @@ private:
 	std::unique_ptr<sf::RenderWindow> m_display = std::make_unique<sf::RenderWindow>(sf::VideoMode(1000, 800), "Memory Viewer");
 	uint32_t m_memAddressStartOffset = 0;
 	uint32_t m_selectIndex = 0;
+	std::string m_input = "";
 };
