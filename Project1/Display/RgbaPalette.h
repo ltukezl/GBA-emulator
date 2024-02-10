@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include "Memory/memoryMappedIO.h"
 
 class RgbaPalette {
@@ -39,5 +39,5 @@ private:
 	const uint32_t _paletteEnd = 0x5FFFFFF;
 	
 	GBAColor paletteColorArray[_colorsWidth][_colorsLength] = {};
-
+	
 };

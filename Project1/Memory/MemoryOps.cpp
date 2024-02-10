@@ -6,11 +6,10 @@
 #include "Timer/timers.h"
 #include "memoryMappedIO.h"
 #include "Display/Display.h"
-#include "Memory/MemoryAreas.h"
+#include "Memory/memoryAreas.h"
 
 uint32_t systemROMStart = 0x00000000;
 uint32_t IoRAMStart = 0x04000000;
-uint32_t PaletteRAMStart = 0x05000000;
 uint32_t VRAMStart = 0x06000000;
 uint32_t OAMStart = 0x07000000;
 uint32_t GamePakStart = 0x08000000;
@@ -18,22 +17,32 @@ uint32_t SP_svc = 0x03007F00;
 uint32_t SP_irq = 0x03007FA0;
 uint32_t SP_usr = 0x03007F00;
 
-uint8_t systemROM[0x4000] = {};
-uint8_t IoRAM[0x801] = {};
-uint8_t PaletteRAM[0x400] = {};
-uint8_t VRAM[0x18000] = {};
-uint8_t OAM[0x400] = {};
-uint8_t* GamePak;
-
-Sram sram;
-ExternalWorkRAM ewram;
-InternalWorkRAM iwram;
-
 const uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x400000, 0x400000 };
-unsigned char *memoryLayout[16] = { systemROM, systemROM, nullptr, nullptr, IoRAM, PaletteRAM, VRAM, OAM, GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], GamePak, &GamePak[0x1000000], nullptr, nullptr };
 
 uint32_t previousAddress = 0;
 extern RgbaPalette PaletteColours;
+
+uint8_t systemROM[0x4000] = {};
+uint8_t IoRAM[0x801] = {};
+uint8_t VRAM[0x18000] = {};
+uint8_t OAM[0x400] = {};
+uint8_t* GamePak = nullptr;
+
+static Sram sram;
+static PaletteRAM paletteram;
+static ExternalWorkRAM ewram;
+static InternalWorkRAM iwram;
+
+std::array<unsigned char*, 16> memoryLayout = { []() constexpr {
+	std::array<unsigned char*, 16> retArray { systemROM, systemROM, nullptr, nullptr, IoRAM, nullptr, VRAM, OAM, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	retArray[EExternalWorkRAM] = ewram.getMemoryPtr();
+	retArray[EInternalWorkRAM] = iwram.getMemoryPtr();
+	retArray[EPaletteRAM] = paletteram.getMemoryPtr();
+	retArray[ESRAM_L] = sram.getMemoryPtr();
+	retArray[ESRAM_H] = sram.getMemoryPtr();
+
+	return retArray;
+}() };
 
 bool isInterrupt() {
 	return cpsr.mode == SUPER || cpsr.mode == IRQ;
@@ -170,6 +179,11 @@ void writeToAddress(uint32_t address, uint8_t value){
 		return;
 	}
 
+	if (memDecoder.mask == 0x5) {
+		paletteram.write8(memDecoder, value);
+		return;
+	}
+
 	if (memDecoder.mask == 0xe || memDecoder.mask == 0xf){
 		sram.write8(memDecoder, value);
 		return;
@@ -223,6 +237,11 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		iwram.write16(memDecoder, value);
 		return;
 	}
+
+	if (memDecoder.mask == 0x5) {
+		paletteram.write16(memDecoder, value);
+		return;
+	}
 	
 	if (mask == 0xe || mask == 0xf)
 	{
@@ -265,6 +284,11 @@ void writeToAddress32(uint32_t address, uint32_t value){
 		return;
 	}
 
+	if (memDecoder.mask == 0x5) {
+		paletteram.write32(memDecoder, value);
+		return;
+	}
+
 	if (mask == 0xe || mask == 0xf)
 	{
 		sram.write32(memDecoder, value);
@@ -304,6 +328,10 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 		return iwram.read8(memDecoder);
 	}
 
+	if (memDecoder.mask == 0x5) {
+		return paletteram.read8(memDecoder);
+	}
+
 	if (mask == 0xe || mask == 0xf){
 		return sram.read8(memDecoder);
 	}
@@ -335,6 +363,10 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	if (memDecoder.mask == 0x3) {
 		return iwram.read16(memDecoder);
 	}
+	if (memDecoder.mask == 0x5) {
+		return paletteram.read16(memDecoder);
+	}
+
 	if (mask == 0xe || mask == 0xf){
 		return sram.read16(memDecoder);
 	}
@@ -369,6 +401,10 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 		return iwram.read32(r, memDecoder);
 	}
 
+	if (memDecoder.mask == 0x5) {
+		return paletteram.read32(r, memDecoder);
+	}
+	
 	if (mask == 0xe || mask == 0xf){
 		return sram.read32(memDecoder);
 	}
@@ -407,14 +443,10 @@ void memoryInits(){
 	rawWrite32(IoRAM, 0x800, 0x0D000020);
 	GamePak = new uint8_t[0x2000000];
 	memset(GamePak, 0, sizeof(uint8_t) * 0x2000000);
-	memoryLayout[2] = ewram.getMemoryPtr();
-	memoryLayout[3] = iwram.getMemoryPtr();
-	memoryLayout[8] = GamePak;
-	memoryLayout[9] = &GamePak[0x1000000];
-	memoryLayout[10] = GamePak;
-	memoryLayout[11] = &GamePak[0x1000000];
-	memoryLayout[12] = GamePak;
-	memoryLayout[13] = &GamePak[0x1000000];
-	memoryLayout[14] = sram.getMemoryPtr();
-	memoryLayout[15] = sram.getMemoryPtr();
+	memoryLayout[EGamePak1] = GamePak;
+	memoryLayout[EGamePak2] = &GamePak[0x1000000];
+	memoryLayout[EGamePak3] = GamePak;
+	memoryLayout[EGamePak4] = &GamePak[0x1000000];
+	memoryLayout[EGamePak5] = GamePak;
+	memoryLayout[EGamePak6] = &GamePak[0x1000000];
 }

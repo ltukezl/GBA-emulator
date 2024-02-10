@@ -12,8 +12,8 @@ enum prescaler {
 	ONE_TO_1024,
 };
 
-uint16_t reloads[4] = { 0 };
-uint16_t called[4] = { 0 };
+uint16_t reloads[4] = {  };
+uint16_t called[4] = {  };
 bool overflowed = false;
 
 bool timerReloadWrite(uint32_t addr, uint32_t val){
@@ -68,7 +68,7 @@ bool reloadCounter(uint32_t addr, uint32_t val){
 	return false;
 }
 
-void updateTimers(uint32_t cycles) {
+void updateTimers(uint64_t cycles) {
 
 	for (int i = 0; i < 4; i++){
 		TIMERCNT* timerCtrl = (TIMERCNT*)&IoRAM[0x100 + 4 * i];
@@ -108,7 +108,7 @@ void updateTimers(uint32_t cycles) {
 
 				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
 					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
-					reinterpret_cast<uint16_t**>(memoryLayout)[4][0x100 + 4 * (i + 1)] = oldVal + 1;
+					//reinterpret_cast<uint16_t**>(memoryLayout)[4][0x100 + 4 * (i + 1)] = oldVal + 1;
 				}
 
 				timerCtrl->counterVal = reloads[i];

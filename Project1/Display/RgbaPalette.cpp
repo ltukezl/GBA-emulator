@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <cstdint>
 #include "RgbaPalette.h"
 #include "Memory/memoryMappedIO.h"
 #include "Display/Display.h"

@@ -149,10 +149,8 @@ int main(int argc, char *args[]){
 	fread(GamePak, 0x2000000, 1, file);
 	fread(systemROM, 0x3fff, 1, bios);
 
-	
-
-	int refreshRate = 0;
-	int vCounterDrawCycles = 0;
+	uint64_t refreshRate = 0;
+	uint64_t vCounterDrawCycles = 0;
 	uint32_t prevAddr = 0;
 	cycles = 0;
 	debug = false;

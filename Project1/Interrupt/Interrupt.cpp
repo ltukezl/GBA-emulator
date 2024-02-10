@@ -25,7 +25,7 @@ void interruptController(){
 bool timerCountHappened[4] = {};
 uint8_t timerCount[4] = {};
 
-void HWInterrupts(int cycles){
+void HWInterrupts(uint64_t cycles){
 #if ENABLED
 	if (!InterruptMaster->IRQEnabled || cpsr.IRQDisable){
 		return;

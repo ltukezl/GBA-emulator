@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "Arm/armopcodes.h"
+#include "cplusplusRewrite/HwRegisters.h"
 
 union MemoryAddress {
 	MemoryAddress(const uint32_t value) : raw(value) {}
@@ -30,14 +31,22 @@ enum Source {
 };
 
 enum MemoryAreas {
-	EsystemROM,
-	EExternalWorkRAM,
-	EIoRAM,
-	EPaletteRAM,
-	EVRAM,
-	EOAM,
-	EGamePak,
-	EGamePakSRAM,
+	ESystemROM_L = 0,
+	ESystemROM_H = 1,
+	EExternalWorkRAM = 2,
+	EInternalWorkRAM = 3,
+	EIoRAM = 4,
+	EPaletteRAM = 5,
+	EVRAM = 5,
+	EOAM = 6,
+	EGamePak1 = 8,
+	EGamePak2 = 9,
+	EGamePak3 = 10,
+	EGamePak4 = 11,
+	EGamePak5 = 12,
+	EGamePak6 = 13,
+	ESRAM_L = 14,
+	ESRAM_H = 15,
 };
 
 /***
@@ -80,13 +89,13 @@ public:
 	template<typename... T>
 	auto write16(const T... params) {
 		m_accessed = true;
-		get()->write16_impl(params...); 
+		get()->write16_impl(params...);
 	}
 
 	template<typename... T>
 	auto write32(const T... params) { 
 		m_accessed = true;
-		get()->write32_impl(params...); 
+		get()->write32_impl(params...);
 	}
 
 	void clearAccess() { m_accessed = false; }
@@ -119,7 +128,7 @@ public:
 	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
-		if (r[15] < 0x4000)
+		if (registers[15] < 0x4000)
 			return tmpResult;
 		return RORnoCond(tmpResult, 8 * address.alignment32b());
 	}
@@ -141,7 +150,7 @@ public:
 		memAddr = value;
 	}
 
-	uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
+	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
 
 	static constexpr uint32_t m_memorySize = 0x4'0000;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
@@ -163,7 +172,7 @@ public:
 	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
-		if (r[15] < 0x4000)
+		if (registers[15] < 0x4000)
 			return tmpResult;
 		return RORnoCond(tmpResult, 8 * address.alignment32b());
 	}
@@ -185,9 +194,54 @@ public:
 		memAddr = value;
 	}
 
-	uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
+	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
 
 	static constexpr uint32_t m_memorySize = 0x8000;
+	std::array<uint8_t, m_memorySize> m_memoryArea = {};
+};
+
+class PaletteRAM : public IMemoryArea<PaletteRAM> {
+public:
+	uint32_t read8_impl(const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		return m_memoryArea[newAddress.address];
+	}
+
+	uint32_t read16_impl(const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
+		return RORnoCond(tmpResult, 8 * address.alignment16b());
+	}
+
+	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
+		auto newAddress = address % m_memorySize;
+		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
+		if (registers[15] < 0x4000)
+			return tmpResult;
+		return RORnoCond(tmpResult, 8 * address.alignment32b());
+	}
+
+	void write8_impl(const MemoryAddress address, const uint8_t value) {
+		auto newAddress = address % m_memorySize;
+		m_memoryArea[newAddress.address] = value;
+		m_memoryArea[newAddress.address + 1] = value;
+	}
+
+	void write16_impl(const MemoryAddress address, const uint16_t value) {
+		auto newAddress = address % m_memorySize;
+		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
+		memAddr = value;
+	}
+
+	void write32_impl(const MemoryAddress address, const uint32_t value) {
+		auto newAddress = address % m_memorySize;
+		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
+		memAddr = value;
+	}
+
+	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
+
+	static constexpr uint32_t m_memorySize = 0x400;
 	std::array<uint8_t, m_memorySize> m_memoryArea = {};
 };
 
@@ -224,7 +278,7 @@ public:
 	}
 
 
-	uint8_t* getMemoryPtr() { return m_memoryArea.data(); }	
+	constexpr uint8_t* getMemoryPtr() { return m_memoryArea.data(); }
 
 private:
 	static constexpr uint32_t m_memorySize = 0x1'0000;
@@ -241,3 +295,4 @@ private:
 //		m_memoryArea[address & mask].read8(context);
 // }
 //};
+

@@ -2,4 +2,4 @@
 
 void interruptController();
 
-void HWInterrupts(int);
+void HWInterrupts(uint64_t);

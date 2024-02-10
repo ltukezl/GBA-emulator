@@ -1,15 +1,17 @@
 #ifndef MEMORYOPS_H
 #define MEMORYOPS_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <array>
 
 extern uint8_t systemROM[0x4000];
 extern uint8_t IoRAM[0x801];
-extern uint8_t PaletteRAM[0x400];
 extern uint8_t VRAM[0x18000];
 extern uint8_t OAM[0x400];
 extern uint8_t* GamePak;
-extern unsigned char* memoryLayout[16];
+extern std::array<unsigned char*, 16> memoryLayout;
+
+// create memory for the different memory areas
 
 void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size);
 

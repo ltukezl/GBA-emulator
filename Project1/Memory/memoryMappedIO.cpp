@@ -26,5 +26,5 @@ union TIMERCNT* TIMERCNT;
 
 union DMAcontrol* DMAcontrol;
 
-RgbaPalette PaletteColours((ColorPaletteRam*)&PaletteRAM[0]);
+RgbaPalette PaletteColours((ColorPaletteRam*)&(memoryLayout[5][0]));
 Tileset tileset;
