@@ -63,30 +63,30 @@ template<class Derived>
 class IMemoryArea {
 public:
 	template<typename... T>
-	auto read8(const T... params) { return get()->read8(params...); }
+	auto read8(const T... params) { return get()->read8_impl(params...); }
 
 	template<typename... T>
-	auto read16(const T... params) { return get()->read16(params...); }
+	auto read16(const T... params) { return get()->read16_impl(params...); }
 
 	template<typename... T>
-	auto read32(const T... params) { return get()->read32(params...); }
+	auto read32(const T... params) { return get()->read32_impl(params...); }
 
 	template<typename... T>
 	auto write8(const T... params) { 
-		accessed = true;
-		get()->write8(params...);
+		m_accessed = true;
+		get()->write8_impl(params...);
 	}
 
 	template<typename... T>
 	auto write16(const T... params) {
-		accessed = true;
-		get()->write16(params...); 
+		m_accessed = true;
+		get()->write16_impl(params...); 
 	}
 
 	template<typename... T>
 	auto write32(const T... params) { 
-		accessed = true;
-		get()->write32(params...); 
+		m_accessed = true;
+		get()->write32_impl(params...); 
 	}
 
 	void clearAccess() { m_accessed = false; }
@@ -105,18 +105,18 @@ private:
 
 class ExternalWorkRAM : public IMemoryArea<ExternalWorkRAM> {
 public:
-	uint32_t read8(const MemoryAddress address) {
+	uint32_t read8_impl(const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		return m_memoryArea[newAddress.address];
 	}
 
-	uint32_t read16(const MemoryAddress address) {
+	uint32_t read16_impl(const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
 		return RORnoCond(tmpResult, 8 * address.alignment16b());
 	}
 
-	uint32_t read32(const Registers& registers, const MemoryAddress address) {
+	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
 		if (r[15] < 0x4000)
@@ -124,18 +124,18 @@ public:
 		return RORnoCond(tmpResult, 8 * address.alignment32b());
 	}
 
-	void write8(const MemoryAddress address, const uint8_t value) {
+	void write8_impl(const MemoryAddress address, const uint8_t value) {
 		auto newAddress = address % m_memorySize;
 		m_memoryArea[newAddress.address] = value;
 	}
 
-	void write16(const MemoryAddress address, const uint16_t value) {
+	void write16_impl(const MemoryAddress address, const uint16_t value) {
 		auto newAddress = address % m_memorySize;
 		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
 		memAddr = value;
 	}
 
-	void write32(const MemoryAddress address, const uint32_t value) {
+	void write32_impl(const MemoryAddress address, const uint32_t value) {
 		auto newAddress = address % m_memorySize;
 		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
 		memAddr = value;
@@ -149,18 +149,18 @@ public:
 
 class InternalWorkRAM : public IMemoryArea<InternalWorkRAM> {
 public:
-	uint32_t read8(const MemoryAddress address) {
+	uint32_t read8_impl(const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		return m_memoryArea[newAddress.address];
 	}
 
-	uint32_t read16(const MemoryAddress address) {
+	uint32_t read16_impl(const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
 		return RORnoCond(tmpResult, 8 * address.alignment16b());
 	}
 
-	uint32_t read32(const Registers& registers, const MemoryAddress address) {
+	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
 		auto newAddress = address % m_memorySize;
 		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
 		if (r[15] < 0x4000)
@@ -168,18 +168,18 @@ public:
 		return RORnoCond(tmpResult, 8 * address.alignment32b());
 	}
 
-	void write8(const MemoryAddress address, const uint8_t value) {
+	void write8_impl(const MemoryAddress address, const uint8_t value) {
 		auto newAddress = address % m_memorySize;
 		m_memoryArea[newAddress.address] = value;
 	}
 
-	void write16(const MemoryAddress address, const uint16_t value) {
+	void write16_impl(const MemoryAddress address, const uint16_t value) {
 		auto newAddress = address % m_memorySize;
 		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
 		memAddr = value;
 	}
 
-	void write32(const MemoryAddress address, const uint32_t value) {
+	void write32_impl(const MemoryAddress address, const uint32_t value) {
 		auto newAddress = address % m_memorySize;
 		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
 		memAddr = value;
@@ -193,30 +193,30 @@ public:
 
 class Sram : public IMemoryArea<Sram> {
 public:
-	uint8_t read8(const MemoryAddress address) {
+	uint8_t read8_impl(const MemoryAddress address) {
 		return m_memoryArea[address.address];
 	}
 
-	uint32_t read16(const MemoryAddress address) {
+	uint32_t read16_impl(const MemoryAddress address) {
 		uint32_t tmpResult = m_memoryArea[address.address] * 0x101;
 		return RORnoCond(tmpResult, 8 * address.alignment16b());
 	}
 
-	uint32_t read32(const MemoryAddress address) {
+	uint32_t read32_impl(const MemoryAddress address) {
 		uint32_t tmpResult = m_memoryArea[address.address] * 0x1010101;
 		return RORnoCond(tmpResult, 8 * address.alignment32b());
 	}
 
-	void write8(const MemoryAddress address, const uint8_t value) {
+	void write8_impl(const MemoryAddress address, const uint8_t value) {
 		m_memoryArea[address.address] = value; 
 	}
 
-	void write16(const MemoryAddress address, const uint16_t value) {
+	void write16_impl(const MemoryAddress address, const uint16_t value) {
 		write8(address.address, value);
 		write8(address.address + 1, value);
 	}
 
-	void write32(const MemoryAddress address, const uint32_t value) {
+	void write32_impl(const MemoryAddress address, const uint32_t value) {
 		write8(address.address, value);
 		write8(address.address + 1, value);
 		write8(address.address + 2, value);
