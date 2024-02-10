@@ -145,6 +145,7 @@
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Shifts.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.cpp" />
     <ClCompile Include="GBA-emulator\Display\Display.cpp" />
+    <ClCompile Include="GBA-emulator\Display\MemoryViewer.cpp" />
     <ClCompile Include="GBA-emulator\Display\Sprites\SpriteGenerator.cpp" />
     <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode3.cpp" />
     <ClCompile Include="GBA-emulator\Display\Rendermodes\RenderMode4.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\shifterTests.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\testUtils.h" />
     <ClInclude Include="GBA-emulator\Include\Display\Display.h" />
+    <ClInclude Include="GBA-emulator\Include\Display\MemoryViewer.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Sprites\SpriteGenerator.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode3.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode4.h" />

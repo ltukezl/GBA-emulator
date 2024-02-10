@@ -102,6 +102,9 @@
     <ClCompile Include="GBA-emulator\Display\Sprites\Sprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GBA-emulator\Display\MemoryViewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBA-emulator\Include\Constants.h">
@@ -213,6 +216,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Sprites\Sprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Display\MemoryViewer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

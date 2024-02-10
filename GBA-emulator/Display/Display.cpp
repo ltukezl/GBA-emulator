@@ -107,8 +107,7 @@ void Display::fillBG(uint32_t regOffset){
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	uint32_t startAddr = 0;
 	uint32_t tileBaseBlock = 0;
-	const int scalar = 255 / 31;
-
+	constexpr uint32_t scalar = 255 / 31;
 
 	uint16_t size_x = bgCnt->hWide ? 512 : 256;
 	uint16_t size_y = bgCnt->vWide ? 512 : 256;
@@ -156,7 +155,6 @@ void Display::fillObjects(uint32_t regOffset){
 
 	display->draw(objMapSprite);
 	OBJupdated = false;
-
 }
 
 
@@ -221,8 +219,6 @@ void Display::appendBGs() {
 	img.setPosition(0, 512);
 	img.scale(2, 2);
 	display->draw(img);
-
-	
 }
 
 void Display::realizePalettes(RgbaPalette& palette, FinalImage& finalImage)
@@ -430,7 +426,6 @@ void Display::handleEvents(){
 			}
 		}
 	}
-
 }
 
 void Display::updateStack(){

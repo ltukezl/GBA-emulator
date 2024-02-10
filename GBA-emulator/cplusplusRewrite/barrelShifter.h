@@ -34,8 +34,6 @@ public:
 		};
 	}immediateRotaterFields;
 
-	~ImmediateRotater() override;
-
 	ImmediateRotater(Registers& registers, uint16_t immediate);
 	ImmediateRotater(Registers& registers, uint16_t immediate, uint16_t rotateAmount);
 

@@ -28,8 +28,6 @@ RotatorUnits::~RotatorUnits(){
 
 //------------
 
-ImmediateRotater::~ImmediateRotater() {}
-
 ImmediateRotater::ImmediateRotater(Registers& registers, uint16_t immediate) : RotatorUnits(registers) {
 	immediateRotaterFields.val = immediate;
 	m_val = immediate;

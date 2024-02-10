@@ -9,6 +9,7 @@
 #include "GBAcpu.h"
 #include "DMA/DMA.h"
 #include "Display/Display.h"
+#include "Display/MemoryViewer.h"
 #include "Interrupt/interrupt.h"
 #include "Timer/timers.h"
 #include "Memory/memoryMappedIO.h"
@@ -102,6 +103,7 @@ int main(int argc, char *args[]){
 
 	std::string windowName = "paletteWindow";
 	debugView = new Display(1280, 496 * 2, windowName);
+	MemoryViewer memoryViewer;
 	//Display gameDisplay(240, 160, "game");
 
 #if BIOS_START
@@ -160,6 +162,7 @@ int main(int argc, char *args[]){
 #if GPU
 		if (debug || (refreshRate > 100000)){
 			debugView->handleEvents();
+			memoryViewer.handleEvents();
 		}
 #endif
 		if (debug && !step){
@@ -188,6 +191,7 @@ int main(int argc, char *args[]){
 
 		if (debug || (refreshRate > 100000)){
 			debugView->updatePalettes();
+			memoryViewer.renderMemory();
 			refreshRate = 0;
 		}
 
