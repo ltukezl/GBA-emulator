@@ -6,7 +6,7 @@
 class RenderMode3
 {
 private:
-	const int _scalar = 255 / 31;
+	static constexpr uint32_t _scalar = 255 / 31;
 	struct BGPixels {
 		RgbaPalette::GBAColor grid[512][512]; //consider of changing to 160x240
 	};

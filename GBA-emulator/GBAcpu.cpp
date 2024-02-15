@@ -18,7 +18,7 @@
 #include "cplusplusRewrite/tests/allTests.h"
 
 #define BIOS_START 0
-#define MEMORY_VIEWER 0
+#define MEMORY_VIEWER 1
 
 using namespace std;
 

@@ -15,15 +15,9 @@ void MemoryViewer::createColumnsHeader()
 	constexpr auto offsetX = 0;
 	constexpr auto offsetY = 0;
 
-	for (uint32_t k = 0; k < 0x10; k++)
-	{
-		char msg[512] = {};
-		sprintf_s(msg, "%02X", k);
-
-		m_text.setString(msg);
-		m_text.setPosition(sf::Vector2f(170 + 30 * k, 110));
-		m_display->draw(m_text);
-	}
+	m_text.setString("00    01   02    03   04    05   06    07   08   09    0A   0B   0C   0D   0E   0F");
+	m_text.setPosition(sf::Vector2f(170, 110));
+	m_display->draw(m_text);
 }
 
 void MemoryViewer::renderMemory() {
@@ -57,69 +51,8 @@ void MemoryViewer::renderMemory() {
 	m_text.setPosition(sf::Vector2f(25, 107));
 	m_display->draw(m_text);
 
-	m_text.setString("Bios");
+	m_text.setString("Bios        Bios      EWRAM  IWRAM    IORAM    VRAM      OAM      Palette    GPAK      GPAK     GPAK     GPAK      GPAK     GPAK     SRAM     SRAM");
 	m_text.setPosition(sf::Vector2f(16, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("Bios");
-	m_text.setPosition(sf::Vector2f(78, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("EWRAM");
-	m_text.setPosition(sf::Vector2f(130, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("IWRAM");
-	m_text.setColor(sf::Color::Black);
-	m_text.setPosition(sf::Vector2f(195, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("IORAM");
-	m_text.setPosition(sf::Vector2f(260, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("Palette");
-	m_text.setPosition(sf::Vector2f(322, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("VRAM");
-	m_text.setPosition(sf::Vector2f(388, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("OAM");
-	m_text.setPosition(sf::Vector2f(453, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("GPAK");
-	m_text.setPosition(sf::Vector2f(514, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("GPAK");
-	m_text.setPosition(sf::Vector2f(576, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("GPAK");
-	m_text.setPosition(sf::Vector2f(638, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("GPAK");
-	m_text.setPosition(sf::Vector2f(700, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("GPAK");
-	m_text.setPosition(sf::Vector2f(762, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("GPAK");
-	m_text.setPosition(sf::Vector2f(824, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("SRAM");
-	m_text.setPosition(sf::Vector2f(890, 21));
-	m_display->draw(m_text);
-
-	m_text.setString("SRAM");
-	m_text.setPosition(sf::Vector2f(954, 21));
 	m_display->draw(m_text);
 	
 	m_text.setColor(sf::Color::White);
