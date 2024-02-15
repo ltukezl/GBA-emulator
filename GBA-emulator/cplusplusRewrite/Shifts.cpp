@@ -12,7 +12,7 @@ void Lsl::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmou
 
 void Lsl::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
 	uint64_t tmp = sourceValue;
-	destinationRegister = tmp << shiftAmount;
+	destinationRegister = static_cast<uint32_t>(tmp << shiftAmount);
 }
 Lsl::Lsl(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};
 

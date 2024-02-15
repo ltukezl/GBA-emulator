@@ -21,11 +21,11 @@ const uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0
 uint32_t previousAddress = 0;
 extern RgbaPalette PaletteColours;
 
-uint8_t systemROM[0x4000] = {};
 uint8_t IoRAM[0x801] = {};
 uint8_t VRAM[0x18000] = {};
 uint8_t* GamePak = nullptr;
 
+BIOS systemROM;
 static Sram sram;
 static PaletteRAM paletteram;
 static ExternalWorkRAM ewram;
@@ -33,7 +33,9 @@ static InternalWorkRAM iwram;
 static OAMRAM oamRam;
 
 std::array<unsigned char*, 16> memoryLayout = { []() constexpr {
-	std::array<unsigned char*, 16> retArray { systemROM, systemROM, nullptr, nullptr, IoRAM, nullptr, VRAM, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	std::array<unsigned char*, 16> retArray { nullptr, nullptr, nullptr, nullptr, IoRAM, nullptr, VRAM, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	retArray[ESystemROM_L] = systemROM.getMemoryPtr();
+	retArray[ESystemROM_H] = systemROM.getMemoryPtr();
 	retArray[EExternalWorkRAM] = ewram.getMemoryPtr();
 	retArray[EInternalWorkRAM] = iwram.getMemoryPtr();
 	retArray[EPaletteRAM] = paletteram.getMemoryPtr();
@@ -169,6 +171,11 @@ void writeToAddress(uint32_t address, uint8_t value){
 	isVideoMemModification(memDecoder.address);
 	calculateCycles(memDecoder.address, (previousAddress + 1) == memDecoder.address);
 
+	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
+		systemROM.write8(memDecoder, value);
+		return;
+	}
+
 	if (memDecoder.mask == 0x2){
 		ewram.write8(memDecoder, value);
 		return;
@@ -233,6 +240,11 @@ void writeToAddress16(uint32_t address, uint16_t value){
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 1;
 
+	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
+		systemROM.write16(memDecoder, value);
+		return;
+	}
+
 	if (memDecoder.mask == 0x2){
 		ewram.write16(memDecoder, value);
 		return;
@@ -283,6 +295,11 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 3;
+
+	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
+		systemROM.write32(memDecoder, value);
+		return;
+	}
 
 	if (memDecoder.mask == 0x2) {
 		ewram.write32(memDecoder, value);
@@ -335,6 +352,10 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 	MemoryAddress memDecoder{ address };
 	uint32_t mask = memDecoder.mask;
 
+	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
+		return systemROM.read8(r, memDecoder);
+	}
+
 	if (memDecoder.mask == 0x2){
 		return ewram.read8(memDecoder);
 	}
@@ -375,6 +396,10 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	MemoryAddress memDecoder{ address };
 	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
+	
+	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
+		return systemROM.read16(r, memDecoder);
+	}
 
 	if (memDecoder.mask == 0x2){
 		return ewram.read16(memDecoder);
@@ -416,6 +441,10 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	MemoryAddress memDecoder{ address };
 	uint32_t mask = memDecoder.mask;
 
+	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
+		return systemROM.read32(r, memDecoder);
+	}
+
 	if (memDecoder.mask == 0x2){
 		return ewram.read32(r, memDecoder);
 	}
@@ -433,7 +462,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	}
 	
 	if (mask == 0xe || mask == 0xf){
-		return sram.read32(memDecoder);
+		return sram.read32(r, memDecoder);
 	}
 
 	address &= ~0xFF000000;

@@ -17,8 +17,8 @@
 #include "cplusplusRewrite/dataProcessingOp.h"
 #include "cplusplusRewrite/tests/allTests.h"
 
-#define GPU 1
 #define BIOS_START 0
+#define MEMORY_VIEWER 0
 
 using namespace std;
 
@@ -103,13 +103,15 @@ int main(int argc, char *args[]){
 
 	std::string windowName = "paletteWindow";
 	debugView = new Display(1280, 496 * 2, windowName);
+#if MEMORY_VIEWER
 	MemoryViewer memoryViewer;
+#endif
 	//Display gameDisplay(240, 160, "game");
 
 #if BIOS_START
-	r = usrSys;
-	*r[13] = SP_usr;
-	*r[16] = 0x10;
+	r.updateMode(CpuModes_t::ESYS);
+	r[13] = SP_usr;
+	r[16] = 0x10;
 #else
 	r.updateMode(CpuModes_t::ESUPER);
 	r[TRegisters::EStackPointer] = 0x3007FE0;
@@ -120,8 +122,8 @@ int main(int argc, char *args[]){
 	r[16] = 0x10;
 
 #if BIOS_START
-	r = svc;
-	*r[13] = SP_svc;
+	r.updateMode(CpuModes_t::ESUPER);
+	r[13] = SP_svc;
 	cpsr.mode = SUPER;
 #else
 	r.updateMode(CpuModes_t::EUSR);
@@ -129,7 +131,7 @@ int main(int argc, char *args[]){
 #endif
 
 #if BIOS_START
-	*r[PC] = 0;
+	r[PC] = 0;
 #else
 	r[TRegisters::EProgramCounter] = 0x0800'0000;
 #endif
@@ -150,7 +152,7 @@ int main(int argc, char *args[]){
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/brin_demo.gba", "rb");
 	fopen_s(&bios, "GBA-emulator/GBA.BIOS", "rb");
 	fread(GamePak, 0x2000000, 1, file);
-	fread(systemROM, 0x3fff, 1, bios);
+	fread(systemROM.getMemoryPtr(), 0x3fff, 1, bios);
 
 	uint64_t refreshRate = 0;
 	uint64_t vCounterDrawCycles = 0;
@@ -159,14 +161,15 @@ int main(int argc, char *args[]){
 	debug = false;
 
 	while (true){
-#if GPU
+		//at startup
 		if (debug || (refreshRate > 100000)){
 			debugView->handleEvents();
+#if MEMORY_VIEWER
 			memoryViewer.handleEvents();
-		}
 #endif
+		}
 		if (debug && !step){
-			//continue;
+			continue;
 		}
 		step = false;
 
@@ -191,7 +194,9 @@ int main(int argc, char *args[]){
 
 		if (debug || (refreshRate > 100000)){
 			debugView->updatePalettes();
+#if MEMORY_VIEWER
 			memoryViewer.renderMemory();
+#endif
 			refreshRate = 0;
 		}
 

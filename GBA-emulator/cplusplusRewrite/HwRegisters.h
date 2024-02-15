@@ -97,6 +97,7 @@ class Registers {
 private:
 	TCPUMode m_offset = EArm;
     uint32_t** r;
+	uint32_t m_previousMode = ESYS;
 
 	uint32_t sharedRegs[9];
 	uint32_t extRegisters[5];
@@ -113,8 +114,6 @@ private:
 	uint32_t sprs_irq = 0;
 	uint32_t sprs_fiq = 0;
 	uint32_t sprs_udf = 0;
-
-	//__int32 r[16];	//used register
 
 	/*prepare complete banks for modes*/
 	uint32_t* usrSys[REG_LEN] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
@@ -140,7 +139,7 @@ public:
 	union CPSR_t m_cpsr;
 
 	void updateMode(const CpuModes_t mode) {
-		//std::cout << "switched mode to " << mode << std::endl;
+		m_previousMode = m_cpsr.mode;
 		m_cpsr.mode = mode;
 		// FIXME: use returns!!!
 		switch (mode) {
@@ -154,8 +153,12 @@ public:
 		}
 	}
 
-	auto getMode() {
+	auto getMode() const {
 		return static_cast<CpuModes_t>(m_cpsr.mode);
+	}
+
+	auto getPreviousMode() const {
+		return static_cast<CpuModes_t>(m_previousMode);
 	}
 
 	void reset(const CpuModes_t mode) {

@@ -8,10 +8,11 @@
 bool IRQMode = false;
 
 void interruptController(){
+	//DURING IRQ
 #if ENABLED
 	//debug = true;
 	r.updateMode(CpuModes_t::ESUPER);
-	r[14] = r[TRegisters::EProgramCounter];
+	r[LR] = r[TRegisters::EProgramCounter];
 	r[16] = cpsr.val;
 	//svc mode
 	cpsr.IRQDisable = 1;
@@ -26,6 +27,7 @@ bool timerCountHappened[4] = {};
 uint64_t timerCount[4] = {};
 
 void HWInterrupts(uint64_t cycles){
+	//DURING IRQ
 #if ENABLED
 	if (!InterruptMaster->IRQEnabled || cpsr.IRQDisable){
 		return;
@@ -59,7 +61,6 @@ void HWInterrupts(uint64_t cycles){
 
 		r[LR] = r[TRegisters::EProgramCounter] + 4;
 		r[TRegisters::EProgramCounter] = 0x18;
-
 		cpsr.thumb = 0;
 		cpsr.IRQDisable = 1;
 		cpsr.mode = IRQ;

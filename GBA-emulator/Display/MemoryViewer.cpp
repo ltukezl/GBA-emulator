@@ -140,17 +140,17 @@ void MemoryViewer::renderMemory() {
 			// printable char
 			if (bios[k] > 0x20 && bios[k] < 0x80) {
 				sprintf_s(msg, "%c", bios[k]);
+				m_text.setString(msg);
 			}
 			else {
-				sprintf_s(msg, ".");
+				m_text.setString('.');
 			}
 			
-			m_text.setString(msg);
 			m_text.setPosition(sf::Vector2f(700 + 10 * k, 150 + i * 20));
 			m_display->draw(m_text);
 		}
 
-		sprintf_s(msg, "0x%08X", m_memAddressStartOffset + 0x10 * i);
+		sprintf_s(msg, "0x%08X", m_memAddressStartOffset + 0x10 * i + 0x100'0000 * m_selectIndex);
 		m_text.setString(msg);
 		m_text.setPosition(sf::Vector2f(20, 150 + i * 20));
 		m_display->draw(m_text);
@@ -169,6 +169,8 @@ void MemoryViewer::handleEvents() {
 			uint32_t My = sf::Mouse::getPosition(*m_display).y;
 			if (My < 63) {
 				m_selectIndex = Mx / 63;
+				m_memAddressStartOffset = 0;
+				m_input = "";
 			}
 		}
 

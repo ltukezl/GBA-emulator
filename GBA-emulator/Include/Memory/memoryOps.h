@@ -5,7 +5,7 @@
 #include <array>
 #include "Memory/memoryAreas.h"
 
-extern uint8_t systemROM[0x4000];
+extern BIOS systemROM;
 extern uint8_t IoRAM[0x801];
 extern uint8_t VRAM[0x18000];
 extern uint8_t* GamePak;
