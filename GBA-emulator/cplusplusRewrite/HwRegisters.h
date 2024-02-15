@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <initializer_list>
+#include <array>
 
 //-------------------------------
 
@@ -96,17 +97,17 @@ constexpr uint8_t REG_LEN = 17;
 class Registers {
 private:
 	TCPUMode m_offset = EArm;
-    uint32_t** r;
+	std::array<uint32_t*, REG_LEN> const * r;
 	uint32_t m_previousMode = ESYS;
 
-	uint32_t sharedRegs[9];
-	uint32_t extRegisters[5];
-	uint32_t usrBanked[2];
-	uint32_t fiqBanked[7];
-	uint32_t svcBanked[2];
-	uint32_t abtBanked[2];
-	uint32_t irqBanked[2];
-	uint32_t undBanked[2];
+	std::array<uint32_t, 9> sharedRegs;
+	std::array<uint32_t, 5> extRegisters;
+	std::array<uint32_t, 2> usrBanked;
+	std::array<uint32_t, 7> fiqBanked;
+	std::array<uint32_t, 2> svcBanked;
+	std::array<uint32_t, 2> abtBanked;
+	std::array<uint32_t, 2> irqBanked;
+	std::array<uint32_t, 2> undBanked;
 
 	uint32_t sprs_usr = 0;
 	uint32_t sprs_svc = 0;
@@ -116,22 +117,22 @@ private:
 	uint32_t sprs_udf = 0;
 
 	/*prepare complete banks for modes*/
-	uint32_t* usrSys[REG_LEN] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+	const std::array<uint32_t*, REG_LEN> usrSys = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &usrBanked[0], &usrBanked[1], &sharedRegs[8], &sprs_usr };
 
-	uint32_t* svc[REG_LEN] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+	const std::array<uint32_t*, REG_LEN> svc = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &svcBanked[0], &svcBanked[1], &sharedRegs[8], &sprs_svc };
 
-	uint32_t* abt[REG_LEN] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+	const std::array<uint32_t*, REG_LEN> abt = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &abtBanked[0], &abtBanked[1], &sharedRegs[8], &sprs_abt };
 
-	uint32_t* fiq[REG_LEN] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+	const std::array<uint32_t*, REG_LEN> fiq = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&fiqBanked[0], &fiqBanked[1], &fiqBanked[2], &fiqBanked[3], &fiqBanked[4], &fiqBanked[5], &fiqBanked[6], &sharedRegs[8], &sprs_fiq };
 
-	uint32_t* irq[REG_LEN] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+	const std::array<uint32_t*, REG_LEN> irq = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &irqBanked[0], &irqBanked[1], &sharedRegs[8], &sprs_irq };
 
-	uint32_t* undef[REG_LEN] = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
+	const std::array<uint32_t*, REG_LEN> undef = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8], &sprs_udf };
 
 public:	
@@ -143,13 +144,13 @@ public:
 		m_cpsr.mode = mode;
 		// FIXME: use returns!!!
 		switch (mode) {
-			case EUSR:    r = usrSys;  break;
-			case EFIQ:    r = fiq;     break;
-			case EIRQ:    r = irq;     break;
-			case ESUPER:  r = svc;     break;
-			case EABORT:  r = abt;     break;
-			case EUNDEF:  r = undef;   break;
-			case ESYS:    r = usrSys;  break;
+			case EUSR:    r = &usrSys;  break;
+			case EFIQ:    r = &fiq;     break;
+			case EIRQ:    r = &irq;     break;
+			case ESUPER:  r = &svc;     break;
+			case EABORT:  r = &abt;     break;
+			case EUNDEF:  r = &undef;   break;
+			case ESYS:    r = &usrSys;  break;
 		}
 	}
 
@@ -163,14 +164,14 @@ public:
 
 	void reset(const CpuModes_t mode) {
 		updateMode(mode);
-		memset(sharedRegs, 0, sizeof(sharedRegs));
-		memset(extRegisters, 0, sizeof(extRegisters));
-		memset(usrBanked, 0, sizeof(usrBanked));        
-		memset(fiqBanked, 0, sizeof(fiqBanked));        
-		memset(svcBanked, 0, sizeof(svcBanked));        
-		memset(abtBanked, 0, sizeof(abtBanked));        
-		memset(irqBanked, 0, sizeof(irqBanked));        
-		memset(undBanked, 0, sizeof(undBanked));
+		sharedRegs.fill(0);
+		extRegisters.fill(0);
+		usrBanked.fill(0);
+		fiqBanked.fill(0);
+		svcBanked.fill(0);
+		abtBanked.fill(0);
+		irqBanked.fill(0);
+		undBanked.fill(0);
 	};
 
 	Registers(const CpuModes_t mode = ESUPER) {
@@ -179,18 +180,16 @@ public:
 
 	Registers(const std::initializer_list<uint32_t> list, const CpuModes_t mode = ESUPER) {
 		reset(mode);
-		for (uint32_t i = 0; i < REG_LEN; i++) {
-			*r[i] = list.begin()[i];
-		}
+		std::copy(list.begin(), list.end(), *r->begin());
 	};
 
     uint32_t& operator[](const uint32_t index) const {
-        return *r[index];
+        return *(*r)[index];
     }
 
     bool operator==(const Registers& other) const {
 		for (uint8_t i = 0; i < REG_LEN; i++) {
-            if (*r[i] != *other.r[i]) {
+            if (*(*r)[i] != *(*other.r)[i]) {
                 return false;
             }
         }
@@ -202,11 +201,11 @@ public:
 	}
 
 	void nextProgramCounter() {
-		*r[EProgramCounter] += m_offset;
+		*(*r)[EProgramCounter] += m_offset;
 	}
 
 	void prevProgramCounter() {
-		*r[EProgramCounter] -= m_offset;
+		*(*r)[EProgramCounter] -= m_offset;
 	}
 
 	/*

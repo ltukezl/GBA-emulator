@@ -11,10 +11,13 @@ void testRegister() {
 
 	reg.updateMode(EUSR);
 	assert(reg == Registers({ 0,0,0,0,0,0,0,0,0x1000,0,0,0,0,0,0,0,0,0 }, EUSR));
+	assert(reg.getPreviousMode() == ESUPER);
 
 	reg.updateMode(EFIQ);
 	assert(reg == empty);
+	assert(reg.getPreviousMode() == EUSR);
 
 	reg.updateMode(EUSR);
 	assert(reg == Registers({ 0,0,0,0,0,0,0,0,0x1000,0,0,0,0,0,0,0,0,0 }, EUSR));
+	assert(reg.getPreviousMode() == EFIQ);
 }
