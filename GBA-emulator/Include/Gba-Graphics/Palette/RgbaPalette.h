@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include "Memory/memoryMappedIO.h"
 
@@ -21,23 +22,25 @@ public:
 
 	bool palettesUpdated = true;
 
-	RgbaPalette(union ColorPaletteRam* startAddr);
+	constexpr RgbaPalette(const union ColorPaletteRam* startAddr) : m_colorStartAddress(startAddr) {}
 	void updatePalette();
-	uint8_t* getPalette();
+	const uint8_t* getPalette();
 	GBAColor colorFromIndex(uint32_t index);
 	GBAColor colorFromIndex(uint32_t y, uint32_t x);
 	void paletteMemChanged(uint32_t testedAddress);
 
 private:
 	static constexpr uint32_t _scalar = 255 / 31;
-	static constexpr uint8_t _colorsWidth = 32;
-	static constexpr uint8_t _colorsLength = 16;
+	static constexpr uint8_t m_colorsWidth = 32;
+	static constexpr uint8_t m_colorsLength = 16;
 	static constexpr uint8_t _colorChannels = 4;
-	union ColorPaletteRam* _colorStartAddress = nullptr;
+	const union ColorPaletteRam* m_colorStartAddress = nullptr;
 
-	const uint32_t _paletteStart = 0x500'0000;
-	const uint32_t _paletteEnd = 0x5FF'FFFF;
+	static constexpr uint32_t m_paletteStart = 0x500'0000;
+	static constexpr uint32_t m_paletteEnd = 0x5FF'FFFF;
 	
-	GBAColor paletteColorArray[_colorsWidth][_colorsLength] = {};
-	
+	union PaletteColorArray {
+		std::array<GBAColor, m_colorsWidth * m_colorsLength> paletteColorArray_linear;
+		std::array<std::array<GBAColor, m_colorsLength>, m_colorsWidth> paletteColorArray_2D;
+	}paletteColorArray = {};
 };

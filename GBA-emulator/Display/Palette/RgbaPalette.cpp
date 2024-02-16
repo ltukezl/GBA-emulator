@@ -3,27 +3,23 @@
 #include "Memory/memoryMappedIO.h"
 #include "Display/Display.h"
 
-RgbaPalette::RgbaPalette(ColorPaletteRam* startAddr): _colorStartAddress(startAddr) {
-
-}
-
 void RgbaPalette::updatePalette() {
 	if (!palettesUpdated)
 		return;
 
-	int colorPtr = 0;
+	size_t colorPtr = 0;
 
 	//for bg palettes
-	for (int i = 0; i < _colorsWidth; i++)
-		for (int k = 0; k < _colorsLength; k++) {
-			ColorPaletteRam* colorPaletteRam = &_colorStartAddress[colorPtr];
+	for (size_t i = 0; i < m_colorsWidth; i++)
+		for (size_t k = 0; k < m_colorsLength; k++) {
+			const ColorPaletteRam* colorPaletteRam = &m_colorStartAddress[colorPtr];
 			uint32_t redScaled = colorPaletteRam->red * _scalar;
 			uint32_t greenScaled = colorPaletteRam->green * _scalar;
 			uint32_t blueScaled = colorPaletteRam->blue * _scalar;
-			paletteColorArray[i][k].r = redScaled;
-			paletteColorArray[i][k].g = greenScaled;
-			paletteColorArray[i][k].b = blueScaled;
-			paletteColorArray[i][k].a = 255;
+			paletteColorArray.paletteColorArray_2D[i][k].r = redScaled;
+			paletteColorArray.paletteColorArray_2D[i][k].g = greenScaled;
+			paletteColorArray.paletteColorArray_2D[i][k].b = blueScaled;
+			paletteColorArray.paletteColorArray_2D[i][k].a = 255;
 			colorPtr++;
 		}
 
@@ -32,18 +28,18 @@ void RgbaPalette::updatePalette() {
 }
 
 RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t index) {
-	return paletteColorArray[index/16][index%16];
+	return paletteColorArray.paletteColorArray_linear[index];
 }
 RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t y, uint32_t x) {
-	return paletteColorArray[y][x];
+	return paletteColorArray.paletteColorArray_2D[y][x];
 }
 
-uint8_t* RgbaPalette::getPalette() {
-	return (uint8_t*)paletteColorArray;
+const uint8_t* RgbaPalette::getPalette() {
+	return reinterpret_cast<uint8_t*>(paletteColorArray.paletteColorArray_linear.data());
 }
 
 void RgbaPalette::paletteMemChanged(uint32_t testedAddress)
 {
-	if (testedAddress >= _paletteStart && testedAddress <= _paletteEnd)
+	if (testedAddress >= m_paletteStart && testedAddress <= m_paletteEnd)
 		palettesUpdated = true;
 }

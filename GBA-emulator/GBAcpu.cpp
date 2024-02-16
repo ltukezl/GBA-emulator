@@ -18,7 +18,7 @@
 #include "cplusplusRewrite/tests/allTests.h"
 
 #define BIOS_START 0
-#define MEMORY_VIEWER 1
+#define MEMORY_VIEWER 0
 
 using namespace std;
 
@@ -60,10 +60,6 @@ uint8_t firstAccessCycles[4] = { 1, 1, 1, 1 };
 uint8_t WS0Second[2] = { 1, 1 };
 uint8_t WS1Second[2] = { 1, 1 };
 uint8_t WS2Second[2] = { 1, 1 };
-
-int swapEndianess32(int num){
-	return ((num & 0xFF) << 24) + ((num & 0xFF00) << 8) + ((num & 0xFF0000) >> 8) + ((num & 0xFF000000) >> 24);
-}
 
 void updateInstructionCycleTimings(uint32_t address){
 	if (address >= 0xC00'0000){
