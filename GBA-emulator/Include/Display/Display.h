@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "Constants.h"
 #include "Memory/memoryMappedIO.h"
 #include "Gba-Graphics/Tile/Tileset.h"
 #include "Gba-Graphics/Rendermodes/TextMode.h"
@@ -17,7 +18,7 @@ struct Ring{
 };
 
 class Display{
-	int res_x, res_y;
+	size_t res_x, res_y;
 	sf::RenderWindow* display;
 	std::string name;
 
@@ -54,8 +55,8 @@ class Display{
 	RenderMode5 renderMode5;
 
 	union FinalImage{
-		Tile::BitmapBit finalImagePalette[160][240];
-		RgbaPalette::GBAColor finalImageColors[160][240];
+		finalImagePalettes finalImagePalette;
+		finalImageColored finalImageColors;
 	} finalImage;
 
 

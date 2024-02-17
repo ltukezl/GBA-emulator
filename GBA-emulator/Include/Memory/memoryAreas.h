@@ -336,11 +336,11 @@ public:
 		if (registers[TRegisters::EProgramCounter] < 0x4000)
 			tmpResult = as<uint16_t>(newAddress.aligned16b());
 		else if (registers.getMode() != CpuModes_t::EUSR)
-			tmpResult = m_duringIRQ;
+			tmpResult = m_duringIRQ & 0xFFFF;
 		else if (registers.getPreviousMode() == CpuModes_t::ESUPER)
-			tmpResult = m_afterSWI;
+			tmpResult = m_afterSWI & 0xFFFF;
 		else if (registers.getPreviousMode() == CpuModes_t::EIRQ)
-			tmpResult = m_afterIRQ;
+			tmpResult = m_afterIRQ & 0xFFFF;
 
 		if (registers[TRegisters::EProgramCounter] < 0x4000)
 			return tmpResult;

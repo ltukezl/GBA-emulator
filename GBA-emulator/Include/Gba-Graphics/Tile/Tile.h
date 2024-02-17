@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <array>
 
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 
@@ -15,14 +16,14 @@ public:
 
 	struct GBATile {
 		union {
-			BitmapBit grid[8][8];
-			uint8_t linear[8 * 8 * 4];
+			std::array<std::array<BitmapBit, 8>, 8> grid;
+			std::array<uint8_t, 8 * 8 * 4> linear;
 		};
 		
 		GBATile& flipVertical(bool flip) {
 			if (flip) {
-				struct GBATile tmp = {};
-				memcpy(tmp.linear, linear, sizeof(uint8_t) * 8 * 8 * 4);
+				GBATile tmp = {};
+				std::copy(linear.begin(), linear.end(), tmp.linear.begin());
 				for (int i = 0; i < 8; i++) {
 					for (int k = 0; k < 8; k++) {
 						grid[i][k] = tmp.grid[7 - i][k];
@@ -34,8 +35,8 @@ public:
 
 		GBATile& flipHorizontal(bool flip) {
 			if (flip) {
-				struct GBATile tmp = {};
-				memcpy(tmp.linear, linear, sizeof(uint8_t) * 8 * 8 * 4);
+				GBATile tmp = {};
+				std::copy(linear.begin(), linear.end(), tmp.linear.begin());
 				for (int i = 0; i < 8; i++) {
 					for (int k = 0; k < 8; k++) {
 						grid[i][k] = tmp.grid[i][7 - k];

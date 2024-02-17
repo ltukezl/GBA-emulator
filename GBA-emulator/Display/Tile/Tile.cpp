@@ -14,7 +14,7 @@ Tile::Tile(uint32_t addr, bool isObj) {
 	
 	for (int y = 0; y < 8; y++) {
 		uint32_t row = rawLoad32(VRAM, addr + startAddr);
-		for (int pixel = 0; pixel < 8; pixel++) {
+		for (size_t pixel = 0; pixel < 8; pixel++) {
 			uint16_t color = (row & 0xf);
 			_tile.grid[y][pixel].index = color;
 			row >>= 4;
@@ -23,8 +23,8 @@ Tile::Tile(uint32_t addr, bool isObj) {
 	}
 	
 	if (!isObj && addr < 0xC000) {
-		for (int y = 0; y < 8; y++) {
-			for (int pixel = 0; pixel < 8; pixel++) {
+		for (size_t y = 0; y < 8; y++) {
+			for (size_t pixel = 0; pixel < 8; pixel++) {
 				uint8_t color = rawLoad8(VRAM, addr * 2 + offset  );
 				auto paletteColor = PaletteColours.colorFromIndex(color);
 				auto palette = color / 16;
@@ -38,7 +38,7 @@ Tile::Tile(uint32_t addr, bool isObj) {
 }
 
 Tile::Tile(GBATile tile, bool is8Bit) {
-
+	return;
 }
 
 Tile::GBATile& Tile::getTile(bool is8Bit, uint8_t palette) {

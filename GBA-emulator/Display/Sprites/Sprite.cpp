@@ -14,7 +14,7 @@ uint8_t* Sprite::getSpriteTiles() {
 	uint8_t tst = 0;
 	
 	for (auto& tile : tiles) {
-		auto t = tile.getTile(objr1->colorMode, 16+objr2->paletteNumber);
+		auto& t = tile.getTile(objr1->colorMode, 16+objr2->paletteNumber);
 		for (uint8_t y = 0; y < 8; y++) {
 			auto yPOS = (tilenum /(sizeX / 8)) * 8 * 8 * (sizeX / 8) + y * sizeX;
 			for (uint8_t x = 0; x < 8; x++) {
@@ -52,13 +52,13 @@ uint8_t* Sprite::getSpriteTiles() {
 	return (uint8_t*)pixels;
 }
 
-void Sprite::fillToImg(Tile::BitmapBit* imageBase) {
+void Sprite::fillToImg(finalImagePalettes& imageBase) {
 	if (objr1->isDoubleOrNoDisplay)
 		return;
 	getSpriteTiles();
 	auto asd = 0;
-	for (int k = 0; k < sizeY; k++) {
-		for (int i = 0; i < sizeX; i++) {
+	for (size_t k = 0; k < sizeY; k++) {
+		for (size_t i = 0; i < sizeX; i++) {
 			if ((objr1->xCoord + i) >= 240 || (objr1->xCoord + i) < 0) {
 				asd++;
 				continue;
@@ -69,11 +69,11 @@ void Sprite::fillToImg(Tile::BitmapBit* imageBase) {
 			}
 
 			auto xpos = (objr1->xCoord + i);
-			auto ypos = 240 * (objr1->yCoord + k);
+			auto ypos = (objr1->yCoord + k);
 			auto paletteInfo = pixels[asd++];
 			if (paletteInfo.index == 0)
 				continue;
-			imageBase[ypos + xpos] = paletteInfo;
+			imageBase[ypos][xpos] = paletteInfo;
 		}
 	}
 }

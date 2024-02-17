@@ -43,7 +43,7 @@ uint8_t* SpriteGenerator::getTileset(bool is8bit) {
 		for (int pixelY = 0; pixelY < 8; pixelY++)
 			for (int tileX = 0; tileX < 32; tileX++)
 				for (int pixelX = 0; pixelX < 8; pixelX++) {
-					auto t = objTileset[tileY][tileX].getTile(is8bit, 16).grid[pixelY][pixelX];
+					auto& t = objTileset[tileY][tileX].getTile(is8bit, 16).grid[pixelY][pixelX];
 					auto clr = PaletteColours.colorFromIndex(t.palette, t.index);
 					manyTiles[8 * tileY + pixelY][8 * tileX + pixelX] = clr.rawColor;
 				}

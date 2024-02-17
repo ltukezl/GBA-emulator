@@ -1,3 +1,4 @@
+#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <cstdio>
 #include <iostream>
@@ -168,7 +169,7 @@ void Display::appendBGs() {
 	gameTXT.clear(sf::Color(0, 0, 0));
 
 	std::vector<uint8_t> bgOrder[4];
-	memset(finalImage.finalImagePalette, 0xFFFF'FFFF, sizeof(finalImage.finalImagePalette));
+	memset(finalImage.finalImagePalette.data(), 0xFFFF'FFFF, sizeof(finalImage.finalImagePalette));
 
 	uint16_t screenSizeX = 0;
 	uint16_t screenSizey = 0;
@@ -195,7 +196,7 @@ void Display::appendBGs() {
 		for (auto& offset : bgOrder[vec]) {
 			if (displayCtrl->bgMode == 0) {
 				textMode.draw(offset);
-				textMode.fillImage((Tile::BitmapBit*) finalImage.finalImagePalette, offset);
+				textMode.fillImage(finalImage.finalImagePalette, offset);
 			}
 			else if (displayCtrl->bgMode == 3) {
 				renderMode3.draw();
@@ -206,11 +207,11 @@ void Display::appendBGs() {
 	for (int tst = 126; tst >= 0; tst--) {
 		auto s1 = Sprite(spriteObjects, tst * 8);
 		s1.update();
-		s1.fillToImg((Tile::BitmapBit*)finalImage.finalImagePalette);
+		s1.fillToImg(finalImage.finalImagePalette);
 	}
 	realizePalettes(PaletteColours, finalImage);
 
-	gameScreen.update((uint8_t*)finalImage.finalImageColors);
+	gameScreen.update(reinterpret_cast<uint8_t*>(&finalImage.finalImageColors));
 	
 	gameTXT.draw(gameScreen_s);
 	gameTXT.display();
@@ -236,6 +237,11 @@ void Display::realizePalettes(RgbaPalette& palette, FinalImage& finalImage)
 }
 
 void Display::updatePalettes(){
+	float fps;
+	sf::Clock clock = sf::Clock::Clock();
+	sf::Time previousTime = clock.getElapsedTime();
+	sf::Time currentTime;
+
 	display->clear(sf::Color::Black);
 
 	scanPalettes();
@@ -276,11 +282,17 @@ void Display::updatePalettes(){
 	sprintf_s(msg, " PC: %02x\n R0: %02x\n R1: %02x\n R2: %02x\n R3: %02x\n R4: %02x\n R5: %02x\n R6: %02x\n R7: %02x\n R8: %02x\n FP(r11): %02x\n IP (r12): %02x\n SP: %02x\n LR: %02x\n CPSR: %02x\n Status: %02x\n, zero: %01x\n, carry: %01x\n, overflow: %01x\n, negative: %01x\n mode: %02x\n",
 		r[15], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[11], r[12], r[13], r[14], cpsr.val, r[16], cpsr.zero, cpsr.carry, cpsr.overflow, cpsr.negative, cpsr.mode);
 
-	for (int i = 0; i < 1; i++){
-		text.setString(msg);
-		text.setPosition(sf::Vector2f(850 + 256, 130 + 12 * i));
-		display->draw(text);
-	}
+	text.setString(msg);
+	text.setPosition(sf::Vector2f(850 + 256, 130 + 12));
+	display->draw(text);
+
+	currentTime = clock.getElapsedTime();
+	fps = 1.0f / (currentTime.asSeconds() - previousTime.asSeconds()); // the asSeconds returns a float
+	
+	sprintf_s(msg, "FPS %f ", fps);
+	text.setString(msg);
+	text.setPosition(sf::Vector2f(1100, 530));
+	display->draw(text);
 	
 	display->display();
 }

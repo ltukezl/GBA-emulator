@@ -1,11 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <set>
+#include <tuple>
+
+#include "Constants.h"
 #include "Memory/memoryMappedIO.h"
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
-#include <set>
-#include <tuple>
 
 class SpriteGenerator;
 
@@ -35,7 +37,7 @@ public:
 	void update();
 	~Sprite();
 	uint8_t* getSpriteTiles();
-	void fillToImg(Tile::BitmapBit* imageBase);
+	void fillToImg(finalImagePalettes& imageBase);
 
 	auto operator<(const Sprite& other) {	
 		if (objr2->priority == other.objr2->priority)
