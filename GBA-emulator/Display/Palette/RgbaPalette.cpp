@@ -27,10 +27,10 @@ void RgbaPalette::updatePalette() {
 	debugView->VRAMupdated = true;
 }
 
-RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t index) {
+RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t index) const {
 	return paletteColorArray.paletteColorArray_linear[index];
 }
-RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t y, uint32_t x) {
+RgbaPalette::GBAColor RgbaPalette::colorFromIndex(uint32_t y, uint32_t x) const {
 	return paletteColorArray.paletteColorArray_2D[y][x];
 }
 

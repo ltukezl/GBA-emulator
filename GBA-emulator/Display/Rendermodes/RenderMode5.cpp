@@ -19,25 +19,25 @@ uint32_t* RenderMode5::getBG()
 void RenderMode5::draw()
 {
 	uint32_t startAddr = 0xa000 * displayCtrl->displayFrame;
-	for (int k = 0; k < 128; k++) {
-		for (int i = 0; i < 160; i++) {
+	for (size_t k = 0; k < 128; k++) {
+		for (size_t i = 0; i < 160; i++) {
 			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
-			int redScaled = colorPaletteRam->red * _scalar;
-			int greenScaled = colorPaletteRam->green * _scalar;
-			int blueScaled = colorPaletteRam->blue * _scalar;
+			uint32_t redScaled = colorPaletteRam->red * _scalar;
+			uint32_t greenScaled = colorPaletteRam->green * _scalar;
+			uint32_t blueScaled = colorPaletteRam->blue * _scalar;
 			background->grid[k][i].r = redScaled;
 			background->grid[k][i].b = blueScaled;
 			background->grid[k][i].g = greenScaled;
 			background->grid[k][i].a = 255;
 			startAddr += 2;
 		}
-		for (int i = 160; i < 240; i++) {
+		for (size_t i = 160; i < 240; i++) {
 			background->grid[k][i] = PaletteColours.colorFromIndex(0);
 		}
 	}
 
-	for (int k = 128; k < 160; k++) {
-		for (int i = 0; i < 240; i++) {
+	for (size_t k = 128; k < 160; k++) {
+		for (size_t i = 0; i < 240; i++) {
 			background->grid[k][i] = PaletteColours.colorFromIndex(0);
 		}
 	}

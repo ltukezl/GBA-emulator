@@ -37,7 +37,7 @@ public:
 	void update();
 	~Sprite();
 	uint8_t* getSpriteTiles();
-	void fillToImg(finalImagePalettes& imageBase);
+	void fillToImg(const RgbaPalette& palette, finalImagePalettes& imageBase, const bool tst);
 
 	auto operator<(const Sprite& other) {	
 		if (objr2->priority == other.objr2->priority)

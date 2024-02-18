@@ -25,8 +25,8 @@ public:
 	constexpr RgbaPalette(const union ColorPaletteRam* startAddr) : m_colorStartAddress(startAddr) {}
 	void updatePalette();
 	const uint8_t* getPalette();
-	GBAColor colorFromIndex(uint32_t index);
-	GBAColor colorFromIndex(uint32_t y, uint32_t x);
+	GBAColor colorFromIndex(uint32_t index) const;
+	GBAColor colorFromIndex(uint32_t y, uint32_t x) const;
 	void paletteMemChanged(uint32_t testedAddress);
 
 private:

@@ -5,8 +5,8 @@
 void RenderMode3::draw()
 {
 	uint32_t startAddr = 0;
-	for (int k = 0; k < 160; k++){
-		for (int i = 0; i < 240; i++) {
+	for (size_t k = 0; k < 160; k++){
+		for (size_t i = 0; i < 240; i++) {
 			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
 			uint32_t redScaled = colorPaletteRam->red * _scalar;
 			uint32_t greenScaled = colorPaletteRam->green * _scalar;
@@ -26,11 +26,11 @@ RenderMode3::RenderMode3()
 	memset(background, 0, sizeof(BGPixels));
 }
 
-void RenderMode3::fillToDisplay(uint32_t* imageBG)
+void RenderMode3::fillToDisplay(finalImageColored& imageBG)
 {
 	for (int k = 0; k < 160; k++) {
 		for (int i = 0; i < 240; i++) {
-			imageBG[240 * k + i] = background->grid[k][i].rawColor;
+			imageBG[k][i].rawColor = background->grid[k][i].rawColor;
 		}
 	}
 }

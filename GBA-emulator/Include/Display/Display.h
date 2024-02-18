@@ -87,7 +87,7 @@ public:
 
 	void appendBGs();
 
-	void realizePalettes(RgbaPalette& palette, FinalImage& finalImage);
+	void realizePalettes(const RgbaPalette& palette, FinalImage& finalImage);
 
 private:
 	int cnt;

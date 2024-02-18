@@ -52,7 +52,7 @@ uint8_t* Sprite::getSpriteTiles() {
 	return (uint8_t*)pixels;
 }
 
-void Sprite::fillToImg(finalImagePalettes& imageBase) {
+void Sprite::fillToImg(const RgbaPalette& palette, finalImagePalettes& imageBase, const bool isRender3or4) {
 	if (objr1->isDoubleOrNoDisplay)
 		return;
 	getSpriteTiles();
@@ -73,7 +73,15 @@ void Sprite::fillToImg(finalImagePalettes& imageBase) {
 			auto paletteInfo = pixels[asd++];
 			if (paletteInfo.index == 0)
 				continue;
-			imageBase[ypos][xpos] = paletteInfo;
+			if (isRender3or4)
+			{
+				auto tmp = reinterpret_cast<finalImageColored*>(&imageBase);
+				(*tmp)[ypos][xpos] = palette.colorFromIndex(paletteInfo.palette, paletteInfo.index);
+			}
+			else
+			{
+				imageBase[ypos][xpos] = paletteInfo;
+			}
 		}
 	}
 }

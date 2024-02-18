@@ -12,9 +12,9 @@ extern RgbaPalette PaletteColours;
 void TextMode::draw(uint8_t regOffset) {
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
-	uint32_t tileStartRow = bgCnt->is8Bit ? bgCnt->tileBaseBlock * 8 : bgCnt->tileBaseBlock * 16;
-	uint8_t sizeX = bgCnt->hWide ? 64 : 32;
-	uint8_t sizeY = bgCnt->vWide ? 64 : 32;
+	const uint32_t tileStartRow = bgCnt->is8Bit ? bgCnt->tileBaseBlock * 8 : bgCnt->tileBaseBlock * 16;
+	const uint8_t sizeX = bgCnt->hWide ? 64 : 32;
+	const uint8_t sizeY = bgCnt->vWide ? 64 : 32;
 
 	for (size_t i = 0; i < 32; i++) {
 		for (size_t k = 0; k < 32; k++) {
@@ -72,8 +72,8 @@ void TextMode::fillImage(finalImagePalettes& imageBase, const uint32_t offset)
 	uint16_t offsetY = ((BGoffset*)&IoRAM[0x12 + offset*2])->offset;
 	for (size_t k = 0; k < 160; k++) {
 		for (size_t i = 0; i < 240; i++) {
-			auto tile = backgroundTiles[((k + offsetY) / 8) % sizeY][((i + offsetX) / 8) % sizeX];
-			auto clr = tile.grid[(k + offsetY) % 8][(i + offsetX) % 8];
+			auto& tile = backgroundTiles[((k + offsetY) / 8) % sizeY][((i + offsetX) / 8) % sizeX];
+			auto& clr = tile.grid[(k + offsetY) % 8][(i + offsetX) % 8];
 			if (imageBase[k][i].index != 0xFFFF && clr.index == 0)
 				continue;
 			imageBase[k][i] = clr;

@@ -107,7 +107,6 @@ void Display::fillBG(uint32_t regOffset){
 	
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
 	uint32_t startAddr = 0;
-	uint32_t tileBaseBlock = 0;
 	constexpr uint32_t scalar = 255 / 31;
 
 	uint16_t size_x = bgCnt->hWide ? 512 : 256;
@@ -119,7 +118,7 @@ void Display::fillBG(uint32_t regOffset){
 		bgText[(regOffset / 2)].update((uint8_t*)textMode.getBG());
 	}
 
-	else if (displayCtrl->bgMode == 3){
+	if (displayCtrl->bgMode == 3){
 		renderMode3.draw();
 		bgSprite[(regOffset / 2)].setTextureRect(sf::IntRect(0, 0, 240, 160));
 		bgText[(regOffset / 2)].update((uint8_t*)renderMode3.getBG());
@@ -141,7 +140,6 @@ void Display::fillBG(uint32_t regOffset){
 	bgSprite[(regOffset / 2)].setScale(256.0f / size_x, 256.0f / size_y);
 	display->draw(bgSprite[(regOffset / 2)]);
 	VRAMupdated = false;
-	
 }
 
 void Display::fillObjects(uint32_t regOffset){
@@ -171,11 +169,10 @@ void Display::appendBGs() {
 	std::vector<uint8_t> bgOrder[4];
 	memset(finalImage.finalImagePalette.data(), 0xFFFF'FFFF, sizeof(finalImage.finalImagePalette));
 
-	uint16_t screenSizeX = 0;
-	uint16_t screenSizey = 0;
+	constexpr uint16_t screenSizeX = 240;
+	constexpr uint16_t screenSizey = 160;
 
-	screenSizeX = 240;
-	screenSizey = 160;
+	const bool isBitmapMode = (displayCtrl->bgMode == 3);
 
 	spriteObjects.updateSpritePriorities();
 
@@ -191,25 +188,32 @@ void Display::appendBGs() {
 	if (displayCtrl->bg0Display) {
 			bgOrder[bgCnt0->priority].push_back(0);
 	}
-	
+
+	if (displayCtrl->bgMode == 3) {
+		renderMode3.fillToDisplay(finalImage.finalImageColors);
+	}
+
+	if (displayCtrl->bgMode == 4) {
+		renderMode4.fillImage(finalImage.finalImagePalette);
+	}
+
 	for (int vec = 3; vec >= 0; vec--) {
 		for (auto& offset : bgOrder[vec]) {
 			if (displayCtrl->bgMode == 0) {
 				textMode.draw(offset);
 				textMode.fillImage(finalImage.finalImagePalette, offset);
 			}
-			else if (displayCtrl->bgMode == 3) {
-				renderMode3.draw();
-				//renderMode3.fillToDisplay(imgBG);
-			}
 		}
 	}
+
 	for (int tst = 126; tst >= 0; tst--) {
 		auto s1 = Sprite(spriteObjects, tst * 8);
 		s1.update();
-		s1.fillToImg(finalImage.finalImagePalette);
+		s1.fillToImg(PaletteColours, finalImage.finalImagePalette, isBitmapMode);
 	}
-	realizePalettes(PaletteColours, finalImage);
+
+	if(!isBitmapMode)
+		realizePalettes(PaletteColours, finalImage);
 
 	gameScreen.update(reinterpret_cast<uint8_t*>(&finalImage.finalImageColors));
 	
@@ -222,10 +226,10 @@ void Display::appendBGs() {
 	display->draw(img);
 }
 
-void Display::realizePalettes(RgbaPalette& palette, FinalImage& finalImage)
+void Display::realizePalettes(const RgbaPalette& palette, FinalImage& finalImage)
 {
-	for(int y = 0; y < 160; y++)
-		for (int x = 0; x < 240; x++) {
+	for(size_t y = 0; y < 160; y++)
+		for (size_t x = 0; x < 240; x++) {
 			auto bitmapInfo = finalImage.finalImagePalette[y][x];
 			if (bitmapInfo.index == 0xFFFF) {
 				bitmapInfo.index = 0;

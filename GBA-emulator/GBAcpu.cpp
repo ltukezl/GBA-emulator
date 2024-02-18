@@ -142,8 +142,8 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE *bios;
-	//fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
-	fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
+	fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/brin_demo.gba", "rb");
 	fopen_s(&bios, "GBA-emulator/GBA.BIOS", "rb");
