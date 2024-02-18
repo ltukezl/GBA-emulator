@@ -30,6 +30,15 @@ public:
 		m_display->display();
 	}
 
+	void handleEvents() {
+		sf::Event event;
+		while (m_display->pollEvent(event))
+		{
+			if (event.type == sf::Event::Closed)
+				m_display->close();
+		}
+	}
+
 private:
 	sf::Sprite m_paletteSprite;
 	sf::Texture m_paletteTexture;

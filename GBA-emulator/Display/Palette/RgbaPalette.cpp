@@ -7,21 +7,21 @@
 void RgbaPalette::updatePalette() {
 	if (!paletteram.m_accessed)
 		return;
-	size_t colorPtr = 0;
 
-	//for bg palettes
-	for (size_t i = 0; i < m_colorsWidth; i++)
-		for (size_t k = 0; k < m_colorsLength; k++) {
-			const ColorPaletteRam* colorPaletteRam = &m_colorStartAddress[colorPtr];
-			uint32_t redScaled = colorPaletteRam->red * _scalar;
-			uint32_t greenScaled = colorPaletteRam->green * _scalar;
-			uint32_t blueScaled = colorPaletteRam->blue * _scalar;
-			paletteColorArray.paletteColorArray_2D[i][k].r = redScaled;
-			paletteColorArray.paletteColorArray_2D[i][k].g = greenScaled;
-			paletteColorArray.paletteColorArray_2D[i][k].b = blueScaled;
-			paletteColorArray.paletteColorArray_2D[i][k].a = 255;
-			colorPtr++;
-		}
+	for (size_t i = 0; i < paletteram.m_accessedPaletteColour.size(); i++)
+	{
+		if (!paletteram.m_accessedPaletteColour[i])
+			continue;
+		const ColorPaletteRam* colorPaletteRam = &m_colorStartAddress[i];
+		uint32_t redScaled = colorPaletteRam->red * _scalar;
+		uint32_t greenScaled = colorPaletteRam->green * _scalar;
+		uint32_t blueScaled = colorPaletteRam->blue * _scalar;
+		paletteColorArray.paletteColorArray_linear[i].r = redScaled;
+		paletteColorArray.paletteColorArray_linear[i].g = greenScaled;
+		paletteColorArray.paletteColorArray_linear[i].b = blueScaled;
+		paletteColorArray.paletteColorArray_linear[i].a = 255;
+		paletteram.m_accessedPaletteColour[i] = 0;
+	}
 
 	debugView->VRAMupdated = true;
 	paletteram.clearAccess();

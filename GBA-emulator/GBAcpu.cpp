@@ -20,7 +20,7 @@
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
-#define PALETTE_VIEWER 1
+#define PALETTE_VIEWER 0
 
 using namespace std;
 
@@ -167,6 +167,10 @@ int main(int argc, char *args[]){
 			debugView->handleEvents();
 #if MEMORY_VIEWER
 			memoryViewer.handleEvents();
+#endif
+
+#if PALETTE_VIEWER
+			paletteViewer.handleEvents();
 #endif
 		}
 		if (debug && !step){

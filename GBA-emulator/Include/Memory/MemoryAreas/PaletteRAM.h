@@ -41,8 +41,8 @@ public:
 		auto newAddress = address % m_memorySize;
 		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
 		memAddr = value;
-		m_accessedPaletteColour[(newAddress.alignedMasked16b() >> 1) + 0] = 1;
-		m_accessedPaletteColour[(newAddress.alignedMasked16b() >> 1) + 1] = 1;
+		m_accessedPaletteColour[(newAddress.alignedMasked32b() >> 1) + 0] = 1;
+		m_accessedPaletteColour[(newAddress.alignedMasked32b() >> 1) + 1] = 1;
 	}
 
 	static constexpr uint32_t m_memorySize = 0x400;
