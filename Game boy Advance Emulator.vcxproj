@@ -186,6 +186,7 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\testUtils.h" />
     <ClInclude Include="GBA-emulator\Include\Display\Display.h" />
     <ClInclude Include="GBA-emulator\Include\Display\MemoryViewer.h" />
+    <ClInclude Include="GBA-emulator\Include\Display\PaletteViewer.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Sprites\SpriteGenerator.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode3.h" />
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode4.h" />
@@ -195,6 +196,7 @@
     <ClInclude Include="GBA-emulator\Include\DMA\DMA.h" />
     <ClInclude Include="GBA-emulator\Include\GBAcpu.h" />
     <ClInclude Include="GBA-emulator\Include\Interrupt\interrupt.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\PaletteRAM.h" />
     <ClInclude Include="GBA-emulator\Include\Memory\memoryMappedIO.h" />
     <ClInclude Include="GBA-emulator\Include\Memory\memoryOps.h" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h" />

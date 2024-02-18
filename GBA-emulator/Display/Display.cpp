@@ -28,13 +28,6 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 		memset(tmp, 0, sizeof(Ring));
 	}
 	tmp->next = txtRing;
-
-	paletteTexture.create(16, 32);
-
-	paletteSprite.setTexture(paletteTexture, true);
-	paletteSprite.setPosition(0, 0);
-	paletteSprite.setScale(16.0, 16.0);
-
 	gameScreen.create(240, 160);
 	gameScreen_s.setTexture(gameScreen);
 	gameScreen_s.setPosition(0, 0);
@@ -78,14 +71,6 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 	text.setFont(font);
 	text.setCharacterSize(15);
 	text.setStyle(sf::Text::Bold);
-}
-
-void Display::scanPalettes() {
-
-	PaletteColours.updatePalette();
-	paletteTexture.update(PaletteColours.getPalette());
-
-	display->draw(paletteSprite);
 }
 
 void Display::fillTiles(){
@@ -248,9 +233,9 @@ void Display::updatePalettes(){
 
 	display->clear(sf::Color::Black);
 
-	scanPalettes();
 	fillObjects(0);
 	fillTiles();
+	PaletteColours.updatePalette();
 	
 	if (displayCtrl->bg0Display) {
 		fillBG(0);

@@ -10,6 +10,7 @@
 #include "DMA/DMA.h"
 #include "Display/Display.h"
 #include "Display/MemoryViewer.h"
+#include "Display/PaletteViewer.h"
 #include "Interrupt/interrupt.h"
 #include "Timer/timers.h"
 #include "Memory/memoryMappedIO.h"
@@ -19,6 +20,7 @@
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
+#define PALETTE_VIEWER 1
 
 using namespace std;
 
@@ -101,6 +103,9 @@ int main(int argc, char *args[]){
 	debugView = new Display(1280, 496 * 2, windowName);
 #if MEMORY_VIEWER
 	MemoryViewer memoryViewer;
+#endif
+#if PALETTE_VIEWER
+	PaletteViewer paletteViewer;
 #endif
 	//Display gameDisplay(240, 160, "game");
 
@@ -192,6 +197,9 @@ int main(int argc, char *args[]){
 			debugView->updatePalettes();
 #if MEMORY_VIEWER
 			memoryViewer.renderMemory();
+#endif
+#if PALETTE_VIEWER
+			paletteViewer.renderPalettes();
 #endif
 			refreshRate = 0;
 		}

@@ -1,5 +1,5 @@
 #pragma once
-#include "Memory/memoryAreas.h"
+#include "Memory/MemoryAreas/memoryAreas.h"
 #include <iostream>
 #include <assert.h>
 

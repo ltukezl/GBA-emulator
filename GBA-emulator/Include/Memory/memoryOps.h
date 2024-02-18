@@ -3,9 +3,14 @@
 
 #include <cstdint>
 #include <array>
-#include "Memory/memoryAreas.h"
+#include "Memory/MemoryAreas/PaletteRAM.h"
 
 extern BIOS systemROM;
+extern ExternalWorkRAM ewram;
+extern InternalWorkRAM iwram;
+extern PaletteRAM paletteram;
+extern OAMRAM oamRam;
+extern Sram sram;
 extern uint8_t IoRAM[0x801];
 extern uint8_t VRAM[0x18000];
 extern uint8_t* GamePak;

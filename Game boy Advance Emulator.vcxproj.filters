@@ -221,6 +221,12 @@
     <ClInclude Include="GBA-emulator\Include\Display\MemoryViewer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Display\PaletteViewer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\PaletteRAM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="GBA-emulator\TestBinaries\program2.bin">

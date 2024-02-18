@@ -22,10 +22,6 @@ class Display{
 	sf::RenderWindow* display;
 	std::string name;
 
-	sf::Sprite paletteSprite;
-
-	sf::Texture paletteTexture;
-
 	sf::Sprite tilemapSprite;
 
 	sf::Texture tileMap1Texture;
@@ -70,8 +66,6 @@ public:
 	Display(int, int, std::string&);
 
 	void updatePalettes();
-
-	void scanPalettes();
 
 	void handleEvents();
 
