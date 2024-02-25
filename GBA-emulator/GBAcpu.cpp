@@ -20,7 +20,7 @@
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
-#define PALETTE_VIEWER 0
+#define PALETTE_VIEWER 1
 
 using namespace std;
 
@@ -32,13 +32,6 @@ __int64 hBlankCounter = 0;
 
 bool hBlankHappened = false;
 bool vBlankHappened = false;
-
-__int32 sprs_usr = 0;
-__int32 sprs_svc = 0;
-__int32 sprs_abt = 0;
-__int32 sprs_irq = 0;
-__int32 sprs_fiq = 0;
-__int32 sprs_udf = 0;
 
 Registers r;
 
@@ -152,8 +145,10 @@ int main(int argc, char *args[]){
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/brin_demo.gba", "rb");
 	fopen_s(&bios, "GBA-emulator/GBA.BIOS", "rb");
-	fread(GamePak, 0x2000000, 1, file);
-	fread(systemROM.getMemoryPtr(), 0x3fff, 1, bios);
+	if (fread(GamePak, 0x2000000, 1, file) != 0)
+		return 1;
+	if (fread(systemROM.getMemoryPtr(), 0x3fff, 1, bios) == 0)
+		return 1;
 
 	uint64_t refreshRate = 0;
 	uint64_t vCounterDrawCycles = 0;

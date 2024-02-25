@@ -3,16 +3,22 @@
 
 #include <cstdint>
 #include <array>
+#include "Memory/MemoryAreas/BIOS.h"
+#include "Memory/MemoryAreas/EWRAM.h"
+#include "Memory/MemoryAreas/IWRAM.h"
 #include "Memory/MemoryAreas/PaletteRAM.h"
+#include "Memory/MemoryAreas/VRAM.h"
+#include "Memory/MemoryAreas/OAMRAM.h"
+#include "Memory/MemoryAreas/SRAM.h"
 
 extern BIOS systemROM;
 extern ExternalWorkRAM ewram;
 extern InternalWorkRAM iwram;
+extern uint8_t IoRAM[0x801];
 extern PaletteRAM paletteram;
+extern VRAM vram;
 extern OAMRAM oamRam;
 extern Sram sram;
-extern uint8_t IoRAM[0x801];
-extern uint8_t VRAM[0x18000];
 extern uint8_t* GamePak;
 extern std::array<unsigned char*, 16> memoryLayout;
 

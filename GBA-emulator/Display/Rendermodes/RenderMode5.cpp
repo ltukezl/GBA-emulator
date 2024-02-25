@@ -21,7 +21,7 @@ void RenderMode5::draw()
 	uint32_t startAddr = 0xa000 * displayCtrl->displayFrame;
 	for (size_t k = 0; k < 128; k++) {
 		for (size_t i = 0; i < 160; i++) {
-			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
+			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&vram[startAddr];
 			uint32_t redScaled = colorPaletteRam->red * _scalar;
 			uint32_t greenScaled = colorPaletteRam->green * _scalar;
 			uint32_t blueScaled = colorPaletteRam->blue * _scalar;

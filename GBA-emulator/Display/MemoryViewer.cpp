@@ -51,7 +51,7 @@ void MemoryViewer::renderMemory() {
 	m_text.setPosition(sf::Vector2f(25, 107));
 	m_display->draw(m_text);
 
-	m_text.setString("Bios        Bios      EWRAM  IWRAM    IORAM    VRAM      OAM      Palette    GPAK      GPAK     GPAK     GPAK      GPAK     GPAK     SRAM     SRAM");
+	m_text.setString("Bios        Bios      EWRAM  IWRAM    IORAM    Palette     VRAM    OAM      GPAK      GPAK     GPAK     GPAK      GPAK     GPAK     SRAM     SRAM");
 	m_text.setPosition(sf::Vector2f(16, 21));
 	m_display->draw(m_text);
 	

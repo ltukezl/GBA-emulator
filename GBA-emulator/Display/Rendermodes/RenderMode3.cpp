@@ -7,7 +7,7 @@ void RenderMode3::draw()
 	uint32_t startAddr = 0;
 	for (size_t k = 0; k < 160; k++){
 		for (size_t i = 0; i < 240; i++) {
-			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&VRAM[startAddr];
+			ColorPaletteRam* colorPaletteRam = (ColorPaletteRam*)&vram[startAddr];
 			uint32_t redScaled = colorPaletteRam->red * _scalar;
 			uint32_t greenScaled = colorPaletteRam->green * _scalar;
 			uint32_t blueScaled = colorPaletteRam->blue * _scalar;

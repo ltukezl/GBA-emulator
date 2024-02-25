@@ -14,7 +14,7 @@ union MemoryAddress {
 		const uint32_t address : 24;
 		const uint32_t mask : 8;
 	};
-	const uint32_t raw;
+	uint32_t raw;
 
 	uint32_t alignment16b() const { return raw & 1; }
 	uint32_t alignment32b() const { return raw & 3; }
@@ -23,6 +23,9 @@ union MemoryAddress {
 	uint32_t alignedMasked16b() const { return address & (~1); }
 	uint32_t alignedMasked32b() const { return address & (~3); }
 	const MemoryAddress operator%(const uint32_t value) const { return MemoryAddress{ raw % value }; }
+	const MemoryAddress operator-(const uint32_t value) const { return MemoryAddress{ raw - value }; }
+	const MemoryAddress operator+(const uint32_t value) const { return MemoryAddress{ raw + value }; }
+	const void operator=(const MemoryAddress value) { raw = value.raw; }
 };
 
 enum Source {
@@ -106,236 +109,12 @@ public:
 
 	bool m_accessed = false;
 
+	constexpr auto& operator[](const uint32_t offset) { return getMemoryPtr()[offset]; }
+
 private:
 	constexpr Derived* get() {
 		return static_cast<Derived*>(this);
 	};
-};
-
-class ExternalWorkRAM : public IMemoryArea<ExternalWorkRAM> {
-public:
-	uint32_t read8_impl(const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		return m_memoryArea[newAddress.address];
-	}
-
-	uint32_t read16_impl(const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
-		return RORnoCond(tmpResult, 8 * address.alignment16b());
-	}
-
-	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
-		if (registers[15] < 0x4000)
-			return tmpResult;
-		return RORnoCond(tmpResult, 8 * address.alignment32b());
-	}
-
-	void write8_impl(const MemoryAddress address, const uint8_t value) {
-		auto newAddress = address % m_memorySize;
-		m_memoryArea[newAddress.address] = value;
-	}
-
-	void write16_impl(const MemoryAddress address, const uint16_t value) {
-		auto newAddress = address % m_memorySize;
-		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
-		memAddr = value;
-	}
-
-	void write32_impl(const MemoryAddress address, const uint32_t value) {
-		auto newAddress = address % m_memorySize;
-		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
-		memAddr = value;
-	}
-
-	static constexpr uint32_t m_memorySize = 0x4'0000;
-	std::array<uint8_t, m_memorySize> m_memoryArea = {};
-};
-
-class InternalWorkRAM : public IMemoryArea<InternalWorkRAM> {
-public:
-	uint32_t read8_impl(const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		return m_memoryArea[newAddress.address];
-	}
-
-	uint32_t read16_impl(const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
-		return RORnoCond(tmpResult, 8 * address.alignment16b());
-	}
-
-	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
-		if (registers[15] < 0x4000)
-			return tmpResult;
-		return RORnoCond(tmpResult, 8 * address.alignment32b());
-	}
-
-	void write8_impl(const MemoryAddress address, const uint8_t value) {
-		auto newAddress = address % m_memorySize;
-		m_memoryArea[newAddress.address] = value;
-	}
-
-	void write16_impl(const MemoryAddress address, const uint16_t value) {
-		auto newAddress = address % m_memorySize;
-		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
-		memAddr = value;
-	}
-
-	void write32_impl(const MemoryAddress address, const uint32_t value) {
-		auto newAddress = address % m_memorySize;
-		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
-		memAddr = value;
-	}
-
-	static constexpr uint32_t m_memorySize = 0x8000;
-	std::array<uint8_t, m_memorySize> m_memoryArea = {};
-};
-
-class OAMRAM : public IMemoryArea<OAMRAM> {
-public:
-	uint32_t read8_impl(const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		return m_memoryArea[newAddress.address];
-	}
-
-	uint32_t read16_impl(const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
-		return RORnoCond(tmpResult, 8 * address.alignment16b());
-	}
-
-	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = as<uint32_t>(newAddress.aligned32b());
-		if (registers[15] < 0x4000)
-			return tmpResult;
-		return RORnoCond(tmpResult, 8 * address.alignment32b());
-	}
-
-	void write8_impl(const MemoryAddress address, const uint8_t value) {}
-
-	void write16_impl(const MemoryAddress address, const uint16_t value) {
-		auto newAddress = address % m_memorySize;
-		auto& memAddr = as<uint16_t>(newAddress.aligned16b());
-		memAddr = value;
-	}
-
-	void write32_impl(const MemoryAddress address, const uint32_t value) {
-		auto newAddress = address % m_memorySize;
-		auto& memAddr = as<uint32_t>(newAddress.aligned32b());
-		memAddr = value;
-	}
-
-	static constexpr uint32_t m_memorySize = 0x400;
-	std::array<uint8_t, m_memorySize> m_memoryArea = {};
-};
-
-class Sram : public IMemoryArea<Sram> {
-public:
-	uint8_t read8_impl(const MemoryAddress address) {
-		return m_memoryArea[address.address];
-	}
-
-	uint32_t read16_impl(const MemoryAddress address) {
-		uint32_t tmpResult = m_memoryArea[address.address] * 0x101;
-		return RORnoCond(tmpResult, 8 * address.alignment16b());
-	}
-
-	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
-		uint32_t tmpResult = m_memoryArea[address.address] * 0x1010101;
-		return RORnoCond(tmpResult, 8 * address.alignment32b());
-	}
-
-	void write8_impl(const MemoryAddress address, const uint8_t value) {
-		m_memoryArea[address.address] = value; 
-	}
-
-	void write16_impl(const MemoryAddress address, const uint16_t value) {
-		write8(address.address, value);
-		write8(address.address + 1, value);
-	}
-
-	void write32_impl(const MemoryAddress address, const uint32_t value) {
-		write8(address.address, value);
-		write8(address.address + 1, value);
-		write8(address.address + 2, value);
-		write8(address.address + 3, value);
-	}
-
-	static constexpr uint32_t m_memorySize = 0x1'0000;
-	std::array<uint8_t, m_memorySize> m_memoryArea = {};
-};
-
-class BIOS : public IMemoryArea<BIOS> {
-public:
-	uint32_t read8_impl(const Registers& registers, const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		if (registers[TRegisters::EProgramCounter] < 0x4000)
-			return m_memoryArea[newAddress.address];
-		else if (registers.getMode() != CpuModes_t::EUSR)
-			return m_duringIRQ & 0xFF;
-		else if (registers.getPreviousMode() == CpuModes_t::ESUPER)
-			return m_afterSWI & 0xFF;
-		else if (registers.getPreviousMode() == CpuModes_t::EIRQ)
-			return m_afterIRQ & 0xFF;
-		return m_memoryArea[newAddress.address];
-	}
-
-	uint32_t read16_impl(const Registers& registers, const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = as<uint16_t>(newAddress.aligned16b());
-		if (registers[TRegisters::EProgramCounter] < 0x4000)
-			tmpResult = as<uint16_t>(newAddress.aligned16b());
-		else if (registers.getMode() != CpuModes_t::EUSR)
-			tmpResult = m_duringIRQ & 0xFFFF;
-		else if (registers.getPreviousMode() == CpuModes_t::ESUPER)
-			tmpResult = m_afterSWI & 0xFFFF;
-		else if (registers.getPreviousMode() == CpuModes_t::EIRQ)
-			tmpResult = m_afterIRQ & 0xFFFF;
-
-		if (registers[TRegisters::EProgramCounter] < 0x4000)
-			return tmpResult;
-		return RORnoCond(tmpResult, 8 * address.alignment16b());
-	}
-
-	uint32_t read32_impl(const Registers& registers, const MemoryAddress address) {
-		auto newAddress = address % m_memorySize;
-		auto tmpResult = 0;
-		if (registers[TRegisters::EProgramCounter] < 0x4000)
-			tmpResult = as<uint32_t>(newAddress.aligned32b());
-		else if (registers.getMode() != CpuModes_t::EUSR)
-			tmpResult = m_duringIRQ;
-		else if (registers.getPreviousMode() == CpuModes_t::ESUPER)
-			tmpResult = m_afterSWI;
-		else if (registers.getPreviousMode() == CpuModes_t::EIRQ)
-			tmpResult = m_afterIRQ;
-
-		if (registers[TRegisters::EProgramCounter] < 0x4000)
-			return tmpResult;
-		return RORnoCond(tmpResult, 8 * address.alignment32b());
-	}
-
-	void write8_impl(const MemoryAddress address, const uint8_t value) {
-	}
-
-	void write16_impl(const MemoryAddress address, const uint16_t value) {
-	}
-
-	void write32_impl(const MemoryAddress address, const uint32_t value) {
-	}
-
-	static constexpr uint32_t m_memorySize = 0x4000;
-	std::array<uint8_t, m_memorySize> m_memoryArea = {};
-
-	static constexpr uint32_t m_afterSWI = 0xe3a0'2004;
-	static constexpr uint32_t m_afterIRQ = 0xe510'f004;
-	static constexpr uint32_t m_duringIRQ = 0xe28f'e000;
-	static constexpr uint32_t m_afterStartup = 0xe129'f000;
 };
 
 

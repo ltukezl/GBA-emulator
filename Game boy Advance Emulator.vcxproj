@@ -194,9 +194,16 @@
     <ClInclude Include="GBA-emulator\Display\Rendermodes\TextMode.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Palette\RgbaPalette.h" />
     <ClInclude Include="GBA-emulator\Include\DMA\DMA.h" />
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\TilesetMemoryObserver.h" />
     <ClInclude Include="GBA-emulator\Include\GBAcpu.h" />
     <ClInclude Include="GBA-emulator\Include\Interrupt\interrupt.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\BIOS.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\EWRAM.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\IWRAM.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\OAMRAM.h" />
     <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\PaletteRAM.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\SRAM.h" />
+    <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\VRAM.h" />
     <ClInclude Include="GBA-emulator\Include\Memory\memoryMappedIO.h" />
     <ClInclude Include="GBA-emulator\Include\Memory\memoryOps.h" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h" />

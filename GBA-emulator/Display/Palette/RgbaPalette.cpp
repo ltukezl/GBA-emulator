@@ -20,9 +20,9 @@ void RgbaPalette::updatePalette() {
 		paletteColorArray.paletteColorArray_linear[i].g = greenScaled;
 		paletteColorArray.paletteColorArray_linear[i].b = blueScaled;
 		paletteColorArray.paletteColorArray_linear[i].a = 255;
-		paletteram.m_accessedPaletteColour[i] = 0;
+		
 	}
-
+	paletteram.m_accessedPaletteColour.reset();
 	debugView->VRAMupdated = true;
 	paletteram.clearAccess();
 }

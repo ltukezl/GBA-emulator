@@ -22,23 +22,24 @@ uint32_t previousAddress = 0;
 extern RgbaPalette PaletteColours;
 
 uint8_t IoRAM[0x801] = {};
-uint8_t VRAM[0x18000] = {};
 uint8_t* GamePak = nullptr;
 
 BIOS systemROM;
 ExternalWorkRAM ewram;
 InternalWorkRAM iwram;
 PaletteRAM paletteram;
+VRAM vram;
 OAMRAM oamRam;
 Sram sram;
 
 std::array<unsigned char*, 16> memoryLayout = { []() constexpr {
-	std::array<unsigned char*, 16> retArray { nullptr, nullptr, nullptr, nullptr, IoRAM, nullptr, VRAM, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	std::array<unsigned char*, 16> retArray { nullptr, nullptr, nullptr, nullptr, IoRAM, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	retArray[ESystemROM_L] = systemROM.getMemoryPtr();
 	retArray[ESystemROM_H] = systemROM.getMemoryPtr();
 	retArray[EExternalWorkRAM] = ewram.getMemoryPtr();
 	retArray[EInternalWorkRAM] = iwram.getMemoryPtr();
 	retArray[EPaletteRAM] = paletteram.getMemoryPtr();
+	retArray[EVRAM] = vram.getMemoryPtr();
 	retArray[EOAM] = oamRam.getMemoryPtr();
 	retArray[ESRAM_L] = sram.getMemoryPtr();
 	retArray[ESRAM_H] = sram.getMemoryPtr();
@@ -185,6 +186,13 @@ void writeToAddress(uint32_t address, uint8_t value){
 		return;
 	}
 
+	if (memDecoder.mask == 0x6) {
+		vram.write8(memDecoder, value);
+		debugView->VRAMupdated = true;
+		debugView->OBJupdated = true;
+		return;
+	}
+
 	if (memDecoder.mask == EOAM) {
 		oamRam.write8(memDecoder, value);
 		return;
@@ -253,6 +261,13 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		return;
 	}
 
+	if (memDecoder.mask == 0x6) {
+		vram.write16(memDecoder, value);
+		debugView->VRAMupdated = true;
+		debugView->OBJupdated = true;
+		return;
+	}
+
 	if (memDecoder.mask == EOAM) {
 		oamRam.write16(memDecoder, value);
 		return;
@@ -308,6 +323,13 @@ void writeToAddress32(uint32_t address, uint32_t value){
 		return;
 	}
 
+	if (memDecoder.mask == 0x6) {
+		vram.write32(memDecoder, value);
+		debugView->OBJupdated = true;
+		debugView->VRAMupdated = true;
+		return;
+	}
+
 	if (memDecoder.mask == EOAM) {
 		oamRam.write32(memDecoder, value);
 		return;
@@ -360,6 +382,10 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 		return paletteram.read8(memDecoder);
 	}
 
+	if (memDecoder.mask == 0x6) {
+		return vram.read8(memDecoder);
+	}
+
 	if (memDecoder.mask == EOAM) {
 		return oamRam.read8(memDecoder);
 	}
@@ -401,6 +427,9 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	}
 	if (memDecoder.mask == 0x5) {
 		return paletteram.read16(memDecoder);
+	}
+	if (memDecoder.mask == 0x6) {
+		return vram.read16(memDecoder);
 	}
 
 	if (memDecoder.mask == EOAM) {
@@ -447,6 +476,9 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 
 	if (memDecoder.mask == 0x5) {
 		return paletteram.read32(r, memDecoder);
+	}
+	if (memDecoder.mask == 0x6) {
+		return vram.read32(r, memDecoder);
 	}
 
 	if (memDecoder.mask == EOAM) {
