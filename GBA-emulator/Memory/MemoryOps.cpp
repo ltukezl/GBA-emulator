@@ -151,6 +151,17 @@ void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
 	uint32_t mask1 = (destination >> 24) & 15;
 	uint32_t mask2 = (source >> 24) & 15;
 
+	if (mask1 == EPaletteRAM) {
+		paletteram.m_accessed = 1;
+		paletteram.m_accessedPaletteColour.set();
+	}
+		
+	if (mask1 == EVRAM || mask1 == EOAM)
+	{
+		debugView->VRAMupdated = true;
+		debugView->OBJupdated = true;
+	}
+
 	if (mask1 >= 8 && mask1 < 0xD)
 		return;
 	if (mask1 == 0)

@@ -107,7 +107,7 @@ public:
 
 	constexpr uint8_t* getMemoryPtr() { return get()->m_memoryArea.data(); }
 
-	bool m_accessed = false;
+	bool m_accessed = true;
 
 	constexpr auto& operator[](const uint32_t offset) { return getMemoryPtr()[offset]; }
 
