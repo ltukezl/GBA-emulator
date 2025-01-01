@@ -18,7 +18,7 @@ public:
 	}
 
 	void write8_impl(const MemoryAddress address, const uint8_t value) {
-		m_memoryArea[address.address] = value;
+		m_memoryArea[address.address % m_memorySize] = value;
 	}
 
 	void write16_impl(const MemoryAddress address, const uint16_t value) {

@@ -49,7 +49,7 @@ uint32_t ImmediateRotater::calculate(bool setStatus) {
 
 //------------
 
-RegisterWithImmediateShifter::~RegisterWithImmediateShifter() {}
+RegisterWithImmediateShifter::~RegisterWithImmediateShifter() = default;
 
 RegisterWithImmediateShifter::RegisterWithImmediateShifter(Registers& registers, uint16_t val) : RotatorUnits(registers) {
 	registerRotaterFields.val = val;

@@ -3,31 +3,33 @@
 #include "Memory/memoryMappedIO.h"
 #include "iostream"
 
+using DMAcontrol_t = DMAcontrol::control_t;
+using DMAtransfer_t = DMAcontrol::transferType_t;
+using DMAtiming_t = DMAcontrol::timing_t;
 
-void doDMA(DMAcontrol* DMAControl, uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint32_t wordCount){
-	if ((DMAControl->transferType == 1) &&
-		(DMAControl->destCtrl == 0 || DMAControl->destCtrl == 3) &&
-		(DMAControl->sourceCtrl == 0) &&
-		(DMAControl->transferType == 1))
-		DmaIncreasing(destinationAddress, sourceAddress, wordCount);
+void doDMA(DMAcontrol* DMAControl, uint32_t i, uint32_t destinationAddress, uint32_t sourceAddress, uint32_t wordCount) {
+	if ((DMAControl->transferType == DMAtransfer_t::WORD) &&
+		(DMAControl->destCtrl == DMAcontrol_t::Increment || DMAControl->destCtrl == DMAcontrol_t::IncOrReload) &&
+		(DMAControl->sourceCtrl == DMAcontrol_t::Increment))
+		DmaIncreasing(i, destinationAddress, sourceAddress, wordCount);
 	else {
 		for (uint32_t k = 0; k < wordCount; k++) {
-			if (DMAControl->transferType == 0) {
+			if (DMAControl->transferType == DMAtransfer_t::HALFWORD) {
 				writeToAddress16(destinationAddress & ~0x1, loadFromAddress16(sourceAddress & ~0x1));
 			}
 			else {
 				writeToAddress32(destinationAddress & ~0x3, loadFromAddress32(sourceAddress & ~0x3));
 			}
 
-			if (DMAControl->destCtrl == 0 || DMAControl->destCtrl == 3)
-				destinationAddress += DMAControl->transferType ? 4 : 2;
-			else if (DMAControl->destCtrl == 1)
-				destinationAddress -= DMAControl->transferType ? 4 : 2;
+			if (DMAControl->destCtrl == DMAcontrol_t::Increment || DMAControl->destCtrl == DMAcontrol_t::IncOrReload)
+				destinationAddress += DMAControl->transferType == DMAtransfer_t::WORD ? 4 : 2;
+			else if (DMAControl->destCtrl == DMAcontrol_t::Decrement)
+				destinationAddress -= DMAControl->transferType == DMAtransfer_t::WORD ? 4 : 2;
 
-			if (DMAControl->sourceCtrl == 0)
-				sourceAddress += DMAControl->transferType ? 4 : 2;
-			else if (DMAControl->sourceCtrl == 1)
-				sourceAddress -= DMAControl->transferType ? 4 : 2;
+			if (DMAControl->sourceCtrl == DMAcontrol_t::Increment)
+				sourceAddress += DMAControl->transferType == DMAtransfer_t::WORD ? 4 : 2;
+			else if (DMAControl->sourceCtrl == DMAcontrol_t::Decrement)
+				sourceAddress -= DMAControl->transferType == DMAtransfer_t::WORD ? 4 : 2;
 		}
 	}
 	if (DMAControl->irq){
@@ -66,25 +68,29 @@ void startDMA(){
 			else if (wordCount == 0)
 				wordCount = 0x4000;
 
-			if ((i == 1 || i == 2) && DMAControl->timing == 3){
+			if ((i == 1 || i == 2) && DMAControl->timing == DMAtiming_t::Special){
 				for (int words = 0; words < 4; words++){
 					//writeToAddress32(destinationAddress + 4, loadFromAddress32(sourceAddress)); //fifo mode, do addr control logic sound control. do later
 				}
 			}
 
-			else if (i == 3 && DMAControl->timing == 3){
+			else if (i == 3 && DMAControl->timing == DMAcontrol::timing_t::Special){
 				std::cout << "not used";
 			}
 
-			else if (DMAControl->timing == 0){
+			if (i != 3 && destinationAddress >= 0x8000000) {
+				continue;
+			}
+
+			else if (DMAControl->timing == DMAtiming_t::Immediately){
 				doDMA(DMAControl, i, destinationAddress, sourceAddress, wordCount);
 			}
 
-			else if (DMAControl->timing == 1 && InterruptFlagRegister->vBlank){
+			else if (DMAControl->timing == DMAtiming_t::VBlank && InterruptFlagRegister->vBlank){
 				doDMA(DMAControl, i, destinationAddress, sourceAddress, wordCount);
 			}
 
-			else if (DMAControl->timing == 2 && InterruptFlagRegister->hBlank){
+			else if (DMAControl->timing == DMAtiming_t::HBlank && InterruptFlagRegister->hBlank){
 				doDMA(DMAControl, i, destinationAddress, sourceAddress, wordCount);
 			}
 			

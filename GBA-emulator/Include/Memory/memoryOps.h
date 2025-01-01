@@ -24,7 +24,7 @@ extern std::array<unsigned char*, 16> memoryLayout;
 
 // create memory for the different memory areas
 
-void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size);
+void DmaIncreasing(uint32_t dmaNumber, uint32_t destination, uint32_t source, uint32_t size);
 
 void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val);
 void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val);

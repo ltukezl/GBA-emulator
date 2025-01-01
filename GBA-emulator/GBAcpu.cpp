@@ -19,8 +19,8 @@
 #include "cplusplusRewrite/tests/allTests.h"
 
 #define BIOS_START 0
-#define MEMORY_VIEWER 0
-#define PALETTE_VIEWER 1
+#define MEMORY_VIEWER 1
+#define PALETTE_VIEWER 0
 
 using namespace std;
 
@@ -140,7 +140,7 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE *bios;
-	fopen_s(&file, "GBA-emulator/TestBinaries/program3.bin", "rb");
+	fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/brin_demo.gba", "rb");

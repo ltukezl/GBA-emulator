@@ -30,8 +30,6 @@ public:
 	}
 
 	void write8_impl(const MemoryAddress address, const uint8_t value) {
-		if ((displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
-			return;
 		const uint32_t memoryRegion = (address.address >> 15) & 0x3;
 		if (memoryRegion == 2 || memoryRegion == 3)
 			return;
@@ -41,8 +39,6 @@ public:
 	}
 
 	void write16_impl(const MemoryAddress address, const uint16_t value) {
-		if ((displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
-			return;
 		const uint32_t memoryRegion = (address.address >> 15) & 0x3;
 		auto newAddress = address % m_regionSize;
 		auto& memAddr = as<uint16_t>(newAddress.aligned16b(), memoryRegion);
@@ -50,8 +46,6 @@ public:
 	}
 
 	void write32_impl(const MemoryAddress address, const uint32_t value) {
-		if ((displayCtrl->forceBlank || InterruptFlagRegister->vBlank || InterruptFlagRegister->hBlank))
-			return;
 		const uint32_t memoryRegion = (address.address >> 15) & 0x3;
 		auto newAddress = address % m_regionSize;
 		auto& memAddr = as<uint32_t>(newAddress.aligned32b(), memoryRegion);

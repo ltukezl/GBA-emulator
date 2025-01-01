@@ -144,7 +144,7 @@ uint32_t clampAddress(uint32_t mask, uint32_t address){
 	return address;
 }
 
-void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
+void DmaIncreasing(uint32_t dmaNumber, uint32_t destination, uint32_t source, uint32_t size) {
 	destination &= ~3;
 	source &= ~3;
 
@@ -154,6 +154,8 @@ void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
 	if (mask1 == EPaletteRAM) {
 		paletteram.m_accessed = 1;
 		paletteram.m_accessedPaletteColour.set();
+		debugView->VRAMupdated = true;
+		debugView->OBJupdated = true;
 	}
 		
 	if (mask1 == EVRAM || mask1 == EOAM)
@@ -162,9 +164,11 @@ void DmaIncreasing(uint32_t destination, uint32_t source, uint32_t size) {
 		debugView->OBJupdated = true;
 	}
 
-	if (mask1 >= 8 && mask1 < 0xD)
+	if (mask1 >= EGamePak1 && mask1 <= EGamePak6)
 		return;
-	if (mask1 == 0)
+	if (mask1 == ESRAM_L || mask1 == ESRAM_H || mask2 == ESRAM_L || mask2 == ESRAM_H)
+		return;
+	if (mask1 == ESystemROM_L || mask1 == ESystemROM_H)
 		return;
 
 	destination = clampAddress(mask1, destination);
@@ -283,6 +287,9 @@ void writeToAddress16(uint32_t address, uint16_t value){
 		oamRam.write16(memDecoder, value);
 		return;
 	}
+
+	else if (memDecoder.mask >= 8 && memDecoder.mask <= 0xd)
+		return;
 	
 	if (mask == 0xe || mask == 0xf)
 	{
@@ -345,6 +352,9 @@ void writeToAddress32(uint32_t address, uint32_t value){
 		oamRam.write32(memDecoder, value);
 		return;
 	}
+
+	else if (memDecoder.mask >= 8 && memDecoder.mask <= 0xd)
+		return;
 
 	if (mask == 0xe || mask == 0xf)
 	{

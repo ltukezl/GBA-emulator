@@ -232,14 +232,36 @@ union TIMERCNT {
 };
 
 union DMAcontrol{
+	enum class control_t: uint16_t
+	{
+		Increment,
+		Decrement,
+		Fixed,
+		IncOrReload,
+	};
+
+	enum class transferType_t : uint16_t
+	{
+		HALFWORD,
+		WORD,
+	};
+
+	enum class timing_t : uint16_t
+	{
+		Immediately,
+		VBlank,
+		HBlank,
+		Special,
+	};
+
 	struct{
 		uint16_t:5;
-		uint16_t destCtrl : 2;
-		uint16_t sourceCtrl : 2;
+		control_t destCtrl : 2;
+		control_t sourceCtrl : 2;
 		uint16_t repeat : 1;
-		uint16_t transferType : 1;
+		transferType_t transferType : 1;
 		uint16_t DRQ : 1;
-		uint16_t timing : 2;
+		timing_t timing : 2;
 		uint16_t irq : 1;
 		uint16_t enable : 1;
 	};
