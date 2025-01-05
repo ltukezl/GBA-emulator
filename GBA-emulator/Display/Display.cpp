@@ -74,10 +74,6 @@ Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(
 }
 
 void Display::fillTiles(){
-	if (!VRAMupdated){
-		display->draw(tilemapSprite);
-		return;  
-	}
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8];
 	
 	tileset.update();
@@ -140,8 +136,6 @@ void Display::fillObjects(uint32_t regOffset){
 	display->draw(objMapSprite);
 	OBJupdated = false;
 }
-
-
 
 void Display::appendBGs() {
 	

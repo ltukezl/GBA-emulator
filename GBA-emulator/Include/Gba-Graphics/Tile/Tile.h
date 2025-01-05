@@ -50,7 +50,6 @@ public:
 
 	Tile() = default;
 	Tile(uint32_t addr, bool isObj);
-	Tile(GBATile tile, bool is8Bit);
 	GBATile& getTile(bool is8Bit, uint8_t palette);
 
 private:

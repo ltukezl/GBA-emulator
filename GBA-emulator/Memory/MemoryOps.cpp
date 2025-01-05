@@ -146,6 +146,7 @@ uint32_t clampAddress(uint32_t mask, uint32_t address){
 
 void DmaIncreasing(uint32_t dmaNumber, MemoryAddress destination, MemoryAddress source, uint32_t size) {
 	if (destination.mask == EPaletteRAM) {
+		vram.m_observer.setAll();
 		paletteram.m_accessed = 1;
 		paletteram.m_accessedPaletteColour.set();
 		debugView->VRAMupdated = true;
@@ -154,6 +155,7 @@ void DmaIncreasing(uint32_t dmaNumber, MemoryAddress destination, MemoryAddress 
 		
 	if (destination.mask == EVRAM || source.mask == EOAM)
 	{
+		vram.m_observer.setAll();
 		debugView->VRAMupdated = true;
 		debugView->OBJupdated = true;
 	}

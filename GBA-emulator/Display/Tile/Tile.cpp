@@ -6,12 +6,11 @@
 extern RgbaPalette PaletteColours;
 
 Tile::Tile(uint32_t addr, bool isObj) {
-	
 	uint32_t startAddr = 0;
 	uint8_t offset = 0;
 	
 	for (int y = 0; y < 8; y++) {
-		uint32_t row = rawLoad32(&vram[0], addr + startAddr);
+		uint32_t row = rawLoad32(vram.getMemoryPtr(), addr + startAddr);
 		for (size_t pixel = 0; pixel < 8; pixel++) {
 			uint16_t color = (row & 0xf);
 			_tile.grid[y][pixel].index = color;
@@ -34,16 +33,19 @@ Tile::Tile(uint32_t addr, bool isObj) {
 	}
 }
 
-Tile::Tile(GBATile tile, bool is8Bit) {
-	return;
-}
-
 Tile::GBATile& Tile::getTile(bool is8Bit, uint8_t palette) {
 	if (is8Bit)
 		return _tile8bit;
-
-	for (int k = 0; k < 8; k++)
-		for (int i = 0; i < 8; i++)
-			_tile.grid[i][k].palette = palette;
+	//unrolled for performance
+	for (int i = 0; i < 8; i++) {
+		_tile.grid[i][0].palette = palette;
+		_tile.grid[i][1].palette = palette;
+		_tile.grid[i][2].palette = palette;
+		_tile.grid[i][3].palette = palette;
+		_tile.grid[i][4].palette = palette;
+		_tile.grid[i][5].palette = palette;
+		_tile.grid[i][6].palette = palette;
+		_tile.grid[i][7].palette = palette;
+	}
 	return _tile;
 }

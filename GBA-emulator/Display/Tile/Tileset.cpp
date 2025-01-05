@@ -2,6 +2,8 @@
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 #include "Memory/MemoryOps.h"
 #include <iostream>
+#include <SFML/Audio.hpp>
+#include <SFML/Graphics.hpp>
 
 extern RgbaPalette PaletteColours;
 
@@ -9,26 +11,38 @@ void Tileset::update() {
 	uint32_t startAddr = 0;
 	for (size_t tileY = 0; tileY < 64; tileY++) {
 		for (size_t tileX = 0; tileX < 32; tileX++) {
+			if (!vram.m_observer.checkAccessed(startAddr))
+			{
+				startAddr += 32;
+				continue;
+			}
 			Tile t(startAddr, false);
 			tileset.grid[tileY][tileX] = std::move(t);
 
 			startAddr += 32;
-			if (startAddr == 0xdd00)
-			{
-				continue;
-			}
 		}
 	}
 }
 
 uint8_t* Tileset::getTileset(bool is8bit) {
+	uint32_t startAddr = 0;
 	for (size_t tileY = 0; tileY < 64; tileY++)
-	for (size_t pixelY = 0; pixelY < 8; pixelY++)
 	for (size_t tileX = 0; tileX < 32; tileX++)
-	for (size_t pixelX = 0; pixelX < 8; pixelX++) {
-		auto& tile = tileset.grid[tileY][tileX].getTile(is8bit, 0).grid[pixelY][pixelX];
-		auto clr = PaletteColours.colorFromIndex(tile.palette, tile.index);
-		fullTileset[8 * tileY + pixelY][8 * tileX + pixelX] = clr.rawColor;
+	{
+		if (!vram.m_observer.checkAccessed(startAddr))
+		{
+			startAddr += 32;
+			continue;
+		}
+		for (size_t pixelY = 0; pixelY < 8; pixelY++)
+		for (size_t pixelX = 0; pixelX < 8; pixelX++)
+		{
+			auto& tile = tileset.grid[tileY][tileX].getTile(is8bit, 0).grid[pixelY][pixelX];
+			auto clr = PaletteColours.colorFromIndex(tile.palette, tile.index);
+			fullTileset[8 * tileY + pixelY][8 * tileX + pixelX] = clr.rawColor;
+		}
+		vram.m_observer.clearAccessed(startAddr);
+		startAddr += 32;
 	}
 	return (uint8_t*)fullTileset;
 }

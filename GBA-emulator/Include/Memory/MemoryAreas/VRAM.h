@@ -36,6 +36,9 @@ public:
 		auto newAddress = address % m_regionSize;
 		m_fullRegion[memoryRegion][newAddress.address] = value;
 		m_fullRegion[memoryRegion][newAddress.address + 1] = value;
+		if(address.address < 0x8000*2)
+			m_observer.setAccessed(address);
+		m_observer.setAccessed(newAddress);
 	}
 
 	void write16_impl(const MemoryAddress address, const uint16_t value) {
@@ -43,6 +46,9 @@ public:
 		auto newAddress = address % m_regionSize;
 		auto& memAddr = as<uint16_t>(newAddress.aligned16b(), memoryRegion);
 		memAddr = value;
+		if(address.address < 0x8000*2)
+			m_observer.setAccessed(address);
+		m_observer.setAccessed(newAddress);
 	}
 
 	void write32_impl(const MemoryAddress address, const uint32_t value) {
@@ -50,6 +56,8 @@ public:
 		auto newAddress = address % m_regionSize;
 		auto& memAddr = as<uint32_t>(newAddress.aligned32b(), memoryRegion);
 		memAddr = value;
+		if(address.address < 0x8000*2)
+			m_observer.setAccessed(address);
 	}
 	static constexpr uint32_t m_objMemStart = 0x1'0000;
 	static constexpr uint32_t m_regionSize = 0x8000;
