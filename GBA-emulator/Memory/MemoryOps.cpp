@@ -144,37 +144,36 @@ uint32_t clampAddress(uint32_t mask, uint32_t address){
 	return address;
 }
 
-void DmaIncreasing(uint32_t dmaNumber, uint32_t destination, uint32_t source, uint32_t size) {
-	destination &= ~3;
-	source &= ~3;
-
-	uint32_t mask1 = (destination >> 24) & 15;
-	uint32_t mask2 = (source >> 24) & 15;
-
-	if (mask1 == EPaletteRAM) {
+void DmaIncreasing(uint32_t dmaNumber, MemoryAddress destination, MemoryAddress source, uint32_t size) {
+	if (destination.mask == EPaletteRAM) {
 		paletteram.m_accessed = 1;
 		paletteram.m_accessedPaletteColour.set();
 		debugView->VRAMupdated = true;
 		debugView->OBJupdated = true;
 	}
 		
-	if (mask1 == EVRAM || mask1 == EOAM)
+	if (destination.mask == EVRAM || source.mask == EOAM)
 	{
 		debugView->VRAMupdated = true;
 		debugView->OBJupdated = true;
 	}
 
-	if (mask1 >= EGamePak1 && mask1 <= EGamePak6)
-		return;
-	if (mask1 == ESRAM_L || mask1 == ESRAM_H || mask2 == ESRAM_L || mask2 == ESRAM_H)
-		return;
-	if (mask1 == ESystemROM_L || mask1 == ESystemROM_H)
-		return;
+	uint32_t destination_clamped = clampAddress(destination.mask, destination.alignedMasked32b());
+	uint32_t source_clamped = clampAddress(source.mask, source.alignedMasked32b());
 
-	destination = clampAddress(mask1, destination);
-	source = clampAddress(mask2, source);
-
-	memcpy(&memoryLayout[mask1][destination], &memoryLayout[mask2][source], size * 4);
+	if (source.mask > EGamePak6 && dmaNumber != 0)
+	{
+		uint8_t sramVal = sram.read8(source.alignedMasked32b());
+		memset(&memoryLayout[destination.mask][destination_clamped], sramVal, size * 4);
+	}
+	else if (source.mask > EGamePak6 && dmaNumber == 0)
+	{
+		memset(&memoryLayout[destination.mask][destination_clamped], 0, size * 4);
+	}
+	else 
+	{
+		memcpy(&memoryLayout[destination.mask][destination_clamped], &memoryLayout[source.mask][source_clamped], size * 4);
+	}
 }
 
 void writeToAddress(uint32_t address, uint8_t value){

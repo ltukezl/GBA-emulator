@@ -9,6 +9,7 @@
 
 union MemoryAddress {
 	MemoryAddress(const uint32_t value) : raw(value) {}
+	MemoryAddress(const uint32_t mask, const uint32_t value) : address{ value }, mask{ mask }{}
 
 	struct {
 		const uint32_t address : 24;
@@ -25,6 +26,7 @@ union MemoryAddress {
 	const MemoryAddress operator%(const uint32_t value) const { return MemoryAddress{ raw % value }; }
 	const MemoryAddress operator-(const uint32_t value) const { return MemoryAddress{ raw - value }; }
 	const MemoryAddress operator+(const uint32_t value) const { return MemoryAddress{ raw + value }; }
+	const MemoryAddress operator&(const uint32_t value) const { return MemoryAddress{ mask, address & value }; }
 	const void operator=(const MemoryAddress value) { raw = value.raw; }
 };
 
