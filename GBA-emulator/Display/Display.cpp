@@ -231,9 +231,9 @@ void Display::updatePalettes(){
 
 	display->clear(sf::Color::Black);
 
+	PaletteColours.updatePalette();
 	fillObjects(0);
 	fillTiles();
-	PaletteColours.updatePalette();
 	
 	if (displayCtrl->bg0Display) {
 		fillBG(0);

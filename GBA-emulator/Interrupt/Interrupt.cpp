@@ -54,7 +54,7 @@ void HWInterrupts(uint64_t cycles){
 
 	if (InterruptFlagRegister->addr != 0){
 		if (debug)
-			std::cout << "entered interuut from 0x" << std::hex << r[TRegisters::EProgramCounter] << " saving LR " << (cpsr.thumb ? r[PC] + 4 : r[PC]) << " " << std::dec << std::endl;
+			std::cout << "entered interrupt from 0x" << std::hex << r[TRegisters::EProgramCounter] << " saving LR " << (cpsr.thumb ? r[PC] + 4 : r[PC]) << " " << std::dec << std::endl;
 		//debug = true;
 		r.updateMode(CpuModes_t::EIRQ);
 		r[16] = cpsr.val;
