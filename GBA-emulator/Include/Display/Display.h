@@ -2,6 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <cstdint>
 #include <cstring>
+#include <SFML/Audio.hpp>
+#include <SFML/Graphics.hpp>
+#include <iostream>
 
 #include "Constants.h"
 #include "Memory/memoryMappedIO.h"

@@ -7,7 +7,7 @@ extern RgbaPalette PaletteColours;
 RenderMode5::RenderMode5()
 {
 	background = (BGPixels*) new BGPixels;
-	memset(background, 0, sizeof(BGPixels));
+	memset(background, 0xFFFF'FFFF, sizeof(BGPixels));
 }
 
 uint32_t* RenderMode5::getBG()
@@ -28,7 +28,6 @@ void RenderMode5::draw()
 			background->grid[k][i].r = redScaled;
 			background->grid[k][i].b = blueScaled;
 			background->grid[k][i].g = greenScaled;
-			background->grid[k][i].a = 255;
 			startAddr += 2;
 		}
 		for (size_t i = 160; i < 240; i++) {
@@ -43,3 +42,9 @@ void RenderMode5::draw()
 	}
 }
 
+void RenderMode5::fillImage(finalImageColored& imageBase)
+{
+	for (int k = 0; k < 160; k++) {
+		memcpy(&imageBase[k], &background->grid[k], 240*4);
+	}
+}

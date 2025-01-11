@@ -91,6 +91,12 @@ void startDMA(){
 				for (int words = 0; words < 4; words++){
 					//writeToAddress32(destinationAddress + 4, loadFromAddress32(sourceAddress)); //fifo mode, do addr control logic sound control. do later
 				}
+				return;
+			}
+
+			if (destinationAddress.mask == 4 || sourceAddress.mask == 4)
+			{
+				continue;
 			}
 
 			if (destinationAddress.mask >= EGamePak1 && destinationAddress.mask <= EGamePak6)

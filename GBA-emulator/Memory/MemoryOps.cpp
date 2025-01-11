@@ -198,6 +198,7 @@ void writeToAddress(uint32_t address, uint8_t value){
 	}
 
 	if (memDecoder.mask == 0x5) {
+		vram.m_observer.setAll();
 		paletteram.write8(memDecoder, value);
 		return;
 	}
@@ -273,6 +274,7 @@ void writeToAddress16(uint32_t address, uint16_t value){
 	}
 
 	if (memDecoder.mask == 0x5) {
+		vram.m_observer.setAll();
 		paletteram.write16(memDecoder, value);
 		return;
 	}
@@ -338,6 +340,7 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	}
 
 	if (memDecoder.mask == 0x5) {
+		vram.m_observer.setAll();
 		paletteram.write32(memDecoder, value);
 		return;
 	}
@@ -551,4 +554,5 @@ void memoryInits(){
 	memoryLayout[EGamePak4] = &GamePak[0x1000000];
 	memoryLayout[EGamePak5] = GamePak;
 	memoryLayout[EGamePak6] = &GamePak[0x1000000];
+	vram.m_observer.setAll();
 }

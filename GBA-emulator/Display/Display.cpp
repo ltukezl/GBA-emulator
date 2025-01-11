@@ -151,7 +151,7 @@ void Display::appendBGs() {
 	constexpr uint16_t screenSizeX = 240;
 	constexpr uint16_t screenSizey = 160;
 
-	const bool isBitmapMode = (displayCtrl->bgMode == 3);
+	const bool isBitmapMode = (displayCtrl->bgMode == 3) || (displayCtrl->bgMode == 5);
 
 	spriteObjects.updateSpritePriorities();
 
@@ -174,6 +174,10 @@ void Display::appendBGs() {
 
 	if (displayCtrl->bgMode == 4) {
 		renderMode4.fillImage(finalImage.finalImagePalette);
+	}
+
+	if (displayCtrl->bgMode == 5) {
+		renderMode5.fillImage(finalImage.finalImageColors);
 	}
 
 	for (int vec = 3; vec >= 0; vec--) {

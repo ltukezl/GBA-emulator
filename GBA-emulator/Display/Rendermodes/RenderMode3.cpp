@@ -14,7 +14,6 @@ void RenderMode3::draw()
 			background->grid[k][i].r = redScaled;
 			background->grid[k][i].b = blueScaled;
 			background->grid[k][i].g = greenScaled;
-			background->grid[k][i].a = 255;
 			startAddr += 2;
 		}
 	}
@@ -23,15 +22,13 @@ void RenderMode3::draw()
 RenderMode3::RenderMode3()
 {
 	background = (BGPixels*) new BGPixels;
-	memset(background, 0, sizeof(BGPixels));
+	memset(background, 0xFFFF'FFFF, sizeof(BGPixels));
 }
 
 void RenderMode3::fillToDisplay(finalImageColored& imageBG)
 {
 	for (int k = 0; k < 160; k++) {
-		for (int i = 0; i < 240; i++) {
-			imageBG[k][i].rawColor = background->grid[k][i].rawColor;
-		}
+		memcpy(&imageBG[k], &background->grid[k], 240*4);
 	}
 }
 

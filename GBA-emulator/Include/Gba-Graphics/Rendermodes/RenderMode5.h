@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "Constants.h"
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 
@@ -17,4 +18,5 @@ public:
 	RenderMode5();
 	void draw();
 	uint32_t* getBG();
+	void fillImage(finalImageColored& imageBase);
 };
