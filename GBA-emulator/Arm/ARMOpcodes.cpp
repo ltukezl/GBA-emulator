@@ -182,7 +182,7 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 				a(memAddress, false);
 				r[i] = b(memAddress, false);
 				if (i == 15)
-					r[16] = cpsr.val;
+					r[16] = r.m_cpsr.val;
 			}
 			regList >>= 1;
 		}
@@ -191,7 +191,7 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 				a(memAddress, false);
 				r[15 - i] = b(memAddress, false);
 				if (i == 0)
-					r[16] = cpsr.val;
+					r[16] = r.m_cpsr.val;
 			}
 			regList <<= 1;
 		}
@@ -222,7 +222,7 @@ void singleDataSwap(int opCode){
 
 void branchAndExhange(int opCode){
 	r[TRegisters::EProgramCounter] = r[opCode & 15];
-	cpsr.thumb = (r[TRegisters::EProgramCounter] & 1);
+	r.m_cpsr.thumb = (r[TRegisters::EProgramCounter] & 1);
 	r[TRegisters::EProgramCounter] = (r[TRegisters::EProgramCounter] & ~1);
 	if (debug)
 		std::cout << "bx " << r[TRegisters::EProgramCounter] << " ";
@@ -233,9 +233,9 @@ void lslCond(int &saveTo, int from, int immidiate) {
 	saveTo = tmp << immidiate;
 
 	if (immidiate > 32)
-		cpsr.carry = 0;
+		r.m_cpsr.carry = 0;
 	else if (immidiate > 0)
-		cpsr.carry = ((unsigned)tmp >> (32 - immidiate) & 1);
+		r.m_cpsr.carry = ((unsigned)tmp >> (32 - immidiate) & 1);
 	negative(saveTo);
 	zero(saveTo);
 }
@@ -245,7 +245,7 @@ void lsrCond(int &saveTo, int from, int immidiate) {
 	saveTo = tmp >> immidiate;
 
 	if (immidiate > 0)
-		cpsr.carry = (tmp >> (immidiate - 1) & 1);
+		r.m_cpsr.carry = (tmp >> (immidiate - 1) & 1);
 	negative(saveTo);
 	zero(saveTo);
 }
@@ -255,7 +255,7 @@ void asrCond(int &saveTo, int from, int immidiate) {
 	saveTo = tmp >> immidiate;
 
 	if (immidiate != 0)
-		cpsr.carry = (tmp >> (immidiate - 1) & 1);
+		r.m_cpsr.carry = (tmp >> (immidiate - 1) & 1);
 	zero(saveTo);
 	negative(saveTo);
 }
@@ -266,7 +266,7 @@ void rorCond(int &saveTo, int from, int immidiate){
 	}
 	else{
 		if (immidiate > 0)
-			cpsr.carry = (from >> (immidiate - 1) & 1);
+			r.m_cpsr.carry = (from >> (immidiate - 1) & 1);
 		saveTo = ((unsigned)from >> immidiate) | ((unsigned)from << (32 - immidiate));
 		negative(saveTo);
 		zero(saveTo);
@@ -305,8 +305,8 @@ uint32_t RORnoCond(uint32_t immediate, uint32_t by){
 }
 
 void rrx(int& saveTo, uint32_t from){
-	saveTo = (cpsr.carry << 31) | (from >> 1);
-	cpsr.carry = from & 1;
+	saveTo = (r.m_cpsr.carry << 31) | (from >> 1);
+	r.m_cpsr.carry = from & 1;
 	zero(saveTo);
 	negative(saveTo);
 }
@@ -317,7 +317,7 @@ std::string ARMshifts_s[4] = { "lsl", "lsr", "asr", "ror" };
 
 void updateMode(){
 	//std::cout << "switched mode to " << mode << std::endl;
-	switch (cpsr.mode){
+	switch (r.m_cpsr.mode){
 	case USR:
 		r.updateMode(CpuModes_t::EUSR);
 		break;
@@ -337,13 +337,13 @@ void updateMode(){
 		r.updateMode(CpuModes_t::EUNDEF);
 		break;
 	case SYS:
-		r.updateMode(CpuModes_t::EUSR);
+		r.updateMode(CpuModes_t::ESYS);
 		break;
 	}
 }
 
 void msr(int& saveTo, int operand1, int operand2){
-	cpsr.val = operand2;
+	r.m_cpsr.val = operand2;
 	updateMode();
 }
 
@@ -354,7 +354,7 @@ void msr2(int& saveTo, int operand1, int operand2){
 
 void MSR(uint32_t opCode){
 	bool SPSR = (opCode >> 22) & 1;
-	union CPSR tmp_cpsr;
+	CPSR_t tmp_cpsr;
 	uint8_t rotate = (opCode >> 8) & 0xF;
 	uint32_t imm = opCode & 0xFF;
 	uint32_t shiftedImm = RORnoCond(imm, rotate);
@@ -364,10 +364,10 @@ void MSR(uint32_t opCode){
 	if (SPSR)
 		r[16] = shiftedImm;
 	else {
-		cpsr.zero = tmp_cpsr.zero;
-		cpsr.overflow = tmp_cpsr.overflow;
-		cpsr.carry = tmp_cpsr.carry;
-		cpsr.negative = tmp_cpsr.negative;
+		r.m_cpsr.zero = tmp_cpsr.zero;
+		r.m_cpsr.overflow = tmp_cpsr.overflow;
+		r.m_cpsr.carry = tmp_cpsr.carry;
+		r.m_cpsr.negative = tmp_cpsr.negative;
 	}
 
 	if (debug)
@@ -376,7 +376,7 @@ void MSR(uint32_t opCode){
 
 
 void mrs(int& saveTo, int operand1, int operand2){
-	saveTo = cpsr.val;
+	saveTo = r.m_cpsr.val;
 }
 
 void mrs2(int& saveTo, int operand1, int operand2){
@@ -399,14 +399,14 @@ void immediateRotate(int opCode){
 		int rm = opCode & 0xF;
 
 		if (sprs){
-			int tmp = cpsr.val & 0xFFFFFFF;
+			int tmp = r.m_cpsr.val & 0xFFFFFFF;
 			tmp |= r[rm] & 0xF0000000;
 			r[16] = tmp;
 		}
 		else{
-			int tmp = cpsr.val & 0xFFFFFFF;
+			int tmp = r.m_cpsr.val & 0xFFFFFFF;
 			tmp |= r[rm] & 0xF0000000;
-			cpsr.val = tmp;
+			r.m_cpsr.val = tmp;
 		}
 		codeExecuted = true;
 	}
@@ -444,7 +444,7 @@ void immediateRotate(int opCode){
 		dataOperations[operationID]((int&)r[rd], operand1, tmpRegister);
 
 		if (rd == 15 && (opCode >> 20) & 1){
-			cpsr.val = r[16];
+			r.m_cpsr.val = r[16];
 			updateMode();
 		}
 
@@ -480,7 +480,7 @@ void registerRotate(int opCode){
 	dataOperations[operationID]((int&)r[rd], r[rn], tmpResult);
 
 	if (rd == TRegisters::EProgramCounter && (opCode >> 20) & 1){
-		cpsr.val = r[16];
+		r.m_cpsr.val = r[16];
 		updateMode();
 	}
 
@@ -517,7 +517,7 @@ void dataProcessingImmediate(int opCode){
 	dataOperations[operationID]((int&)r[rd], operand1, shiftedImm);
 
 	if (rd == 15 && conditions){
-		cpsr.val = r[16];
+		r.m_cpsr.val = r[16];
 		updateMode();
 	}
 

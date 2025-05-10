@@ -2,35 +2,35 @@
 #include "GBAcpu.h"
 
 int BEQ(){
-	return cpsr.zero;
+	return r.m_cpsr.zero;
 }
 
 int BNE(){
-	return !cpsr.zero;
+	return !r.m_cpsr.zero;
 }
 
 int BCS(){
-	return cpsr.carry;
+	return r.m_cpsr.carry;
 }
 
 int BCC(){
-	return !cpsr.carry;
+	return !r.m_cpsr.carry;
 }
 
-int BMI(){
-	return cpsr.negative;
+int BMI() {
+	return r.m_cpsr.negative;
 }
 
-int BPL(){
-	return !cpsr.negative;
+int BPL() {
+	return !r.m_cpsr.negative;
 }
 
-int BVS(){
-	return cpsr.overflow;
+int BVS() {
+	return r.m_cpsr.overflow;
 }
 
-int BVC(){
-	return !cpsr.overflow;
+int BVC() {
+	return !r.m_cpsr.overflow;
 }
 
 int BHI(){

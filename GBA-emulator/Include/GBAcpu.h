@@ -22,21 +22,6 @@ enum CpuModes{
 	SYS = 0x1F
 };
 
-extern union CPSR {
-	struct {
-		uint32_t mode : 5;
-		uint32_t thumb : 1;
-		uint32_t FIQDisable : 1;
-		uint32_t IRQDisable : 1;
-		uint32_t unused : 20;
-		uint32_t overflow : 1;
-		uint32_t carry : 1;
-		uint32_t zero : 1;
-		uint32_t negative : 1;
-	};
-	uint32_t val;
-}cpsr;
-
 extern __int64 cycles;
 extern __int8 N_cycles;
 extern __int8 S_cycles;

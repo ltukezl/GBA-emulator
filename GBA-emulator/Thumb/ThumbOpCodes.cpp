@@ -18,7 +18,7 @@ void mul(int &saveTo, int immidiate, int immidiate2){
 
 void bx(int& saveTo, int immidiate, int immidiate2){
 	r[TRegisters::EProgramCounter] = immidiate2 & ~1;
-	cpsr.thumb = immidiate2 & 1;
+	r.m_cpsr.thumb = immidiate2 & 1;
 }
 
 void(*shifts[3])(int&, int, int) = { lslCond, lsrCond, asrCond };

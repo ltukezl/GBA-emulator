@@ -2,32 +2,32 @@
 
 void negative(int result)
 {
-	cpsr.negative = result < 0;
+	r.m_cpsr.negative = result < 0;
 }
 
 void zero(int result)
 {
-	cpsr.zero = result == 0;
+	r.m_cpsr.zero = result == 0;
 }
 
 void addCarry(int operand1, int operand2, int result)
 {
-	cpsr.carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31 & 1;
+	r.m_cpsr.carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31 & 1;
 }
 
 void addOverflow(int operand1, int operand2, int result)
 {
-	cpsr.overflow = ((operand1 & operand2 & ~result) | (~operand1 & ~operand2 & result)) >> 31 & 1;
+	r.m_cpsr.overflow = ((operand1 & operand2 & ~result) | (~operand1 & ~operand2 & result)) >> 31 & 1;
 }
 
 void subCarry(int operand1, int operand2, int result)
 {
-	cpsr.carry = ((operand1 & ~operand2) | (operand1 & ~result) | (~operand2 & ~result)) >> 31 & 1;
+	r.m_cpsr.carry = ((operand1 & ~operand2) | (operand1 & ~result) | (~operand2 & ~result)) >> 31 & 1;
 }
 
 void subOverflow(int operand1, int operand2, int result)
 {
-	cpsr.overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
+	r.m_cpsr.overflow = ((~operand1 & operand2 & result) | (operand1 & ~operand2 & ~result)) >> 31 & 1;
 }
 
 void Sub(int& saveTo, int operand1, int operand2){
@@ -67,11 +67,11 @@ void Rsbs(int& saveTo, int operand1, int operand2){
 }
 
 void Adc(int& saveTo, int operand1, int operand2){
-	saveTo = operand1 + operand2 + cpsr.carry;
+	saveTo = operand1 + operand2 + r.m_cpsr.carry;
 }
 
 void Adcs(int& saveTo, int operand1, int operand2){
-	saveTo = operand1 + operand2 + cpsr.carry;
+	saveTo = operand1 + operand2 + r.m_cpsr.carry;
 	zero(saveTo);
 	negative(saveTo);
 	addCarry(operand2, operand1, saveTo);
@@ -79,11 +79,11 @@ void Adcs(int& saveTo, int operand1, int operand2){
 }
 
 void Sbc(int& saveTo, int operand1, int operand2){
-	saveTo = operand1 - operand2 - !cpsr.carry;
+	saveTo = operand1 - operand2 - !r.m_cpsr.carry;
 }
 
 void Sbcs(int& saveTo, int operand1, int operand2){
-	saveTo = operand1 - operand2 - !cpsr.carry;
+	saveTo = operand1 - operand2 - !r.m_cpsr.carry;
 	zero(saveTo);
 	negative(saveTo);
 	subCarry(operand1, operand2, saveTo);
@@ -91,11 +91,11 @@ void Sbcs(int& saveTo, int operand1, int operand2){
 }
 
 void Rsc(int& saveTo, int operand1, int operand2){
-	saveTo = operand2 - operand1 - !cpsr.carry;
+	saveTo = operand2 - operand1 - !r.m_cpsr.carry;
 }
 
 void Rscs(int& saveTo, int operand1, int operand2){
-	saveTo = operand2 - operand1 - !cpsr.carry;
+	saveTo = operand2 - operand1 - !r.m_cpsr.carry;
 	zero(saveTo);
 	negative(saveTo);
 	subCarry(operand2, operand1, saveTo);

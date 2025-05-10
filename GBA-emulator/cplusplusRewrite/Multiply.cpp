@@ -31,8 +31,6 @@ void MultiplyLong::execute(Registers& r, const uint32_t opcode)
 	{
 		r.m_cpsr.zero = result ? 0 : 1;
 		r.m_cpsr.negative = ((result >> 63) & 1);
-		cpsr.zero = result ? 0 : 1;
-		cpsr.negative = ((result >> 63) & 1);
 	}
 }
 

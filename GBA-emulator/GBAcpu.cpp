@@ -35,7 +35,6 @@ bool vBlankHappened = false;
 
 Registers r;
 
-union CPSR cpsr;
 bool step = false;
 //1  0  0  0
 //N  Z  C  V  = sign,zero,carry,overflow
@@ -83,11 +82,11 @@ int main(int argc, char *args[]){
 
 
 #if BIOS_START
-	cpsr.FIQDisable = 1;
-	cpsr.IRQDisable = 1;
-	cpsr.mode = SUPER;
+	r.m_cpsr.FIQDisable = 1;
+	r.m_cpsr.IRQDisable = 1;
+	r.m_cpsr.mode = SUPER;
 #else
-	cpsr.val = 0x1f;	//current program status register
+	r.m_cpsr.val = 0x1f;	//current program status register
 #endif
 
 	rawWrite16(IoRAM, 0x130, 0xFFFF); // input register, 0 = pressed down, 1 = released
@@ -129,7 +128,7 @@ int main(int argc, char *args[]){
 #else
 	r[TRegisters::EProgramCounter] = 0x0800'0000;
 #endif
-
+	r.updateMode(CpuModes_t::ESYS);
 
 #if BIOS_START
 
@@ -171,14 +170,14 @@ int main(int argc, char *args[]){
 			//debug = true;
 		}
 		//updateInstructionCycleTimings(*r[PC]);
-		uint32_t opCode = cpsr.thumb ? loadFromAddress16(r[TRegisters::EProgramCounter], true) : loadFromAddress32(r[TRegisters::EProgramCounter], true);
+		uint32_t opCode = r.m_cpsr.thumb ? loadFromAddress16(r[TRegisters::EProgramCounter], true) : loadFromAddress32(r[TRegisters::EProgramCounter], true);
 
 		if (debug){
-			cout << hex << r[15] << " opCode: " << (cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
-			cout << "r0: " << r[0] << " r1: " << r[1] << " r2: " << r[2] << " r3: " << r[3] << " r4: " << r[4] << " r5: " << r[5] << " r6: " << r[6] << " r7: " << r[7] << " r8: " << r[8] << " r9: " << r[9] << " r10: " << r[10] << " FP (r11): " << r[11] << " IP (r12): " << r[12] << " SP: " << r[13] << " LR: " << r[14] << " CPRS: " << cpsr.val << " SPRS: " << r[16]<< " ";
+			cout << hex << r[15] << " opCode: " << (r.m_cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
+			cout << "r0: " << r[0] << " r1: " << r[1] << " r2: " << r[2] << " r3: " << r[3] << " r4: " << r[4] << " r5: " << r[5] << " r6: " << r[6] << " r7: " << r[7] << " r8: " << r[8] << " r9: " << r[9] << " r10: " << r[10] << " FP (r11): " << r[11] << " IP (r12): " << r[12] << " SP: " << r[13] << " LR: " << r[14] << " CPRS: " << r.m_cpsr.val << " SPRS: " << r[16]<< " ";
 		}
 
-		cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
+		r.m_cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 
 		if (debug){
 			cout << endl;
@@ -186,10 +185,6 @@ int main(int argc, char *args[]){
 
 		cycles = 1;
 
-		if (debug || (refreshRate > 100000)){
-
-			refreshRate = 0;
-		}
 
 		refreshRate += cycles;
 		vCounterDrawCycles += cycles;
