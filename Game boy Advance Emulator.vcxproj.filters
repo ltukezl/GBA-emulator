@@ -105,6 +105,12 @@
     <ClCompile Include="GBA-emulator\Display\MemoryViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GBA-emulator\Display\VideoCycleCounter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GBA-emulator\cplusplusRewrite\Multiply.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBA-emulator\Include\Constants.h">
@@ -243,6 +249,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\VRAM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\TilesetMemoryObserver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\cplusplusRewrite\Multiply.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

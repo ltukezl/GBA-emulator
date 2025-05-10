@@ -140,10 +140,10 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE *bios;
-	fopen_s(&file, "GBA-emulator/TestBinaries/program3.bin", "rb");
+	fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
-	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/brin_demo.gba", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/irq_demo.gba", "rb");
 	fopen_s(&bios, "GBA-emulator/GBA.BIOS", "rb");
 	if (fread(GamePak, 0x2000000, 1, file) != 0)
 		return 1;
@@ -159,14 +159,8 @@ int main(int argc, char *args[]){
 	while (true){
 		//at startup
 		if (debug || (refreshRate > 100000)){
-			debugView->handleEvents();
-#if MEMORY_VIEWER
-			memoryViewer.handleEvents();
-#endif
+			
 
-#if PALETTE_VIEWER
-			paletteViewer.handleEvents();
-#endif
 		}
 		if (debug && !step){
 			continue;
@@ -193,22 +187,16 @@ int main(int argc, char *args[]){
 		cycles = 1;
 
 		if (debug || (refreshRate > 100000)){
-			debugView->updatePalettes();
-#if MEMORY_VIEWER
-			memoryViewer.renderMemory();
-#endif
-#if PALETTE_VIEWER
-			paletteViewer.renderPalettes();
-#endif
+
 			refreshRate = 0;
 		}
 
 		refreshRate += cycles;
 		vCounterDrawCycles += cycles;
 
-		if (vCounterDrawCycles >= 240){
+		if (vCounterDrawCycles >= 1232){
 			memoryLayout[4][6]++;
-			vCounterDrawCycles -= 240;
+			vCounterDrawCycles -= 1232;
 
 			if (LCDStatus->LYC == memoryLayout[4][6] && LCDStatus->VcounterIRQEn && InterruptEnableRegister->vCounter){
 				InterruptFlagRegister->vCounter = 1;
@@ -238,6 +226,16 @@ int main(int argc, char *args[]){
 			if (InterruptEnableRegister->vBlank && LCDStatus->vIRQEn){
 				InterruptFlagRegister->vBlank = 1;
 			}
+			debugView->handleEvents();
+			debugView->updatePalettes();
+#if MEMORY_VIEWER
+			memoryViewer.handleEvents();
+			memoryViewer.renderMemory();
+#endif
+#if PALETTE_VIEWER
+			paletteViewer.handleEvents();
+			paletteViewer.renderPalettes();
+#endif
 		}
 		else if (vBlankCounter > 197120)
 			LCDStatus->vblankFlag = 1;

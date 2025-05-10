@@ -19,7 +19,7 @@ void TextMode::draw(uint8_t regOffset) {
 	for (size_t i = 0; i < 32; i++) {
 		for (size_t k = 0; k < 32; k++) {
 			BgTile* tileCtrl = (BgTile*)&vram[startAddr];
-			auto& t = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
+			auto t = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit);
 			backgroundTiles[i][k] = t.flipVertical(tileCtrl->VerticalFlip).flipHorizontal(tileCtrl->horizontalFlip);
 			startAddr += 2;
 		}

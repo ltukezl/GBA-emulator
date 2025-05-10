@@ -26,7 +26,6 @@ extern std::array<unsigned char*, 16> memoryLayout;
 
 void DmaIncreasing(uint32_t dmaNumber, MemoryAddress destination, MemoryAddress source, uint32_t size);
 
-void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val);
 void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val);
 void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val);
 

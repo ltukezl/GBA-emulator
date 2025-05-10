@@ -77,16 +77,16 @@ void calculateCycles(uint32_t address, bool isSequental){
 	previousAddress = address;
 }
 
-void rawWrite8(uint8_t* arr, uint32_t addr, uint8_t val){
-	arr[addr] = val;
-}
-
 void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val){
-	*(uint16_t*)&(uint8_t)arr[addr] = val;
+	uint8_t* place = &arr[addr];
+	auto asU16 = reinterpret_cast<uint16_t*>(place);
+	*asU16 = val;
 }
 
 void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val){
-	*(uint32_t*)&(uint8_t)arr[addr] = val;
+	uint8_t* place = &arr[addr];
+	auto asU32 = reinterpret_cast<uint32_t*>(place);
+	*asU32 = val;
 }
 
 uint8_t rawLoad8(uint8_t* arr, uint32_t addr){
@@ -94,15 +94,19 @@ uint8_t rawLoad8(uint8_t* arr, uint32_t addr){
 }
 
 uint16_t rawLoad16(uint8_t* arr, uint32_t addr){
-	return *(uint16_t*)&(uint8_t)arr[addr];
+	uint8_t* place = &arr[addr];
+	auto asU16 = reinterpret_cast<uint16_t*>(place);
+	return *asU16;
 }
 
 uint32_t rawLoad32(uint8_t* arr, uint32_t addr){
-	return *(uint32_t*)&(uint8_t)arr[addr];
+	uint8_t* place = &arr[addr];
+	auto asU32 = reinterpret_cast<uint32_t*>(place);
+	return *asU32;
 }
 
 bool specialWrites(uint32_t mask, uint32_t addr, uint32_t val){
-	if (mask == 4 && addr == 0x202) {//iinterrupt flag clear
+	if (mask == 4 && addr == 0x202) {//interrupt flag clear
 		uint16_t tmp = rawLoad16(IoRAM, 0x202);
 		tmp &= ~val;
 		rawWrite16(IoRAM, 0x202, tmp);
@@ -312,7 +316,9 @@ void writeToAddress16(uint32_t address, uint16_t value){
 	if (specialWrites(mask, address, value))
 		return;
 
-	*(uint16_t*)&(uint8_t)memoryLayout[mask][address - misalignment] = value;
+	uint8_t* place = &memoryLayout[mask][address - misalignment];
+	auto asU16 = reinterpret_cast<uint16_t*>(place);
+	*asU16 = value;
 }
 
 void writeToAddress32(uint32_t address, uint32_t value){
@@ -381,7 +387,9 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	if (specialWrites(mask, address, value))
 		return;
 
-	*(uint32_t*)&(uint8_t)memoryLayout[mask][address - misalignment] = value;
+	uint8_t* place = &(memoryLayout[mask][address - misalignment]);
+	auto asU32 = reinterpret_cast<uint32_t*>(place);
+	*asU32 = value;
 }
 
 uint8_t loadFromAddress(uint32_t address, bool free){

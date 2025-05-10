@@ -8,6 +8,7 @@
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
+#include "cplusplusRewrite/multiply.hpp"
 #include <cstdint>
 
 void ARMBranch(int opCode){
@@ -917,10 +918,10 @@ void ARMExecute(int opCode){
 				}
 			else if ((((opCode >> 23) & 0x1F) == 2) && (((opCode >> 4) & 0xFF) == 9))
 				singleDataSwap(opCode);
-			else if (((opCode >> 23) & 0x1F) == 0 && (((opCode >> 4) & 0xF) == 9))
+			else if (((opCode >> 22) & 0x3F) == 0 && (((opCode >> 4) & 0xF) == 9))
 				multiply(opCode);
-			else if (((opCode >> 23) & 0x1F) == 1 && (((opCode >> 4) & 0xF) == 9))
-				multiplyLong(opCode);
+			else if (MultiplyLong::isThisOpcode(opCode))
+				MultiplyLong::execute(r, opCode);
 			else
 				halfDataTransfer(opCode);
 			break;
