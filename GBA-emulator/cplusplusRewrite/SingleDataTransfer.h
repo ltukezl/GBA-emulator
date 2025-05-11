@@ -2,10 +2,13 @@
 #include <bit>
 #include <cstdint>
 #include <cassert>
+#include <format>
+#include <iostream>
 
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Memory/memoryOps.h"
 
+constexpr bool DebugPrints = true;
 
 namespace SingleDataTransfer {
 
@@ -35,8 +38,8 @@ namespace SingleDataTransfer {
 
 	enum class prePost_t : uint32_t
 	{
-		EPre,
 		EPost,
+		EPre,
 	};
 
 	enum class immediate_t : uint32_t
@@ -80,6 +83,12 @@ namespace SingleDataTransfer {
 		return std::bit_cast<SingleDataTransfer_t>(opcode);
 	}
 
+	static inline void destinationRegisterBug(const SingleDataTransfer_t& op, Registers& regs)
+	{
+		if (op.destinationRegister == 15)
+			regs[op.destinationRegister] -= 8;
+	}
+
 	class SingleDataTransferIPrDWNS {
 	public:
 		
@@ -92,16 +101,93 @@ namespace SingleDataTransfer {
 
 		static void execute(Registers& regs, const uint32_t opcode) {
 			auto op = fromOpcode(opcode);
-			uint32_t offset = op.offset;
-			offset += (op.baseRegister == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
-			uint32_t calculated = regs[op.baseRegister];
-			if (op.destinationRegister == 15)
-				regs[op.destinationRegister] += 8;
+			uint32_t calculated = regs[op.baseRegister] - op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
 			writeToAddress32(calculated, regs[op.destinationRegister]);
-			calculated -= offset;
-			if (op.destinationRegister == 15)
-				regs[op.destinationRegister] -= 8;
+			destinationRegisterBug(op, regs);
+
+			if constexpr (DebugPrints)
+			{
+
+			}
+		}
+	};
+
+	class SingleDataTransferIPrDBNS {
+	public:
+
+		static constexpr bool isThisOpcode(const uint32_t opcode)
+		{
+			auto op = fromOpcode(opcode);
+			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.writeBack == writeBack_t::ENoWriteback) && (op.byteTransfer == byteWord_t::EByte) &&
+				(op.addOffset == upDown_t::ESubstract) && (op.preIndexing == prePost_t::EPre) && (op.immediateOffset == immediate_t::EImmediate);
+		}
+
+		static void execute(Registers& regs, const uint32_t opcode) {
+			auto op = fromOpcode(opcode);
+			uint32_t calculated = regs[op.baseRegister] - op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
+			writeToAddress(calculated, regs[op.destinationRegister]);
+			destinationRegisterBug(op, regs);
+		}
+	};
+
+	class SingleDataTransferIPrUWNS {
+	public:
+
+		static constexpr bool isThisOpcode(const uint32_t opcode)
+		{
+			auto op = fromOpcode(opcode);
+			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.writeBack == writeBack_t::ENoWriteback) && (op.byteTransfer == byteWord_t::EWord) &&
+				(op.addOffset == upDown_t::EAdd) && (op.preIndexing == prePost_t::EPre) && (op.immediateOffset == immediate_t::EImmediate);
+		}
+
+		static void execute(Registers& regs, const uint32_t opcode) {
+			auto op = fromOpcode(opcode);
+			uint32_t calculated = regs[op.baseRegister] + op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
+			writeToAddress32(calculated, regs[op.destinationRegister]);
+			destinationRegisterBug(op, regs);
+		}
+	};
+
+	class SingleDataTransferIPrUBNS {
+	public:
+
+		static constexpr bool isThisOpcode(const uint32_t opcode)
+		{
+			auto op = fromOpcode(opcode);
+			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.writeBack == writeBack_t::ENoWriteback) && (op.byteTransfer == byteWord_t::EByte) &&
+				(op.addOffset == upDown_t::EAdd) && (op.preIndexing == prePost_t::EPre) && (op.immediateOffset == immediate_t::EImmediate);
+		}
+
+		static void execute(Registers& regs, const uint32_t opcode) {
+			auto op = fromOpcode(opcode);
+			uint32_t calculated = regs[op.baseRegister] + op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
+			writeToAddress(calculated, regs[op.destinationRegister]);
+			destinationRegisterBug(op, regs);
+		}
+	};
+
+	class SingleDataTransferIPoUWNS {
+	public:
+
+		static constexpr bool isThisOpcode(const uint32_t opcode)
+		{
+			auto op = fromOpcode(opcode);
+			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.byteTransfer == byteWord_t::EWord) &&
+				(op.addOffset == upDown_t::EAdd) && (op.preIndexing == prePost_t::EPost) && (op.immediateOffset == immediate_t::EImmediate);
+		}
+
+		static void execute(Registers& regs, const uint32_t opcode) {
+			auto op = fromOpcode(opcode);
+			uint32_t calculated = regs[op.baseRegister];
+			writeToAddress32(calculated, regs[op.destinationRegister]);
+			calculated += op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
 			regs[op.baseRegister] = calculated;
+			destinationRegisterBug(op, regs);
 		}
 	};
 
@@ -111,26 +197,60 @@ namespace SingleDataTransfer {
 		static constexpr bool isThisOpcode(const uint32_t opcode)
 		{
 			auto op = fromOpcode(opcode);
-			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.writeBack == writeBack_t::ENoWriteback) && (op.byteTransfer == byteWord_t::EByte) &&
+			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.byteTransfer == byteWord_t::EByte) &&
 				(op.addOffset == upDown_t::EAdd) && (op.preIndexing == prePost_t::EPost) && (op.immediateOffset == immediate_t::EImmediate);
 		}
 
 		static void execute(Registers& regs, const uint32_t opcode) {
 			auto op = fromOpcode(opcode);
-			assert(op.destinationRegister != 15);
-			int calculated = 0;
-			int offset = op.offset;
-			offset += (op.baseRegister == 15) ? 4 : 0;
-			int oldReg = regs[op.baseRegister];
-			regs[op.baseRegister] += offset;
-			calculated = regs[op.baseRegister];
-			regs[op.baseRegister] = oldReg;
-			if (op.destinationRegister == op.baseRegister)
-				regs[op.destinationRegister] -= offset;
+			uint32_t calculated = regs[op.baseRegister];
 			writeToAddress(calculated, regs[op.destinationRegister]);
-			if (op.destinationRegister == op.baseRegister)
-				regs[op.destinationRegister] += offset;
+			calculated += op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
+			regs[op.baseRegister] = calculated;
+			destinationRegisterBug(op, regs);
 		}
 	};
 
+	class SingleDataTransferIPoDWNS {
+	public:
+
+		static constexpr bool isThisOpcode(const uint32_t opcode)
+		{
+			auto op = fromOpcode(opcode);
+			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.byteTransfer == byteWord_t::EWord) &&
+				(op.addOffset == upDown_t::ESubstract) && (op.preIndexing == prePost_t::EPost) && (op.immediateOffset == immediate_t::EImmediate);
+		}
+
+		static void execute(Registers& regs, const uint32_t opcode) {
+			auto op = fromOpcode(opcode);
+			uint32_t calculated = regs[op.baseRegister];
+			writeToAddress32(calculated, regs[op.destinationRegister]);
+			calculated -= op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
+			regs[op.baseRegister] = calculated;
+			destinationRegisterBug(op, regs);
+		}
+	};
+
+	class SingleDataTransferIPoDBNS {
+	public:
+
+		static constexpr bool isThisOpcode(const uint32_t opcode)
+		{
+			auto op = fromOpcode(opcode);
+			return (op.unused == 1) && (op.loadBit == loadStore_t::EStore) && (op.byteTransfer == byteWord_t::EByte) &&
+				(op.addOffset == upDown_t::ESubstract) && (op.preIndexing == prePost_t::EPost) && (op.immediateOffset == immediate_t::EImmediate);
+		}
+
+		static void execute(Registers& regs, const uint32_t opcode) {
+			auto op = fromOpcode(opcode);
+			uint32_t calculated = regs[op.baseRegister];
+			writeToAddress(calculated, regs[op.destinationRegister]);
+			calculated -= op.offset;
+			calculated += (op.baseRegister == 15) ? 4 : 0;
+			regs[op.baseRegister] = calculated;
+			destinationRegisterBug(op, regs);
+		}
+	};
 }

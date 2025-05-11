@@ -144,7 +144,6 @@
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Multiply.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Operation.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Shifts.cpp" />
-    <ClCompile Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.cpp" />
     <ClCompile Include="GBA-emulator\Display\Display.cpp" />
     <ClCompile Include="GBA-emulator\Display\MemoryViewer.cpp" />
     <ClCompile Include="GBA-emulator\Display\Sprites\SpriteGenerator.cpp" />

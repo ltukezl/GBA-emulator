@@ -671,6 +671,8 @@ void multiplyLong(int opCode){
 
 void singleDataTrasnferImmediatePre(int opCode){
 	int calculated = 0;
+	int wrong = (opCode >> 24) & 1;
+	assert(wrong == 1);
 	int upDownBit = (opCode >> 23) & 1;
 	int byteFlag = (opCode >> 22) & 1;
 	int writeBack = (opCode >> 21) & 1;
@@ -890,18 +892,49 @@ void ARMExecute(int opCode){
 			singleDataTrasnferRegisterPost(opCode);
 			break;
 		case 5:// single data transfer, immediate pre offset
-			if (SingleDataTransfer::SingleDataTransferIPoUBNS::isThisOpcode(opCode))
+			if (SingleDataTransfer::SingleDataTransferIPrDWNS::isThisOpcode(opCode))
 			{
-				SingleDataTransfer::SingleDataTransferIPoUBNS::execute(r, opCode);
-				//singleDataTrasnferImmediatePre(opCode);
+				SingleDataTransfer::SingleDataTransferIPrDWNS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrDBNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrDBNS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUBNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUBNS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUWNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUWNS::execute(r, opCode);
 			}
 			else
 			{
 				singleDataTrasnferImmediatePre(opCode);
 			}
+			
 			break;
 		case 4: // single data transfer, immediate post offset
-			singleDataTrasnferImmediatePost(opCode);
+			if (SingleDataTransfer::SingleDataTransferIPoUWNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoUWNS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPoUBNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoUBNS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPoDWNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoDWNS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPoDBNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoDBNS::execute(r, opCode);
+			}
+			else
+			{
+				singleDataTrasnferImmediatePost(opCode);
+			}
 			break;
 		case 3: case 2: //data processing, immediate check msr?
 			if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0)) {

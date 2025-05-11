@@ -72,9 +72,6 @@
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Operation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GBA-emulator\Display\Palette\RgbaPalette.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
