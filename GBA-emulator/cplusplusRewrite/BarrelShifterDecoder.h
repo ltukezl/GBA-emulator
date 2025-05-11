@@ -13,5 +13,4 @@ public:
 	BarrelShifterDecoder(Registers& registers) : m_registers(registers) {};
 
 	RotatorUnits* decode(DataProcessingOpcode& opCode);
-	RotatorUnits* decode(SingleDataTransfer& opCode);
 };

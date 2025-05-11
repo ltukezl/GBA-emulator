@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <format>
 #include "Memory/MemoryOps.h"
 #include "Thumb/ThumbOpCodes.h"
 #include "Arm/ARMOpCodes.h"
@@ -139,7 +140,9 @@ int main(int argc, char *args[]){
 
 	FILE *file;
 	FILE *bios;
-	fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
+	fopen_s(&file, "GBA-emulator/TestBinaries/ARM_DataProcessing.gba", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/arm.gba", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/program2.bin", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/irq_demo.gba", "rb");
@@ -154,17 +157,13 @@ int main(int argc, char *args[]){
 	uint32_t prevAddr = 0;
 	cycles = 0;
 	debug = false;
+	step = true;
 
 	while (true){
-		//at startup
-		if (debug || (refreshRate > 100000)){
-			
-
-		}
 		if (debug && !step){
 			continue;
 		}
-		step = false;
+		step = true;
 
 		if (r[TRegisters::EProgramCounter] == 0x8000954){ //0x8006668, 0x801d6a2
 			//debug = true;

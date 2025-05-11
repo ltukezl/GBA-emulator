@@ -27,7 +27,7 @@ public:
 	}
 
 	static constexpr uint32_t fromFields(const uint32_t operand1, const uint32_t operand2, const uint32_t operand3, const uint32_t destination, const bool setCond, const bool accumulate) {
-		MultiplyAccumulate::MulAccOpcode opcode{};
+		MulAccOpcode opcode{};
 		opcode.operand1 = operand1;
 		opcode.operand2 = operand2;
 		opcode.operand3 = operand3;

@@ -9,6 +9,7 @@
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
 #include "cplusplusRewrite/multiply.hpp"
+#include "cplusplusRewrite/SingleDataTransfer.h"
 #include <cstdint>
 
 void ARMBranch(int opCode){
@@ -844,6 +845,7 @@ void ARMExecute(int opCode){
 		case 11: //branch with link 
 			r[LR] = r[TRegisters::EProgramCounter];
 			r[LR] &= ~3; //bits 1-0 should always be cleared, but you never know
+			[[fallthrough]];
 		case 10://branch 
 			ARMBranch(opCode);
 			break;
@@ -888,7 +890,15 @@ void ARMExecute(int opCode){
 			singleDataTrasnferRegisterPost(opCode);
 			break;
 		case 5:// single data transfer, immediate pre offset
-			singleDataTrasnferImmediatePre(opCode);
+			if (SingleDataTransfer::SingleDataTransferIPoUBNS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoUBNS::execute(r, opCode);
+				//singleDataTrasnferImmediatePre(opCode);
+			}
+			else
+			{
+				singleDataTrasnferImmediatePre(opCode);
+			}
 			break;
 		case 4: // single data transfer, immediate post offset
 			singleDataTrasnferImmediatePost(opCode);

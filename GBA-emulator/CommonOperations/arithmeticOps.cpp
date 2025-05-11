@@ -12,7 +12,11 @@ void zero(int result)
 
 void addCarry(int operand1, int operand2, int result)
 {
-	r.m_cpsr.carry = ((operand1 & operand2) | (operand1 & ~result) | (operand2 & ~result)) >> 31 & 1;
+	auto a = static_cast<uint64_t>(static_cast<uint32_t>(operand1));
+	auto b = static_cast<uint64_t>(static_cast<uint32_t>(operand2));
+	auto c = a + b + result;
+
+	r.m_cpsr.carry = (c >> 32) & 1;
 }
 
 void addOverflow(int operand1, int operand2, int result)
@@ -74,7 +78,7 @@ void Adcs(int& saveTo, int operand1, int operand2){
 	saveTo = operand1 + operand2 + r.m_cpsr.carry;
 	zero(saveTo);
 	negative(saveTo);
-	addCarry(operand2, operand1, saveTo);
+	addCarry(operand2, operand1, r.m_cpsr.carry);
 	addOverflow(operand2, operand1, saveTo);
 }
 

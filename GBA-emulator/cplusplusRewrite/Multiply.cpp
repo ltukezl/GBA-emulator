@@ -22,6 +22,12 @@ void MultiplyLong::execute(Registers& r, const uint32_t opcode)
 		result = op1 * op2;
 	}
 
+	if (op.accumulate)
+	{
+		uint64_t current = static_cast<uint64_t>(r[op.destinationHigh]) << 32 | static_cast<uint64_t>(r[op.destinationLow]);
+		result += current;
+	}
+
 	uint32_t hiPart = (result >> 32) & 0xFFFF'FFFF;
 	uint32_t loPart = (result >> 0) & 0xFFFF'FFFF;
 	r[op.destinationLow] = loPart;

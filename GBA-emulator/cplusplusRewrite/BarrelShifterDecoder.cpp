@@ -11,10 +11,3 @@ RotatorUnits* BarrelShifterDecoder::decode(DataProcessingOpcode& opCode){
 	else
 		return new RegisterWithImmediateShifter(m_registers, opCode.m_opCode.immediate);
 }
-
-RotatorUnits* BarrelShifterDecoder::decode(SingleDataTransfer& opCode) {
-	if (opCode.m_opCode.offset & 0x10)
-		return new RegisterWithRegisterShifter(m_registers, opCode.m_opCode.offset);
-	else
-		return new RegisterWithImmediateShifter(m_registers, opCode.m_opCode.offset);
-}

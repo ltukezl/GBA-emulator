@@ -16,7 +16,7 @@ uint32_t SP_svc = 0x03007F00;
 uint32_t SP_irq = 0x03007FA0;
 uint32_t SP_usr = 0x03007F00;
 
-const uint32_t memsizes[16] = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x400000, 0x400000 };
+constexpr std::array<uint32_t,16> memsizes = { 0x4000, 0x4000, 0x40000, 0x8000, 0x400, 0x400, 0x20000, 0x400, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x1000000, 0x400000, 0x400000 };
 
 uint32_t previousAddress = 0;
 extern RgbaPalette PaletteColours;
@@ -429,6 +429,9 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 
 	address &= ~0xFF000000;
 
+	if (mask >= 16)
+		return 0;
+
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
@@ -474,6 +477,9 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	}
 
 	if (mask == 4 && address > memsizes[mask])
+		return 0;
+
+	if (mask >= 16)
 		return 0;
 
 	address = clampAddress(mask, address);
@@ -527,6 +533,8 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	if (mask == 4 && address > memsizes[mask])
 		return 0;
 
+	if (mask >= 16)
+		return 0;
 	address = clampAddress(mask, address);
 
 	uint32_t result = 0;

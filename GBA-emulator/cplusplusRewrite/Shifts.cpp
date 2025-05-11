@@ -25,8 +25,7 @@ void Lsr::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmou
 }
 
 void Lsr::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
-	uint64_t tmp = sourceValue;
-	destinationRegister = tmp >> shiftAmount;
+	destinationRegister = sourceValue >> shiftAmount;
 }
 Lsr::Lsr(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};
 
@@ -39,8 +38,7 @@ void Asr::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmou
 }
 
 void Asr::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
-	int64_t tmp = (signed)sourceValue;
-	destinationRegister = tmp >> shiftAmount;
+	destinationRegister = static_cast<int32_t>(sourceValue) >> shiftAmount;
 }
 Asr::Asr(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};
 
