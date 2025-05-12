@@ -687,10 +687,6 @@ void singleDataTrasnferImmediatePre(int opCode){
 		r[baseReg] += upDownBit ? offset : -offset;
 		calculated = r[baseReg];
 		r[baseReg] = (writeBack) ? r[baseReg] : oldReg;
-		if (destinationReg == 15)
-			r[destinationReg] += 8;
-		if (destinationReg == baseReg)
-			r[destinationReg] -= offset;
 		byteFlag ? writeToAddress(calculated, r[destinationReg]) : writeToAddress32(calculated, r[destinationReg]);
 		if (destinationReg == 15)
 			r[destinationReg] -= 8;
@@ -725,8 +721,6 @@ void singleDataTrasnferImmediatePost(int opCode){
 	cycles += S_cycles + N_cycles + 1;
 	switch (loadStore){
 	case 0:
-		if (destinationReg == 15)
-			r[destinationReg] += 8;
 		byteFlag ? writeToAddress(calculated, r[destinationReg]) : writeToAddress32(calculated, r[destinationReg]);
 		calculated += upDownBit ? offset : -offset;
 		if (destinationReg == 15)
@@ -908,6 +902,22 @@ void ARMExecute(int opCode){
 			{
 				SingleDataTransfer::SingleDataTransferIPrUWNS::execute(r, opCode);
 			}
+			else if (SingleDataTransfer::SingleDataTransferIPrDWWS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrDWWS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrDBWS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrDBWS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUBWS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUBWS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUWWS::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUWWS::execute(r, opCode);
+			}
 			else
 			{
 				singleDataTrasnferImmediatePre(opCode);
@@ -930,6 +940,22 @@ void ARMExecute(int opCode){
 			else if (SingleDataTransfer::SingleDataTransferIPoDBNS::isThisOpcode(opCode))
 			{
 				SingleDataTransfer::SingleDataTransferIPoDBNS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPoUWNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoUWNL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPoUBNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoUBNL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPoDWNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoDWNL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPoDBNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPoDBNL::execute(r, opCode);
 			}
 			else
 			{
