@@ -305,11 +305,14 @@ uint32_t RORnoCond(uint32_t immediate, uint32_t by){
 	return (immediate >> by) | (immediate << (32 - by));
 }
 
-void rrx(int& saveTo, uint32_t from){
+void rrx(int& saveTo, uint32_t from, bool conditions){
 	saveTo = (r.m_cpsr.carry << 31) | (from >> 1);
-	r.m_cpsr.carry = from & 1;
-	zero(saveTo);
-	negative(saveTo);
+	if (conditions)
+	{
+		r.m_cpsr.carry = from & 1;
+		zero(saveTo);
+		negative(saveTo);
+	}
 }
 
 void(*ARMshifts[4])(int&, int, int) = { lslCond, lsrCond, asrCond, rorCond };
@@ -429,7 +432,7 @@ void immediateRotate(int opCode){
 			operand1 += 4;
 
 		if (shiftId == 3 && immediate == 0){
-			rrx(tmpRegister, tmpRegister);
+			rrx(tmpRegister, tmpRegister, conditions);
 		}
 		else{
 			if (immediate == 0 && shiftId != 0)
@@ -484,6 +487,11 @@ void registerRotate(int opCode){
 		r.m_cpsr.val = r[16];
 		updateMode();
 	}
+
+	if (rm == 15)
+		r[rm] -= 8;
+	else if (rn == 15)
+		r[rn] -= 8;
 
 	if (debug)
 		std::cout << dataOperations_s[operationID] << " r" << +rd << ", r" << +rn << ", r" << +rm << " " << ARMshifts_s[shiftId] << " " << +operand << " ";
@@ -756,11 +764,14 @@ void singleDataTrasnferRegisterPre(int opCode){
 
 	offset = (opCode >> 7) & 0x1F;
 	if (shiftId == 3 && offset == 0){
-		rrx(tmpRegister, tmpRegister);
+		rrx(tmpRegister, tmpRegister, false);
 	}
 	else
+	{
+		if (offset == 0 && shiftId != 0)
+			offset = 0x20;
 		ARMshifts[shiftId](tmpRegister, r[rm], offset);
-
+	}
 	int oldReg = r[rn];
 	switch (loadStore){
 	case 0:
@@ -773,8 +784,10 @@ void singleDataTrasnferRegisterPre(int opCode){
 
 	case 1:
 		r[rn] += upDownBit ? tmpRegister : -tmpRegister;
-		r[rd] = byteFlag ? loadFromAddress(r[rn]) : loadFromAddress32(r[rn]);
+		auto ret = byteFlag ? loadFromAddress(r[rn]) : loadFromAddress32(r[rn]);
 		r[rn] = (writeBack) ? r[rn] : oldReg;
+		r[rd] = ret;
+
 		if (debug && byteFlag)
 			std::cout << "ldrb r" << +rd << ", [r" << +rn << " r" << +rm << "] ";
 		else if (debug && !byteFlag)
@@ -825,7 +838,7 @@ void ARMExecute(int opCode){
 	r[TRegisters::EProgramCounter] += 4;
 	cycles += 1;
 	//units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr, Registers());
-
+	
 	if (conditions[condition]()) //condition true
 	{
 		int opCodeType = (opCode >> 24) & 0xF;
@@ -917,6 +930,38 @@ void ARMExecute(int opCode){
 			else if (SingleDataTransfer::SingleDataTransferIPrUWWS::isThisOpcode(opCode))
 			{
 				SingleDataTransfer::SingleDataTransferIPrUWWS::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrDWNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrDWNL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrDBNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrDBNL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUBNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUBNL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUWNL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUWNL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrDWWL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrDWWL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrDBWL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrDBWL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUBWL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUBWL::execute(r, opCode);
+			}
+			else if (SingleDataTransfer::SingleDataTransferIPrUWWL::isThisOpcode(opCode))
+			{
+				SingleDataTransfer::SingleDataTransferIPrUWWL::execute(r, opCode);
 			}
 			else
 			{

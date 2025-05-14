@@ -141,8 +141,8 @@ int main(int argc, char *args[]){
 	FILE *file;
 	FILE *bios;
 	//fopen_s(&file, "GBA-emulator/TestBinaries/FuzzARM.gba", "rb");
-	fopen_s(&file, "GBA-emulator/TestBinaries/arm.gba", "rb");
-	//fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
+	//fopen_s(&file, "GBA-emulator/TestBinaries/arm.gba", "rb");
+	fopen_s(&file, "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
 	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/irq_demo.gba", "rb");
@@ -164,8 +164,9 @@ int main(int argc, char *args[]){
 			continue;
 		}
 		step = true;
+		// mem tests region 0x80011a0
 
-		if (r[TRegisters::EProgramCounter] == 0x8000954){ //0x8006668, 0x801d6a2
+		if (r[TRegisters::EProgramCounter] == 0x8001214){ //0x80011a0, 0x80011e0
 			//debug = true;
 		}
 		//updateInstructionCycleTimings(*r[PC]);
@@ -179,6 +180,7 @@ int main(int argc, char *args[]){
 		r.m_cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
 
 		if (debug){
+			debugView->handleEvents();
 			cout << endl;
 		}
 
