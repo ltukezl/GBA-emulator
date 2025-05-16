@@ -166,7 +166,7 @@ int main(int argc, char *args[]){
 		step = true;
 		// mem tests region 0x80011a0
 
-		if (r[TRegisters::EProgramCounter] == 0x8001214){ //0x80011a0, 0x80011e0
+		if (r[TRegisters::EProgramCounter] == 0x8001560){ //0x80011a0, 0x80011e0
 			//debug = true;
 		}
 		//updateInstructionCycleTimings(*r[PC]);

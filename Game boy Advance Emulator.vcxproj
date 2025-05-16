@@ -165,8 +165,10 @@
     <ClCompile Include="GBA-emulator\Display\Sprites\Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferImmediate.hpp" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\Multiply.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\armopcodes.h" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\arithmeticOps.h" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\conditions.h" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\logicalOps.h" />
@@ -180,7 +182,7 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\MathOps.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\operation.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\Shifts.h" />
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.h" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransfer.hpp" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\allTests.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\dataProcessingTests.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\HwRegisterTests.h" />

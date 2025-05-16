@@ -164,7 +164,7 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\operation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\SingleDataTransfer.h">
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransfer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Display\Rendermodes\RenderMode3.h">
@@ -252,6 +252,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\cplusplusRewrite\Multiply.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferImmediate.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferRegister.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

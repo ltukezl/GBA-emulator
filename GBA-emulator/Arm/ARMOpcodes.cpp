@@ -805,9 +805,20 @@ void singleDataTrasnferRegisterPost(int opCode){
 	int loadStore = (opCode >> 20) & 1;
 	int baseReg = (opCode >> 16) & 15;
 	int destinationReg = (opCode >> 12) & 15;
+	int shiftId = (opCode >> 5) & 3;
 	int shiftAmount = (opCode >> 4) & 0xFF;
-	int offset = r[(opCode & 0xF)] << shiftAmount;
-	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
+	int offset = (opCode >> 7) & 0x1F;
+	int tmpRegister = r[opCode & 0xf];
+	if (shiftId == 3 && offset == 0) {
+		rrx(tmpRegister, tmpRegister, false);
+	}
+	else
+	{
+		if (offset == 0 && shiftId != 0)
+			offset = 0x20;
+		ARMshifts[shiftId](tmpRegister, r[opCode & 0xf], offset);
+	}
+
 
 	int oldReg = r[baseReg];
 
@@ -816,13 +827,14 @@ void singleDataTrasnferRegisterPost(int opCode){
 		if (destinationReg == 15)
 			r[destinationReg] += 8;
 		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
-		r[baseReg] += upDownBit ? offset : -offset;
+		r[baseReg] += upDownBit ? tmpRegister : -tmpRegister;
 		if (destinationReg == 15)
 			r[destinationReg] -= 8;
 		break;
 	case 1:
-		r[destinationReg] = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
-		r[baseReg] += upDownBit ? offset : -offset;
+		const auto ret = byteFlag ? loadFromAddress(r[baseReg]) : loadFromAddress32(r[baseReg]);
+		r[baseReg] += upDownBit ? tmpRegister : -tmpRegister;
+		r[destinationReg] = ret;
 		break;
 	}
 
