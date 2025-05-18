@@ -2,62 +2,35 @@
 #include <cstdint>
 #include "cplusplusRewrite/HwRegisters.h"
 
-class ShiferUnit {
-protected:
-	union CPSR_t& m_cpsr;
-
-	virtual void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) = 0;
-	virtual void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) = 0;
-public:
-	ShiferUnit(union CPSR_t& programStatus) : m_cpsr(programStatus) {}
-	void execute(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount, bool setStatus){
-		shift(destinationRegister, sourceValue, shiftAmount);
-		if (setStatus)
-			calcConditions(destinationRegister, sourceValue, shiftAmount);
+namespace shifts
+{
+	class Lsl {
+	public:
+		static void calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount);
+		static uint32_t shift(const uint32_t sourceValue, const uint8_t shiftAmount);
 	};
-};
 
-class Lsl : public ShiferUnit {
-protected:
-	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override;
-	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
+	class Lsr {
+	public:
+		static void calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount);
+		static uint32_t shift(const uint32_t sourceValue, const uint8_t shiftAmount);
+	};
 
-public:
-	Lsl(union CPSR_t& programStatus);
-};
+	class Asr{
+	public:
+		static void calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount);
+		static uint32_t shift(const uint32_t sourceValue, const uint8_t shiftAmount);
+	};
 
-class Lsr : public ShiferUnit {
-protected:
-	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override;
-	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
+	class Ror {
+	public:
+		static void calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount);
+		static uint32_t shift(const uint32_t sourceValue, const uint8_t shiftAmount);
+	};
 
-public:
-	Lsr(union CPSR_t& programStatus);
-};
-
-class Asr : public ShiferUnit {
-protected:
-	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override;
-	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
-
-public:
-	Asr(union CPSR_t& programStatus);
-};
-
-class Ror : public ShiferUnit {
-protected:
-	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override;
-	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
-
-public:
-	Ror(union CPSR_t& programStatus);
-};
-
-class Rrx : public ShiferUnit {
-protected:
-	void calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) override;
-	void shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) override;
-
-public:
-	Rrx(union CPSR_t& programStatus);
-};
+	class Rrx{
+	public:
+		static void calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount) ;
+		static uint32_t shift(const uint32_t sourceValue, const uint32_t carry);
+	};
+}

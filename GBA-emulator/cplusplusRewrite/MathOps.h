@@ -1,7 +1,7 @@
 #pragma once
 #include "cplusplusRewrite/operation.h"
 #include "cplusplusRewrite/HwRegisters.h"
-
+/*
 class MathOp: public Operation {
 protected:
 	virtual void calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) = 0;
@@ -67,3 +67,4 @@ protected:
 public:
 	Negation(union CPSR_t& programStatus);
 };
+*/

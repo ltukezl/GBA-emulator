@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 #include <cassert>
 
 #include "cplusplusRewrite/HwRegisters.h"
@@ -1259,3 +1259,5 @@ void dataProcessingTests() {
 	tstOperandTests();
 	psrOperandTests();
 }
+
+*/

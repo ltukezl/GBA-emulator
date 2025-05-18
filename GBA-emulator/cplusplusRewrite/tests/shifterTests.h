@@ -5,7 +5,7 @@
 #include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/tests/testUtils.h"
-
+/*
 struct shifterTest {
 	const char* name;
 	uint32_t in0;
@@ -179,3 +179,4 @@ void testShifter() {
 	PCOperandTestsIMM();
 	PCOperandTestsREG();
 }
+*/

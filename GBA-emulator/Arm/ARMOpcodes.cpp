@@ -9,7 +9,8 @@
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
 #include "cplusplusRewrite/multiply.hpp"
-#include "cplusplusRewrite/SingleDataTransfer.h"
+#include "cplusplusRewrite/BarrelShifterDecoder.h"
+#include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
 #include <cstdint>
 
 void ARMBranch(int opCode){
@@ -509,22 +510,13 @@ void dataProcessingImmediate(int opCode){
 	int shiftedImm = 0;
 	bool conditions = (opCode >> 20) & 1;
 	int operationID = (opCode >> 20) & 0x1F;
+	int operation = (opCode >> 21) & 0xF;
 
-	if (conditions && (((operationID > 3) && (operationID < 16)) || ((operationID > 21) && (operationID < 24)))){
-		shiftedImm = RORnoCond(immediate, shift);
-		shiftedImm = RORnoCond(shiftedImm, shift);
-	}
-	else if (conditions){
-		rorCond(shiftedImm, immediate, shift);
-		rorCond(shiftedImm, shiftedImm, shift);
-	}
-	else{
-		rorNoCond(shiftedImm, immediate, shift);
-		rorNoCond(shiftedImm, shiftedImm, shift);
-	}
-
-	dataOperations[operationID]((int&)r[rd], operand1, shiftedImm);
-
+	const bool isLogicalOp = (operation == 0b0000) || (operation == 0b0001) || (operation == 0b1000) || (operation == 0b1001) || (operation == 0b1100) || (operation == 0b1101) || (operation == 0b1110) || (operation == 0b1111);
+	const auto func = BarrelShifterDecoder::decode(opCode);
+	const uint32_t result = func(opCode, r.m_cpsr, conditions && isLogicalOp);
+	dataOperations[operationID]((int&)r[rd], operand1, result);
+	
 	if (rd == 15 && conditions){
 		r.m_cpsr.val = r[16];
 		updateMode();

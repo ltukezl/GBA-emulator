@@ -1,77 +1,69 @@
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/HwRegisters.h"
 
-void Lsl::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) {
+using namespace shifts;
+
+void Lsl::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount) {
 	if (shiftAmount > 32)
-		m_cpsr.carry = 0;
+		cpsr.carry = 0;
 	else if (shiftAmount > 0)
-		m_cpsr.carry = ((unsigned)sourceValue >> (32 - shiftAmount) & 1);
-	m_cpsr.negative = result < 0;
-	m_cpsr.zero = result == 0;
+		cpsr.carry = ((unsigned)sourceValue >> (32 - shiftAmount) & 1);
+	cpsr.negative = result < 0;
+	cpsr.zero = result == 0;
 }
 
-void Lsl::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
+uint32_t Lsl::shift(uint32_t sourceValue, uint8_t shiftAmount) {
 	uint64_t tmp = sourceValue;
-	destinationRegister = static_cast<uint32_t>(tmp << shiftAmount);
+	return static_cast<uint32_t>(tmp << shiftAmount);
 }
-Lsl::Lsl(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};
 
-void Lsr::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) {
+
+void Lsr::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount) {
 	uint64_t tmp = sourceValue;
 	if (shiftAmount > 0)
-		m_cpsr.carry = (tmp >> (shiftAmount - 1) & 1);
-	m_cpsr.negative = result < 0;
-	m_cpsr.zero = result == 0;
+		cpsr.carry = (tmp >> (shiftAmount - 1) & 1);
+	cpsr.negative = result < 0;
+	cpsr.zero = result == 0;
 }
 
-void Lsr::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
-	destinationRegister = sourceValue >> shiftAmount;
+uint32_t Lsr::shift(const uint32_t sourceValue, const uint8_t shiftAmount) {
+	return sourceValue >> shiftAmount;
 }
-Lsr::Lsr(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};
 
-void Asr::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) {
-	int64_t tmp = (signed)sourceValue;
+
+void Asr::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount) {
+	int64_t tmp = static_cast<int64_t>(static_cast<int32_t>(sourceValue));
 	if (shiftAmount != 0)
-		m_cpsr.carry = (tmp >> (shiftAmount - 1) & 1);
-	m_cpsr.zero = result == 0;
-	m_cpsr.negative = result < 0;
+		cpsr.carry = (tmp >> (shiftAmount - 1) & 1);
+	cpsr.zero = result == 0;
+	cpsr.negative = result < 0;
 }
 
-void Asr::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
-	destinationRegister = static_cast<int32_t>(sourceValue) >> shiftAmount;
+uint32_t Asr::shift(const uint32_t sourceValue, const uint8_t shiftAmount) {
+	return static_cast<uint32_t>(static_cast<int32_t>(sourceValue) >> shiftAmount);
 }
-Asr::Asr(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};
 
-
-
-void Ror::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount) {
+void Ror::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount) {
 	if (shiftAmount > 0)
-		m_cpsr.carry = (sourceValue >> (shiftAmount - 1) & 1);
-	m_cpsr.negative = result < 0;
-	m_cpsr.zero = result == 0;
+		cpsr.carry = (sourceValue >> (shiftAmount - 1) & 1);
+	cpsr.negative = static_cast<int32_t>(result) < 0;
+	cpsr.zero = result == 0;
 }
 
-void Ror::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
-	if (shiftAmount > 32){
-		shift(destinationRegister, sourceValue, shiftAmount % 32);
+uint32_t Ror::shift(const uint32_t sourceValue, const uint8_t shiftAmount) {
+	if (shiftAmount > 32) {
+		Ror::shift(sourceValue, shiftAmount - 32);
 	}
-	else{
-		destinationRegister = (sourceValue >> shiftAmount) | (sourceValue << (32 - shiftAmount));
-	}
+	return (sourceValue >> shiftAmount) | (sourceValue << (32 - shiftAmount));
 }
 
-Ror::Ror(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};
 
-
-void Rrx::calcConditions(int32_t result, uint32_t sourceValue, uint8_t shiftAmount)  {
-	m_cpsr.carry = sourceValue & 1;
-	m_cpsr.negative = result < 0;
-	m_cpsr.zero = result == 0;
-
+void Rrx::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount)  {
+	cpsr.carry = sourceValue & 1;
+	cpsr.negative = result < 0;
+	cpsr.zero = result == 0;
 }
 
-void Rrx::shift(uint32_t& destinationRegister, uint32_t sourceValue, uint8_t shiftAmount) {
-	destinationRegister = (m_cpsr.carry << 31) | (sourceValue >> 1);
+uint32_t Rrx::shift(const uint32_t sourceValue, const uint32_t carry) {
+	return (carry << 31) | (sourceValue >> 1);
 }
-
-Rrx::Rrx(union CPSR_t& programStatus) : ShiferUnit(programStatus) {};

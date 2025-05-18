@@ -2,7 +2,7 @@
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/MathOps.h"
 #include "cplusplusRewrite/operation.h"
-
+/*
 
 void MathOp::execute(uint32_t& destinationRegister, uint32_t operand1, RotatorUnits& rotation, bool setConditions){
 	uint32_t operand2 = rotation.calculate(false);
@@ -110,4 +110,4 @@ void Negation::calculate(uint32_t& destinationRegister, uint32_t operand1, uint3
 }
 
 Negation::Negation(union CPSR_t& programStatus) : MathOp(programStatus){}
-
+*/

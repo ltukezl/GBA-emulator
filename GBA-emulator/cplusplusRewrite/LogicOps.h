@@ -1,6 +1,6 @@
 #pragma once
 #include "cplusplusRewrite/operation.h"
-
+/*
 class LogicOp: public Operation {
 protected:
 	virtual void calcConditions(uint32_t op1, uint32_t op2) = 0;
@@ -113,3 +113,4 @@ public:
 };
 
 //---------
+*/

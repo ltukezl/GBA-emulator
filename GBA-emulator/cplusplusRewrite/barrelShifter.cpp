@@ -1,54 +1,27 @@
+#include <bit>
+#include <iostream>
+
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/dataProcessingOp.h"
 #include "cplusplusRewrite/HwRegisters.h"
-#include <iostream>
 
-RotatorUnits::RotatorUnits(Registers& registers) : m_registers(registers) {
-	m_shifts[0] = new Lsl(m_registers.m_cpsr);
-	m_shifts[1] = new Lsr(m_registers.m_cpsr);
-	m_shifts[2] = new Asr(m_registers.m_cpsr);
-	m_shifts[3] = new Ror(m_registers.m_cpsr);
-	m_shifts[4] = new Rrx(m_registers.m_cpsr);
-	m_val = 0;
-}
-RotatorUnits::~RotatorUnits(){
-	delete m_shifts[0];
-	delete m_shifts[1];
-	delete m_shifts[2];
-	delete m_shifts[3];
-	delete m_shifts[4];
-
-	m_shifts[0] = nullptr;
-	m_shifts[1] = nullptr;
-	m_shifts[2] = nullptr;
-	m_shifts[3] = nullptr;
-	m_shifts[4] = nullptr;
-}
 
 //------------
 
-ImmediateRotater::ImmediateRotater(Registers& registers, uint16_t immediate) : RotatorUnits(registers) {
-	immediateRotaterFields.val = immediate;
-	m_val = immediate;
-}
-
-ImmediateRotater::ImmediateRotater(Registers& registers, uint16_t immediate, uint16_t rotateAmount) : RotatorUnits(registers) {
-	immediateRotaterFields.immediate = immediate;
-	immediateRotaterFields.rotateAmount = rotateAmount;
-	m_val = immediateRotaterFields.val;
-}
-
-uint32_t ImmediateRotater::calculate(bool setStatus) {
-	uint32_t tempResult = 0;
-	auto ror = Ror(m_registers.m_cpsr);
-	ror.execute(tempResult, immediateRotaterFields.immediate, immediateRotaterFields.rotateAmount, setStatus);
-	ror.execute(tempResult, immediateRotaterFields.immediate, immediateRotaterFields.rotateAmount, setStatus);
-	return tempResult;
+uint32_t ImmediateRotater::calculate(const uint32_t opcode, CPSR_t& cpsr, bool setStatus) {
+	const auto immediateRotaterFields = std::bit_cast<ImmediateRotateBits>(opcode);
+	const uint32_t tempResult = shifts::Ror::shift(immediateRotaterFields.immediate, immediateRotaterFields.shift);
+	const uint32_t tempResult2 = shifts::Ror::shift(tempResult, immediateRotaterFields.shift);
+	if (setStatus)
+	{
+		shifts::Ror::calcConditions(cpsr, tempResult2, tempResult, immediateRotaterFields.shift);
+	}
+	return tempResult2;
 }
 
 //------------
-
+/*
 RegisterWithImmediateShifter::~RegisterWithImmediateShifter() = default;
 
 RegisterWithImmediateShifter::RegisterWithImmediateShifter(Registers& registers, uint16_t val) : RotatorUnits(registers) {
@@ -106,3 +79,4 @@ uint32_t RegisterWithRegisterShifter::calculate(bool setStatus) {
 }
 
 //------------
+*/

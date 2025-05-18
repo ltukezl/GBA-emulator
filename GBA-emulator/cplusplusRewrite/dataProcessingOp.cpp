@@ -7,7 +7,7 @@
 #include "cplusplusRewrite/LogicOps.h"
 #include "cplusplusRewrite/HwRegisters.h"
 #include <iostream>
-
+/*
 void DataProcessingOpcode::initialize(){
 	tst[0] = new And(m_regs.m_cpsr);
 	tst[1] = new Or(m_regs.m_cpsr);
@@ -71,3 +71,4 @@ uint32_t DataProcessingOpcode::fromFields(DataProcessingOpCodes opCode, DataProc
 	opCodeFields.immediate = imm;
 	return opCodeFields.val;
 }
+*/

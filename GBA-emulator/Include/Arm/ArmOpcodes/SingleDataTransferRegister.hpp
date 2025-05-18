@@ -9,8 +9,6 @@
 #include "Memory/memoryOps.h"
 #include "SingleDataTransfer.hpp"
 
-constexpr bool DebugPrints = true;
-
 namespace SingleDataTransfer {
 
 	// ----------

@@ -2,7 +2,7 @@
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/operation.h"
 #include "cplusplusRewrite/LogicOps.h"
-
+/*
 bool LogicOp::isZero(uint32_t result) { return result == 0; }
 bool LogicOp::isNegative(int32_t result) { return result < 0; }
 
@@ -77,7 +77,7 @@ Tst::Tst(CPSR_t& programStatus) : LogicOp(programStatus) {}
 // --------
 
 //Mrs.calculate(m_cpsr.m_val, XXX, 0, 0);
-/*
+
 void Mrs::calcConditions(uint32_t op1, uint32_t op2)
 {
 	
@@ -96,7 +96,7 @@ void Msr::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 	if (!setConditions)
 		destinationRegister = m_cpsr.val;
 }
-*/
+
 //----------
 
 void Cmp::calcConditions(uint32_t op1, uint32_t op2)
@@ -192,3 +192,5 @@ void Mvn::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t o
 }
 
 Mvn::Mvn(CPSR_t& programStatus) : LogicOp(programStatus) {}
+
+*/

@@ -13,34 +13,21 @@ enum Rotation : uint16_t{
 	RRX = 4,
 };
 
-class RotatorUnits{
+class ImmediateRotater{
 public:
-	ShiferUnit* m_shifts[5];
-	uint16_t m_val;
-	Registers& m_registers;
 
-	RotatorUnits(Registers& registers);
-	virtual ~RotatorUnits() = 0;
-	virtual uint32_t calculate(bool setStatus) = 0;
+	struct ImmediateRotateBits
+	{
+		uint32_t immediate : 8;
+		uint32_t shift : 4;
+		uint32_t : 0;
+	};
+
+	static uint32_t calculate(const uint32_t opcode, CPSR_t& cpsr, const bool setStatus);
 };
 
-class ImmediateRotater : public RotatorUnits{
-public:
-	union {
-		uint16_t val;
-		struct{
-			uint16_t immediate : 8;
-			uint16_t rotateAmount : 4;
-		};
-	}immediateRotaterFields;
-
-	ImmediateRotater(Registers& registers, uint16_t immediate);
-	ImmediateRotater(Registers& registers, uint16_t immediate, uint16_t rotateAmount);
-
-	uint32_t calculate(bool setStatus) override;
-};
-
-class RegisterWithImmediateShifter : public RotatorUnits{
+/*
+class RegisterWithImmediateShifter{
 public:
 	union {
 		uint16_t val;
@@ -61,7 +48,7 @@ public:
 	uint32_t calculate(bool setStatus) override;
 };
 
-class RegisterWithRegisterShifter : public RotatorUnits{
+class RegisterWithRegisterShifter{
 public:
 	union {
 		uint16_t val;
@@ -80,3 +67,5 @@ public:
 
 	uint32_t calculate(bool setStatus) override;
 };
+
+*/

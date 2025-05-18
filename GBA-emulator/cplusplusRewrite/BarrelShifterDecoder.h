@@ -1,16 +1,19 @@
 #pragma once
 
 #include "cplusplusRewrite/barrelShifter.h"
-#include "cplusplusRewrite/dataProcessingOp.h"
-#include "cplusplusRewrite/SingleDataTransfer.h"
-#include "cplusplusRewrite/HwRegisters.h"
 
 class BarrelShifterDecoder {
-private:
-	Registers& m_registers;
-
 public:
-	BarrelShifterDecoder(Registers& registers) : m_registers(registers) {};
+	decltype(&ImmediateRotater::calculate) static decode(const uint32_t opCode);
 
-	RotatorUnits* decode(DataProcessingOpcode& opCode);
+private:
+	struct DecodeBits
+	{
+		uint32_t unused : 20;
+		uint32_t setConditions : 1;
+		uint32_t unused2 : 4;
+		uint32_t immediate : 1;
+		uint32_t opCode : 2;
+		uint32_t : 0;
+	};
 };
