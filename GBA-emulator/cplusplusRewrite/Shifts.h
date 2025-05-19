@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
-#include "cplusplusRewrite/HwRegisters.h"
+
+union CPSR_t;
 
 namespace shifts
 {
@@ -31,6 +32,6 @@ namespace shifts
 	class Rrx{
 	public:
 		static void calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t sourceValue, const uint8_t shiftAmount) ;
-		static uint32_t shift(const uint32_t sourceValue, const uint32_t carry);
+		static uint32_t shift(const uint32_t sourceValue, const uint8_t carry);
 	};
 }

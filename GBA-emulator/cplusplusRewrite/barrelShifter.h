@@ -1,16 +1,17 @@
 #pragma once
 #include <cstdint>
+#include <array>
+
 #include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/barrelShifter.h"
-#include "cplusplusRewrite/HwRegisters.h"
 
+class Registers;
 
-enum Rotation : uint16_t{
+enum class Rotation : uint32_t{
 	LSL = 0,
 	LSR = 1,
 	ASR = 2,
 	ROR = 3,
-	RRX = 4,
 };
 
 class ImmediateRotater{
@@ -23,49 +24,39 @@ public:
 		uint32_t : 0;
 	};
 
-	static uint32_t calculate(const uint32_t opcode, CPSR_t& cpsr, const bool setStatus);
+	static uint32_t calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
 };
 
-/*
+
 class RegisterWithImmediateShifter{
 public:
-	union {
-		uint16_t val;
-		struct{
-			uint16_t sourceRegister : 4;
-			uint16_t type : 1;
-			uint16_t shiftCode : 2;
-			uint16_t shiftAmount : 5;
-		};
-	}registerRotaterFields;
+	static constexpr std::array<decltype(&shifts::Lsl::shift), 4> m_shifts {shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift, shifts::Ror::shift};
+	static constexpr std::array<decltype(&shifts::Lsl::calcConditions), 4> m_conditions{ shifts::Lsl::calcConditions, shifts::Lsr::calcConditions, shifts::Asr::calcConditions, shifts::Ror::calcConditions };
 
-	~RegisterWithImmediateShifter() override;
+	struct registerRotateFields {
+		uint32_t sourceRegister : 4;
+		uint32_t type : 1;
+		Rotation shiftCode : 2;
+		uint32_t shiftAmount : 5;
+		uint32_t : 0;
+	};
 
-	RegisterWithImmediateShifter(Registers& registers, uint16_t val);
-	RegisterWithImmediateShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftAmount);
-
-	uint16_t shifter() const { return ((registerRotaterFields.shiftCode == ROR) && (registerRotaterFields.shiftAmount == 0)) ? RRX : registerRotaterFields.shiftCode; }
-	uint32_t calculate(bool setStatus) override;
+	static uint32_t calculate(Registers& regs, const uint32_t opcode, bool setStatus);
 };
 
 class RegisterWithRegisterShifter{
 public:
-	union {
-		uint16_t val;
-		struct{
-			uint16_t sourceRegister : 4;
-			uint16_t type : 1;
-			uint16_t shiftCode : 2;
-			uint16_t unused : 1;
-			uint16_t shiftRegister : 5;
-		};
-	}registerRotaterFields;
-	
-	RegisterWithRegisterShifter(Registers& registers, uint16_t val);
-	RegisterWithRegisterShifter(Registers& registers, uint16_t sourceRegister, Rotation rotation, uint16_t shiftRegister);
-	~RegisterWithRegisterShifter() override ;
+	static constexpr std::array<decltype(&shifts::Lsl::shift), 4> m_shifts{ shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift, shifts::Ror::shift };
+	static constexpr std::array<decltype(&shifts::Lsl::calcConditions), 4> m_conditions{ shifts::Lsl::calcConditions, shifts::Lsr::calcConditions, shifts::Asr::calcConditions, shifts::Ror::calcConditions };
 
-	uint32_t calculate(bool setStatus) override;
+	struct RegisterWithRegisterFields {
+		uint32_t sourceRegister : 4;
+		uint32_t type : 1;
+		Rotation shiftCode : 2;
+		uint32_t unused : 1;
+		uint32_t shiftRegister : 5;
+		uint32_t : 0;
+	};
+
+	static uint32_t calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
 };
-
-*/

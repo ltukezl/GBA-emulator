@@ -503,18 +503,15 @@ void dataProcessingImmediate(int opCode){
 	int rd = (opCode >> 12) & 0xF; //destination
 	int rs = (opCode >> 16) & 0xF; //first operand
 	int operand1 = r[rs];
-	int immediate = opCode & 0xFF;
 	if (rs == TRegisters::EProgramCounter)
 		operand1 += 4;
-	int shift = (opCode >> 8) & 0xF;
-	int shiftedImm = 0;
 	bool conditions = (opCode >> 20) & 1;
 	int operationID = (opCode >> 20) & 0x1F;
 	int operation = (opCode >> 21) & 0xF;
 
 	const bool isLogicalOp = (operation == 0b0000) || (operation == 0b0001) || (operation == 0b1000) || (operation == 0b1001) || (operation == 0b1100) || (operation == 0b1101) || (operation == 0b1110) || (operation == 0b1111);
 	const auto func = BarrelShifterDecoder::decode(opCode);
-	const uint32_t result = func(opCode, r.m_cpsr, conditions && isLogicalOp);
+	const uint32_t result = func(r, opCode, conditions && isLogicalOp);
 	dataOperations[operationID]((int&)r[rd], operand1, result);
 	
 	if (rd == 15 && conditions){
@@ -523,7 +520,7 @@ void dataProcessingImmediate(int opCode){
 	}
 
 	if (debug)
-		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", " << shiftedImm << " ";
+		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", " << result << " ";
 }
 
 void halfDataTransfer(int opCode){
@@ -632,112 +629,6 @@ void multiply(int opCode){
 		std::cout << "mult ";
 }
 
-void multiplyLong(int opCode){
-	int sign = (opCode >> 22) & 1;
-	int accumulate = (opCode >> 21) & 1;
-	int setConditions = (opCode >> 20) & 1;
-
-	uint32_t rdHi = (opCode >> 16) & 0xF;
-	uint32_t rdLo = (opCode >> 12) & 0xF;
-	uint32_t Rs = (opCode >> 8) & 0xF;
-	uint32_t Rm = opCode & 0xF;
-	uint64_t tmp = 0;
-	uint64_t tmp4 = (((uint64_t)r[rdHi] & 0xFFFFFFFF) << 32) | (r[rdLo] & 0xFFFFFFFF);
-	if (sign){
-		int64_t tmp2 = r[Rs];
-		int64_t tmp3 = r[Rm];
-		tmp = tmp2 * tmp3;
-		if (accumulate)
-			tmp = tmp + tmp4;
-	}
-	else{
-		uint64_t tmp2 = r[Rs] & 0xFFFFFFFF;
-		uint64_t tmp3 = r[Rm] & 0xFFFFFFFF;
-		tmp = (uint64_t)tmp2 * (uint64_t)tmp3;
-		if (accumulate)
-			tmp = (uint64_t)tmp + (uint64_t)tmp4;
-	}
-
-	r[rdHi] = (tmp >> 32) & 0xFFFFFFFF;
-	r[rdLo] = tmp & 0xFFFFFFFF;
-
-	if (setConditions){
-		negative(r[rdHi]);
-		zero(tmp);
-	}
-	if (debug)
-		std::cout << "mult long ";
-}
-
-void singleDataTrasnferImmediatePre(int opCode){
-	int calculated = 0;
-	int wrong = (opCode >> 24) & 1;
-	assert(wrong == 1);
-	int upDownBit = (opCode >> 23) & 1;
-	int byteFlag = (opCode >> 22) & 1;
-	int writeBack = (opCode >> 21) & 1;
-	int loadStore = (opCode >> 20) & 1;
-	int baseReg = (opCode >> 16) & 15;
-	int destinationReg = (opCode >> 12) & 15;
-	int offset = opCode & 0xFFF;
-	offset += (baseReg == 15) ? 4 : 0;
-	int oldReg = r[baseReg];
-	switch (loadStore){
-	case 0:
-		r[baseReg] += upDownBit ? offset : -offset;
-		calculated = r[baseReg];
-		r[baseReg] = (writeBack) ? r[baseReg] : oldReg;
-		byteFlag ? writeToAddress(calculated, r[destinationReg]) : writeToAddress32(calculated, r[destinationReg]);
-		if (destinationReg == 15)
-			r[destinationReg] -= 8;
-		if (destinationReg == baseReg)
-			r[destinationReg] += offset;
-		break;
-	case 1:
-		r[baseReg] += upDownBit ? offset : -offset;
-		calculated = r[baseReg];
-		r[baseReg] = (writeBack) ? r[baseReg] : oldReg;
-		r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
-		break;
-	}
-
-	cycles += S_cycles + N_cycles + 1;
-
-	if (debug && loadStore)
-		std::cout << "ldr r" << destinationReg << " [r" << baseReg << " =" << (upDownBit ? offset : -offset) << "] ";
-	else if (debug && !loadStore)
-		std::cout << "str [r" << baseReg << " " << (upDownBit ? offset : -offset) << "] r" << destinationReg << " ";
-}
-
-void singleDataTrasnferImmediatePost(int opCode){
-	int upDownBit = (opCode >> 23) & 1;
-	int byteFlag = (opCode >> 22) & 1;
-	int loadStore = (opCode >> 20) & 1;
-	int baseReg = (opCode >> 16) & 15;
-	int destinationReg = (opCode >> 12) & 15;
-	int offset = opCode & 0xFFF;
-	offset += (baseReg == 15) ? 4 : 0; //for PC as offset, remember that PC is behind
-	int calculated = r[baseReg];
-	cycles += S_cycles + N_cycles + 1;
-	switch (loadStore){
-	case 0:
-		byteFlag ? writeToAddress(calculated, r[destinationReg]) : writeToAddress32(calculated, r[destinationReg]);
-		calculated += upDownBit ? offset : -offset;
-		if (destinationReg == 15)
-			r[destinationReg] -= 8;
-		r[baseReg] = calculated;
-		return;
-		break;
-	case 1:
-		r[destinationReg] = byteFlag ? loadFromAddress(calculated) : loadFromAddress32(calculated);
-		calculated += upDownBit ? offset : -offset;
-		if (destinationReg != baseReg)
-			r[baseReg] = calculated;
-		return;
-		break;
-	}
-}
-
 void singleDataTrasnferRegisterPre(int opCode){
 	int offset = 0;
 
@@ -751,19 +642,9 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int writeBack = (opCode >> 21) & 1;
 	int loadStore = (opCode >> 20) & 1;
 
-	int shiftId = (opCode >> 5) & 3;
-	int tmpRegister = r[rm];
+	const auto func = BarrelShifterDecoder::decode(opCode);
+	const int tmpRegister = func(r, opCode, 0);
 
-	offset = (opCode >> 7) & 0x1F;
-	if (shiftId == 3 && offset == 0){
-		rrx(tmpRegister, tmpRegister, false);
-	}
-	else
-	{
-		if (offset == 0 && shiftId != 0)
-			offset = 0x20;
-		ARMshifts[shiftId](tmpRegister, r[rm], offset);
-	}
 	int oldReg = r[rn];
 	switch (loadStore){
 	case 0:
@@ -969,7 +850,6 @@ void ARMExecute(int opCode){
 			}
 			else
 			{
-				singleDataTrasnferImmediatePre(opCode);
 			}
 			
 			break;
@@ -1008,7 +888,6 @@ void ARMExecute(int opCode){
 			}
 			else
 			{
-				singleDataTrasnferImmediatePost(opCode);
 			}
 			break;
 		case 3: case 2: //data processing, immediate check msr?
