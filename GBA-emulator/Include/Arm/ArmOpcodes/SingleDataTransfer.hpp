@@ -65,6 +65,7 @@ namespace SingleDataTransfer {
 	constexpr uint32_t fromFields(const uint32_t offset, const uint32_t destinationRegister, const uint32_t baseRegister, const loadStore_t loadBit, const writeBack_t writeBack, 
 		                          const byteWord_t byteTransfer, const upDown_t addOffset, const prePost_t preIndexing, const immediate_t immediateOffset) {
 		SingleDataTransfer_t opcode {};
+		static_assert(sizeof(SingleDataTransfer_t) == sizeof(uint32_t));
 		opcode.offset = offset;
 		opcode.destinationRegister = destinationRegister;
 		opcode.baseRegister = baseRegister;
@@ -74,6 +75,7 @@ namespace SingleDataTransfer {
 		opcode.addOffset = addOffset;
 		opcode.preIndexing = preIndexing;
 		opcode.immediateOffset = immediateOffset;
+		opcode.unused = 1;
 		opcode.executionCondition = 0xe;
 
 		return std::bit_cast<uint32_t>(opcode);
@@ -81,6 +83,8 @@ namespace SingleDataTransfer {
 
 	static constexpr SingleDataTransfer_t fromOpcode(const uint32_t opcode)
 	{
+		assert(std::is_trivially_copyable_v<SingleDataTransfer_t>);
+		assert(sizeof(SingleDataTransfer_t) == sizeof(uint32_t));
 		return std::bit_cast<SingleDataTransfer_t>(opcode);
 	}
 
