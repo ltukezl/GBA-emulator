@@ -635,7 +635,6 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int rn = (opCode >> 16) & 0xF;
 	int rd = (opCode >> 12) & 0xF;
 	int rm = opCode & 0xF;
-	int rs = (opCode >> 8) & 0xF;
 
 	int upDownBit = (opCode >> 23) & 1;
 	int byteFlag = (opCode >> 22) & 1;
@@ -648,8 +647,6 @@ void singleDataTrasnferRegisterPre(int opCode){
 	int oldReg = r[rn];
 	switch (loadStore){
 	case 0:
-		if (rd == 15)
-			r[rd] += 8;
 		r[rn] += upDownBit ? tmpRegister : -tmpRegister;
 		byteFlag ? writeToAddress(r[rn], r[rd]) : writeToAddress32(r[rn], r[rd]);
 		r[rn] = (writeBack) ? r[rn] : oldReg;
@@ -678,27 +675,14 @@ void singleDataTrasnferRegisterPost(int opCode){
 	int loadStore = (opCode >> 20) & 1;
 	int baseReg = (opCode >> 16) & 15;
 	int destinationReg = (opCode >> 12) & 15;
-	int shiftId = (opCode >> 5) & 3;
-	int shiftAmount = (opCode >> 4) & 0xFF;
-	int offset = (opCode >> 7) & 0x1F;
-	int tmpRegister = r[opCode & 0xf];
-	if (shiftId == 3 && offset == 0) {
-		rrx(tmpRegister, tmpRegister, false);
-	}
-	else
-	{
-		if (offset == 0 && shiftId != 0)
-			offset = 0x20;
-		ARMshifts[shiftId](tmpRegister, r[opCode & 0xf], offset);
-	}
 
+	const auto func = BarrelShifterDecoder::decode(opCode);
+	const int tmpRegister = func(r, opCode, 0);
 
 	int oldReg = r[baseReg];
 
 	switch (loadStore){
 	case 0:
-		if (destinationReg == 15)
-			r[destinationReg] += 8;
 		byteFlag ? writeToAddress(r[baseReg], r[destinationReg]) : writeToAddress32(r[baseReg], r[destinationReg]);
 		r[baseReg] += upDownBit ? tmpRegister : -tmpRegister;
 		if (destinationReg == 15)
@@ -714,16 +698,11 @@ void singleDataTrasnferRegisterPost(int opCode){
 	cycles += S_cycles + N_cycles + 1;
 }
 
-enum ProcessingUnits {
-	EDataProcessing,
-};
-
 void ARMExecute(int opCode){
 	int condition = (opCode >> 28) & 0xF;
 	r[TRegisters::EProgramCounter] += 4;
 	cycles += 1;
 	//units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr, Registers());
-	
 	if (conditions[condition]()) //condition true
 	{
 		int opCodeType = (opCode >> 24) & 0xF;
@@ -784,111 +763,8 @@ void ARMExecute(int opCode){
 			singleDataTrasnferRegisterPost(opCode);
 			break;
 		case 5:// single data transfer, immediate pre offset
-			if (SingleDataTransfer::SingleDataTransferIPrDWNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDWNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrDBNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDBNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUBNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUBNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUWNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUWNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrDWWS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDWWS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrDBWS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDBWS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUBWS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUBWS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUWWS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUWWS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrDWNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDWNL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrDBNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDBNL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUBNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUBNL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUWNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUWNL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrDWWL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDWWL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrDBWL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrDBWL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUBWL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUBWL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPrUWWL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPrUWWL::execute(r, opCode);
-			}
-			else
-			{
-			}
-			
 			break;
 		case 4: // single data transfer, immediate post offset
-			if (SingleDataTransfer::SingleDataTransferIPoUWNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoUWNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPoUBNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoUBNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPoDWNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoDWNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPoDBNS::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoDBNS::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPoUWNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoUWNL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPoUBNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoUBNL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPoDWNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoDWNL::execute(r, opCode);
-			}
-			else if (SingleDataTransfer::SingleDataTransferIPoDBNL::isThisOpcode(opCode))
-			{
-				SingleDataTransfer::SingleDataTransferIPoDBNL::execute(r, opCode);
-			}
-			else
-			{
-			}
 			break;
 		case 3: case 2: //data processing, immediate check msr?
 			if ((((opCode >> 12) & 0x3FF) == 0x28F) && (((opCode >> 23) & 0x3) == 2) && (((opCode >> 26) & 0x3) == 0)) {
