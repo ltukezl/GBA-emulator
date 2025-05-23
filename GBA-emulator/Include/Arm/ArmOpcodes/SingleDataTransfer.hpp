@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "cplusplusRewrite/HwRegisters.h"
+#include "cplusplusRewrite/barrelShifterDecoder.h"
 #include "Memory/memoryOps.h"
 
 constexpr bool DebugPrints = true;
@@ -62,9 +63,9 @@ namespace SingleDataTransfer {
 		uint32_t executionCondition : 4;
 	};
 
-	constexpr uint32_t fromFields(const uint32_t offset, const uint32_t destinationRegister, const uint32_t baseRegister, const loadStore_t loadBit, const writeBack_t writeBack, 
-		                          const byteWord_t byteTransfer, const upDown_t addOffset, const prePost_t preIndexing, const immediate_t immediateOffset) {
-		SingleDataTransfer_t opcode {};
+	constexpr uint32_t fromFields(const uint32_t offset, const uint32_t destinationRegister, const uint32_t baseRegister, const loadStore_t loadBit, const writeBack_t writeBack,
+		const byteWord_t byteTransfer, const upDown_t addOffset, const prePost_t preIndexing, const immediate_t immediateOffset) {
+		SingleDataTransfer_t opcode{};
 		static_assert(sizeof(SingleDataTransfer_t) == sizeof(uint32_t));
 		opcode.offset = offset;
 		opcode.destinationRegister = destinationRegister;
@@ -92,5 +93,36 @@ namespace SingleDataTransfer {
 	{
 		if (op.destinationRegister == 15)
 			regs[op.destinationRegister] -= 8;
+	}
+
+	static auto makeExpression(const uint32_t opcode)
+	{
+		const auto op = fromOpcode(opcode);
+		if (op.immediateOffset == immediate_t::EImmediate)
+		{
+			if (op.offset)
+			{
+				const auto sign = op.addOffset == upDown_t::ESubstract ? "-" : "";
+				return std::format(", {}#0x{:x}", sign, op.offset);
+			}
+			return std::format("");
+		}
+		else
+		{
+			const auto shifter = BarrelShifterDecoder::disassemble(opcode);
+			return shifter(opcode);
+		}
+	}
+
+	static auto disassemble(const uint32_t opcode)
+	{
+		const auto op = fromOpcode(opcode);
+		const auto ls = op.loadBit == loadStore_t::ELoad ? "LDR" : "STR";
+		const auto condition = "";
+		const auto bw = op.byteTransfer == byteWord_t::EByte ? "B" : "";
+		const auto prePost1 = op.preIndexing == prePost_t::EPre ? "" : "]";
+		const auto prePost2 = op.preIndexing == prePost_t::EPre ? "]" : "";
+		const auto writeback = op.writeBack == writeBack_t::EWriteback ? "!" : "";
+		return std::format("{}{}{} R{}, [R{}{}{}{}{}", ls, condition, bw, op.destinationRegister, op.baseRegister, prePost1, makeExpression(opcode), prePost2, writeback);
 	}
 }

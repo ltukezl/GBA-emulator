@@ -1,10 +1,13 @@
 #pragma once
 
+#include <string>
+
 #include "cplusplusRewrite/barrelShifter.h"
 
 class BarrelShifterDecoder {
 public:
 	decltype(&ImmediateRotater::calculate) static decode(const uint32_t opCode);
+	decltype(&ImmediateRotater::disassemble) static disassemble(const uint32_t opCode);
 
 private:
 	struct DecodeBits

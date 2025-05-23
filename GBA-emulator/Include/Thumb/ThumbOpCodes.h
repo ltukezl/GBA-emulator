@@ -84,15 +84,13 @@ union loadStoreSignExtended{
 	};
 };
 
-union loadStoreImmediate{
-	uint16_t op;
-	struct{
-		uint16_t destSourceReg : 3;
-		uint16_t baseReg : 3;
-		uint16_t offset : 5;
-		uint16_t loadFlag : 1;
-		uint16_t byteSize : 1;
-	};
+
+struct loadStoreImmediate {
+	uint16_t destSourceReg : 3;
+	uint16_t baseReg : 3;
+	uint16_t offset : 5;
+	uint16_t loadFlag : 1;
+	uint16_t byteSize : 1;
 };
 
 union loadStoreHalfWord{

@@ -1,4 +1,6 @@
-#include "iostream"
+#include <print>
+#include <iostream>
+
 #include "GBAcpu.h"
 #include "Thumb/ThumbOpCodes.h"
 #include "Arm/armopcodes.h"
@@ -824,7 +826,6 @@ static constexpr std::array<decltype(&SingleDataTransfer::SingleDataTransferIPrD
 
 void ARMExecute(int opCode){
 	int condition = (opCode >> 28) & 0xF;
-	r[TRegisters::EProgramCounter] += 4;
 	cycles += 1;
 	//units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr, Registers());
 	if (conditions[condition]()) //condition true
@@ -832,6 +833,7 @@ void ARMExecute(int opCode){
 		if (((opCode >> 25) & 0x7) == 2)
 		{
 			m_dispatch_table[reduce_opcode(opCode)](r, opCode);
+			//std::println("{}", SingleDataTransfer::disassemble(opCode));
 			return;
 		}
 
@@ -888,9 +890,11 @@ void ARMExecute(int opCode){
 			break;
 		case 7:// single data transfer, register pre offset 
 			singleDataTrasnferRegisterPre(opCode);
+			std::println("{}", SingleDataTransfer::disassemble(opCode));
 			break;
 		case 6:// single data transfer, register, post offset
 			singleDataTrasnferRegisterPost(opCode);
+			std::println("{}", SingleDataTransfer::disassemble(opCode));
 			break;
 		case 5:// single data transfer, immediate pre offset
 			break;

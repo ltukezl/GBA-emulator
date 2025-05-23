@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
 #include <array>
+#include <string>
 
 #include "cplusplusRewrite/Shifts.h"
-#include "cplusplusRewrite/barrelShifter.h"
 
 class Registers;
 
@@ -25,6 +25,7 @@ public:
 	};
 
 	static uint32_t calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
+	static std::string disassemble(const uint32_t opcode);
 };
 
 
@@ -42,6 +43,7 @@ public:
 	};
 
 	static uint32_t calculate(Registers& regs, const uint32_t opcode, bool setStatus);
+	static std::string disassemble(const uint32_t opcode);
 };
 
 class RegisterWithRegisterShifter{
@@ -59,4 +61,5 @@ public:
 	};
 
 	static uint32_t calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
+	static std::string disassemble(const uint32_t opcode);
 };
