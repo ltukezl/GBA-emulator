@@ -8,7 +8,6 @@
 
 namespace branches
 {
-
 	class ArmBranch
 	{
 	public:
@@ -65,6 +64,53 @@ namespace branches
 			const uint32_t location = (static_cast<uint32_t>(static_cast<int32_t>(op.offset)) << 2);
 
 			return std::format("{}{} #0x{:x}", ls, condition_strings[op.condition], location);
+		}
+	};
+
+	class ArmBranchAndExhange
+	{
+	public:
+
+		struct BxOP {
+			uint32_t rn : 4;
+			uint32_t unused : 24;
+			uint32_t condition : 4;
+		};
+
+		static constexpr uint32_t fromFields(const uint32_t branchReg) {
+			BxOP opcode{};
+			static_assert(sizeof(BxOP) == sizeof(uint32_t));
+			opcode.rn = branchReg;
+			opcode.unused = 0x12FFF1;
+			opcode.condition = 0xe;
+
+			return std::bit_cast<uint32_t>(opcode);
+		}
+
+		static constexpr BxOP fromOpcode(const uint32_t opcode)
+		{
+			assert(std::is_trivially_copyable_v<BxOP>);
+			assert(sizeof(BxOP) == sizeof(uint32_t));
+			return std::bit_cast<BxOP>(opcode);
+		}
+
+		static constexpr bool isThisOpcode(const uint32_t opcode)
+		{
+			auto op = fromOpcode(opcode);
+			return (op.unused == 0x12FFF1);
+		}
+
+		static void execute(Registers& regs, const uint32_t opcode) {
+			const auto op = fromOpcode(opcode);
+			regs.m_cpsr.thumb = regs[op.rn] & 1;
+			regs[TRegisters::EProgramCounter] = regs[op.rn] & ~1;
+		}
+
+		static auto disassemble(const uint32_t opcode)
+		{
+			const auto op = fromOpcode(opcode);
+
+			return std::format("BX{} R{}", condition_strings[op.condition], op.rn);
 		}
 	};
 }

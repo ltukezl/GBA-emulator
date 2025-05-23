@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <format>
 #include <print>
 
 #include "GBAcpu.h"
@@ -273,11 +274,11 @@ void multiLoad(uint16_t opcode){
 
 void conditionalBranch(uint16_t opcode){
 	union conditionalBranchOp op = { opcode };
-	r[PC] += conditions[op.condition]() ? ((op.immediate << 1) + 2) : 0;
+	const uint32_t location = ((op.immediate << 1) + 2);
+	r[PC] += conditions[op.condition]() ? location : 0;
 
-	cycles += S_cycles;
-	if (conditions[op.condition]())
-		cycles += S_cycles + N_cycles;
+	if(debug)
+		 std::print("B{} #0x{:x}", condition_strings[op.condition], location);
 }
 
 void unconditionalBranch(uint16_t opcode){

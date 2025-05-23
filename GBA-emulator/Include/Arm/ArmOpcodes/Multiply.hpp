@@ -55,14 +55,14 @@ public:
 
 		if (op.sign)
 		{
-			auto op1 = static_cast<int64_t>(static_cast<int32_t>(regs[op.operand1]));
-			auto op2 = static_cast<int64_t>(static_cast<int32_t>(regs[op.operand2]));
+			const auto op1 = static_cast<int64_t>(static_cast<int32_t>(regs[op.operand1]));
+			const auto op2 = static_cast<int64_t>(static_cast<int32_t>(regs[op.operand2]));
 			result = std::bit_cast<uint64_t>(op1 * op2);
 		}
 		else
 		{
-			auto op1 = static_cast<uint64_t>(regs[op.operand1]);
-			auto op2 = static_cast<uint64_t>(regs[op.operand2]);
+			const auto op1 = static_cast<uint64_t>(regs[op.operand1]);
+			const auto op2 = static_cast<uint64_t>(regs[op.operand2]);
 			result = op1 * op2;
 		}
 
@@ -72,8 +72,8 @@ public:
 			result += current;
 		}
 
-		uint32_t hiPart = (result >> 32) & 0xFFFF'FFFF;
-		uint32_t loPart = (result >> 0) & 0xFFFF'FFFF;
+		const uint32_t hiPart = (result >> 32) & 0xFFFF'FFFF;
+		const uint32_t loPart = (result >> 0) & 0xFFFF'FFFF;
 		regs[op.destinationLow] = loPart;
 		regs[op.destinationHigh] = hiPart;
 
@@ -133,5 +133,26 @@ public:
 		return (opcodeStruct.reserved1 == 9) && (opcodeStruct.reserved2 == 0);
 	}
 
-	static void execute(Registers& regs, const uint32_t opcode);
+	static void execute(Registers& regs, const uint32_t opcode)
+	{
+		const auto op = fromOpcode(opcode);
+		uint64_t result = regs[op.operand1] * regs[op.operand2];
+		result += op.accumulate ? regs[op.operand3] : 0;
+		regs[op.destination] = result;
+		if (op.setCondition) {
+			r.m_cpsr.zero = result ? 0 : 1;
+			r.m_cpsr.negative = ((result >> 31) & 1);
+		}
+	}
+
+	static auto disassemble(const uint32_t opcode)
+	{
+		const auto op = fromOpcode(opcode);
+		const auto s = op.setCondition ? "S" : "";
+
+		if(op.accumulate)
+			return std::format("MLA{}{} R{},R{},R{},R{}", condition_strings[op.cond], s, op.destination, op.operand1, op.operand2, op.operand3);
+		else
+			return std::format("MUL{}{} R{},R{},R{}", condition_strings[op.cond], s, op.destination, op.operand1, op.operand2);
+	}
 };

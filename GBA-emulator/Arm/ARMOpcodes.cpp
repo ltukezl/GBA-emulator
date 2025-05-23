@@ -214,14 +214,6 @@ void singleDataSwap(int opCode){
 		std::cout << "swp r" << +rd << " r" << +rm << " r[" << +rn << "] ";
 }
 
-void branchAndExhange(int opCode){
-	r[TRegisters::EProgramCounter] = r[opCode & 15];
-	r.m_cpsr.thumb = (r[TRegisters::EProgramCounter] & 1);
-	r[TRegisters::EProgramCounter] = (r[TRegisters::EProgramCounter] & ~1);
-	if (debug)
-		std::cout << "bx " << r[TRegisters::EProgramCounter] << " ";
-}
-
 void lslCond(int &saveTo, int from, int immidiate) {
 	uint64_t tmp = (unsigned)from;
 	saveTo = tmp << immidiate;
@@ -605,22 +597,6 @@ void halfDataTransfer(int opCode){
 	}
 }
 
-void multiply(int opCode){
-	int accumulateBit = (opCode >> 21) & 1;
-	int setBit = (opCode >> 20) & 1;
-	int rd = (opCode >> 16) & 0xF;
-	int rn = (opCode >> 12) & 0xF;
-	int rs = (opCode >> 8) & 0xF;
-	int rm = opCode & 0xF;
-	r[rd] = accumulateBit ? r[rm] * r[rs] + r[rn] : r[rm] * r[rs];
-	if (setBit){
-		negative(r[rd]);
-		zero(r[rd]);
-	}
-	if (debug)
-		std::cout << "mult ";
-}
-
 void singleDataTrasnferRegisterPre(int opCode){
 	int offset = 0;
 
@@ -834,10 +810,24 @@ void ARMExecute(int opCode){
 			return;
 		}
 
+		if (branches::ArmBranchAndExhange::isThisOpcode(opCode))
+		{
+			branches::ArmBranchAndExhange::execute(r, opCode);
+			std::println("{}", branches::ArmBranchAndExhange::disassemble(opCode));
+			return;
+		}
+
 		if (MultiplyAccumulate::isThisOpcode(opCode))
 		{
 			MultiplyAccumulate::execute(r, opCode);
-			std::println("{}", MultiplyAccumulate::disassemble(opCode));
+			// std::println("{}", MultiplyAccumulate::disassemble(opCode));
+			return;
+		}
+
+		if (MultiplyLong::isThisOpcode(opCode))
+		{
+			MultiplyLong::execute(r, opCode);
+			//std::println("{}", MultiplyLong::disassemble(opCode));
 			return;
 		}
 
@@ -887,11 +877,9 @@ void ARMExecute(int opCode){
 			break;
 		case 7:// single data transfer, register pre offset 
 			singleDataTrasnferRegisterPre(opCode);
-			std::println("{}", SingleDataTransfer::disassemble(opCode));
 			break;
 		case 6:// single data transfer, register, post offset
 			singleDataTrasnferRegisterPost(opCode);
-			std::println("{}", SingleDataTransfer::disassemble(opCode));
 			break;
 		case 5:// single data transfer, immediate pre offset
 			break;
@@ -908,11 +896,7 @@ void ARMExecute(int opCode){
 			}
 			break;
 		case 1: case 0: //data prceossing, multiply, data transfer, branch and exhange
-			if (((opCode >> 4) & 0x12FFF1) == 0x12FFF1) {
-				//units[ProcessingUnits::EDataProcessing]->execute();
-				branchAndExhange(opCode);
-			}
-			else if (((opCode >> 4) & 1) == 0){ //data processing
+			if (((opCode >> 4) & 1) == 0){ //data processing
 				//units[ProcessingUnits::EDataProcessing]->execute(opCode);
 				immediateRotate(opCode);//<-
 			}
@@ -922,8 +906,6 @@ void ARMExecute(int opCode){
 				}
 			else if ((((opCode >> 23) & 0x1F) == 2) && (((opCode >> 4) & 0xFF) == 9))
 				singleDataSwap(opCode);
-			else if (((opCode >> 22) & 0x3F) == 0 && (((opCode >> 4) & 0xF) == 9))
-				multiply(opCode);
 			else
 				halfDataTransfer(opCode);
 			break;
