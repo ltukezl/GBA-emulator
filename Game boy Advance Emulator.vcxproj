@@ -141,7 +141,6 @@
     <ClCompile Include="GBA-emulator\cplusplusRewrite\dataProcessingOp.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\LogicOps.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\MathOps.cpp" />
-    <ClCompile Include="GBA-emulator\cplusplusRewrite\Multiply.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Operation.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Shifts.cpp" />
     <ClCompile Include="GBA-emulator\Display\Display.cpp" />
@@ -165,8 +164,9 @@
     <ClCompile Include="GBA-emulator\Display\Sprites\Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Branch.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferImmediate.hpp" />
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\Multiply.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Multiply.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\armopcodes.h" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\arithmeticOps.h" />

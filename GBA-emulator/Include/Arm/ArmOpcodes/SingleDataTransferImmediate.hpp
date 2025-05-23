@@ -31,11 +31,6 @@ namespace SingleDataTransfer {
 			calculated += (op.baseRegister == 15) ? 4 : 0;
 			writeToAddress32(calculated, regs[op.destinationRegister]);
 			destinationRegisterBug(op, regs);
-
-			if constexpr (DebugPrints)
-			{
-
-			}
 		}
 	};
 
@@ -113,11 +108,6 @@ namespace SingleDataTransfer {
 			regs[op.baseRegister] = calculated;
 			writeToAddress32(calculated, regs[op.destinationRegister]);
 			destinationRegisterBug(op, regs);
-
-			if constexpr (DebugPrints)
-			{
-
-			}
 		}
 	};
 

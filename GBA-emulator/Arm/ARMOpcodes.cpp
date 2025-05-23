@@ -10,20 +10,10 @@
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
-#include "cplusplusRewrite/multiply.hpp"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
+#include "Arm/ArmOpcodes/multiply.hpp"
+#include "Arm/ArmOpcodes/Branch.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
-#include <cstdint>
-
-void ARMBranch(int opCode){
-	r[TRegisters::EProgramCounter] += 4;
-	int location = opCode & 0xFFFFFF; //24 bits
-	location = (location << 2);
-	uint32_t tmp = signExtend<26>(location);
-	r[TRegisters::EProgramCounter] += tmp;
-	if (debug)
-		std::cout << conditions_s[opCode >> 28 & 0xF] << " " << r[PC] << " " << conditions[opCode >> 28 & 0xF]() << " ";
-}
 
 void incrementBase(int& baseRegister, bool nullParameter = false){
 	baseRegister += 4;
@@ -833,7 +823,21 @@ void ARMExecute(int opCode){
 		if (((opCode >> 25) & 0x7) == 2)
 		{
 			m_dispatch_table[reduce_opcode(opCode)](r, opCode);
-			//std::println("{}", SingleDataTransfer::disassemble(opCode));
+			// std::println("{}", SingleDataTransfer::disassemble(opCode));
+			return;
+		}
+
+		if (branches::ArmBranch::isThisOpcode(opCode))
+		{
+			branches::ArmBranch::execute(r, opCode);
+			// std::println("{}", branches::ArmBranch::disassemble(opCode));
+			return;
+		}
+
+		if (MultiplyAccumulate::isThisOpcode(opCode))
+		{
+			MultiplyAccumulate::execute(r, opCode);
+			std::println("{}", MultiplyAccumulate::disassemble(opCode));
 			return;
 		}
 
@@ -846,13 +850,6 @@ void ARMExecute(int opCode){
 		case 14: //coProcessor data ops / register transfer, not used in GBA
 			break;
 		case 13: case 12: //co processor data transfer, not used in GBA
-			break;
-		case 11: //branch with link 
-			r[LR] = r[TRegisters::EProgramCounter];
-			r[LR] &= ~3; //bits 1-0 should always be cleared, but you never know
-			[[fallthrough]];
-		case 10://branch 
-			ARMBranch(opCode);
 			break;
 		case 9: //block data transfer pre offset. maybe implement S bits
 			subType = (opCode >> 20) & 0xB;
@@ -927,8 +924,6 @@ void ARMExecute(int opCode){
 				singleDataSwap(opCode);
 			else if (((opCode >> 22) & 0x3F) == 0 && (((opCode >> 4) & 0xF) == 9))
 				multiply(opCode);
-			else if (MultiplyLong::isThisOpcode(opCode))
-				MultiplyLong::execute(r, opCode);
 			else
 				halfDataTransfer(opCode);
 			break;

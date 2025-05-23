@@ -3,13 +3,10 @@
 #include <cstdint>
 #include <cassert>
 #include <format>
-#include <iostream>
 
 #include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/barrelShifterDecoder.h"
 #include "Memory/memoryOps.h"
-
-constexpr bool DebugPrints = true;
 
 namespace SingleDataTransfer {
 
@@ -118,7 +115,7 @@ namespace SingleDataTransfer {
 	{
 		const auto op = fromOpcode(opcode);
 		const auto ls = op.loadBit == loadStore_t::ELoad ? "LDR" : "STR";
-		const auto condition = "";
+		const auto condition = condition_strings[op.executionCondition];
 		const auto bw = op.byteTransfer == byteWord_t::EByte ? "B" : "";
 		const auto prePost1 = op.preIndexing == prePost_t::EPre ? "" : "]";
 		const auto prePost2 = op.preIndexing == prePost_t::EPre ? "]" : "";

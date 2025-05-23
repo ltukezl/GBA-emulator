@@ -65,7 +65,7 @@ void hiRegOperations(uint16_t opcode){
 	uint32_t operand1 = r[newDestinationReg];
 	uint32_t operand2 = r[op.source];
 
-	if (op.source == PC){
+	if (op.source == 15){
 		operand2 += 2;
 		operand2 &= ~1;
 	}
@@ -85,7 +85,7 @@ void hiRegOperations(uint16_t opcode){
 
 static void PCRelativeLoad(uint16_t opcode){
 	union PCRelativeLoad op = { opcode };
-	uint32_t tmpPC = (r[PC] + 2) & ~2;
+	uint32_t tmpPC = (r[15] + 2) & ~2;
 	tmpPC += (op.offset << 2);
 	r[op.destination] = loadFromAddress32(tmpPC);
 

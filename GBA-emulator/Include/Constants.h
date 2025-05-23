@@ -1,6 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 #include <cstdint>
+#include <array>
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 
@@ -17,6 +18,9 @@ extern uint32_t SP_usr;
 #define SP 13
 #define LR 14
 #define PC 15
+
+static constexpr std::array condition_strings = { "EQ", "NE", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "" };
+
 extern bool debug;
 
 using finalImagePalettes = std::array<std::array<Tile::BitmapBit, 240>, 160>;
