@@ -3,16 +3,19 @@
 #include "Memory/memoryMappedIO.h"
 #include <cplusplusRewrite/HwRegisters.h>
 #include <cstdint>
-#include <cstdio>
 #include <Display/Display.h>
+#include <DMA/DMA.h>
+#include <fstream>
+#include <Interrupt/interrupt.h>
 #include <ios>
 #include <iostream>
 #include <Memory/memoryOps.h>
 #include <string>
 #include <Thumb/ThumbOpCodes.h>
-#include <DMA/DMA.h>
-#include <Interrupt/interrupt.h>
 #include <Timer/timers.h>
+#include <array>
+#include <filesystem>
+#include <vector>
 
 
 #define BIOS_START 0
@@ -53,6 +56,32 @@ uint8_t WS1Second[2] = { 1, 1 };
 uint8_t WS2Second[2] = { 1, 1 };
 
 Display* debugView;
+
+static void readFile(const std::string& fileName, std::vector<unsigned char>& input)
+{
+	size_t size = std::filesystem::file_size(fileName);
+
+	// Open and read file
+	std::ifstream file(fileName, std::ios::binary);
+
+	if (!file.read(reinterpret_cast<char*>(input.data()), size))
+	{
+		return;
+	}
+}
+
+static void readFile(const std::string& fileName, std::array<uint8_t, 0x4000>& input)
+{
+	size_t size = std::filesystem::file_size(fileName);
+
+	// Open and read file
+	std::ifstream file(fileName, std::ios::binary);
+
+	if (!file.read(reinterpret_cast<char*>(input.data()), size))
+	{
+		return;
+	}
+}
 
 /*
 NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in usr mode.
@@ -115,20 +144,16 @@ int main(int argc, char *args[]){
 #endif
 	memoryInits();
 
-	FILE *file;
-	FILE *bios;
-	//fopen_s(&file, "GBA-emulator/TestBinaries/FuzzARM.gba", "rb");
-	//fopen_s(&file, "GBA-emulator/TestBinaries/arm.gba", "rb");
-	fopen_s(&file, "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba", "rb");
-	//fopen_s(&file, "GBA-emulator/TestBinaries/program6.bin", "rb");
-	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/bigmap.gba", "rb");
-	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/obj_demo.gba", "rb");
-	//fopen_s(&file, "GBA-emulator/TestBinaries/tonc/irq_demo.gba", "rb");
-	fopen_s(&bios, "GBA-emulator/GBA.BIOS", "rb");
-	if (fread(GamePak, 0x2000000, 1, file) != 0)
-		return 1;
-	if (fread(systemROM.getMemoryPtr(), 0x3fff, 1, bios) == 0)
-		return 1;
+	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
+	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/program6.bin";
+	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/tonc/irq_demo.gba";
+
+	readFile(game, GamePak);
+	readFile("GBA-emulator/GBA.BIOS", systemROM.m_memoryArea);
 
 	uint64_t refreshRate = 0;
 	uint64_t vCounterDrawCycles = 0;

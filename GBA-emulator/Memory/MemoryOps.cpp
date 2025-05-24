@@ -1,6 +1,7 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 #include "Arm/armopcodes.h"
 #include "Constants.h"
@@ -34,7 +35,7 @@ uint32_t previousAddress = 0;
 extern RgbaPalette PaletteColours;
 
 uint8_t IoRAM[0x801] = {};
-uint8_t* GamePak = nullptr;
+std::vector<unsigned char> GamePak;
 
 BIOS systemROM;
 ExternalWorkRAM ewram;
@@ -574,13 +575,13 @@ unsigned __int32 POP(){
 void memoryInits(){
 	//writeToAddress32(0, 0xe129f000);
 	rawWrite32(IoRAM, 0x800, 0x0D000020);
-	GamePak = new uint8_t[0x2000000];
-	memset(GamePak, 0, sizeof(uint8_t) * 0x2000000);
-	memoryLayout[EGamePak1] = GamePak;
+	GamePak.reserve(0x2000000);
+	GamePak.resize(0x2000000);
+	memoryLayout[EGamePak1] = GamePak.data();
 	memoryLayout[EGamePak2] = &GamePak[0x1000000];
-	memoryLayout[EGamePak3] = GamePak;
+	memoryLayout[EGamePak3] = GamePak.data();
 	memoryLayout[EGamePak4] = &GamePak[0x1000000];
-	memoryLayout[EGamePak5] = GamePak;
+	memoryLayout[EGamePak5] = GamePak.data();
 	memoryLayout[EGamePak6] = &GamePak[0x1000000];
 	vram.m_observer.setAll();
 }

@@ -1,8 +1,9 @@
-#ifndef MEMORYOPS_H
-#define MEMORYOPS_H
+#pragma once
 
 #include <cstdint>
 #include <array>
+#include <vector>
+
 #include "Memory/MemoryAreas/BIOS.h"
 #include "Memory/MemoryAreas/EWRAM.h"
 #include "Memory/MemoryAreas/IWRAM.h"
@@ -19,7 +20,7 @@ extern PaletteRAM paletteram;
 extern VRAM vram;
 extern OAMRAM oamRam;
 extern Sram sram;
-extern uint8_t* GamePak;
+extern std::vector<unsigned char> GamePak;
 extern std::array<unsigned char*, 16> memoryLayout;
 
 // create memory for the different memory areas
@@ -45,5 +46,3 @@ void PUSH(int);
 unsigned __int32 POP();
 
 void memoryInits();
-
-#endif
