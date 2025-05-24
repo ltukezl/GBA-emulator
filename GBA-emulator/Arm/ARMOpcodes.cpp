@@ -1,4 +1,3 @@
-#include <print>
 #include <iostream>
 #include <utility>
 #include <string>
@@ -362,9 +361,6 @@ void MSR(uint32_t opCode){
 		r.m_cpsr.carry = tmp_cpsr.carry;
 		r.m_cpsr.negative = tmp_cpsr.negative;
 	}
-
-	if (debug)
-		std::cout << "MSR " << (SPSR ? "SPSR " : "CPSR ") << std::hex << shiftedImm << std::dec << " ";
 }
 
 

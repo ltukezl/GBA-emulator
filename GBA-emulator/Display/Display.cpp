@@ -1,29 +1,65 @@
-#include <SFML/Audio.hpp>
-#include <SFML/Graphics.hpp>
 #include <cstdio>
-#include <iostream>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
+#include <malloc.h>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Sprite.hpp>
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Time.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <SFML/Window/Event.hpp>
+#include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/VideoMode.hpp>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/Rect.hpp>
+#include <SFML/Graphics/Text.hpp>
+#include <vector>
+#include <string>
+#include <cassert>
 
-#include "Display/Display.h"
-#include "Memory/MemoryOps.h"
-#include "GBAcpu.h"
 #include "Constants.h"
-#include "Memory/memoryMappedIO.h"
+#include "Display/Display.h"
+#include "GBAcpu.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
+#include "Gba-Graphics/Rendermodes/RenderMode3.h"
+#include "Gba-Graphics/Rendermodes/TextMode.h"
+#include "Gba-Graphics/Sprites/Sprite.h"
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Gba-Graphics/Tile/Tileset.h"
-#include "Gba-Graphics/Rendermodes/TextMode.h"
-#include "Gba-Graphics/Rendermodes/RenderMode3.h"
-#include "Gba-Graphics/Sprites/Sprite.h"
+#include "Memory/memoryMappedIO.h"
+#include "Memory/MemoryOps.h"
+
+
+
+
 
 extern RgbaPalette PaletteColours;
 extern Tileset tileset;
 
 Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(res_y), name(name){
 	display = new sf::RenderWindow(sf::VideoMode(res_x, res_y), name);
+	if (display == 0)
+	{
+		assert(false);
+	}
 	txtRing = (Ring*)malloc(sizeof(Ring));
-	memset(txtRing, 0, sizeof(Ring));
+	if (txtRing == 0)
+	{
+		assert(false);
+	}
+	auto res = memset(txtRing, 0, sizeof(Ring));
+	if (res == 0)
+	{
+		assert(false);
+	}
 	Ring* tmp = txtRing;
 	for (int i = 0; i < 10; i++){
 		tmp->next = (Ring*)malloc(sizeof(Ring));
+		if (tmp->next == 0)
+		{
+			assert(false);
+		}
 		tmp = tmp->next;
 		memset(tmp, 0, sizeof(Ring));
 	}

@@ -1,5 +1,6 @@
 #include <bit>
 #include <cstdint>
+#include <cassert>
 
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/barrelShifter.h"
@@ -25,6 +26,11 @@ decltype(&ImmediateRotater::calculate) BarrelShifterDecoder::decode(const uint32
 		else
 			return &(RegisterWithImmediateShifter::calculate);
 	}
+	else
+	{
+		assert(false);
+		return &(RegisterWithImmediateShifter::calculate);
+	}
 }
 
 decltype(&ImmediateRotater::disassemble) BarrelShifterDecoder::disassemble(const uint32_t opCode) {
@@ -46,5 +52,10 @@ decltype(&ImmediateRotater::disassemble) BarrelShifterDecoder::disassemble(const
 			return &(RegisterWithRegisterShifter::disassemble);
 		else
 			return &(RegisterWithImmediateShifter::disassemble);
+	}
+	else
+	{
+		assert(false);
+		return &(RegisterWithImmediateShifter::disassemble);
 	}
 }

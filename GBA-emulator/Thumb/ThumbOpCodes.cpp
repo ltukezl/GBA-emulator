@@ -1,20 +1,24 @@
-#include <print>
 #include <array>
 #include <bit>
+#include <cstdint>
+#include <print>
+#include <utility>
 
-#include "GBAcpu.h"
-#include "Memory/MemoryOps.h"
-#include "Interrupt/interrupt.h"
-#include "Constants.h"
-#include "Thumb/ThumbOpCodes.h"
 #include "Arm/armopcodes.h"
-#include "CommonOperations/conditions.h"
-#include "CommonOperations/arithmeticOps.h"
-#include "CommonOperations/logicalOps.h"
-#include "cplusplusRewrite/HwRegisters.h"
 #include "Arm/ArmOpcodes/SingleDataTransfer.hpp"
-#include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
+#include "CommonOperations/arithmeticOps.h"
+#include "CommonOperations/conditions.h"
+#include "CommonOperations/logicalOps.h"
+#include "Constants.h"
+#include "cplusplusRewrite/HwRegisters.h"
+#include "GBAcpu.h"
+#include "Interrupt/interrupt.h"
+#include "Memory/MemoryOps.h"
+#include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
+#include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
+
+
 
 void mul(int &saveTo, int immidiate, int immidiate2){
 	saveTo = (immidiate2 * immidiate) & 0xFFFFFFFF;

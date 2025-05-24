@@ -1,23 +1,19 @@
-#include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <format>
-#include "Memory/MemoryOps.h"
-#include "Thumb/ThumbOpCodes.h"
-#include "Arm/ARMOpCodes.h"
+#include "Arm/armopcodes.h"
 #include "Constants.h"
-#include "GBAcpu.h"
-#include "DMA/DMA.h"
-#include "Display/Display.h"
-#include "Display/MemoryViewer.h"
-#include "Display/PaletteViewer.h"
-#include "Interrupt/interrupt.h"
-#include "Timer/timers.h"
 #include "Memory/memoryMappedIO.h"
-#include "cplusplusRewrite/HwRegisters.h"
-#include "cplusplusRewrite/dataProcessingOp.h"
-#include "cplusplusRewrite/tests/allTests.h"
+#include <cplusplusRewrite/HwRegisters.h>
+#include <cstdint>
+#include <cstdio>
+#include <Display/Display.h>
+#include <ios>
+#include <iostream>
+#include <Memory/memoryOps.h>
+#include <string>
+#include <Thumb/ThumbOpCodes.h>
+#include <DMA/DMA.h>
+#include <Interrupt/interrupt.h>
+#include <Timer/timers.h>
+
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
@@ -56,21 +52,6 @@ uint8_t WS0Second[2] = { 1, 1 };
 uint8_t WS1Second[2] = { 1, 1 };
 uint8_t WS2Second[2] = { 1, 1 };
 
-void updateInstructionCycleTimings(uint32_t address){
-	if (address >= 0xC00'0000){
-		N_cycles = firstAccessCycles[waitStateControl->waitstate2First];
-		S_cycles = WS2Second[waitStateControl->waitstate2Second];
-	}
-	else if (address >= 0xA000000){
-		N_cycles = firstAccessCycles[waitStateControl->waitstate1First];
-		S_cycles = WS1Second[waitStateControl->waitstate1Second];
-	}
-	else if (address >= 0x8000000){
-		N_cycles = firstAccessCycles[waitStateControl->waitstate0First];
-		S_cycles = WS0Second[waitStateControl->waitstate0Second];
-	}
-}
-
 Display* debugView;
 
 /*
@@ -78,10 +59,6 @@ NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in us
 otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
-
-	runAllTests();
-
-
 #if BIOS_START
 	r.m_cpsr.FIQDisable = 1;
 	r.m_cpsr.IRQDisable = 1;

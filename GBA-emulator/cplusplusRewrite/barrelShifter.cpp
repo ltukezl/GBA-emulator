@@ -1,6 +1,7 @@
 #include <bit>
-#include <assert.h>
 #include <format>
+#include <cstdint>
+#include <string>
 
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/Shifts.h"

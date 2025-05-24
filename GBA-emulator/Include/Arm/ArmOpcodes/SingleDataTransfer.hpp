@@ -1,12 +1,13 @@
 #pragma once
 #include <bit>
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 #include <format>
+#include <type_traits>
+#include <Constants.h>
 
-#include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/barrelShifterDecoder.h"
-#include "Memory/memoryOps.h"
+#include "cplusplusRewrite/HwRegisters.h"
 
 namespace SingleDataTransfer {
 
@@ -114,12 +115,12 @@ namespace SingleDataTransfer {
 	static auto disassemble(const uint32_t opcode)
 	{
 		const auto op = fromOpcode(opcode);
-		const auto ls = op.loadBit == loadStore_t::ELoad ? "LDR" : "STR";
+		const auto ls = (op.loadBit == loadStore_t::ELoad) ? "LDR" : "STR";
 		const auto condition = condition_strings[op.executionCondition];
-		const auto bw = op.byteTransfer == byteWord_t::EByte ? "B" : "";
-		const auto prePost1 = op.preIndexing == prePost_t::EPre ? "" : "]";
-		const auto prePost2 = op.preIndexing == prePost_t::EPre ? "]" : "";
-		const auto writeback = op.writeBack == writeBack_t::EWriteback ? "!" : "";
+		const auto bw = (op.byteTransfer == byteWord_t::EByte) ? "B" : "";
+		const auto prePost1 = (op.preIndexing == prePost_t::EPre) ? "" : "]";
+		const auto prePost2 = (op.preIndexing == prePost_t::EPre) ? "]" : "";
+		const auto writeback = (op.writeBack == writeBack_t::EWriteback) ? "!" : "";
 		return std::format("{}{}{} R{}, [R{}{}{}{}{}", ls, condition, bw, op.destinationRegister, op.baseRegister, prePost1, makeExpression(opcode), prePost2, writeback);
 	}
 }

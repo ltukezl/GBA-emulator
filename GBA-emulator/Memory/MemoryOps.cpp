@@ -1,11 +1,23 @@
-#include "Constants.h"
-#include "memory/memoryOps.h"
-#include "GBAcpu.h"
+#include <array>
+#include <cstdint>
+#include <cstring>
+
 #include "Arm/armopcodes.h"
-#include "iostream"
-#include "Timer/timers.h"
-#include "Memory/memoryMappedIO.h"
+#include "Constants.h"
 #include "Display/Display.h"
+#include "GBAcpu.h"
+#include "Memory/memoryMappedIO.h"
+#include "memory/memoryOps.h"
+#include "Timer/timers.h"
+#include <Gba-Graphics/Palette/RgbaPalette.h>
+#include <Memory/MemoryAreas/BIOS.h>
+#include <Memory/MemoryAreas/EWRAM.h>
+#include <Memory/MemoryAreas/IWRAM.h>
+#include <Memory/MemoryAreas/memoryAreas.h>
+#include <Memory/MemoryAreas/OAMRAM.h>
+#include <Memory/MemoryAreas/PaletteRAM.h>
+#include <Memory/MemoryAreas/SRAM.h>
+#include <Memory/MemoryAreas/VRAM.h>
 
 uint32_t systemROMStart = 0x00000000;
 uint32_t IoRAMStart = 0x04000000;
