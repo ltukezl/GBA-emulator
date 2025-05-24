@@ -69,6 +69,6 @@ public:
 		const auto op = fromOpcode(opcode);
 		const auto operation = op.Sub ? "SUB" : "ADD";
 		const auto prefix = op.useImmediate ? "#" : "R";
-		return std::format("{} R{}, R{}, {}{}", operation, op.destination, op.source, prefix, op.regOrImmediate);
+		return std::format("{} R{}, R{}, {}{:x}", operation, op.destination, op.source, prefix, op.regOrImmediate);
 	}
 };

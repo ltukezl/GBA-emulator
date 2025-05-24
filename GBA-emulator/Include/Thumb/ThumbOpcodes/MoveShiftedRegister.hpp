@@ -2,8 +2,7 @@
 
 #include <cstdint>
 #include <bit>
-//#include <array>
-//#include "Constants.h"
+#include <format>
 
 #include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/Shifts.h"
@@ -14,6 +13,7 @@ public:
 
 	static constexpr std::array m_shifts{ shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift };
 	static constexpr std::array m_conditions{ shifts::Lsl::calcConditions, shifts::Lsr::calcConditions, shifts::Asr::calcConditions };
+	static constexpr std::array shift_strings = { "LSL", "LSR", "ASR" };
 
 	struct MoveShiftedRegisterOpcode {
 		uint16_t destination : 3;
@@ -58,6 +58,9 @@ public:
 
 	static auto disassemble(const uint16_t opcode)
 	{
-		return "";
+		const auto op = fromOpcode(opcode);
+		const auto operation = shift_strings[op.instruction];
+		const auto value = op.immediate;
+		return std::format("{} R{}, R{}, #{:x}", operation, op.destination, op.source, value);
 	}
 };
