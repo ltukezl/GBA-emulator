@@ -31,8 +31,8 @@ public:
 
 class RegisterWithImmediateShifter{
 public:
-	static constexpr std::array<decltype(&shifts::Lsl::shift), 4> m_shifts {shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift, shifts::Ror::shift};
-	static constexpr std::array<decltype(&shifts::Lsl::calcConditions), 4> m_conditions{ shifts::Lsl::calcConditions, shifts::Lsr::calcConditions, shifts::Asr::calcConditions, shifts::Ror::calcConditions };
+	static constexpr std::array m_shifts {shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift, shifts::Ror::shift};
+	static constexpr std::array m_conditions{ shifts::Lsl::calcConditions, shifts::Lsr::calcConditions, shifts::Asr::calcConditions, shifts::Ror::calcConditions };
 
 	struct registerRotateFields {
 		uint32_t sourceRegister : 4;

@@ -1,6 +1,8 @@
 #ifndef TOC_H
 #define TOC_H
 
+#include <cstdint>
+
 void thumbExecute(uint16_t);
 
 union moveShiftedRegisterOp{

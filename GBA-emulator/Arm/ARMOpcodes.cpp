@@ -1,8 +1,11 @@
 #include <print>
 #include <iostream>
+#include <utility>
+#include <string>
+#include <cstdint>
+#include <array>
 
 #include "GBAcpu.h"
-#include "Thumb/ThumbOpCodes.h"
 #include "Arm/armopcodes.h"
 #include "Memory/MemoryOps.h"
 #include "Constants.h"
@@ -11,6 +14,7 @@
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
+#include "cplusplusRewrite/HwRegisters.h"
 #include "Arm/ArmOpcodes/multiply.hpp"
 #include "Arm/ArmOpcodes/Branch.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
@@ -783,7 +787,7 @@ consteval void insert_opcodes_impl(T& arr, std::index_sequence<Is...>) {
 	((arr[Is] = populate_func<(baseOp + static_cast<uint32_t>(Is) * 0x10'0000)>()), ...);
 }
 
-static constexpr std::array<decltype(&SingleDataTransfer::SingleDataTransferIPrDWNS::execute), 64> m_dispatch_table = { []() consteval {
+static constexpr std::array m_dispatch_table = { []() consteval {
 	std::array<decltype(&SingleDataTransfer::SingleDataTransferIPrDWNS::execute), 64> tmp {};
 	constexpr uint32_t start = 0x400'0000;
 	insert_opcodes<start>(tmp);
@@ -813,7 +817,7 @@ void ARMExecute(int opCode){
 		if (branches::ArmBranchAndExhange::isThisOpcode(opCode))
 		{
 			branches::ArmBranchAndExhange::execute(r, opCode);
-			std::println("{}", branches::ArmBranchAndExhange::disassemble(opCode));
+			// std::println("{}", branches::ArmBranchAndExhange::disassemble(opCode));
 			return;
 		}
 

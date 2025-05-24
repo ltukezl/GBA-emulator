@@ -1,113 +1,69 @@
 #include <cstdint>
-#include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/MathOps.h"
-#include "cplusplusRewrite/operation.h"
-/*
 
-void MathOp::execute(uint32_t& destinationRegister, uint32_t operand1, RotatorUnits& rotation, bool setConditions){
-	uint32_t operand2 = rotation.calculate(false);
-	calculate(destinationRegister, operand1, operand2);
-	if (setConditions)
-		calcConditions(destinationRegister, operand1, operand2);
+using namespace mathOps;
+
+static bool negative(const uint32_t result)
+{
+	return static_cast<int32_t>(result) < 0;
 }
 
-MathOp::MathOp(union CPSR_t& programStatus) : Operation(programStatus) {}
-
-//-------
-void Addition::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
-	m_cpsr.zero = isZero(result);
-	m_cpsr.negative = isNegative(result);
-	m_cpsr.carry = additionCarry(operand1, operand2, result);
-	m_cpsr.overflow = additionOverflow(operand1, operand2, result);
+static bool zero(const uint32_t result)
+{
+	return result == 0;
 }
 
-void Addition::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = operand1 + operand2;
+static bool addCarry(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
+{
+	const auto a = static_cast<uint64_t>(operand1);
+	const auto b = static_cast<uint64_t>(operand2);
+	const auto c = a + b + result;
+
+	return (c >> 32) & 1;
 }
 
-Addition::Addition(union CPSR_t& programStatus) : MathOp(programStatus){}
-
-//-------
-void Substraction::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
-	m_cpsr.zero = isZero(result);
-	m_cpsr.negative = isNegative(result);
-	m_cpsr.carry = substractionBorrow(operand1, operand2, result);
-	m_cpsr.overflow = substractionUnderflow(operand1, operand2, result);
+static bool addOverflow(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
+{
+	return static_cast<int32_t>((operand1 ^ result) & (operand2 ^ result)) < 0;
 }
 
-void Substraction::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = operand1 - operand2;
+static bool subCarry(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
+{
+	return operand1 < operand2;
 }
 
-Substraction::Substraction(union CPSR_t& programStatus) : MathOp(programStatus){}
-
-//-------
-void ReverseSubstraction::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
-	m_cpsr.zero = isZero(result);
-	m_cpsr.negative = isNegative(result);
-	m_cpsr.carry = substractionBorrow(operand1, operand2, result);
-	m_cpsr.overflow = substractionUnderflow(operand1, operand2, result);
+static bool subOverflow(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
+{
+	return static_cast<int32_t>((operand1 ^ operand2) & (operand2 ^ result)) < 0;
 }
 
-void ReverseSubstraction::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = operand2 - operand1;
+
+//------------
+
+uint32_t Add::calculate(const CPSR_t& cpsr, const uint32_t operand1, const uint32_t operand2)
+{
+	return operand1 + operand2;
 }
 
-ReverseSubstraction::ReverseSubstraction(union CPSR_t& programStatus) : MathOp(programStatus){}
-
-//-------
-void AddWithCarry::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
-	m_cpsr.zero = isZero(result);
-	m_cpsr.negative = isNegative(result);
-	m_cpsr.carry = additionCarry(operand1, operand2, result);
-	m_cpsr.overflow = additionOverflow(operand1, operand2, result);
+void Add::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t operand1, const uint32_t operand2)
+{
+	cpsr.zero = zero(result);
+	cpsr.negative = negative(result);
+	cpsr.carry = addCarry(operand2, operand1, 0);
+	cpsr.overflow = addOverflow(operand1, operand2, result);
 }
 
-void AddWithCarry::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = operand1 + operand2 + m_cpsr.carry;
+//------------
+
+uint32_t Sub::calculate(const CPSR_t& cpsr, const uint32_t operand1, const uint32_t operand2)
+{
+	return operand1 - operand2;
 }
 
-AddWithCarry::AddWithCarry(union CPSR_t& programStatus) : MathOp(programStatus){}
-
-//-------
-void BorrowSubstraction::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
-	m_cpsr.zero = isZero(result);
-	m_cpsr.negative = isNegative(result);
-	m_cpsr.carry = substractionBorrow(operand1, operand2, result);
-	m_cpsr.overflow = substractionUnderflow(operand1, operand2, result);
+void Sub::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t operand1, const uint32_t operand2)
+{
+	cpsr.zero = zero(result);
+	cpsr.negative = negative(result);
+	cpsr.carry = subCarry(operand2, operand1, result);
+	cpsr.overflow = subOverflow(operand2, operand1, result);
 }
-
-void BorrowSubstraction::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = operand1 - operand2 - !m_cpsr.carry;
-}
-
-BorrowSubstraction::BorrowSubstraction(union CPSR_t& programStatus) : MathOp(programStatus){}
-
-//-------
-void ReverseBorrowSubstraction::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
-	m_cpsr.zero = isZero(result);
-	m_cpsr.negative = isNegative(result);
-	m_cpsr.carry = substractionBorrow(operand2, operand1, result);
-	m_cpsr.overflow = substractionUnderflow(operand2, operand1, result);
-}
-
-void ReverseBorrowSubstraction::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = operand2 - operand1 - !m_cpsr.carry;
-}
-
-ReverseBorrowSubstraction::ReverseBorrowSubstraction(union CPSR_t& programStatus) : MathOp(programStatus){}
-
-//-------
-void Negation::calcConditions(uint32_t result, uint32_t operand1, uint32_t operand2) {
-	m_cpsr.zero = isZero(result);
-	m_cpsr.negative = isNegative(result);
-	m_cpsr.carry = substractionBorrow(operand1, 0, 0);
-	m_cpsr.overflow = substractionUnderflow(operand1, 0, 0);
-}
-
-void Negation::calculate(uint32_t& destinationRegister, uint32_t operand1, uint32_t operand2) {
-	destinationRegister = 0 - operand2;
-}
-
-Negation::Negation(union CPSR_t& programStatus) : MathOp(programStatus){}
-*/

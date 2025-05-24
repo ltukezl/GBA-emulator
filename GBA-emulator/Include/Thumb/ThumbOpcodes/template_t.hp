@@ -1,0 +1,45 @@
+#pragma once
+
+#include <cstdint>
+#include <bit>
+#include <array>
+#include "Constants.h"
+
+#include "cplusplusRewrite/HwRegisters.h"
+
+class MultiplyAccumulate
+{
+public:
+	struct MultiplyAccumulateOpcode
+	{
+
+	};
+
+	static constexpr uint16_t mask(const uint16_t opcode)
+	{
+		return opcode & (0x3 << 11);
+	}
+
+	static constexpr MultiplyAccumulateOpcode fromOpcode(const uint16_t opcode)
+	{
+		return std::bit_cast<MultiplyAccumulateOpcode>(opcode);
+	}
+
+	static constexpr bool isThisOpcode(const uint16_t opcode)
+	{
+		const auto opcodeStruct = fromOpcode(opcode);
+		return (opcodeStruct.reserved1 == 9) && (opcodeStruct.reserved2 == 1);
+	}
+
+	template<uint16_t iterOpcode>
+	static void execute(Registers& regs, const uint16_t opcode)
+	{
+		constexpr auto c_op = fromOpcode(iterOpcode);
+		const auto op = fromOpcode(opcode);
+	}
+
+	static auto disassemble(const uint16_t opcode)
+	{
+
+	}
+};

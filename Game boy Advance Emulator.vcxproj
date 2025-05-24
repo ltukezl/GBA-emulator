@@ -211,6 +211,8 @@
     <ClInclude Include="GBA-emulator\Include\Memory\memoryMappedIO.h" />
     <ClInclude Include="GBA-emulator\Include\Memory\memoryOps.h" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AddSubstract.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\Timer\timers.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tile.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tileset.h" />
@@ -218,6 +220,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+    <None Include="GBA-emulator\Include\Thumb\ThumbOpcodes\template_t.hp" />
     <None Include="GBA-emulator\TestBinaries\program2.bin" />
     <None Include="GBA-emulator\TestBinaries\program3.bin" />
     <None Include="GBA-emulator\TestBinaries\program4.bin" />

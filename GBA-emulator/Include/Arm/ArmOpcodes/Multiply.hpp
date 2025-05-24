@@ -3,8 +3,9 @@
 #include <cstdint>
 #include <bit>
 #include <array>
-#include "Constants.h"
+#include <format>
 
+#include "Constants.h"
 #include "cplusplusRewrite/HwRegisters.h"
 
 class MultiplyAccumulate
@@ -79,8 +80,8 @@ public:
 
 		if (op.setCondition)
 		{
-			r.m_cpsr.zero = result ? 0 : 1;
-			r.m_cpsr.negative = ((result >> 63) & 1);
+			regs.m_cpsr.zero = result ? 0 : 1;
+			regs.m_cpsr.negative = ((result >> 63) & 1);
 		}
 	}
 
@@ -140,8 +141,8 @@ public:
 		result += op.accumulate ? regs[op.operand3] : 0;
 		regs[op.destination] = result;
 		if (op.setCondition) {
-			r.m_cpsr.zero = result ? 0 : 1;
-			r.m_cpsr.negative = ((result >> 31) & 1);
+			regs.m_cpsr.zero = result ? 0 : 1;
+			regs.m_cpsr.negative = ((result >> 31) & 1);
 		}
 	}
 

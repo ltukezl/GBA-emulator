@@ -105,9 +105,6 @@
     <ClCompile Include="GBA-emulator\Display\VideoCycleCounter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\cplusplusRewrite\Multiply.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBA-emulator\Include\Constants.h">
@@ -251,13 +248,22 @@
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\TilesetMemoryObserver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\Multiply.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferImmediate.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferRegister.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Branch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Multiply.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AddSubstract.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -275,5 +281,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="ClassDiagram.cd" />
+    <None Include="GBA-emulator\Include\Thumb\ThumbOpcodes\template_t.hp" />
   </ItemGroup>
 </Project>

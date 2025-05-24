@@ -1,7 +1,6 @@
-#include <iostream>
-#include <cstring>
-#include <format>
 #include <print>
+#include <array>
+#include <bit>
 
 #include "GBAcpu.h"
 #include "Memory/MemoryOps.h"
@@ -12,7 +11,10 @@
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/logicalOps.h"
+#include "cplusplusRewrite/HwRegisters.h"
 #include "Arm/ArmOpcodes/SingleDataTransfer.hpp"
+#include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
+#include "Thumb/ThumbOpcodes/AddSubstract.hpp"
 
 void mul(int &saveTo, int immidiate, int immidiate2){
 	saveTo = (immidiate2 * immidiate) & 0xFFFFFFFF;
@@ -30,14 +32,6 @@ void(*arith[2])(int&, int, int) = { Adds, Subs };
 void(*movCompIpaddIpsub[4])(int&, int, int) = { Movs, Cmp, Adds, Subs };
 void(*logicalOps[16])(int&, int, int) = { Ands, Eors, lslCond, lsrCond, asrCond, Adcs, Sbcs, rorCond, Tst, Neg, Cmp, Cmn, Orrs, mul, Bics, Mvns };
 void(*hlOps[4])(int&, int, int) = { Add, Cmp, Mov, bx };
-
-void moveShiftedRegister(uint16_t opcode){
-	union moveShiftedRegisterOp op = { opcode };
-	if (op.immediate == 0 && (op.instruction == 1 || op.instruction == 2))
-		shifts_thumb[op.instruction]((int&)r[op.destination], r[op.source], 32);
-	else
-		shifts_thumb[op.instruction]((int&)r[op.destination], r[op.source], op.immediate);
-}
 
 void addSubFunction(uint16_t opcode){
 	union addSubRegisterOp op = { opcode };
@@ -305,24 +299,44 @@ void branchLink(uint16_t opcode){
 	}
 }
 
+template<uint16_t op>
+static consteval auto decode_table()
+{
+	if constexpr (AddSubThumb::isThisOpcode(op))
+		return &(AddSubThumb::execute<AddSubThumb::mask(op)>);
+	else if constexpr (MoveShiftedRegister::isThisOpcode(op))
+		return &(MoveShiftedRegister::execute<MoveShiftedRegister::mask(op)>);
+	else
+		return &(AddSubThumb::execute<AddSubThumb::mask(op)>);
+}
+
+template<typename T, std::size_t... Opcodes>
+static consteval auto insert_to_table(T& arr, std::index_sequence<Opcodes...>)
+{
+	((arr[Opcodes] = decode_table<static_cast<uint16_t>(Opcodes) << 8 >()), ...);
+}
+
+static constexpr std::array<decltype(&AddSubThumb::execute<0>), 256> thumb_dispatch = { []() consteval {
+		std::array <decltype(&AddSubThumb::execute<0>), 256> tmp {};
+		insert_to_table(tmp, std::make_index_sequence<tmp.size()>{});
+		return tmp;
+	}() };
+
 void thumbExecute(uint16_t opcode){
 	int subType;
 	int instruction;
 	cycles += 1;
 	__int16 type = (opcode & 0xE000) >> 13;
+	/*
+	if (AddSubThumb::isThisOpcode(opcode))
+		std::println("{}", AddSubThumb::disassemble(opcode));
+	else if  (MoveShiftedRegister::isThisOpcode(opcode))
+		std::println("{}", MoveShiftedRegister::disassemble(opcode));
+	*/
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
-		instruction = (opcode >> 11) & 3;
-		switch (instruction){
-		case 0x00: case 0x01: case 0x02: //shifts
-			moveShiftedRegister(opcode);
-			break;
-
-		case 0x03: //add / substract
-			addSubFunction(opcode);
-			break;
-		}
+		thumb_dispatch[opcode >> 8](r, opcode);
 		break;
 
 	case 1: // move|compare|substract|add immediate
