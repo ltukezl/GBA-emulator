@@ -1,11 +1,11 @@
-#include "cplusplusRewrite/dataProcessingOp.h"
 #include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
-#include "cplusplusRewrite/Shifts.h"
-#include "cplusplusRewrite/operation.h"
-#include "cplusplusRewrite/MathOps.h"
-#include "cplusplusRewrite/LogicOps.h"
+#include "cplusplusRewrite/dataProcessingOp.h"
 #include "cplusplusRewrite/HwRegisters.h"
+#include "cplusplusRewrite/LogicOps.h"
+#include "cplusplusRewrite/MathOps.h"
+#include "cplusplusRewrite/operation.h"
+#include "cplusplusRewrite/Shifts.h"
 #include <iostream>
 /*
 void DataProcessingOpcode::initialize(){

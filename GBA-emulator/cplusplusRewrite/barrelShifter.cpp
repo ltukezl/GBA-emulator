@@ -1,11 +1,11 @@
 #include <bit>
-#include <format>
 #include <cstdint>
+#include <format>
 #include <string>
 
 #include "cplusplusRewrite/barrelShifter.h"
-#include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/HwRegisters.h"
+#include "cplusplusRewrite/Shifts.h"
 
 static constexpr std::array shift_strings = { "LSL", "LSR", "ASR", "ROR" };
 

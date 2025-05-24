@@ -1,8 +1,6 @@
 #include <cstdint>
-#include "cplusplusRewrite/operation.h"
-#include "cplusplusRewrite/barrelShifter.h"
-#include "cplusplusRewrite/HwRegisters.h"
 
+#include "cplusplusRewrite/operation.h"
 
 bool Operation::isZero(uint32_t result) { return result == 0; }
 bool Operation::isNegative(int32_t result) { return result < 0; }

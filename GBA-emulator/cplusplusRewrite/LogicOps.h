@@ -1,5 +1,4 @@
 #pragma once
-#include "cplusplusRewrite/operation.h"
 /*
 class LogicOp: public Operation {
 protected:

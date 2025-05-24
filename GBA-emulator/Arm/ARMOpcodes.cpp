@@ -1,22 +1,22 @@
-#include <iostream>
-#include <utility>
-#include <string>
-#include <cstdint>
 #include <array>
+#include <cstdint>
+#include <iostream>
+#include <string>
+#include <utility>
 
-#include "GBAcpu.h"
 #include "Arm/armopcodes.h"
-#include "Memory/MemoryOps.h"
-#include "Constants.h"
-#include "Interrupt/interrupt.h"
-#include "CommonOperations/conditions.h"
+#include "Arm/ArmOpcodes/Branch.hpp"
+#include "Arm/ArmOpcodes/multiply.hpp"
+#include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
 #include "CommonOperations/arithmeticOps.h"
+#include "CommonOperations/conditions.h"
 #include "CommonOperations/logicalOps.h"
+#include "Constants.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
-#include "Arm/ArmOpcodes/multiply.hpp"
-#include "Arm/ArmOpcodes/Branch.hpp"
-#include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
+#include "GBAcpu.h"
+#include "Interrupt/interrupt.h"
+#include "Memory/MemoryOps.h"
 
 void incrementBase(int& baseRegister, bool nullParameter = false){
 	baseRegister += 4;

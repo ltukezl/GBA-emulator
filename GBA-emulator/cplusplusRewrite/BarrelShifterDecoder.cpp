@@ -1,9 +1,9 @@
 #include <bit>
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 
-#include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/barrelShifter.h"
+#include "cplusplusRewrite/BarrelShifterDecoder.h"
 
 
 decltype(&ImmediateRotater::calculate) BarrelShifterDecoder::decode(const uint32_t opCode){

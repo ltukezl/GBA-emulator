@@ -1,6 +1,3 @@
-#include <cstdint>
-#include "cplusplusRewrite/barrelShifter.h"
-#include "cplusplusRewrite/operation.h"
 #include "cplusplusRewrite/LogicOps.h"
 /*
 bool LogicOp::isZero(uint32_t result) { return result == 0; }

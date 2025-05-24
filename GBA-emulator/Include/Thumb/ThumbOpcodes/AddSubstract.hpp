@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <bit>
+#include <cstdint>
 #include <format>
 
 #include "cplusplusRewrite/HwRegisters.h"

@@ -1,9 +1,9 @@
 #pragma once
-#include <cstdint>
 #include "cplusplusRewrite/barrelShifter.h"
-#include "cplusplusRewrite/Shifts.h"
-#include "cplusplusRewrite/operation.h"
 #include "cplusplusRewrite/HwRegisters.h"
+#include "cplusplusRewrite/operation.h"
+#include "cplusplusRewrite/Shifts.h"
+#include <cstdint>
 
 enum DataProcessingOpCodes {
 	AND,

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <cstdint>
-#include <memory>
-#include <initializer_list>
 #include <array>
+#include <cstdint>
+#include <initializer_list>
 
 //-------------------------------
 

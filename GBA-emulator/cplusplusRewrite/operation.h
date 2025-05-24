@@ -1,5 +1,4 @@
 #pragma once
-#include "cplusplusRewrite/barrelShifter.h"
 #include "cplusplusRewrite/HwRegisters.h"
 
 class Operation {

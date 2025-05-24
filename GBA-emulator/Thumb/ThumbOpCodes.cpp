@@ -16,8 +16,8 @@
 #include "Memory/MemoryOps.h"
 #include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
-#include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
+#include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
 
 
 

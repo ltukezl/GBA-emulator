@@ -1,7 +1,7 @@
 #include <cstdint>
 
-#include "cplusplusRewrite/Shifts.h"
 #include "cplusplusRewrite/HwRegisters.h"
+#include "cplusplusRewrite/Shifts.h"
 
 using namespace shifts;
 

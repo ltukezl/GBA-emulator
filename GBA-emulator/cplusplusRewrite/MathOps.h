@@ -1,8 +1,6 @@
 #pragma once
 #include <cstdint>
 
-#include "cplusplusRewrite/operation.h"
-
 union CPSR_t;
 
 namespace mathOps
