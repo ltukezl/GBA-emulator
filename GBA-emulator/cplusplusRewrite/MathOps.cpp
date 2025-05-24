@@ -29,7 +29,7 @@ static bool addOverflow(const uint32_t operand1, const uint32_t operand2, const 
 
 static bool subCarry(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
 {
-	return operand1 < operand2;
+	return operand1 <= operand2;
 }
 
 static bool subOverflow(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
@@ -67,3 +67,33 @@ void Sub::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t ope
 	cpsr.carry = subCarry(operand2, operand1, result);
 	cpsr.overflow = subOverflow(operand2, operand1, result);
 }
+
+//------------
+
+uint32_t Mov::calculate(const CPSR_t& cpsr, const uint32_t operand1, const uint32_t operand2)
+{
+	return operand2;
+}
+
+void Mov::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t operand1, const uint32_t operand2)
+{
+	cpsr.zero = zero(result);
+	cpsr.negative = negative(result);
+}
+
+//------------
+
+uint32_t Cmp::calculate(const CPSR_t& cpsr, const uint32_t operand1, const uint32_t operand2)
+{
+	return operand1 - operand2;
+}
+
+void Cmp::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t operand1, const uint32_t operand2)
+{
+	cpsr.zero = zero(result);
+	cpsr.negative = negative(result);
+	cpsr.carry = subCarry(operand2, operand1, result);
+	cpsr.overflow = subOverflow(operand2, operand1, result);
+}
+
+//------------

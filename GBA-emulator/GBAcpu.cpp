@@ -144,9 +144,10 @@ int main(int argc, char *args[]){
 #endif
 	memoryInits();
 
-	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
+	const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
-	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/program6.bin";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";
@@ -169,7 +170,7 @@ int main(int argc, char *args[]){
 		step = true;
 		// mem tests region 0x80011a0
 
-		if (r[TRegisters::EProgramCounter] == 0x8001560){ //0x80011a0, 0x80011e0
+		if (r[TRegisters::EProgramCounter] == 0x80003a8){ //0x80011a0, 0x80011e0
 			//debug = true;
 		}
 		//updateInstructionCycleTimings(*r[PC]);

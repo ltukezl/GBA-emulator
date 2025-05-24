@@ -1,6 +1,5 @@
-#include "GBAcpu.h"
-#include "CommonOperations/logicalOps.h"
 #include "CommonOperations/arithmeticOps.h"
+#include "CommonOperations/logicalOps.h"
 
 void And(int& saveTo, int operand1, int operand2){
 	saveTo = operand1 & operand2;

@@ -17,6 +17,7 @@
 #include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
 #include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
+#include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
 
 
 
@@ -310,6 +311,8 @@ static consteval auto decode_table()
 		return &(AddSubThumb::execute<AddSubThumb::mask(op)>);
 	else if constexpr (MoveShiftedRegister::isThisOpcode(op))
 		return &(MoveShiftedRegister::execute<MoveShiftedRegister::mask(op)>);
+	else if constexpr (MovCmpAddSubImm::isThisOpcode(op))
+		return &(MovCmpAddSubImm::execute<MovCmpAddSubImm::mask(op)>);
 	else
 		return &(AddSubThumb::execute<AddSubThumb::mask(op)>);
 }
@@ -331,12 +334,15 @@ void thumbExecute(uint16_t opcode){
 	int instruction;
 	cycles += 1;
 	__int16 type = (opcode & 0xE000) >> 13;
-	/*
+	
+	std::print("{:x} ", r[15]);
 	if (AddSubThumb::isThisOpcode(opcode))
 		std::println("{}", AddSubThumb::disassemble(opcode));
-	else if  (MoveShiftedRegister::isThisOpcode(opcode))
+	else if (MoveShiftedRegister::isThisOpcode(opcode))
 		std::println("{}", MoveShiftedRegister::disassemble(opcode));
-	*/
+	else if (MovCmpAddSubImm::isThisOpcode(opcode))
+		std::println("{}", MovCmpAddSubImm::disassemble(opcode));
+	
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
@@ -344,7 +350,7 @@ void thumbExecute(uint16_t opcode){
 		break;
 
 	case 1: // move|compare|substract|add immediate
-		movCompSubAddImm(opcode);
+		thumb_dispatch[opcode >> 8](r, opcode);
 		break;
 
 	case 2: //logical ops / memory load / store
