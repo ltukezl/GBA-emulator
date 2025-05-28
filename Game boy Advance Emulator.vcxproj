@@ -176,7 +176,6 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\barrelShifter.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\BarrelShifterDecoder.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\dataProcessingOp.h" />
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\Emulator.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\HwRegisters.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\LogicOps.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\MathOps.h" />
@@ -212,6 +211,7 @@
     <ClInclude Include="GBA-emulator\Include\Memory\memoryOps.h" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AddSubstract.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AluOps.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MovCmpAddSubImm.hpp" />
     <ClInclude Include="GBA-emulator\Include\Timer\timers.h" />

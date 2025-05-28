@@ -25,6 +25,18 @@ public:
 		return opcode & (0x3 << 9);
 	}
 
+	template<uint32_t opcode>
+	static consteval addSubRegisterOp fromOpcode()
+	{
+		return addSubRegisterOp{
+		.destination = static_cast<uint16_t>(opcode & 0b111),
+		.source = static_cast<uint16_t>((opcode >> 3) & 0b111),
+		.regOrImmediate = static_cast<uint16_t>((opcode >> 6) & 0b111),
+		.Sub = static_cast<bool>((opcode >> 9) & 0b1),
+		.useImmediate = static_cast<bool>((opcode >> 10) & 0b1),
+		};
+	}
+
 	static constexpr addSubRegisterOp fromOpcode(const uint16_t opcode)
 	{
 		return std::bit_cast<addSubRegisterOp>(opcode);
@@ -39,7 +51,7 @@ public:
 	template<uint32_t iterOpcode>
 	static void execute(Registers& regs, const uint16_t opcode)
 	{
-		constexpr auto c_op = fromOpcode(iterOpcode);
+		constexpr auto c_op = fromOpcode<iterOpcode>();
 		const auto op = fromOpcode(opcode);
 		uint32_t value = 0;
 		uint32_t reg_value = regs[op.source];

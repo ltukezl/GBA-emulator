@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <bit>
 #include <array>
-#include "Constants.h"
+#include <bit>
+#include <cstdint>
+#include <format>
 
 #include "cplusplusRewrite/HwRegisters.h"
 
@@ -19,6 +19,7 @@ public:
 	{
 		return opcode & (0x3 << 11);
 	}
+
 
 	static constexpr MultiplyAccumulateOpcode fromOpcode(const uint16_t opcode)
 	{

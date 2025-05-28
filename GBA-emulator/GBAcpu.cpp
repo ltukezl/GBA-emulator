@@ -1,10 +1,12 @@
 #include "Arm/armopcodes.h"
 #include "Constants.h"
 #include "Memory/memoryMappedIO.h"
+#include <array>
 #include <cplusplusRewrite/HwRegisters.h>
 #include <cstdint>
 #include <Display/Display.h>
 #include <DMA/DMA.h>
+#include <filesystem>
 #include <fstream>
 #include <Interrupt/interrupt.h>
 #include <ios>
@@ -13,8 +15,6 @@
 #include <string>
 #include <Thumb/ThumbOpCodes.h>
 #include <Timer/timers.h>
-#include <array>
-#include <filesystem>
 #include <vector>
 
 
@@ -144,9 +144,9 @@ int main(int argc, char *args[]){
 #endif
 	memoryInits();
 
-	const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/program6.bin";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";

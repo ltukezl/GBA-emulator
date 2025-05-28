@@ -185,9 +185,6 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\shifterTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\Emulator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\testUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -267,6 +264,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MovCmpAddSubImm.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AluOps.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
