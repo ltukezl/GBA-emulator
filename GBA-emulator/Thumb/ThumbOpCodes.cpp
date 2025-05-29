@@ -4,7 +4,6 @@
 #include <print>
 #include <utility>
 
-#include "Arm/armopcodes.h"
 #include "Arm/ArmOpcodes/SingleDataTransfer.hpp"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/conditions.h"
@@ -20,35 +19,20 @@
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
 #include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
 
-
-
-void mul(int &saveTo, int immidiate, int immidiate2){
+static void mul(int &saveTo, int immidiate, int immidiate2){
 	saveTo = (immidiate2 * immidiate) & 0xFFFFFFFF;
 	negative(saveTo);
 	zero(saveTo);
 }
 
-void bx(int& saveTo, int immidiate, int immidiate2){
+static void bx(int& saveTo, int immidiate, int immidiate2){
 	r[TRegisters::EProgramCounter] = immidiate2 & ~1;
 	r.m_cpsr.thumb = immidiate2 & 1;
 }
 
-void(*shifts_thumb[3])(int&, int, int) = { lslCond, lsrCond, asrCond };
-void(*arith[2])(int&, int, int) = { Adds, Subs };
-void(*movCompIpaddIpsub[4])(int&, int, int) = { Movs, Cmp, Adds, Subs };
-void(*logicalOps[16])(int&, int, int) = { Ands, Eors, lslCond, lsrCond, asrCond, Adcs, Sbcs, rorCond, Tst, Neg, Cmp, Cmn, Orrs, mul, Bics, Mvns };
 void(*hlOps[4])(int&, int, int) = { Add, Cmp, Mov, bx };
 
-static void aluOps(Registers& regs, const uint16_t opcode){
-	union aluOps op = { opcode };
-	logicalOps[op.instruction]((int&)regs[op.destination], regs[op.destination], regs[op.source]);
-
-	cycles += S_cycles;
-	if (op.instruction == 2 || op.instruction == 3 || op.instruction == 4 || op.instruction == 12)
-		cycles += 1;
-}
-
-void hiRegOperations(uint16_t opcode){
+static void hiRegOperations(uint16_t opcode){
 
 	union hiRegOps op = { opcode };
 	uint8_t newDestinationReg = 8 * op.destHiBit + op.destination;
@@ -68,9 +52,6 @@ void hiRegOperations(uint16_t opcode){
 	hlOps[op.instruction]((int&)r[newDestinationReg], operand1, operand2);
 
 	cycles += S_cycles;
-
-	if ((op.source == 15) || (newDestinationReg == 3))
-		cycles += N_cycles + 1;
 }
 
 static void PCRelativeLoad(uint16_t opcode){
@@ -82,7 +63,7 @@ static void PCRelativeLoad(uint16_t opcode){
 	cycles += 1;
 }
 
-void loadStoreRegOffset(uint16_t opcode){
+static void loadStoreRegOffset(uint16_t opcode){
 	union loadStoreRegOffset op = { opcode };
 	uint32_t totalAddress = r[op.baseReg] + r[op.offsetReg];
 
@@ -94,11 +75,9 @@ void loadStoreRegOffset(uint16_t opcode){
 		writeToAddress(totalAddress, r[op.destSourceReg]);
 	else
 		writeToAddress32(totalAddress, r[op.destSourceReg]);
-
-	cycles += S_cycles + N_cycles + 1;
 }
 
-void loadStoreSignExtend(uint16_t opcode){
+static void loadStoreSignExtend(uint16_t opcode){
 	union loadStoreSignExtended op = { opcode };
 	uint32_t totalAddress = r[op.baseReg] + r[op.offsetReg];
 
@@ -118,11 +97,9 @@ void loadStoreSignExtend(uint16_t opcode){
 		r[op.destSourceReg] = signExtend<8>(loadFromAddress(totalAddress));
 	else
 		writeToAddress16(totalAddress, r[op.destSourceReg]);
-
-	cycles += S_cycles + N_cycles + 1;
 }
 
-void loadStoreImm(uint16_t opcode){
+static void loadStoreImm(uint16_t opcode){
 	using namespace SingleDataTransfer;
 	const auto op = std::bit_cast<loadStoreImmediate>(opcode);
 	const uint32_t shift = op.byteSize ? 0 : 2;
@@ -138,55 +115,45 @@ void loadStoreImm(uint16_t opcode){
 	else
 		writeToAddress32(totalAddress, r[op.destSourceReg]);
 
-	cycles += S_cycles + N_cycles + 1;
-
 	const auto ls = op.loadFlag ? loadStore_t::ELoad : loadStore_t::EStore;
 	const auto bw = op.byteSize ? byteWord_t::EByte : byteWord_t::EWord;
 
 	const auto armOp = fromFields(immediate, op.destSourceReg, op.baseReg, ls, writeBack_t::ENoWriteback, bw, upDown_t::EAdd, prePost_t::EPre, immediate_t::EImmediate);
 	//std::println("{}", disassemble(armOp));
 	
-	cycles += S_cycles + N_cycles + 1;
-	
 }
 
-void loadStoreHalfword(uint16_t opcode){
+static void loadStoreHalfword(uint16_t opcode){
 	union loadStoreHalfWord op = { opcode };
 	int immediate = op.offset << 1; //half word alignment, 5 bits to 6 bits last bit is 0
 	if (op.loadFlag)
 		r[op.destSourceReg] = loadFromAddress16(r[op.baseReg] + immediate);
 	else
 		writeToAddress16(r[op.baseReg] + immediate, r[op.destSourceReg]);
-
-	cycles += S_cycles + N_cycles + 1;
 }
 
-void loadSPRelative(uint16_t opcode){
+static void loadSPRelative(uint16_t opcode){
 	union SPrelativeLoad op = { opcode };
 	if (op.loadFlag)
 		r[op.destSourceReg] = loadFromAddress32(r[TRegisters::EStackPointer] + (op.immediate << 2));
 	else
 		writeToAddress32(r[TRegisters::EStackPointer] + (op.immediate << 2), r[op.destSourceReg]);
-
-	cycles += 1;
-	if (!op.loadFlag)
-		cycles += N_cycles + 1;
 }
 
 
-void loadAddress(uint16_t opcode){
+static void loadAddress(uint16_t opcode){
 	union loadAddress op = { opcode };
 	int rs = op.useSP ? r[TRegisters::EStackPointer] : ((r[TRegisters::EProgramCounter] + 2) & ~2);
 	r[op.destination] = (op.immediate << 2) + rs;
 }
 
-void addOffsetToSP(uint16_t opcode){
+static void addOffsetToSP(uint16_t opcode){
 	int loadFlag = (opcode >> 7) & 1;
 	int immediate = (opcode & 0x7F) << 2;
 	r[SP] += loadFlag ? -immediate : immediate;
 }
 
-void pushpop(uint16_t opcode){
+static void pushpop(uint16_t opcode){
 	union pushPopReg op = { opcode };
 	int immediate = op.regList;
 
@@ -215,7 +182,7 @@ void pushpop(uint16_t opcode){
 	cycles += 1;
 }
 
-void multiLoad(uint16_t opcode){
+static void multiLoad(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
 	int baseReg = (opcode >> 8) & 7;
@@ -261,7 +228,7 @@ void multiLoad(uint16_t opcode){
 	cycles += 1;
 }
 
-void conditionalBranch(uint16_t opcode){
+static void conditionalBranch(uint16_t opcode){
 	union conditionalBranchOp op = { opcode };
 	const uint32_t location = ((op.immediate << 1) + 2);
 	r[PC] += conditions[op.condition]() ? location : 0;
@@ -270,14 +237,12 @@ void conditionalBranch(uint16_t opcode){
 		 std::print("B{} #0x{:x}", condition_strings[op.condition], location);
 }
 
-void unconditionalBranch(uint16_t opcode){
+static void unconditionalBranch(uint16_t opcode){
 	int immediate = (opcode & 0x7FF) << 1;
 	r[PC] += signExtend<12>(immediate) +2;
-
-	cycles += 1 + S_cycles + N_cycles;
 }
 
-void branchLink(uint16_t opcode){
+static void branchLink(uint16_t opcode){
 	int HLOffset = (opcode >> 11) & 1;
 	int immediate = (opcode & 0x7FF);
 	if (!HLOffset)
@@ -286,11 +251,6 @@ void branchLink(uint16_t opcode){
 		int nextInstruction = r[PC] + 1;
 		r[TRegisters::EProgramCounter] = r[LR] + (immediate << 1);
 		r[LR] = nextInstruction | 1;
-	}
-	if (!HLOffset)
-		cycles += S_cycles;
-	else{
-		cycles += S_cycles + S_cycles + N_cycles;
 	}
 }
 
@@ -306,7 +266,7 @@ static consteval auto decode_table()
 	else if constexpr (AluOps::isThisOpcode(op))
 		return &(AluOps::execute<AluOps::mask(op)>);
 	else
-		return &aluOps;
+		return &(AluOps::execute<AluOps::mask(op)>);
 }
 
 template<typename T, std::size_t... Opcodes>
@@ -315,11 +275,12 @@ static consteval auto insert_to_table(T& arr, std::index_sequence<Opcodes...>)
 	((arr[Opcodes] = decode_table<static_cast<uint16_t>(Opcodes) << 6 >()), ...);
 }
 
-static constexpr std::array<decltype(&AddSubThumb::execute<0>), 1024> thumb_dispatch = { []() consteval {
-		std::array <decltype(&AddSubThumb::execute<0>), 1024> tmp {};
-		insert_to_table(tmp, std::make_index_sequence<tmp.size()>{});
-		return tmp;
-	}() };
+static constexpr std::array thumb_dispatch = { []() consteval
+ {
+	std::array <decltype(&AddSubThumb::execute<0>), 1024> tmp {};
+	insert_to_table(tmp, std::make_index_sequence<tmp.size()>{});
+	return tmp;
+}() };
 
 void thumbExecute(uint16_t opcode){
 	int subType;

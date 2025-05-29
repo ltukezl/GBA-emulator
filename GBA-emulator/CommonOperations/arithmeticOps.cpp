@@ -1,3 +1,5 @@
+#include <cstdint>
+
 #include "GBAcpu.h"
 
 void negative(int result)

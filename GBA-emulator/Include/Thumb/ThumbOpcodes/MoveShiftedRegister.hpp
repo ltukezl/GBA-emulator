@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <bit>
 #include <format>
 
 #include "cplusplusRewrite/HwRegisters.h"
@@ -30,7 +29,13 @@ public:
 
 	static constexpr MoveShiftedRegisterOpcode fromOpcode(const uint16_t opcode)
 	{
-		return std::bit_cast<MoveShiftedRegisterOpcode>(opcode);
+		return {
+			.destination = static_cast<uint16_t>(opcode & 0b111),             // bits 0–2
+			.source = static_cast<uint16_t>((opcode >> 3) & 0b111),           // bits 3–5
+			.immediate = static_cast<uint16_t>((opcode >> 6) & 0b11111),        // bits 6–10
+			.instruction = static_cast<uint16_t>((opcode >> 11) & 0b11),     // bits 11–12
+			.unused = static_cast<uint16_t>((opcode >> 13) & 0b111)           // bits 13–15
+		};
 	}
 
 	static constexpr bool isThisOpcode(const uint16_t opcode)

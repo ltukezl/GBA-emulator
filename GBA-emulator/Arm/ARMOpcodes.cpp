@@ -8,6 +8,7 @@
 #include "Arm/ArmOpcodes/Branch.hpp"
 #include "Arm/ArmOpcodes/multiply.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
+#include "Arm/ArmOpcodes/SingleDataTransferRegister.hpp"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/logicalOps.h"
@@ -18,11 +19,11 @@
 #include "Interrupt/interrupt.h"
 #include "Memory/MemoryOps.h"
 
-void incrementBase(int& baseRegister, bool nullParameter = false){
+static void incrementBase(int& baseRegister, bool nullParameter = false){
 	baseRegister += 4;
 }
 
-void decrementBase(int& baseRegister, bool nullParameter = false){
+static void decrementBase(int& baseRegister, bool nullParameter = false){
 	baseRegister -= 4;
 }
 
@@ -203,7 +204,7 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b){
 }
 
 
-void singleDataSwap(int opCode){
+static void singleDataSwap(int opCode){
 	uint32_t rm = opCode & 0xF;
 	uint32_t rd = (opCode >> 12) & 0xF;
 	uint32_t rn = (opCode >> 16) & 0xF;
@@ -293,7 +294,7 @@ uint32_t RORnoCond(uint32_t immediate, uint32_t by){
 	return (immediate >> by) | (immediate << (32 - by));
 }
 
-void rrx(int& saveTo, uint32_t from, bool conditions){
+static void rrx(int& saveTo, uint32_t from, bool conditions){
 	saveTo = (r.m_cpsr.carry << 31) | (from >> 1);
 	if (conditions)
 	{
@@ -346,7 +347,7 @@ void msr2(int& saveTo, int operand1, int operand2){
 
 void MSR(uint32_t opCode){
 	bool SPSR = (opCode >> 22) & 1;
-	CPSR_t tmp_cpsr;
+	CPSR_t tmp_cpsr {};
 	uint8_t rotate = (opCode >> 8) & 0xF;
 	uint32_t imm = opCode & 0xFF;
 	uint32_t shiftedImm = RORnoCond(imm, rotate);
@@ -507,7 +508,7 @@ void dataProcessingImmediate(int opCode){
 		std::cout << dataOperations_s[operationID] << " r" << rd << ", r" << rs << ", " << result << " ";
 }
 
-void halfDataTransfer(int opCode){
+static void halfDataTransfer(int opCode){
 	int pFlag = (opCode >> 24) & 1;
 	int uFlag = (opCode >> 23) & 1;
 	int func = (opCode >> 22) & 1;
@@ -597,7 +598,7 @@ void halfDataTransfer(int opCode){
 	}
 }
 
-void singleDataTrasnferRegisterPre(int opCode){
+static void singleDataTrasnferRegisterPre(int opCode){
 	int offset = 0;
 
 	int rn = (opCode >> 16) & 0xF;
@@ -625,18 +626,10 @@ void singleDataTrasnferRegisterPre(int opCode){
 		auto ret = byteFlag ? loadFromAddress(r[rn]) : loadFromAddress32(r[rn]);
 		r[rn] = (writeBack) ? r[rn] : oldReg;
 		r[rd] = ret;
-
-		if (debug && byteFlag)
-			std::cout << "ldrb r" << +rd << ", [r" << +rn << " r" << +rm << "] ";
-		else if (debug && !byteFlag)
-			std::cout << "ldr r" << +rd << ", [r" << +rn << " r" << +rm << "] ";
-		break;
 	}
-
-	cycles += S_cycles + N_cycles + 1;
 }
 
-void singleDataTrasnferRegisterPost(int opCode){
+static void singleDataTrasnferRegisterPost(int opCode){
 	int upDownBit = (opCode >> 23) & 1;
 	int byteFlag = (opCode >> 22) & 1;
 	int writeback = (opCode >> 21) & 1;
@@ -662,113 +655,51 @@ void singleDataTrasnferRegisterPost(int opCode){
 		r[destinationReg] = ret;
 		break;
 	}
-
-	cycles += S_cycles + N_cycles + 1;
 }
 
 static uint32_t constexpr reduce_opcode(uint32_t opCode)
 {
-	return ((opCode >> 20) & 0x1F);
+	return ((opCode >> 20) & 0x3F);
 }
 
 template<uint32_t opCode>
-decltype(&SingleDataTransfer::SingleDataTransferIPrDWNS::execute) constexpr populate_func()
+decltype(&SingleDataTransfer::SingleDataTransferIPoL::execute<0>) constexpr populate_func()
 {
-	if constexpr (SingleDataTransfer::SingleDataTransferIPrDWNS::isThisOpcode(opCode))
+	if constexpr (SingleDataTransfer::SingleDataTransferIPrS::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrDWNS::execute;
+		return &SingleDataTransfer::SingleDataTransferIPrS::execute<opCode>;
 	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrDBNS::isThisOpcode(opCode))
+	else if constexpr (SingleDataTransfer::SingleDataTransferIPrL::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrDBNS::execute;
+		return &SingleDataTransfer::SingleDataTransferIPrL::execute<opCode>;
 	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrUBNS::isThisOpcode(opCode))
+	else if constexpr (SingleDataTransfer::SingleDataTransferIPoS::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrUBNS::execute;
+		return &SingleDataTransfer::SingleDataTransferIPoS::execute<opCode>;
 	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrUWNS::isThisOpcode(opCode))
+	else if constexpr (SingleDataTransfer::SingleDataTransferIPoL::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrUWNS::execute;
+		return &SingleDataTransfer::SingleDataTransferIPoL::execute<opCode>;
 	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrDWWS::isThisOpcode(opCode))
+	if constexpr (SingleDataTransfer::SingleDataTransferRPrS::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrDWWS::execute;
+		return &SingleDataTransfer::SingleDataTransferRPrS::execute<opCode>;
 	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrDBWS::isThisOpcode(opCode))
+	else if constexpr (SingleDataTransfer::SingleDataTransferRPrL::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrDBWS::execute;
+		return &SingleDataTransfer::SingleDataTransferRPrL::execute<opCode>;
 	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrUBWS::isThisOpcode(opCode))
+	else if constexpr (SingleDataTransfer::SingleDataTransferRPoS::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrUBWS::execute;
+		return &SingleDataTransfer::SingleDataTransferRPoS::execute<opCode>;
 	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrUWWS::isThisOpcode(opCode))
+	else if constexpr (SingleDataTransfer::SingleDataTransferRPoL::isThisOpcode(opCode))
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrUWWS::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrDWNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrDWNL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrDBNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrDBNL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrUBNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrUBNL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrUWNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrUWNL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrDWWL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrDWWL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrDBWL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrDBWL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrUBWL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrUBWL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoUWNS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoUWNS::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoUBNS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoUBNS::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoDWNS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoDWNS::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoDBNS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoDBNS::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoUWNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoUWNL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoUBNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoUBNL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoDWNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoDWNL::execute;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoDBNL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoDBNL::execute;
+		return &SingleDataTransfer::SingleDataTransferRPoL::execute<opCode>;
 	}
 	else
 	{
-		return &SingleDataTransfer::SingleDataTransferIPrUWWL::execute;
+		return &SingleDataTransfer::SingleDataTransferIPoL::execute<opCode>;
 	}
 }
 
@@ -784,7 +715,7 @@ consteval void insert_opcodes_impl(T& arr, std::index_sequence<Is...>) {
 }
 
 static constexpr std::array m_dispatch_table = { []() consteval {
-	std::array<decltype(&SingleDataTransfer::SingleDataTransferIPrDWNS::execute), 64> tmp {};
+	std::array<decltype(&SingleDataTransfer::SingleDataTransferIPoL::execute<0>), 64> tmp {};
 	constexpr uint32_t start = 0x400'0000;
 	insert_opcodes<start>(tmp);
 	return tmp;
@@ -796,7 +727,7 @@ void ARMExecute(int opCode){
 	//units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr, Registers());
 	if (conditions[condition]()) //condition true
 	{
-		if (((opCode >> 25) & 0x7) == 2)
+		if (((opCode >> 26) & 0x3) == 1)
 		{
 			m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 			// std::println("{}", SingleDataTransfer::disassemble(opCode));

@@ -1,10 +1,9 @@
 #pragma once
 
 #include <array>
-#include <bit>
+#include <cassert>
 #include <cstdint>
 #include <format>
-#include <cassert>
 
 #include "cplusplusRewrite/HwRegisters.h"
 #include "cplusplusRewrite/MathOps.h"
@@ -50,7 +49,12 @@ public:
 
 	static constexpr AluOpsOpcode fromOpcode(const uint16_t opcode)
 	{
-		return std::bit_cast<AluOpsOpcode>(opcode);
+		return {
+			.destination = static_cast<uint16_t>(opcode & 0b111), 
+			.source = static_cast<uint16_t>((opcode >> 3) & 0b111),
+			.instruction = static_cast<uint16_t>((opcode >> 6) & 0b1111),
+			.unused = static_cast<uint16_t>((opcode >> 10) & 0x3f)
+		};
 	}
 
 	static constexpr bool isThisOpcode(const uint16_t opcode)

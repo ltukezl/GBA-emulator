@@ -1,13 +1,14 @@
 #pragma once
 #include <bit>
 #include <cassert>
+#include <Constants.h>
 #include <cstdint>
 #include <format>
 #include <type_traits>
-#include <Constants.h>
 
 #include "cplusplusRewrite/barrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
+#include "Memory/memoryOps.h"
 
 namespace SingleDataTransfer {
 
@@ -84,7 +85,19 @@ namespace SingleDataTransfer {
 	{
 		assert(std::is_trivially_copyable_v<SingleDataTransfer_t>);
 		assert(sizeof(SingleDataTransfer_t) == sizeof(uint32_t));
-		return std::bit_cast<SingleDataTransfer_t>(opcode);
+		return {
+			.offset = opcode & 0xFFF,
+			.destinationRegister = (opcode >> 12) & 0xF,
+			.baseRegister = (opcode >> 16) & 0xF,
+			.loadBit = static_cast<loadStore_t>((opcode >> 20) & 0x1),
+			.writeBack = static_cast<writeBack_t>((opcode >> 21) & 0x1),
+			.byteTransfer = static_cast<byteWord_t>((opcode >> 22) & 0x1),
+			.addOffset = static_cast<upDown_t>((opcode >> 23) & 0x1),
+			.preIndexing = static_cast<prePost_t>((opcode >> 24) & 0x1),
+			.immediateOffset = static_cast<immediate_t>((opcode >> 25) & 0x1),
+			.unused = (opcode >> 26) & 0x3,
+			.executionCondition = (opcode >> 28) & 0xF
+		};
 	}
 
 	static inline void destinationRegisterBug(const SingleDataTransfer_t& op, Registers& regs)
@@ -109,6 +122,32 @@ namespace SingleDataTransfer {
 		{
 			const auto shifter = BarrelShifterDecoder::disassemble(opcode);
 			return shifter(opcode);
+		}
+	}
+
+	template<SingleDataTransfer_t op>
+	static consteval auto memLoadOp()
+	{
+		if constexpr (op.byteTransfer == byteWord_t::EWord)
+		{
+			return &loadFromAddress32;
+		}
+		else
+		{
+			return &loadFromAddress;
+		}
+	}
+
+	template<SingleDataTransfer_t op>
+	static consteval auto memStoreOp()
+	{
+		if constexpr (op.byteTransfer == byteWord_t::EWord)
+		{
+			return &writeToAddress32;
+		}
+		else
+		{
+			return  &writeToAddress;
 		}
 	}
 

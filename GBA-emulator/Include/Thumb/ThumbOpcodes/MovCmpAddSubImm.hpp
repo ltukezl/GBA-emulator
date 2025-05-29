@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Constants.h"
 #include <array>
 #include <bit>
 #include <cstdint>
+#include <format>
 
 #include "cplusplusRewrite/HwRegisters.h"
 #include <cplusplusRewrite/MathOps.h>
@@ -31,7 +31,12 @@ public:
 
 	static constexpr MovCmpAddSubImmOpcode fromOpcode(const uint16_t opcode)
 	{
-		return std::bit_cast<MovCmpAddSubImmOpcode>(opcode);
+		return {
+			.offset = static_cast<uint16_t>(opcode & 0xFF),                    // bits 0–7
+			.destination = static_cast<uint16_t>((opcode >> 8) & 0x7),         // bits 8–10
+			.instruction = static_cast<uint16_t>((opcode >> 11) & 0x3),        // bits 11–12
+			.unused = static_cast<uint16_t>((opcode >> 13) & 0x7)              // bits 13–15
+		};
 	}
 
 	static constexpr bool isThisOpcode(const uint16_t opcode)
