@@ -18,6 +18,9 @@
 #include "Thumb/ThumbOpcodes/AluOps.hpp"
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
 #include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
+#include "Thumb/ThumbOpcodes/PcRelativeLoad.hpp"
+#include "Thumb/ThumbOpcodes/PopRegisters.hpp"
+#include "Thumb/ThumbOpcodes/PushRegisters.hpp"
 
 static void bx(int& saveTo, int immidiate, int immidiate2){
 	r[TRegisters::EProgramCounter] = immidiate2 & ~1;
@@ -46,15 +49,6 @@ static void hiRegOperations(uint16_t opcode){
 	hlOps[op.instruction]((int&)r[newDestinationReg], operand1, operand2);
 
 	cycles += S_cycles;
-}
-
-static void PCRelativeLoad(uint16_t opcode){
-	union PCRelativeLoad op = { opcode };
-	uint32_t tmpPC = (r[15] + 2) & ~2;
-	tmpPC += (op.offset << 2);
-	r[op.destination] = loadFromAddress32(tmpPC);
-
-	cycles += 1;
 }
 
 static void loadStoreRegOffset(uint16_t opcode){
@@ -139,35 +133,6 @@ static void addOffsetToSP(uint16_t opcode){
 	r[SP] += loadFlag ? -immediate : immediate;
 }
 
-static void pushpop(uint16_t opcode){
-	union pushPopReg op = { opcode };
-	int immediate = op.regList;
-
-	if (op.loadBit){
-		for (int i = 0; i < 8; i++){
-			if (immediate & 1){
-				r[i] = POP();
-			}
-			immediate = immediate >> 1;
-		}
-		r[TRegisters::EProgramCounter] = op.PCRLBit ? (POP() & -2) : (r[TRegisters::EProgramCounter]);
-
-		if (immediate & 0x80)
-			cycles += 1;
-	}
-
-	else{
-		if (op.PCRLBit)
-			PUSH(r[LR]);
-		for (int i = 0; i < 8; i++){
-			if (immediate & 0x80)
-				PUSH(r[7 - i]);
-			immediate = immediate << 1;
-		}
-	}
-	cycles += 1;
-}
-
 static void multiLoad(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
@@ -239,7 +204,7 @@ static void branchLink(uint16_t opcode){
 		r[LR] = nextInstruction | 1;
 	}
 }
-/*
+
 template<uint16_t op>
 static consteval auto decode_table()
 {
@@ -251,6 +216,12 @@ static consteval auto decode_table()
 		return &(MovCmpAddSubImm::execute<MovCmpAddSubImm::mask(op)>);
 	else if constexpr (AluOps::isThisOpcode(op))
 		return &(AluOps::execute<AluOps::mask(op)>);
+	else if constexpr (PcRelativeLoad::isThisOpcode(op))
+		return &(PcRelativeLoad::execute<PcRelativeLoad::mask(op)>);
+	else if constexpr (PopRegisters::isThisOpcode(op))
+		return &(PopRegisters::execute<PopRegisters::mask(op)>);
+	else if constexpr (PushRegisters::isThisOpcode(op))
+		return &(PushRegisters::execute<PushRegisters::mask(op)>);
 	else
 		return &(AluOps::execute<AluOps::mask(op)>);
 }
@@ -267,7 +238,7 @@ static constexpr std::array thumb_dispatch = { []() consteval
 	insert_to_table(tmp, std::make_index_sequence<tmp.size()>{});
 	return tmp;
 }() };
-*/
+
 void thumbExecute(uint16_t opcode){
 	int subType;
 	cycles += 1;
@@ -282,22 +253,29 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", MovCmpAddSubImm::disassemble(opcode));
 	else if (AluOps::isThisOpcode(opcode))
 		std::println("{}", AluOps::disassemble(opcode));
+	else if (PcRelativeLoad::isThisOpcode(opcode))
+		std::println("{}", PcRelativeLoad::disassemble(opcode));
 	*/
+
+	if (PopRegisters::isThisOpcode(opcode))
+		std::println("{}", PopRegisters::disassemble(opcode));
+	if (PushRegisters::isThisOpcode(opcode))
+		std::println("{}", PushRegisters::disassemble(opcode));
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
-		//thumb_dispatch[opcode >> 6](r, opcode);
+		thumb_dispatch[opcode >> 6](r, opcode);
 		break;
 
 	case 1: // move|compare|substract|add immediate
-		//thumb_dispatch[opcode >> 6](r, opcode);
+		thumb_dispatch[opcode >> 6](r, opcode);
 		break;
 
 	case 2: //logical ops / memory load / store
 		subType = (opcode >> 10) & 7;
 		switch (subType){
 		case 0: //logical ops reg - reg
-			//thumb_dispatch[opcode >> 6](r, opcode);
+			thumb_dispatch[opcode >> 6](r, opcode);
 			break;
 
 		case 1: //high low reg loading, branch
@@ -305,7 +283,7 @@ void thumbExecute(uint16_t opcode){
 			break;
 
 		case 2: case 3: //PC relative load
-			PCRelativeLoad(opcode);
+			thumb_dispatch[opcode >> 6](r, opcode);
 			break;
 
 		default:
@@ -355,7 +333,7 @@ void thumbExecute(uint16_t opcode){
 				break;
 
 			case 1: //push pop reg
-				pushpop(opcode);
+				thumb_dispatch[opcode >> 6](r, opcode);
 				break;
 			}
 			break;

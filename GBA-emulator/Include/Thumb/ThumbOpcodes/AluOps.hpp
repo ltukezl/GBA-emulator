@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ALUOPS_H
+#define ALUOPS_H
 
 #include <array>
 #include <cassert>
@@ -106,3 +107,5 @@ public:
 		return std::format("{} R{}, R{}", operation, op.destination, op.source);
 	}
 };
+
+#endif

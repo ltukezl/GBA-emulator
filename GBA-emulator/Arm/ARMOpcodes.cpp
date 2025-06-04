@@ -666,7 +666,7 @@ static uint32_t constexpr reduce_opcode(uint32_t opCode)
 {
 	return ((opCode >> 20) & 0x3F);
 }
-/*
+
 template<uint32_t opCode>
 auto constexpr populate_func()
 {
@@ -721,14 +721,14 @@ consteval void insert_opcodes_impl(T& arr, std::index_sequence<Is...>)
 	((arr[Is] = populate_func<(baseOp + static_cast<uint32_t>(Is) * 0x10'0000)>()), ...);
 }
 
-static constexpr std::array<void(*)(Registers, const uint32_t), 64> m_dispatch_table = { []() consteval
+static constexpr std::array<void(*)(Registers&, const uint32_t), 64> m_dispatch_table = { []() consteval
  {
-std::array<void(*)(Registers, const uint32_t), 64> tmp {};
+std::array<void(*)(Registers&, const uint32_t), 64> tmp {};
 constexpr uint32_t start = 0x400'0000;
 insert_opcodes<start>(tmp);
 return tmp;
 }() };
-*/
+
 void ARMExecute(int opCode)
 {
 	int condition = (opCode >> 28) & 0xF;
@@ -738,7 +738,7 @@ void ARMExecute(int opCode)
 	{
 		if (((opCode >> 26) & 0x3) == 1)
 		{
-			//m_dispatch_table[reduce_opcode(opCode)](r, opCode);
+			m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 			// std::println("{}", SingleDataTransfer::disassemble(opCode));
 			return;
 		}

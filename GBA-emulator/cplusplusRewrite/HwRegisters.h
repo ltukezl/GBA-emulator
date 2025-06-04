@@ -7,7 +7,8 @@
 
 //-------------------------------
 
-enum TRegisters {
+enum TRegisters
+{
 	ER0 = 0,
 	ER1,
 	ER2,
@@ -28,7 +29,8 @@ enum TRegisters {
 	ECPSR,
 };
 
-enum CpuModes_t {
+enum CpuModes_t
+{
 	EUSR = 0x10,
 	EFIQ = 0x11,
 	EIRQ = 0x12,
@@ -38,13 +40,16 @@ enum CpuModes_t {
 	ESYS = 0x1F
 };
 
-enum TCPUMode {
+enum TCPUMode
+{
 	EThumb = 4,
 	EArm = 8
 };
 
-union CPSR_t {
-	struct {
+union CPSR_t
+{
+	struct
+	{
 		uint32_t mode : 5;
 		uint32_t thumb : 1;
 		uint32_t FIQDisable : 1;
@@ -57,16 +62,20 @@ union CPSR_t {
 	};
 	uint32_t val;
 
-	void updateAll(uint32_t newVal) {
-		if (mode == EUSR) {
+	void updateAll(uint32_t newVal)
+	{
+		if (mode == EUSR)
+		{
 			updateFlags(newVal);
 		}
-		else {
+		else
+		{
 			val = newVal;
 		}
 	}
 
-	void updateFlags(uint32_t newVal) {
+	void updateFlags(uint32_t newVal)
+	{
 		CPSR_t tmp = {};
 		tmp.val = newVal;
 		negative = tmp.negative;
@@ -75,16 +84,20 @@ union CPSR_t {
 		overflow = tmp.overflow;
 	}
 
-	void saveAll(uint32_t& dest) {
-		if (mode == EUSR) {
+	void saveAll(uint32_t& dest)
+	{
+		if (mode == EUSR)
+		{
 			saveFlags(dest);
 		}
-		else {
+		else
+		{
 			dest = val;
 		}
 	}
 
-	void saveFlags(uint32_t& dest) {
+	void saveFlags(uint32_t& dest)
+	{
 		uint32_t tmp = val & 0xF000'0000;
 		dest = tmp;
 	}
@@ -94,13 +107,14 @@ union CPSR_t {
 //-------------------------------
 constexpr uint8_t REG_LEN = 17;
 
-class Registers {
+class Registers
+{
 private:
 	TCPUMode m_offset = EArm;
-	std::array<uint32_t*, REG_LEN> const * r;
+	std::array<uint32_t*, REG_LEN> const* r;
 	uint32_t m_previousMode = ESYS;
 
-	std::array<uint32_t, 9> sharedRegs {};
+	std::array<uint32_t, 9> sharedRegs{};
 	std::array<uint32_t, 5> extRegisters = {};
 	std::array<uint32_t, 2> usrBanked = {};
 	std::array<uint32_t, 7> fiqBanked = {};
@@ -135,15 +149,17 @@ private:
 	const std::array<uint32_t*, REG_LEN> undef = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8], &sprs_udf };
 
-public:	
+public:
 
 	union CPSR_t m_cpsr;
 
-	void updateMode(const CpuModes_t mode) {
+	void updateMode(const CpuModes_t mode)
+	{
 		m_previousMode = m_cpsr.mode;
 		m_cpsr.mode = mode;
 		// FIXME: use returns!!!
-		switch (mode) {
+		switch (mode)
+		{
 			case EUSR:    r = &usrSys;  break;
 			case EFIQ:    r = &fiq;     break;
 			case EIRQ:    r = &irq;     break;
@@ -154,15 +170,18 @@ public:
 		}
 	}
 
-	auto getMode() const {
+	auto getMode() const
+	{
 		return static_cast<CpuModes_t>(m_cpsr.mode);
 	}
 
-	auto getPreviousMode() const {
+	auto getPreviousMode() const
+	{
 		return static_cast<CpuModes_t>(m_previousMode);
 	}
 
-	void reset(const CpuModes_t mode) {
+	void reset(const CpuModes_t mode)
+	{
 		updateMode(mode);
 		sharedRegs.fill(0);
 		extRegisters.fill(0);
@@ -174,46 +193,48 @@ public:
 		undBanked.fill(0);
 	};
 
-	Registers(const CpuModes_t mode = ESUPER) {
+	Registers(const CpuModes_t mode = ESUPER)
+	{
 		reset(mode);
 	};
 
-	Registers(const std::initializer_list<uint32_t> list, const CpuModes_t mode = ESUPER) {
+	Registers(const std::initializer_list<uint32_t> list, const CpuModes_t mode = ESUPER)
+	{
 		reset(mode);
 		std::copy(list.begin(), list.end(), *r->begin());
 	};
 
-    uint32_t& operator[](const uint32_t index) const {
-        return *(*r)[index];
-    }
-
-    bool operator==(const Registers& other) const {
-		for (uint8_t i = 0; i < REG_LEN; i++) {
-            if (*(*r)[i] != *(*other.r)[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-	bool operator!=(const Registers& other) const {
-		return !(* this == other);
+	uint32_t& operator[](const uint32_t index) const
+	{
+		return *(*r)[index];
 	}
 
-	void nextProgramCounter() {
+	bool operator==(const Registers& other) const
+	{
+		for (uint8_t i = 0; i < REG_LEN; i++)
+		{
+			if (*(*r)[i] != *(*other.r)[i])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool operator!=(const Registers& other) const
+	{
+		return !(*this == other);
+	}
+
+	void nextProgramCounter()
+	{
 		*(*r)[EProgramCounter] += m_offset;
 	}
 
-	void prevProgramCounter() {
+	void prevProgramCounter()
+	{
 		*(*r)[EProgramCounter] -= m_offset;
 	}
-
-	/*
-	string representation() {
-		
-		return "Registers({ 0,0,0,0,0,0,0,0,0x1000,0,0,0,0,0,0,0,0,0 }, USR));"
-	}
-	*/
 };
 
 #endif

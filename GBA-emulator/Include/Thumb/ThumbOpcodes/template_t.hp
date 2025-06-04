@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MultiplyAccumulate_H
+#define MultiplyAccumulate_H
 
 #include <array>
 #include <bit>
@@ -44,3 +45,5 @@ public:
 
 	}
 };
+
+#endif

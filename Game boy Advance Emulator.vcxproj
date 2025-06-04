@@ -77,7 +77,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -97,7 +98,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <SupportJustMyCode>false</SupportJustMyCode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -113,7 +115,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>D:\Built libraries\sfml_2_5_1\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -123,7 +126,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>D:\Built libraries\sfml_2_5_1\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -216,6 +220,9 @@
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreImm.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MovCmpAddSubImm.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PcRelativeLoad.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PopRegisters.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PushRegisters.hpp" />
     <ClInclude Include="GBA-emulator\Include\Timer\timers.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tile.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tileset.h" />
