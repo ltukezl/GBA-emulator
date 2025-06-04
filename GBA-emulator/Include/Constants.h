@@ -1,9 +1,11 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
-#include <cstdint>
+
 #include <array>
-#include "Gba-Graphics/Tile/Tile.h"
+#include <cstdint>
+
 #include "Gba-Graphics/Palette/RgbaPalette.h"
+#include "Gba-Graphics/Tile/Tile.h"
 
 extern uint32_t systemROMStart;
 extern uint32_t InternalWorkRAMStart;
@@ -15,11 +17,11 @@ extern uint32_t SP_svc;
 extern uint32_t SP_irq;
 extern uint32_t SP_usr;
 
-#define SP 13
-#define LR 14
-#define PC 15
+constexpr auto SP = 13;
+constexpr auto LR = 14;
+constexpr auto PC = 15;
 
-static constexpr std::array condition_strings = { "EQ", "NE", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "" };
+static inline std::array<const char*, 15> condition_strings = { "EQ", "NE", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "" };
 
 extern bool debug;
 

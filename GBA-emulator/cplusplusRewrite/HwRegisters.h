@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HWREGS_H
+#define HWREGS_H
 
 #include <array>
 #include <cstdint>
@@ -99,14 +100,14 @@ private:
 	std::array<uint32_t*, REG_LEN> const * r;
 	uint32_t m_previousMode = ESYS;
 
-	std::array<uint32_t, 9> sharedRegs;
-	std::array<uint32_t, 5> extRegisters;
-	std::array<uint32_t, 2> usrBanked;
-	std::array<uint32_t, 7> fiqBanked;
-	std::array<uint32_t, 2> svcBanked;
-	std::array<uint32_t, 2> abtBanked;
-	std::array<uint32_t, 2> irqBanked;
-	std::array<uint32_t, 2> undBanked;
+	std::array<uint32_t, 9> sharedRegs {};
+	std::array<uint32_t, 5> extRegisters = {};
+	std::array<uint32_t, 2> usrBanked = {};
+	std::array<uint32_t, 7> fiqBanked = {};
+	std::array<uint32_t, 2> svcBanked = {};
+	std::array<uint32_t, 2> abtBanked = {};
+	std::array<uint32_t, 2> irqBanked = {};
+	std::array<uint32_t, 2> undBanked = {};
 
 	uint32_t sprs_usr = 0;
 	uint32_t sprs_svc = 0;
@@ -214,3 +215,5 @@ public:
 	}
 	*/
 };
+
+#endif

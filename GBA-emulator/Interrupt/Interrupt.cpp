@@ -1,8 +1,10 @@
+#include <cstdint>
+#include <iostream>
+
 #include "Constants.h"
-#include "Memory/MemoryOps.h"
 #include "GBAcpu.h"
 #include "Memory/memoryMappedIO.h"
-#include <iostream>
+#include "Memory/memoryOps.h"
 
 #define ENABLED 1
 bool IRQMode = false;

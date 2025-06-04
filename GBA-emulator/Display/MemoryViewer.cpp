@@ -12,9 +12,6 @@ MemoryViewer::MemoryViewer() {
 
 void MemoryViewer::createColumnsHeader()
 {
-	constexpr auto offsetX = 0;
-	constexpr auto offsetY = 0;
-
 	m_text.setString("00    01   02    03   04    05   06    07   08   09    0A   0B   0C   0D   0E   0F");
 	m_text.setPosition(sf::Vector2f(170, 110));
 	m_display->draw(m_text);
@@ -46,7 +43,7 @@ void MemoryViewer::renderMemory() {
 	textBox.setPosition(sf::Vector2f(20, 105));
 	m_display->draw(textBox);
 
-	m_text.setColor(sf::Color::Black);
+	m_text.setFillColor(sf::Color::Black);
 	m_text.setString(m_input);
 	m_text.setPosition(sf::Vector2f(25, 107));
 	m_display->draw(m_text);
@@ -55,7 +52,7 @@ void MemoryViewer::renderMemory() {
 	m_text.setPosition(sf::Vector2f(16, 21));
 	m_display->draw(m_text);
 	
-	m_text.setColor(sf::Color::White);
+	m_text.setFillColor(sf::Color::White);
 	for (uint32_t i = 0; i < 32; i++) {
 		char msg[512] = {};
 

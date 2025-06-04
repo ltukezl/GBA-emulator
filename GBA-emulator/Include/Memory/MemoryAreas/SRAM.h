@@ -1,5 +1,6 @@
 #pragma once
-#include "memoryAreas.h"
+
+#include "Memory/MemoryAreas/memoryAreas.h"
 
 class Sram : public IMemoryArea<Sram> {
 public:

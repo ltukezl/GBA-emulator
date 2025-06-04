@@ -1,6 +1,8 @@
-#include "Gba-Graphics/sprites/SpriteGenerator.h"
 #include <iostream>
 #include <algorithm>
+
+#include "Gba-Graphics/Sprites/SpriteGenerator.h"
+
 extern RgbaPalette PaletteColours;
 
 SpriteGenerator::SpriteGenerator()

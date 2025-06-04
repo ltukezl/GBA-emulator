@@ -1,7 +1,8 @@
-#include "Gba-Graphics/Tile/Tile.h"
-#include "Memory/MemoryOps.h"
-#include "Memory/memoryMappedIO.h"
 #include <iostream>
+
+#include "Gba-Graphics/Tile/Tile.h"
+#include "Memory/memoryOps.h"
+#include "Memory/memoryMappedIO.h"
 
 extern RgbaPalette PaletteColours;
 

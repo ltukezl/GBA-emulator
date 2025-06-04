@@ -8,7 +8,7 @@
 #include "Display/Display.h"
 #include "GBAcpu.h"
 #include "Memory/memoryMappedIO.h"
-#include "memory/memoryOps.h"
+#include "Memory/memoryOps.h"
 #include "Timer/timers.h"
 #include <Gba-Graphics/Palette/RgbaPalette.h>
 #include <Memory/MemoryAreas/BIOS.h>

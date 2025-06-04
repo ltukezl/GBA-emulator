@@ -1,6 +1,6 @@
 #include "Gba-Graphics/Tile/Tileset.h"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
-#include "Memory/MemoryOps.h"
+#include "Memory/memoryOps.h"
 
 extern RgbaPalette PaletteColours;
 

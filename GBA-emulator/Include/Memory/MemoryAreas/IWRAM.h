@@ -1,4 +1,9 @@
 #pragma once
+
+#include <array>
+#include <cstdint>
+
+#include "cplusplusRewrite/HwRegisters.h"
 #include "memoryAreas.h"
 
 class InternalWorkRAM : public IMemoryArea<InternalWorkRAM> {

@@ -1,19 +1,14 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 #include <cstdint>
-#include <cstring>
-#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
-#include <iostream>
+#include <string>
 
 #include "Constants.h"
-#include "Memory/memoryMappedIO.h"
-#include "Gba-Graphics/Tile/Tileset.h"
-#include "Gba-Graphics/Rendermodes/TextMode.h"
 #include "Gba-Graphics/Rendermodes/RenderMode3.h"
 #include "Gba-Graphics/Rendermodes/RenderMode4.h"
 #include "Gba-Graphics/Rendermodes/RenderMode5.h"
-#include "Gba-Graphics/sprites/SpriteGenerator.h"
+#include "Gba-Graphics/Rendermodes/TextMode.h"
+#include "Gba-Graphics/Sprites/SpriteGenerator.h"
 
 struct Ring{
 	char state[512];
@@ -21,7 +16,6 @@ struct Ring{
 };
 
 class Display{
-	size_t res_x, res_y;
 	sf::RenderWindow* display;
 	std::string name;
 
@@ -87,7 +81,6 @@ public:
 	void realizePalettes(const RgbaPalette& palette, FinalImage& finalImage);
 
 private:
-	int cnt;
 	Ring* txtRing;
 };
 

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+
 #include "Memory/memoryMappedIO.h"
 
 class RgbaPalette {

@@ -1,5 +1,5 @@
 #pragma once
-#include "memoryAreas.h"
+#include "Memory/MemoryAreas/memoryAreas.h"
 
 class BIOS : public IMemoryArea<BIOS> {
 public:

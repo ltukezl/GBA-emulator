@@ -1,9 +1,7 @@
 #pragma once
-#include <array>
 #include <bitset>
-#include <iostream>
 
-#include "memoryAreas.h"
+#include "Memory/MemoryAreas/memoryAreas.h"
 
 
 class TilesetMemoryObserver {

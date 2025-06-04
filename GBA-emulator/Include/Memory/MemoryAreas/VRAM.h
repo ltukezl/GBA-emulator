@@ -1,8 +1,7 @@
 #pragma once
 
-#include "memoryAreas.h"
 #include "Gba-Graphics/Tile/TilesetMemoryObserver.h"
-#include "Memory/memoryMappedIO.h"
+#include "Memory/MemoryAreas/memoryAreas.h"
 
 //1204 tests 1285 1330
 class VRAM : public IMemoryArea<VRAM> {

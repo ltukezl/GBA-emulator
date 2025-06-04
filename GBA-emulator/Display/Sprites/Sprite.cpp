@@ -1,9 +1,10 @@
+#include <iostream>
+
 #include "Gba-Graphics/Sprites/Sprite.h"
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Memory/memoryMappedIO.h"
-#include "Memory/MemoryOps.h"
-#include "Gba-Graphics/sprites/SpriteGenerator.h"
-#include <iostream>
+#include "Memory/memoryOps.h"
+#include "Gba-Graphics/Sprites/SpriteGenerator.h"
 
 constexpr std::pair<uint8_t, uint8_t> shapes[3][4] =	{ { { 8, 8 }, { 16, 16 }, { 32, 32 }, { 64, 64 } },
 														{ { 16, 8 }, { 32, 8 }, { 32, 16 }, { 64, 32 } },
@@ -11,7 +12,6 @@ constexpr std::pair<uint8_t, uint8_t> shapes[3][4] =	{ { { 8, 8 }, { 16, 16 }, {
 
 uint8_t* Sprite::getSpriteTiles() {
 	uint16_t tilenum = 0;
-	uint8_t tst = 0;
 	
 	for (auto& tile : tiles) {
 		auto& t = tile.getTile(objr1->colorMode, 16+objr2->paletteNumber);
@@ -125,7 +125,7 @@ void Sprite::update() {
 }
 
 
-Sprite::Sprite(SpriteGenerator& tileset, uint32_t address): _tileset(tileset), _index(address/8)
+Sprite::Sprite(SpriteGenerator& tileset, uint32_t address): _index(address/8), _tileset(tileset)
 {
 	objr1 = (ObjReg1*)&(memoryLayout[EOAM][address + 0]);
 	objr2 = (ObjReg2*)&(memoryLayout[EOAM][address + 4]);

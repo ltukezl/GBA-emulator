@@ -118,15 +118,3 @@ private:
 		return static_cast<Derived*>(this);
 	};
 };
-
-
-//class GBAMemory : public IMemoryArea {
-//	
-// void read8(IMemoryAccessContext context, const uint32_t address) {
-//		if context not in whitelist:
-//			crash()
-// 
-//		m_memoryArea[address & mask].read8(context);
-// }
-//};
-

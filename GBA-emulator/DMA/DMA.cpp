@@ -1,7 +1,8 @@
+#include <cstdint>
+
 #include "DMA/DMA.h"
-#include "Memory/MemoryOps.h"
 #include "Memory/memoryMappedIO.h"
-#include "iostream"
+#include "Memory/memoryOps.h"
 
 using DMAcontrol_t = DMAcontrol::control_t;
 using DMAtransfer_t = DMAcontrol::transferType_t;

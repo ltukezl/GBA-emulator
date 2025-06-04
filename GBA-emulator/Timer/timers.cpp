@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include "Memory/memoryMappedIO.h"
-#include "Memory/MemoryOps.h"
+#include "Memory/memoryOps.h"
 #include "Timer/timers.h"
 
 enum prescaler {
@@ -106,7 +106,7 @@ void updateTimers(uint64_t cycles) {
 					InterruptFlagRegister->timer3OVF = 1;
 
 				if (i < 4 && timerCtrl->timing && timerCtrl->startStop){
-					uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
+					// uint16_t oldVal = loadFromAddress16(0x4000100 + 4 * (i + 1));
 					//reinterpret_cast<uint16_t**>(memoryLayout)[4][0x100 + 4 * (i + 1)] = oldVal + 1;
 				}
 

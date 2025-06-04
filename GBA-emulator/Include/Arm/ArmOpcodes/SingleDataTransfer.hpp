@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SDT_H
+#define SDT_H
+
 #include <bit>
 #include <cassert>
 #include <Constants.h>
@@ -6,7 +8,7 @@
 #include <format>
 #include <type_traits>
 
-#include "cplusplusRewrite/barrelShifterDecoder.h"
+#include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Memory/memoryOps.h"
 
@@ -163,3 +165,5 @@ namespace SingleDataTransfer {
 		return std::format("{}{}{} R{}, [R{}{}{}{}{}", ls, condition, bw, op.destinationRegister, op.baseRegister, prePost1, makeExpression(opcode), prePost2, writeback);
 	}
 }
+
+#endif

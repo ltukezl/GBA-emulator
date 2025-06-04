@@ -1,8 +1,9 @@
-#pragma once
+#ifndef SDTR_H
+#define SDTR_H
 #include <cstdint>
 
+#include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
-#include "Memory/memoryOps.h"
 #include "SingleDataTransfer.hpp"
 
 namespace SingleDataTransfer
@@ -154,3 +155,5 @@ namespace SingleDataTransfer
 		}
 	};
 }
+
+#endif

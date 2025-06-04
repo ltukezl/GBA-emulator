@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "Memory/MemoryOps.h"
+#include "Memory/memoryOps.h"
 #include "Memory/memoryMappedIO.h"
 #include "Gba-Graphics/Tile/Tileset.h"
 #include "Gba-Graphics/Rendermodes/TextMode.h"

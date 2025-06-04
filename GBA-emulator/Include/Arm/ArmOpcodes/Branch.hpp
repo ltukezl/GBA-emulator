@@ -1,10 +1,11 @@
 #pragma once
-#include <cstdint>
-#include <cassert>
 #include <bit>
+#include <cassert>
+#include <cstdint>
+#include <format>
 
-#include "cplusplusRewrite/HwRegisters.h"
 #include "Constants.h"
+#include "cplusplusRewrite/HwRegisters.h"
 
 namespace branches
 {

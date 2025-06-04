@@ -28,7 +28,7 @@
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Gba-Graphics/Tile/Tileset.h"
 #include "Memory/memoryMappedIO.h"
-#include "Memory/MemoryOps.h"
+#include "Memory/memoryOps.h"
 
 
 
@@ -37,7 +37,7 @@
 extern RgbaPalette PaletteColours;
 extern Tileset tileset;
 
-Display::Display(int res_x, int res_y, std::string& name) : res_x(res_x), res_y(res_y), name(name){
+Display::Display(int res_x, int res_y, std::string& name) : name(name){
 	display = new sf::RenderWindow(sf::VideoMode(res_x, res_y), name);
 	if (display == 0)
 	{
@@ -123,8 +123,6 @@ void Display::fillBG(uint32_t regOffset){
 	//return;
 	
 	BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
-	uint32_t startAddr = 0;
-	constexpr uint32_t scalar = 255 / 31;
 
 	uint16_t size_x = bgCnt->hWide ? 512 : 256;
 	uint16_t size_y = bgCnt->vWide ? 512 : 256;
@@ -183,9 +181,6 @@ void Display::appendBGs() {
 
 	std::vector<uint8_t> bgOrder[4];
 	memset(finalImage.finalImagePalette.data(), 0xFFFF'FFFF, sizeof(finalImage.finalImagePalette));
-
-	constexpr uint16_t screenSizeX = 240;
-	constexpr uint16_t screenSizey = 160;
 
 	const bool isBitmapMode = (displayCtrl->bgMode == 3) || (displayCtrl->bgMode == 5);
 
@@ -261,7 +256,7 @@ void Display::realizePalettes(const RgbaPalette& palette, FinalImage& finalImage
 
 void Display::updatePalettes(){
 	float fps;
-	sf::Clock clock = sf::Clock::Clock();
+	sf::Clock clock {};
 	sf::Time previousTime = clock.getElapsedTime();
 	sf::Time currentTime;
 

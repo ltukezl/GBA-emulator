@@ -144,11 +144,11 @@ int main(int argc, char *args[]){
 #endif
 	memoryInits();
 
-	const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/program6.bin";
+	const std::string game = "GBA-emulator/TestBinaries/program3.bin";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/irq_demo.gba";
@@ -156,9 +156,7 @@ int main(int argc, char *args[]){
 	readFile(game, GamePak);
 	readFile("GBA-emulator/GBA.BIOS", systemROM.m_memoryArea);
 
-	uint64_t refreshRate = 0;
 	uint64_t vCounterDrawCycles = 0;
-	uint32_t prevAddr = 0;
 	cycles = 0;
 	debug = false;
 	step = true;
@@ -191,8 +189,6 @@ int main(int argc, char *args[]){
 
 		cycles = 1;
 
-
-		refreshRate += cycles;
 		vCounterDrawCycles += cycles;
 
 		if (vCounterDrawCycles >= 1232){

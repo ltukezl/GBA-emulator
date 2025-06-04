@@ -2,11 +2,9 @@
 #include <cstdint>
 
 #include "cplusplusRewrite/HwRegisters.h"
-#include "Memory/memoryOps.h"
 #include "SingleDataTransfer.hpp"
 
 namespace SingleDataTransfer {
-
 	// ----------
 	// PRE FUNCS STORE
 	// ----------
@@ -148,4 +146,6 @@ namespace SingleDataTransfer {
 			destinationRegisterBug(op, regs);
 		}
 	};
+
+	using SDT_t = decltype(&SingleDataTransferIPoL::execute<0>);
 }

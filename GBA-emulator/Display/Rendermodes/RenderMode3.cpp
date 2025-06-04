@@ -1,6 +1,6 @@
 #include "Gba-Graphics/Rendermodes/RenderMode3.h"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
-#include "Memory/MemoryOps.h"
+#include "Memory/memoryOps.h"
 
 void RenderMode3::draw()
 {

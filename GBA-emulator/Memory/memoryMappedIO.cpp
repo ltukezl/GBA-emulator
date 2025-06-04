@@ -1,7 +1,7 @@
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 #include "Gba-Graphics/Tile/Tileset.h"
-#include "memory/memoryMappedIO.h"
-#include "memory/memoryOps.h"
+#include "Memory/memoryMappedIO.h"
+#include "Memory/memoryOps.h"
 
 union DISPCNT* displayCtrl = (DISPCNT*)&IoRAM[0x0];
 union LCDstatus* LCDStatus = (LCDstatus*)&IoRAM[0x4];

@@ -1,6 +1,7 @@
 #pragma once
 #include <bitset>
-#include "memoryAreas.h"
+
+#include "Memory/MemoryAreas/memoryAreas.h"
 
 class PaletteRAM : public IMemoryArea<PaletteRAM> {
 public:

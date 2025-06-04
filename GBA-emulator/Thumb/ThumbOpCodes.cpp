@@ -12,18 +12,12 @@
 #include "cplusplusRewrite/HwRegisters.h"
 #include "GBAcpu.h"
 #include "Interrupt/interrupt.h"
-#include "Memory/MemoryOps.h"
+#include "Memory/memoryOps.h"
 #include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
 #include "Thumb/ThumbOpcodes/AluOps.hpp"
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
 #include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
-
-static void mul(int &saveTo, int immidiate, int immidiate2){
-	saveTo = (immidiate2 * immidiate) & 0xFFFFFFFF;
-	negative(saveTo);
-	zero(saveTo);
-}
 
 static void bx(int& saveTo, int immidiate, int immidiate2){
 	r[TRegisters::EProgramCounter] = immidiate2 & ~1;
@@ -100,7 +94,6 @@ static void loadStoreSignExtend(uint16_t opcode){
 }
 
 static void loadStoreImm(uint16_t opcode){
-	using namespace SingleDataTransfer;
 	const auto op = std::bit_cast<loadStoreImmediate>(opcode);
 	const uint32_t shift = op.byteSize ? 0 : 2;
 	const uint8_t immediate = op.offset << shift;
@@ -114,13 +107,6 @@ static void loadStoreImm(uint16_t opcode){
 		writeToAddress(totalAddress, r[op.destSourceReg]);
 	else
 		writeToAddress32(totalAddress, r[op.destSourceReg]);
-
-	const auto ls = op.loadFlag ? loadStore_t::ELoad : loadStore_t::EStore;
-	const auto bw = op.byteSize ? byteWord_t::EByte : byteWord_t::EWord;
-
-	const auto armOp = fromFields(immediate, op.destSourceReg, op.baseReg, ls, writeBack_t::ENoWriteback, bw, upDown_t::EAdd, prePost_t::EPre, immediate_t::EImmediate);
-	//std::println("{}", disassemble(armOp));
-	
 }
 
 static void loadStoreHalfword(uint16_t opcode){
@@ -233,8 +219,8 @@ static void conditionalBranch(uint16_t opcode){
 	const uint32_t location = ((op.immediate << 1) + 2);
 	r[PC] += conditions[op.condition]() ? location : 0;
 
-	if(debug)
-		 std::print("B{} #0x{:x}", condition_strings[op.condition], location);
+	//if(debug)
+	//	 std::print("B{} #0x{:x}", condition_strings[op.condition], location);
 }
 
 static void unconditionalBranch(uint16_t opcode){
@@ -253,7 +239,7 @@ static void branchLink(uint16_t opcode){
 		r[LR] = nextInstruction | 1;
 	}
 }
-
+/*
 template<uint16_t op>
 static consteval auto decode_table()
 {
@@ -281,10 +267,9 @@ static constexpr std::array thumb_dispatch = { []() consteval
 	insert_to_table(tmp, std::make_index_sequence<tmp.size()>{});
 	return tmp;
 }() };
-
+*/
 void thumbExecute(uint16_t opcode){
 	int subType;
-	int instruction;
 	cycles += 1;
 	__int16 type = (opcode & 0xE000) >> 13;
 	
@@ -301,18 +286,18 @@ void thumbExecute(uint16_t opcode){
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
-		thumb_dispatch[opcode >> 6](r, opcode);
+		//thumb_dispatch[opcode >> 6](r, opcode);
 		break;
 
 	case 1: // move|compare|substract|add immediate
-		thumb_dispatch[opcode >> 6](r, opcode);
+		//thumb_dispatch[opcode >> 6](r, opcode);
 		break;
 
 	case 2: //logical ops / memory load / store
 		subType = (opcode >> 10) & 7;
 		switch (subType){
 		case 0: //logical ops reg - reg
-			thumb_dispatch[opcode >> 6](r, opcode);
+			//thumb_dispatch[opcode >> 6](r, opcode);
 			break;
 
 		case 1: //high low reg loading, branch
