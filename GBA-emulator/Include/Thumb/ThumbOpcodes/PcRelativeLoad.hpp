@@ -6,6 +6,7 @@
 #include <format>
 
 #include "cplusplusRewrite/HwRegisters.h"
+#include "Memory/memoryOps.h"
 
 class PcRelativeLoad
 {

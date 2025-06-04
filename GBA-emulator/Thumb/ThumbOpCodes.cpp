@@ -15,12 +15,16 @@
 #include "Memory/memoryOps.h"
 #include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
+#include "Thumb/ThumbOpcodes/AddToSp.hpp"
 #include "Thumb/ThumbOpcodes/AluOps.hpp"
+#include "Thumb/ThumbOpcodes/BranchLink.hpp"
+#include "Thumb/ThumbOpcodes/LoadAddress.hpp"
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
 #include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
 #include "Thumb/ThumbOpcodes/PcRelativeLoad.hpp"
 #include "Thumb/ThumbOpcodes/PopRegisters.hpp"
 #include "Thumb/ThumbOpcodes/PushRegisters.hpp"
+#include "Thumb/ThumbOpcodes/SpRelativeOps.hpp"
 
 static void bx(int& saveTo, int immidiate, int immidiate2){
 	r[TRegisters::EProgramCounter] = immidiate2 & ~1;
@@ -112,27 +116,6 @@ static void loadStoreHalfword(uint16_t opcode){
 		writeToAddress16(r[op.baseReg] + immediate, r[op.destSourceReg]);
 }
 
-static void loadSPRelative(uint16_t opcode){
-	union SPrelativeLoad op = { opcode };
-	if (op.loadFlag)
-		r[op.destSourceReg] = loadFromAddress32(r[TRegisters::EStackPointer] + (op.immediate << 2));
-	else
-		writeToAddress32(r[TRegisters::EStackPointer] + (op.immediate << 2), r[op.destSourceReg]);
-}
-
-
-static void loadAddress(uint16_t opcode){
-	union loadAddress op = { opcode };
-	int rs = op.useSP ? r[TRegisters::EStackPointer] : ((r[TRegisters::EProgramCounter] + 2) & ~2);
-	r[op.destination] = (op.immediate << 2) + rs;
-}
-
-static void addOffsetToSP(uint16_t opcode){
-	int loadFlag = (opcode >> 7) & 1;
-	int immediate = (opcode & 0x7F) << 2;
-	r[SP] += loadFlag ? -immediate : immediate;
-}
-
 static void multiLoad(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
@@ -197,11 +180,15 @@ static void branchLink(uint16_t opcode){
 	int HLOffset = (opcode >> 11) & 1;
 	int immediate = (opcode & 0x7FF);
 	if (!HLOffset)
+	{
 		r[LR] = (signExtend<11>(immediate) << 12) + r[PC] + 2;
+		std::println("{:x}", r[ELinkRegisterLR]);
+	}
 	else{
 		int nextInstruction = r[PC] + 1;
 		r[TRegisters::EProgramCounter] = r[LR] + (immediate << 1);
 		r[LR] = nextInstruction | 1;
+		std::println("{:x} {:x}", r[EProgramCounter], r[ELinkRegisterLR]);
 	}
 }
 
@@ -222,6 +209,14 @@ static consteval auto decode_table()
 		return &(PopRegisters::execute<PopRegisters::mask(op)>);
 	else if constexpr (PushRegisters::isThisOpcode(op))
 		return &(PushRegisters::execute<PushRegisters::mask(op)>);
+	else if constexpr (SpRelativeOps::isThisOpcode(op))
+		return &(SpRelativeOps::execute<SpRelativeOps::mask(op)>);
+	else if constexpr (AddToSp::isThisOpcode(op))
+		return &(AddToSp::execute<AddToSp::mask(op)>);
+	else if constexpr (LoadAddress::isThisOpcode(op))
+		return &(LoadAddress::execute<LoadAddress::mask(op)>);
+	else if constexpr (BranchLink::isThisOpcode(op))
+		return &(BranchLink::execute<BranchLink::mask(op)>);
 	else
 		return &(AluOps::execute<AluOps::mask(op)>);
 }
@@ -257,10 +252,8 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", PcRelativeLoad::disassemble(opcode));
 	*/
 
-	if (PopRegisters::isThisOpcode(opcode))
-		std::println("{}", PopRegisters::disassemble(opcode));
-	if (PushRegisters::isThisOpcode(opcode))
-		std::println("{}", PushRegisters::disassemble(opcode));
+	if (BranchLink::isThisOpcode(opcode))
+		std::println("{}", BranchLink::disassemble(r, opcode));
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
@@ -313,31 +306,13 @@ void thumbExecute(uint16_t opcode){
 			break;
 
 		case 1: //load SP relative
-			loadSPRelative(opcode);
+			thumb_dispatch[opcode >> 6](r, opcode);
 			break;
 		}
 		break;
 
 	case 5:
-		subType = (opcode >> 12) & 0x01;
-		switch (subType){
-		case 0x00: // load address to reg
-			loadAddress(opcode);
-			break;
-
-		case 0x01:
-			int subType2 = (opcode >> 10) & 1;
-			switch (subType2){
-			case 0: // add Stack pointer offset
-				addOffsetToSP(opcode);
-				break;
-
-			case 1: //push pop reg
-				thumb_dispatch[opcode >> 6](r, opcode);
-				break;
-			}
-			break;
-		}
+		thumb_dispatch[opcode >> 6](r, opcode);
 		break;
 
 	case 6:
@@ -370,7 +345,7 @@ void thumbExecute(uint16_t opcode){
 			break;
 
 		case 1: //branch and link
-			branchLink(opcode);
+			thumb_dispatch[opcode >> 6](r, opcode);
 			break;
 		}
 		break;

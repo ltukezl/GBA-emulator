@@ -1,7 +1,6 @@
 #ifndef MultiplyAccumulate_H
 #define MultiplyAccumulate_H
 
-#include <array>
 #include <bit>
 #include <cstdint>
 #include <format>
@@ -30,7 +29,7 @@ public:
 	static constexpr bool isThisOpcode(const uint16_t opcode)
 	{
 		const auto opcodeStruct = fromOpcode(opcode);
-		return (opcodeStruct.reserved1 == 9) && (opcodeStruct.reserved2 == 1);
+		return (opcodeStruct.reserved == 9);
 	}
 
 	template<uint16_t iterOpcode>

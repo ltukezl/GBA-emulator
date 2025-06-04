@@ -216,13 +216,17 @@
     <ClInclude Include="GBA-emulator\Include\Memory\memoryOps.h" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AddSubstract.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AddToSp.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AluOps.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\BranchLink.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadAddress.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreImm.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MovCmpAddSubImm.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PcRelativeLoad.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PopRegisters.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PushRegisters.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\SpRelativeOps.hpp" />
     <ClInclude Include="GBA-emulator\Include\Timer\timers.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tile.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tileset.h" />
