@@ -220,11 +220,14 @@
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AluOps.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\BranchLink.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\ConditionalBranch.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\HiRegOps.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadAddress.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreHalfword.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreImm.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MovCmpAddSubImm.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MultipleLoad.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MultipleStore.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PcRelativeLoad.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PopRegisters.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PushRegisters.hpp" />

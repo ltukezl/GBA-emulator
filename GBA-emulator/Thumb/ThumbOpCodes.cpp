@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "Arm/ArmOpcodes/SingleDataTransfer.hpp"
+#include "Arm/Swi.hpp"
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/logicalOps.h"
@@ -13,14 +14,15 @@
 #include "GBAcpu.h"
 #include "Interrupt/interrupt.h"
 #include "Memory/memoryOps.h"
-#include "Arm/Swi.hpp"
 #include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
+#include "Thumb/ThumbOpcodes/MultipleStore.hpp"
+#include "Thumb/ThumbOpcodes/MultipleLoad.hpp"
 #include "Thumb/ThumbOpcodes/AddToSp.hpp"
 #include "Thumb/ThumbOpcodes/AluOps.hpp"
 #include "Thumb/ThumbOpcodes/BranchLink.hpp"
 #include "Thumb/ThumbOpcodes/ConditionalBranch.hpp"
-#include "Thumb/ThumbOpcodes/UnconditionalBranch.hpp"
+#include "Thumb/ThumbOpcodes/HiRegOps.hpp"
 #include "Thumb/ThumbOpcodes/LoadAddress.hpp"
 #include "Thumb/ThumbOpcodes/LoadStoreHalfword.hpp"
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
@@ -29,35 +31,7 @@
 #include "Thumb/ThumbOpcodes/PopRegisters.hpp"
 #include "Thumb/ThumbOpcodes/PushRegisters.hpp"
 #include "Thumb/ThumbOpcodes/SpRelativeOps.hpp"
-
-static void bx(int& saveTo, int immidiate, int immidiate2){
-	r[TRegisters::EProgramCounter] = immidiate2 & ~1;
-	r.m_cpsr.thumb = immidiate2 & 1;
-}
-
-void(*hlOps[4])(int&, int, int) = { Add, Cmp, Mov, bx };
-
-static void hiRegOperations(uint16_t opcode){
-
-	union hiRegOps op = { opcode };
-	uint8_t newDestinationReg = 8 * op.destHiBit + op.destination;
-	uint32_t operand1 = r[newDestinationReg];
-	uint32_t operand2 = r[op.source];
-
-	if (op.source == 15){
-		operand2 += 2;
-		operand2 &= ~1;
-	}
-
-	if (newDestinationReg == 15){
-		operand1 += 2;
-		operand2 &= ~1;
-	}
-
-	hlOps[op.instruction]((int&)r[newDestinationReg], operand1, operand2);
-
-	cycles += S_cycles;
-}
+#include "Thumb/ThumbOpcodes/UnconditionalBranch.hpp"
 
 static void loadStoreRegOffset(uint16_t opcode){
 	union loadStoreRegOffset op = { opcode };
@@ -112,13 +86,9 @@ static void loadStoreImm(uint16_t opcode){
 }
 
 static void multiLoad(uint16_t opcode){
-	int immediate = opcode & 0xFF;
+	uint32_t immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
 	int baseReg = (opcode >> 8) & 7;
-
-	uint32_t savedAddr = 0;
-	bool rInList = immediate & (1 << baseReg);
-	bool first = (immediate & ((1 << baseReg) - 1)) == 0;
 
 	if (loadFlag){
 		if (immediate == 0){
@@ -127,31 +97,31 @@ static void multiLoad(uint16_t opcode){
 		}
 		else {
 			for (int i = 0; i < 8; i++){
-				if (immediate & 1){
+				if ((immediate >> i) & 1){
 					r[i] = loadFromAddress32(r[baseReg]);
 					r[baseReg] += 4;
 				}
-				immediate >>= 1;
 			}
 		}
 	}
 	else{
+		const uint32_t bits = std::popcount((immediate & ((1 << baseReg) - 1)));
+		bool first = bits == 0;
+		const uint32_t savedAddr = (bits << 2) + r[baseReg];
+
 		if (immediate == 0){
 			writeToAddress32(r[baseReg], r[PC] + 4);
 			r[baseReg] += 0x40;
 		}
 		else{
 			for (int i = 0; i < 8; i++){
-				if (immediate & 1){
-					if (i == baseReg)
-						savedAddr = r[baseReg];
+				if (immediate & (1 << i)){
 					writeToAddress32(r[baseReg], r[i]);
 					r[baseReg] += 4;
 				}
-				immediate >>= 1;
 			}
 		}
-		if (rInList && !first)
+		if (!first)
 			writeToAddress32(savedAddr, r[baseReg]);
 	}
 	cycles += 1;
@@ -168,6 +138,8 @@ static consteval auto decode_table()
 		return &(MovCmpAddSubImm::execute<MovCmpAddSubImm::mask(op)>);
 	else if constexpr (AluOps::isThisOpcode(op))
 		return &(AluOps::execute<AluOps::mask(op)>);
+	else if constexpr (HighRegOps::isThisOpcode(op))
+		return &(HighRegOps::execute<HighRegOps::mask(op)>);
 	else if constexpr (PcRelativeLoad::isThisOpcode(op))
 		return &(PcRelativeLoad::execute);
 	else if constexpr (PopRegisters::isThisOpcode(op))
@@ -186,6 +158,10 @@ static consteval auto decode_table()
 		return &(Swi::execute);
 	else if constexpr (UnconditionalBranch::isThisOpcode(op))
 		return &(UnconditionalBranch::execute);
+	else if constexpr (MultipleLoad::isThisOpcode(op))
+		return &(MultipleLoad::execute);
+	else if constexpr (MultipleStore::isThisOpcode(op))
+		return &(MultipleStore::execute);
 	else if constexpr (ConditionalBranch::isThisOpcode(op))
 		return &(ConditionalBranch::execute<ConditionalBranch::mask(op)>);
 	else if constexpr (BranchLink::isThisOpcode(op))
@@ -221,6 +197,8 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", MovCmpAddSubImm::disassemble(opcode));
 	else if (AluOps::isThisOpcode(opcode))
 		std::println("{}", AluOps::disassemble(opcode));
+	else if (HighRegOps::isThisOpcode(opcode))
+		std::println("{}", HighRegOps::disassemble(opcode));
 	else if (PcRelativeLoad::isThisOpcode(opcode))
 		std::println("{}", PcRelativeLoad::disassemble(opcode));
 	else if (PopRegisters::isThisOpcode(opcode))
@@ -241,10 +219,9 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", UnconditionalBranch::disassemble(r, opcode));
 	else if (BranchLink::isThisOpcode(opcode))
 		std::println("{}", BranchLink::disassemble(r, opcode));
+	else
+		std::println("unknown op");
 	*/
-
-	//if (ConditionalBranch::isThisOpcode(opcode))
-	//	std::println("{}", ConditionalBranch::disassemble(r, opcode));
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
@@ -263,7 +240,7 @@ void thumbExecute(uint16_t opcode){
 			break;
 
 		case 1: //high low reg loading, branch
-			hiRegOperations(opcode);
+			thumb_dispatch[opcode >> 6](r, opcode);
 			break;
 
 		case 2: case 3: //PC relative load
@@ -300,7 +277,7 @@ void thumbExecute(uint16_t opcode){
 		subType = (opcode >> 12) & 1;
 		switch (subType){
 		case 0: // multiple load / store
-			multiLoad(opcode);
+			thumb_dispatch[opcode >> 6](r, opcode);
 			break;
 
 		case 1:

@@ -148,8 +148,8 @@ int main(int argc, char *args[]){
 
 	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
-	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/program3.bin";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";

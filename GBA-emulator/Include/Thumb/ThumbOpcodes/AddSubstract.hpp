@@ -24,7 +24,6 @@ public:
 		return opcode & (0x3 << 9);
 	}
 
-
 	static constexpr addSubRegisterOp fromOpcode(const uint16_t opcode)
 	{
 		return {
