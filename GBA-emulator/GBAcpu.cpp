@@ -12,6 +12,8 @@
 #include <ios>
 #include <iostream>
 #include <Memory/memoryOps.h>
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Time.hpp>
 #include <string>
 #include <Thumb/ThumbOpCodes.h>
 #include <Timer/timers.h>
@@ -146,8 +148,8 @@ int main(int argc, char *args[]){
 
 	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
-	const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
+	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/program3.bin";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";
@@ -160,6 +162,8 @@ int main(int argc, char *args[]){
 	cycles = 0;
 	debug = false;
 	step = true;
+
+	sf::Clock clock{};
 
 	while (true){
 		if (debug && !step){

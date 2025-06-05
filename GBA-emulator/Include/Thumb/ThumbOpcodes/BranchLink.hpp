@@ -15,7 +15,7 @@ public:
 	{
 		uint16_t offset : 11;
 		uint16_t h : 1;
-		uint16_t reserved;
+		uint16_t reserved : 4;
 	};
 
 	static constexpr uint16_t mask(const uint16_t opcode)
@@ -73,7 +73,7 @@ public:
 		}
 	}
 
-	static auto disassemble(Registers& regs, const uint16_t opcode)
+	static auto disassemble(const Registers& regs, const uint16_t opcode)
 	{
 		const auto op = fromOpcode(opcode);
 		if(op.h == 0)

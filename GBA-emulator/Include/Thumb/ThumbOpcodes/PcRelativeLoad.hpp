@@ -18,11 +18,6 @@ public:
 		uint16_t reserved : 5;
 	};
 
-	static constexpr uint16_t mask(const uint16_t opcode)
-	{
-		return 0;
-	}
-
 	static constexpr PcRelativeLoadOpcode fromOpcode(const uint16_t opcode)
 	{
 		return {
@@ -38,7 +33,6 @@ public:
 		return (opcodeStruct.reserved == 9);
 	}
 
-	template<uint16_t iterOpcode>
 	static void execute(Registers& regs, const uint16_t opcode)
 	{
 		const auto op = fromOpcode(opcode);

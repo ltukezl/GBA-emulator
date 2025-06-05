@@ -20,7 +20,6 @@ public:
 		return opcode & (0x3 << 11);
 	}
 
-
 	static constexpr MultiplyAccumulateOpcode fromOpcode(const uint16_t opcode)
 	{
 		return std::bit_cast<MultiplyAccumulateOpcode>(opcode);

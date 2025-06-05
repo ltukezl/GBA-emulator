@@ -69,9 +69,6 @@
     <ClCompile Include="GBA-emulator\Timer\timers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GBA-emulator\cplusplusRewrite\Operation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GBA-emulator\Display\Palette\RgbaPalette.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -156,9 +153,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpCodes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\operation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransfer.hpp">
@@ -273,6 +267,42 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Memory\MemoryAreas\memoryAreas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Arm\Conditions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AddToSp.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\BranchLink.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\ConditionalBranch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadAddress.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PcRelativeLoad.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PopRegisters.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PushRegisters.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\SpRelativeOps.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\UnconditionalBranch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Arm\Swi.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreHalfword.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

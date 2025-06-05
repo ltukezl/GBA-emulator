@@ -19,12 +19,6 @@ public:
 		uint16_t reserved : 7;
 	};
 
-	static constexpr uint16_t mask(const uint16_t opcode)
-	{
-		return 0;
-	}
-
-
 	static constexpr PopRegistersOpcode fromOpcode(const uint16_t opcode)
 	{
 		return {
@@ -47,7 +41,6 @@ public:
 		return value;
 	}
 
-	template<uint16_t iterOpcode>
 	static void execute(Registers& regs, const uint16_t opcode)
 	{
 		const auto op = fromOpcode(opcode);

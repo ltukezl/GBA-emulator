@@ -30,10 +30,6 @@
 #include "Memory/memoryMappedIO.h"
 #include "Memory/memoryOps.h"
 
-
-
-
-
 extern RgbaPalette PaletteColours;
 extern Tileset tileset;
 
@@ -256,7 +252,7 @@ void Display::realizePalettes(const RgbaPalette& palette, FinalImage& finalImage
 
 void Display::updatePalettes(){
 	float fps;
-	sf::Clock clock {};
+	static sf::Clock clock {};
 	sf::Time previousTime = clock.getElapsedTime();
 	sf::Time currentTime;
 

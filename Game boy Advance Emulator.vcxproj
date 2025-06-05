@@ -145,7 +145,6 @@
     <ClCompile Include="GBA-emulator\cplusplusRewrite\dataProcessingOp.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\LogicOps.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\MathOps.cpp" />
-    <ClCompile Include="GBA-emulator\cplusplusRewrite\Operation.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Shifts.cpp" />
     <ClCompile Include="GBA-emulator\Display\Display.cpp" />
     <ClCompile Include="GBA-emulator\Display\MemoryViewer.cpp" />
@@ -173,6 +172,8 @@
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Multiply.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\armopcodes.h" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferRegister.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\Conditions.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\Swi.hpp" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\arithmeticOps.h" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\conditions.h" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\logicalOps.h" />
@@ -183,7 +184,6 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\HwRegisters.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\LogicOps.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\MathOps.h" />
-    <ClInclude Include="GBA-emulator\cplusplusRewrite\operation.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\Shifts.h" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransfer.hpp" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\allTests.h" />
@@ -219,7 +219,9 @@
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AddToSp.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\AluOps.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\BranchLink.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\ConditionalBranch.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadAddress.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreHalfword.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreImm.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MovCmpAddSubImm.hpp" />
@@ -227,6 +229,7 @@
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PopRegisters.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\PushRegisters.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\SpRelativeOps.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\UnconditionalBranch.hpp" />
     <ClInclude Include="GBA-emulator\Include\Timer\timers.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tile.h" />
     <ClInclude Include="GBA-emulator\Include\Gba-Graphics\Tile\Tileset.h" />

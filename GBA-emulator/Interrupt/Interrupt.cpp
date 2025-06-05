@@ -10,9 +10,6 @@
 bool IRQMode = false;
 
 void interruptController(){
-	//DURING IRQ
-#if ENABLED
-	//debug = true;
 	uint32_t prev = r.m_cpsr.val;
 	r.updateMode(CpuModes_t::ESUPER);
 	r[LR] = r[TRegisters::EProgramCounter];
@@ -23,7 +20,7 @@ void interruptController(){
 	r.m_cpsr.mode = SUPER;
 
 	r[TRegisters::EProgramCounter] = 0x8;
-#endif
+
 }
 
 bool timerCountHappened[4] = {};

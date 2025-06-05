@@ -13,12 +13,16 @@
 #include "GBAcpu.h"
 #include "Interrupt/interrupt.h"
 #include "Memory/memoryOps.h"
+#include "Arm/Swi.hpp"
 #include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
 #include "Thumb/ThumbOpcodes/AddToSp.hpp"
 #include "Thumb/ThumbOpcodes/AluOps.hpp"
 #include "Thumb/ThumbOpcodes/BranchLink.hpp"
+#include "Thumb/ThumbOpcodes/ConditionalBranch.hpp"
+#include "Thumb/ThumbOpcodes/UnconditionalBranch.hpp"
 #include "Thumb/ThumbOpcodes/LoadAddress.hpp"
+#include "Thumb/ThumbOpcodes/LoadStoreHalfword.hpp"
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
 #include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
 #include "Thumb/ThumbOpcodes/PcRelativeLoad.hpp"
@@ -107,15 +111,6 @@ static void loadStoreImm(uint16_t opcode){
 		writeToAddress32(totalAddress, r[op.destSourceReg]);
 }
 
-static void loadStoreHalfword(uint16_t opcode){
-	union loadStoreHalfWord op = { opcode };
-	int immediate = op.offset << 1; //half word alignment, 5 bits to 6 bits last bit is 0
-	if (op.loadFlag)
-		r[op.destSourceReg] = loadFromAddress16(r[op.baseReg] + immediate);
-	else
-		writeToAddress16(r[op.baseReg] + immediate, r[op.destSourceReg]);
-}
-
 static void multiLoad(uint16_t opcode){
 	int immediate = opcode & 0xFF;
 	int loadFlag = (opcode >> 11) & 1;
@@ -162,36 +157,6 @@ static void multiLoad(uint16_t opcode){
 	cycles += 1;
 }
 
-static void conditionalBranch(uint16_t opcode){
-	union conditionalBranchOp op = { opcode };
-	const uint32_t location = ((op.immediate << 1) + 2);
-	r[PC] += conditions[op.condition]() ? location : 0;
-
-	//if(debug)
-	//	 std::print("B{} #0x{:x}", condition_strings[op.condition], location);
-}
-
-static void unconditionalBranch(uint16_t opcode){
-	int immediate = (opcode & 0x7FF) << 1;
-	r[PC] += signExtend<12>(immediate) +2;
-}
-
-static void branchLink(uint16_t opcode){
-	int HLOffset = (opcode >> 11) & 1;
-	int immediate = (opcode & 0x7FF);
-	if (!HLOffset)
-	{
-		r[LR] = (signExtend<11>(immediate) << 12) + r[PC] + 2;
-		std::println("{:x}", r[ELinkRegisterLR]);
-	}
-	else{
-		int nextInstruction = r[PC] + 1;
-		r[TRegisters::EProgramCounter] = r[LR] + (immediate << 1);
-		r[LR] = nextInstruction | 1;
-		std::println("{:x} {:x}", r[EProgramCounter], r[ELinkRegisterLR]);
-	}
-}
-
 template<uint16_t op>
 static consteval auto decode_table()
 {
@@ -204,17 +169,25 @@ static consteval auto decode_table()
 	else if constexpr (AluOps::isThisOpcode(op))
 		return &(AluOps::execute<AluOps::mask(op)>);
 	else if constexpr (PcRelativeLoad::isThisOpcode(op))
-		return &(PcRelativeLoad::execute<PcRelativeLoad::mask(op)>);
+		return &(PcRelativeLoad::execute);
 	else if constexpr (PopRegisters::isThisOpcode(op))
-		return &(PopRegisters::execute<PopRegisters::mask(op)>);
+		return &(PopRegisters::execute);
 	else if constexpr (PushRegisters::isThisOpcode(op))
-		return &(PushRegisters::execute<PushRegisters::mask(op)>);
+		return &(PushRegisters::execute);
 	else if constexpr (SpRelativeOps::isThisOpcode(op))
 		return &(SpRelativeOps::execute<SpRelativeOps::mask(op)>);
 	else if constexpr (AddToSp::isThisOpcode(op))
 		return &(AddToSp::execute<AddToSp::mask(op)>);
+	else if constexpr (LoadStoreHalfword::isThisOpcode(op))
+		return &(LoadStoreHalfword::execute<LoadStoreHalfword::mask(op)>);
 	else if constexpr (LoadAddress::isThisOpcode(op))
 		return &(LoadAddress::execute<LoadAddress::mask(op)>);
+	else if constexpr (Swi::isThisOpcode_thumb(op))
+		return &(Swi::execute);
+	else if constexpr (UnconditionalBranch::isThisOpcode(op))
+		return &(UnconditionalBranch::execute);
+	else if constexpr (ConditionalBranch::isThisOpcode(op))
+		return &(ConditionalBranch::execute<ConditionalBranch::mask(op)>);
 	else if constexpr (BranchLink::isThisOpcode(op))
 		return &(BranchLink::execute<BranchLink::mask(op)>);
 	else
@@ -250,10 +223,28 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", AluOps::disassemble(opcode));
 	else if (PcRelativeLoad::isThisOpcode(opcode))
 		std::println("{}", PcRelativeLoad::disassemble(opcode));
+	else if (PopRegisters::isThisOpcode(opcode))
+		std::println("{}", PopRegisters::disassemble(opcode));
+	else if (PushRegisters::isThisOpcode(opcode))
+		std::println("{}", PushRegisters::disassemble(opcode));
+	else if (SpRelativeOps::isThisOpcode(opcode))
+		std::println("{}", SpRelativeOps::disassemble(opcode));
+	else if (AddToSp::isThisOpcode(opcode))
+		std::println("{}", AddToSp::disassemble(opcode));
+	else if (LoadAddress::isThisOpcode(opcode))
+		std::println("{}", LoadAddress::disassemble(opcode));
+	else if (LoadStoreHalfword::isThisOpcode(opcode))
+		std::println("{}", LoadStoreHalfword::disassemble(opcode));
+	else if (ConditionalBranch::isThisOpcode(opcode))
+		std::println("{}", ConditionalBranch::disassemble(r, opcode));
+	else if (UnconditionalBranch::isThisOpcode(opcode))
+		std::println("{}", UnconditionalBranch::disassemble(r, opcode));
+	else if (BranchLink::isThisOpcode(opcode))
+		std::println("{}", BranchLink::disassemble(r, opcode));
 	*/
 
-	if (BranchLink::isThisOpcode(opcode))
-		std::println("{}", BranchLink::disassemble(r, opcode));
+	//if (ConditionalBranch::isThisOpcode(opcode))
+	//	std::println("{}", ConditionalBranch::disassemble(r, opcode));
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
@@ -299,17 +290,7 @@ void thumbExecute(uint16_t opcode){
 		break;
 
 	case 4: // load store halfword reg - imm
-		subType = (opcode >> 12) & 1;
-		switch (subType){
-		case 0: //load half word reg - imm
-			loadStoreHalfword(opcode);
-			break;
-
-		case 1: //load SP relative
-			thumb_dispatch[opcode >> 6](r, opcode);
-			break;
-		}
-		break;
+		thumb_dispatch[opcode >> 6](r, opcode);
 
 	case 5:
 		thumb_dispatch[opcode >> 6](r, opcode);
@@ -323,32 +304,12 @@ void thumbExecute(uint16_t opcode){
 			break;
 
 		case 1:
-			int condition = (opcode >> 8) & 0x0F;
-			switch (condition)
-			{
-			case 15: //software interrupt
-				interruptController();
-				break;
-			default:  //conditional branch
-				conditionalBranch(opcode);
-				break;
-			}
-			break;
+			thumb_dispatch[opcode >> 6](r, opcode);
 		}
 		break;
 
 	case 7:
-		subType = (opcode >> 12) & 1;
-		switch (subType){
-		case 0: //unconditional branch
-			unconditionalBranch(opcode);
-			break;
-
-		case 1: //branch and link
-			thumb_dispatch[opcode >> 6](r, opcode);
-			break;
-		}
-		break;
+		thumb_dispatch[opcode >> 6](r, opcode);
 	}
 }
 
