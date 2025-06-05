@@ -85,48 +85,6 @@ static void loadStoreImm(uint16_t opcode){
 		writeToAddress32(totalAddress, r[op.destSourceReg]);
 }
 
-static void multiLoad(uint16_t opcode){
-	uint32_t immediate = opcode & 0xFF;
-	int loadFlag = (opcode >> 11) & 1;
-	int baseReg = (opcode >> 8) & 7;
-
-	if (loadFlag){
-		if (immediate == 0){
-			r[TRegisters::EProgramCounter] = (loadFromAddress32(r[baseReg])) & ~1;
-			r[baseReg] += 0x40;
-		}
-		else {
-			for (int i = 0; i < 8; i++){
-				if ((immediate >> i) & 1){
-					r[i] = loadFromAddress32(r[baseReg]);
-					r[baseReg] += 4;
-				}
-			}
-		}
-	}
-	else{
-		const uint32_t bits = std::popcount((immediate & ((1 << baseReg) - 1)));
-		bool first = bits == 0;
-		const uint32_t savedAddr = (bits << 2) + r[baseReg];
-
-		if (immediate == 0){
-			writeToAddress32(r[baseReg], r[PC] + 4);
-			r[baseReg] += 0x40;
-		}
-		else{
-			for (int i = 0; i < 8; i++){
-				if (immediate & (1 << i)){
-					writeToAddress32(r[baseReg], r[i]);
-					r[baseReg] += 4;
-				}
-			}
-		}
-		if (!first)
-			writeToAddress32(savedAddr, r[baseReg]);
-	}
-	cycles += 1;
-}
-
 template<uint16_t op>
 static consteval auto decode_table()
 {
@@ -154,14 +112,14 @@ static consteval auto decode_table()
 		return &(LoadStoreHalfword::execute<LoadStoreHalfword::mask(op)>);
 	else if constexpr (LoadAddress::isThisOpcode(op))
 		return &(LoadAddress::execute<LoadAddress::mask(op)>);
-	else if constexpr (Swi::isThisOpcode_thumb(op))
-		return &(Swi::execute);
-	else if constexpr (UnconditionalBranch::isThisOpcode(op))
-		return &(UnconditionalBranch::execute);
 	else if constexpr (MultipleLoad::isThisOpcode(op))
 		return &(MultipleLoad::execute);
 	else if constexpr (MultipleStore::isThisOpcode(op))
 		return &(MultipleStore::execute);
+	else if constexpr (Swi::isThisOpcode_thumb(op))
+		return &(Swi::execute);
+	else if constexpr (UnconditionalBranch::isThisOpcode(op))
+		return &(UnconditionalBranch::execute);
 	else if constexpr (ConditionalBranch::isThisOpcode(op))
 		return &(ConditionalBranch::execute<ConditionalBranch::mask(op)>);
 	else if constexpr (BranchLink::isThisOpcode(op))
@@ -188,7 +146,7 @@ void thumbExecute(uint16_t opcode){
 	cycles += 1;
 	__int16 type = (opcode & 0xE000) >> 13;
 	
-	/*
+	
 	if (AddSubThumb::isThisOpcode(opcode))
 		std::println("{}", AddSubThumb::disassemble(opcode));
 	else if (MoveShiftedRegister::isThisOpcode(opcode))
@@ -213,6 +171,10 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", LoadAddress::disassemble(opcode));
 	else if (LoadStoreHalfword::isThisOpcode(opcode))
 		std::println("{}", LoadStoreHalfword::disassemble(opcode));
+	else if (MultipleLoad::isThisOpcode(opcode))
+		std::println("{}", MultipleLoad::disassemble(opcode));
+	else if (MultipleStore::isThisOpcode(opcode))
+		std::println("{}", MultipleStore::disassemble(opcode));
 	else if (ConditionalBranch::isThisOpcode(opcode))
 		std::println("{}", ConditionalBranch::disassemble(r, opcode));
 	else if (UnconditionalBranch::isThisOpcode(opcode))
@@ -221,7 +183,7 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", BranchLink::disassemble(r, opcode));
 	else
 		std::println("unknown op");
-	*/
+	
 
 	switch (type) {
 	case 0: //shifts or add or sub, maybe sign extended for immidiates?
@@ -268,21 +230,14 @@ void thumbExecute(uint16_t opcode){
 
 	case 4: // load store halfword reg - imm
 		thumb_dispatch[opcode >> 6](r, opcode);
+		break;
 
 	case 5:
 		thumb_dispatch[opcode >> 6](r, opcode);
 		break;
 
 	case 6:
-		subType = (opcode >> 12) & 1;
-		switch (subType){
-		case 0: // multiple load / store
-			thumb_dispatch[opcode >> 6](r, opcode);
-			break;
-
-		case 1:
-			thumb_dispatch[opcode >> 6](r, opcode);
-		}
+		thumb_dispatch[opcode >> 6](r, opcode);
 		break;
 
 	case 7:

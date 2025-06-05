@@ -2,6 +2,7 @@
 #define MultipleLoad_H
 
 #include <bit>
+#include <string>
 #include <cstdint>
 #include <format>
 
@@ -59,9 +60,44 @@ public:
 		}
 	}
 
+	static auto createRangeString(uint32_t s, uint32_t e)
+	{
+		return std::format("R{}-R{}", s, e);
+	}
+
+	static auto createPlainReg(uint32_t s)
+	{
+		return std::format("R{}", s);
+	}
+
 	static auto disassemble(const uint16_t opcode)
 	{
+		const auto op = fromOpcode(opcode);
+		std::string baseString = "";
+		for (size_t i = 0; i < 8;)
+		{
+			if (!(op.rlist & (1 << i)))
+			{
+				++i;
+				continue;
+			}
 
+			// Found the start of a run
+			size_t start = i;
+			while (i < 8 && (op.rlist & (1 << i)))
+				++i;
+
+			// Generate string based on run length
+			if (!baseString.empty())
+				baseString += ",";
+
+			if (start == i - 1)
+				baseString += createPlainReg(start);
+			else
+				baseString += createRangeString(start, i - 1);
+		}
+
+		return std::format("LDMIA R{}!, {{{}}}", op.baseReg, baseString);
 	}
 };
 
