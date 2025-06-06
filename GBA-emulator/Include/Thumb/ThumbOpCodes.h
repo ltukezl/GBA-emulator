@@ -80,9 +80,10 @@ union loadStoreSignExtended{
 		uint16_t destSourceReg : 3;
 		uint16_t baseReg : 3;
 		uint16_t offsetReg : 3;
-		uint16_t: 1;
+		uint16_t reserved1 : 1;
 		uint16_t extend : 1;
 		uint16_t halfWord : 1;
+		uint16_t reserved2 : 4;
 	};
 };
 

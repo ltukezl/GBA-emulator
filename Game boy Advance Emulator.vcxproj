@@ -224,6 +224,8 @@
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadAddress.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreHalfword.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreImm.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreRegOffset.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreSignExtend.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MoveShiftedRegister.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MovCmpAddSubImm.hpp" />
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MultipleLoad.hpp" />

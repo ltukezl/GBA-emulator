@@ -1,14 +1,8 @@
 #ifndef GBACPU_H
 #define GBACPU_H
 #include <cstdint>
-#include "cplusplusRewrite/HwRegisters.h"
 
-extern __int32* usrSys[17];
-extern __int32* abt[17];
-extern __int32* undef[17];
-extern __int32* fiq[17];
-extern __int32* irq[17];
-extern __int32* svc[17];
+#include "cplusplusRewrite/HwRegisters.h"
 
 extern Registers r;
 

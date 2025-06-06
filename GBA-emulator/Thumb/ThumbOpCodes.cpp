@@ -1,23 +1,12 @@
 #include <array>
-#include <bit>
 #include <cstdint>
-#include <print>
 #include <utility>
+#include <print>
 
-#include "Arm/ArmOpcodes/SingleDataTransfer.hpp"
 #include "Arm/Swi.hpp"
-#include "CommonOperations/arithmeticOps.h"
-#include "CommonOperations/conditions.h"
-#include "CommonOperations/logicalOps.h"
-#include "Constants.h"
-#include "cplusplusRewrite/HwRegisters.h"
 #include "GBAcpu.h"
-#include "Interrupt/interrupt.h"
-#include "Memory/memoryOps.h"
 #include "Thumb/ThumbOpCodes.h"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
-#include "Thumb/ThumbOpcodes/MultipleStore.hpp"
-#include "Thumb/ThumbOpcodes/MultipleLoad.hpp"
 #include "Thumb/ThumbOpcodes/AddToSp.hpp"
 #include "Thumb/ThumbOpcodes/AluOps.hpp"
 #include "Thumb/ThumbOpcodes/BranchLink.hpp"
@@ -25,65 +14,18 @@
 #include "Thumb/ThumbOpcodes/HiRegOps.hpp"
 #include "Thumb/ThumbOpcodes/LoadAddress.hpp"
 #include "Thumb/ThumbOpcodes/LoadStoreHalfword.hpp"
+#include "Thumb/ThumbOpcodes/LoadStoreImm.hpp"
+#include "Thumb/ThumbOpcodes/LoadStoreRegOffset.hpp"
+#include "Thumb/ThumbOpcodes/LoadStoreSignExtend.hpp"
 #include "Thumb/ThumbOpcodes/MovCmpAddSubImm.hpp"
 #include "Thumb/ThumbOpcodes/MoveShiftedRegister.hpp"
+#include "Thumb/ThumbOpcodes/MultipleLoad.hpp"
+#include "Thumb/ThumbOpcodes/MultipleStore.hpp"
 #include "Thumb/ThumbOpcodes/PcRelativeLoad.hpp"
 #include "Thumb/ThumbOpcodes/PopRegisters.hpp"
 #include "Thumb/ThumbOpcodes/PushRegisters.hpp"
 #include "Thumb/ThumbOpcodes/SpRelativeOps.hpp"
 #include "Thumb/ThumbOpcodes/UnconditionalBranch.hpp"
-
-static void loadStoreRegOffset(uint16_t opcode){
-	union loadStoreRegOffset op = { opcode };
-	uint32_t totalAddress = r[op.baseReg] + r[op.offsetReg];
-
-	if (op.loadBit && op.byteSize)
-		r[op.destSourceReg] = loadFromAddress(totalAddress);
-	else if (op.loadBit && !op.byteSize)
-		r[op.destSourceReg] = loadFromAddress32(totalAddress);
-	else if (!op.loadBit && op.byteSize)
-		writeToAddress(totalAddress, r[op.destSourceReg]);
-	else
-		writeToAddress32(totalAddress, r[op.destSourceReg]);
-}
-
-static void loadStoreSignExtend(uint16_t opcode){
-	union loadStoreSignExtended op = { opcode };
-	uint32_t totalAddress = r[op.baseReg] + r[op.offsetReg];
-
-	if (op.halfWord && op.extend){
-		if (totalAddress & 1){
-			r[op.destSourceReg] = signExtend<8>(loadFromAddress16(totalAddress));
-			if (r[op.destSourceReg] & 0x80) //sign bit on
-				r[op.destSourceReg] |= 0xFFFFFF00;
-		}
-		else{
-			r[op.destSourceReg] = signExtend<16>(loadFromAddress16(totalAddress));
-		}
-	}
-	else if (op.halfWord && !op.extend)
-		r[op.destSourceReg] = loadFromAddress16(totalAddress);
-	else if (!op.halfWord && op.extend)
-		r[op.destSourceReg] = signExtend<8>(loadFromAddress(totalAddress));
-	else
-		writeToAddress16(totalAddress, r[op.destSourceReg]);
-}
-
-static void loadStoreImm(uint16_t opcode){
-	const auto op = std::bit_cast<loadStoreImmediate>(opcode);
-	const uint32_t shift = op.byteSize ? 0 : 2;
-	const uint8_t immediate = op.offset << shift;
-	uint32_t totalAddress = r[op.baseReg] + immediate;
-
-	if (op.loadFlag && op.byteSize)
-		r[op.destSourceReg] = loadFromAddress(totalAddress);
-	else if (op.loadFlag && !op.byteSize)
-		r[op.destSourceReg] = loadFromAddress32(totalAddress);
-	else if (!op.loadFlag && op.byteSize)
-		writeToAddress(totalAddress, r[op.destSourceReg]);
-	else
-		writeToAddress32(totalAddress, r[op.destSourceReg]);
-}
 
 template<uint16_t op>
 static consteval auto decode_table()
@@ -104,12 +46,18 @@ static consteval auto decode_table()
 		return &(PopRegisters::execute);
 	else if constexpr (PushRegisters::isThisOpcode(op))
 		return &(PushRegisters::execute);
+	else if constexpr (LoadStoreReg::isThisOpcode(op))
+		return &(LoadStoreReg::execute<LoadStoreReg::mask(op)>);
+	else if constexpr (LoadStoreImm::isThisOpcode(op))
+		return &(LoadStoreImm::execute<LoadStoreImm::mask(op)>);
 	else if constexpr (SpRelativeOps::isThisOpcode(op))
 		return &(SpRelativeOps::execute<SpRelativeOps::mask(op)>);
 	else if constexpr (AddToSp::isThisOpcode(op))
 		return &(AddToSp::execute<AddToSp::mask(op)>);
 	else if constexpr (LoadStoreHalfword::isThisOpcode(op))
 		return &(LoadStoreHalfword::execute<LoadStoreHalfword::mask(op)>);
+	else if constexpr (LoadStoreSignExtend::isThisOpcode(op))
+		return &(LoadStoreSignExtend::execute<LoadStoreSignExtend::mask(op)>);
 	else if constexpr (LoadAddress::isThisOpcode(op))
 		return &(LoadAddress::execute<LoadAddress::mask(op)>);
 	else if constexpr (MultipleLoad::isThisOpcode(op))
@@ -141,12 +89,10 @@ static constexpr std::array thumb_dispatch = { []() consteval
 	return tmp;
 }() };
 
-void thumbExecute(uint16_t opcode){
-	int subType;
+void thumbExecute(const uint16_t opcode){
 	cycles += 1;
-	__int16 type = (opcode & 0xE000) >> 13;
 	
-	
+	/*
 	if (AddSubThumb::isThisOpcode(opcode))
 		std::println("{}", AddSubThumb::disassemble(opcode));
 	else if (MoveShiftedRegister::isThisOpcode(opcode))
@@ -163,6 +109,10 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", PopRegisters::disassemble(opcode));
 	else if (PushRegisters::isThisOpcode(opcode))
 		std::println("{}", PushRegisters::disassemble(opcode));
+	else if (LoadStoreReg::isThisOpcode(opcode))
+		std::println("{}", LoadStoreReg::disassemble(opcode));
+	else if (LoadStoreImm::isThisOpcode(opcode))
+		std::println("{}", LoadStoreImm::disassemble(opcode));
 	else if (SpRelativeOps::isThisOpcode(opcode))
 		std::println("{}", SpRelativeOps::disassemble(opcode));
 	else if (AddToSp::isThisOpcode(opcode))
@@ -171,6 +121,8 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", LoadAddress::disassemble(opcode));
 	else if (LoadStoreHalfword::isThisOpcode(opcode))
 		std::println("{}", LoadStoreHalfword::disassemble(opcode));
+	else if (LoadStoreSignExtend::isThisOpcode(opcode))
+		std::println("{}", LoadStoreSignExtend::disassemble(opcode));
 	else if (MultipleLoad::isThisOpcode(opcode))
 		std::println("{}", MultipleLoad::disassemble(opcode));
 	else if (MultipleStore::isThisOpcode(opcode))
@@ -181,67 +133,8 @@ void thumbExecute(uint16_t opcode){
 		std::println("{}", UnconditionalBranch::disassemble(r, opcode));
 	else if (BranchLink::isThisOpcode(opcode))
 		std::println("{}", BranchLink::disassemble(r, opcode));
-	else
-		std::println("unknown op");
-	
+	*/
 
-	switch (type) {
-	case 0: //shifts or add or sub, maybe sign extended for immidiates?
-		thumb_dispatch[opcode >> 6](r, opcode);
-		break;
-
-	case 1: // move|compare|substract|add immediate
-		thumb_dispatch[opcode >> 6](r, opcode);
-		break;
-
-	case 2: //logical ops / memory load / store
-		subType = (opcode >> 10) & 7;
-		switch (subType){
-		case 0: //logical ops reg - reg
-			thumb_dispatch[opcode >> 6](r, opcode);
-			break;
-
-		case 1: //high low reg loading, branch
-			thumb_dispatch[opcode >> 6](r, opcode);
-			break;
-
-		case 2: case 3: //PC relative load
-			thumb_dispatch[opcode >> 6](r, opcode);
-			break;
-
-		default:
-			int subType2 = (opcode >> 9) & 1;
-			switch (subType2){
-			case 0: //load / store with reg offset
-				loadStoreRegOffset(opcode);
-				break;
-
-			case 1: //load / store sign extended byte / word
-				loadStoreSignExtend(opcode);
-				break;
-			}
-			break;
-		}
-		break;
-
-	case 3: //load / store reg - imm
-		loadStoreImm(opcode);
-		break;
-
-	case 4: // load store halfword reg - imm
-		thumb_dispatch[opcode >> 6](r, opcode);
-		break;
-
-	case 5:
-		thumb_dispatch[opcode >> 6](r, opcode);
-		break;
-
-	case 6:
-		thumb_dispatch[opcode >> 6](r, opcode);
-		break;
-
-	case 7:
-		thumb_dispatch[opcode >> 6](r, opcode);
-	}
+	thumb_dispatch[opcode >> 6](r, opcode);
 }
 

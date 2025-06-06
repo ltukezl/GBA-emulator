@@ -4,6 +4,7 @@
 #include <format>
 
 #include "cplusplusRewrite/HwRegisters.h"
+#include "Memory/memoryOps.h"
 
 class LoadStoreImm
 {
@@ -22,7 +23,6 @@ public:
 	{
 		return opcode & (0x3 << 11);
 	}
-
 
 	static constexpr LoadStoreImmOpcode fromOpcode(const uint16_t opcode)
 	{
@@ -47,10 +47,27 @@ public:
 	{
 		constexpr auto c_op = fromOpcode(iterOpcode);
 		const auto op = fromOpcode(opcode);
+		const uint32_t shift = op.byteSize ? 0 : 2;
+		const uint8_t immediate = op.offset << shift;
+		const uint32_t totalAddress = regs[op.baseReg] + immediate;
+
+		if constexpr (c_op.loadFlag && c_op.byteSize)
+			regs[op.destSourceReg] = loadFromAddress(totalAddress);
+		else if constexpr (c_op.loadFlag && !c_op.byteSize)
+			regs[op.destSourceReg] = loadFromAddress32(totalAddress);
+		else if constexpr (!c_op.loadFlag && c_op.byteSize)
+			writeToAddress(totalAddress, regs[op.destSourceReg]);
+		else
+			writeToAddress32(totalAddress, regs[op.destSourceReg]);
 	}
 
 	static auto disassemble(const uint16_t opcode)
 	{
-
+		const auto op = fromOpcode(opcode);
+		const uint32_t shift = op.byteSize ? 0 : 2;
+		const uint8_t immediate = op.offset << shift;
+		const auto ls = op.loadFlag ? "LDR" : "STR";
+		const auto bw = op.byteSize ? "B" : "";
+		return std::format("{}{} R{}, [R{}, #0x{:x}]", ls, bw, op.destSourceReg, op.baseReg, immediate);
 	}
 };

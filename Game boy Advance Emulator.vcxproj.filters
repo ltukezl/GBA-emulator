@@ -314,6 +314,12 @@
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\MultipleStore.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreRegOffset.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreSignExtend.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="GBA-emulator\TestBinaries\program2.bin">
