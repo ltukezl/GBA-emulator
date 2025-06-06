@@ -73,11 +73,11 @@ public:
 		}
 	}
 
-	static auto disassemble(const Registers& regs, const uint16_t opcode)
+	static auto disassemble(const uint32_t program_counter, const uint16_t opcode)
 	{
 		const auto op = fromOpcode(opcode);
 		if(op.h == 0)
-			return std::format("BL {:x}", calculateLabelAddr(regs[EProgramCounter], opcode));
+			return std::format("BL {:x}", calculateLabelAddr(program_counter, opcode));
 		return std::format("");
 	}
 };

@@ -66,6 +66,6 @@ public:
 		const auto op = fromOpcode(opcode);
 		const auto operation = shift_strings[op.instruction];
 		const auto value = op.immediate;
-		return std::format("{} R{}, R{}, #{:x}", operation, op.destination, op.source, value);
+		return std::format("{} R{}, R{}, #0x{:x}", operation, op.destination, op.source, value);
 	}
 };

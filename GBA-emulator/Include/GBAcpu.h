@@ -25,10 +25,6 @@ extern uint8_t WS0Second[2];
 extern uint8_t WS1Second[2];
 extern uint8_t WS2Second[2];
 
-extern bool debug;
-extern bool step;
-extern bool memStatistics;
-
 template<int start>
 int signExtend(int value){
 	int m = 1U << (start - 1); //bitextend hack

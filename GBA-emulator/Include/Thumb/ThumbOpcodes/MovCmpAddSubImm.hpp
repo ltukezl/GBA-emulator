@@ -67,6 +67,6 @@ public:
 		const auto op = fromOpcode(opcode);
 		const auto operation = math_strings[op.instruction];
 		const auto value = op.offset;
-		return std::format("{} R{}, #{:x}", operation, op.destination, value);
+		return std::format("{} R{}, #0x{:x}", operation, op.destination, value);
 	}
 };

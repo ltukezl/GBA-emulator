@@ -1,7 +1,6 @@
 #include <array>
 #include <cstdint>
 #include <utility>
-#include <print>
 
 #include "Arm/Swi.hpp"
 #include "GBAcpu.h"
@@ -91,50 +90,6 @@ static constexpr std::array thumb_dispatch = { []() consteval
 
 void thumbExecute(const uint16_t opcode){
 	cycles += 1;
-	
-	/*
-	if (AddSubThumb::isThisOpcode(opcode))
-		std::println("{}", AddSubThumb::disassemble(opcode));
-	else if (MoveShiftedRegister::isThisOpcode(opcode))
-		std::println("{}", MoveShiftedRegister::disassemble(opcode));
-	else if (MovCmpAddSubImm::isThisOpcode(opcode))
-		std::println("{}", MovCmpAddSubImm::disassemble(opcode));
-	else if (AluOps::isThisOpcode(opcode))
-		std::println("{}", AluOps::disassemble(opcode));
-	else if (HighRegOps::isThisOpcode(opcode))
-		std::println("{}", HighRegOps::disassemble(opcode));
-	else if (PcRelativeLoad::isThisOpcode(opcode))
-		std::println("{}", PcRelativeLoad::disassemble(opcode));
-	else if (PopRegisters::isThisOpcode(opcode))
-		std::println("{}", PopRegisters::disassemble(opcode));
-	else if (PushRegisters::isThisOpcode(opcode))
-		std::println("{}", PushRegisters::disassemble(opcode));
-	else if (LoadStoreReg::isThisOpcode(opcode))
-		std::println("{}", LoadStoreReg::disassemble(opcode));
-	else if (LoadStoreImm::isThisOpcode(opcode))
-		std::println("{}", LoadStoreImm::disassemble(opcode));
-	else if (SpRelativeOps::isThisOpcode(opcode))
-		std::println("{}", SpRelativeOps::disassemble(opcode));
-	else if (AddToSp::isThisOpcode(opcode))
-		std::println("{}", AddToSp::disassemble(opcode));
-	else if (LoadAddress::isThisOpcode(opcode))
-		std::println("{}", LoadAddress::disassemble(opcode));
-	else if (LoadStoreHalfword::isThisOpcode(opcode))
-		std::println("{}", LoadStoreHalfword::disassemble(opcode));
-	else if (LoadStoreSignExtend::isThisOpcode(opcode))
-		std::println("{}", LoadStoreSignExtend::disassemble(opcode));
-	else if (MultipleLoad::isThisOpcode(opcode))
-		std::println("{}", MultipleLoad::disassemble(opcode));
-	else if (MultipleStore::isThisOpcode(opcode))
-		std::println("{}", MultipleStore::disassemble(opcode));
-	else if (ConditionalBranch::isThisOpcode(opcode))
-		std::println("{}", ConditionalBranch::disassemble(r, opcode));
-	else if (UnconditionalBranch::isThisOpcode(opcode))
-		std::println("{}", UnconditionalBranch::disassemble(r, opcode));
-	else if (BranchLink::isThisOpcode(opcode))
-		std::println("{}", BranchLink::disassemble(r, opcode));
-	*/
-
 	thumb_dispatch[opcode >> 6](r, opcode);
 }
 

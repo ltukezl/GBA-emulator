@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-void thumbExecute(uint16_t);
+void thumbExecute(const uint16_t);
 
 union moveShiftedRegisterOp{
 	uint16_t op;

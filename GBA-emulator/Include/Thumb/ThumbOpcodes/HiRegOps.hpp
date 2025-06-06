@@ -61,16 +61,8 @@ public:
 	{
 		constexpr auto c_op = fromOpcode_eval(iterOpcode);
 		const auto op = fromOpcode(opcode);
-
-		if constexpr (c_op.instruction == 3)
-		{
-			const uint32_t operand2 = regs[op.source];
-			regs[EProgramCounter] = operand2 & ~1;
-			regs.m_cpsr.thumb = operand2 & 1;
-			return;
-		}
-
 		uint8_t newDestinationReg = op.destination;
+		uint32_t operand2 = regs[op.source];
 
 		if constexpr (c_op.destHiBit)
 		{
@@ -78,16 +70,24 @@ public:
 		}
 
 		uint32_t operand1 = regs[newDestinationReg];
-		uint32_t operand2 = regs[op.source];
-
-		if (newDestinationReg == EProgramCounter)
-		{
-			operand1 += 2;
-		}
 
 		if (op.source == EProgramCounter)
 		{
 			operand2 += 2;
+			operand2 &= ~1;
+		}
+
+		if (newDestinationReg == EProgramCounter)
+		{
+			operand1 += 2;
+			operand2 &= ~1;
+		}
+
+		if constexpr (c_op.instruction == 3)
+		{
+			regs[EProgramCounter] = operand2 & ~1;
+			regs.m_cpsr.thumb = operand2 & 1;
+			return;
 		}
 
 		constexpr auto mathFunc = mathOps_arr[c_op.instruction];
@@ -99,11 +99,6 @@ public:
 		}
 
 		regs[newDestinationReg] = result;
-
-		if (c_op.destHiBit && newDestinationReg == EProgramCounter)
-		{
-			regs[EProgramCounter] &= ~1;
-		}
 	}
 
 	static std::string decodeRegisterName(uint16_t reg)

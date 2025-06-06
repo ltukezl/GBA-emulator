@@ -54,12 +54,12 @@ public:
 		}
 	}
 
-	static auto disassemble(const Registers& regs, const uint16_t opcode)
+	static auto disassemble(const uint32_t program_counter, const uint16_t opcode)
 	{
 		const auto op = fromOpcode(opcode);
 		const auto cond_s = conditionspp_s[op.condition];
 		const uint32_t location = ((op.offset << 1) + 2);
-		const auto result = regs[EProgramCounter] + location;
+		const auto result = program_counter + location;
 		return std::format("{} {:x}", cond_s, result);
 	}
 };

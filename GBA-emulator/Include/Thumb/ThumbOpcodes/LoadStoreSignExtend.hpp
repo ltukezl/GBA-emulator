@@ -78,8 +78,7 @@ public:
 			return std::format("LDRH R{}, [R{}, R{}]", op.destSourceReg, op.baseReg, op.offsetReg);
 		if (!op.halfWord && op.extend)
 			return std::format("LDRSB R{}, [R{}, R{}]", op.destSourceReg, op.baseReg, op.offsetReg);
-		if (!op.halfWord && !op.extend)
-			return std::format("STRH R{}, [R{}, R{}]", op.destSourceReg, op.baseReg, op.offsetReg);
+		return std::format("STRH R{}, [R{}, R{}]", op.destSourceReg, op.baseReg, op.offsetReg);
 	}
 };
 

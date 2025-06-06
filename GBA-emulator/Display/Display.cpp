@@ -373,15 +373,6 @@ void Display::handleEvents(){
 				keyInput->btn_select = 0;
 			}
 
-			if (event.key.code == sf::Keyboard::F)
-			{
-				debug = !debug;
-			}
-			if (event.key.code == sf::Keyboard::G)
-			{
-				if (debug)
-					step = true;
-			}
 			/*
 			if (keypadInterruptCtrl->IRQ_EN && InterruptEnableRegister->keyPad){
 				uint16_t tmp = ~((keyInput->addr) & 0x3FFF);

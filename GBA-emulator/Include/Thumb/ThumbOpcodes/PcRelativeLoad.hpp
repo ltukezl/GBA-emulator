@@ -44,7 +44,7 @@ public:
 	static auto disassemble(const uint16_t opcode)
 	{
 		const auto op = fromOpcode(opcode);
-		return std::format("LDR R{}, [PC, #{:x}]", op.destination, op.offset << 2);
+		return std::format("LDR R{}, [PC, #0x{:x}]", op.destination, op.offset << 2);
 	}
 };
 

@@ -28,7 +28,7 @@ public:
 	{
 		return {
 			.rlist = static_cast<uint16_t>(opcode & 0x00FF),               // bits 0–7
-			.baseReg = static_cast<uint16_t>((opcode >> 8) & 0x0003),     // bits 8–11
+			.baseReg = static_cast<uint16_t>((opcode >> 8) & 0x0007),     // bits 8–11
 			.reserved = static_cast<uint16_t>((opcode >> 11) & 0x001F)      // bits 12–15
 		};
 	}
@@ -43,6 +43,7 @@ public:
 	{
 		const auto op = fromOpcode(opcode);
 		const uint32_t bits = std::popcount((op.rlist & ((1ULL << op.baseReg) - 1ULL)));
+		const bool rInList = op.rlist & (1 << op.baseReg);
 		const bool first = bits == 0;
 		const uint32_t savedAddr = (bits << 2) + regs[op.baseReg];
 
@@ -62,7 +63,7 @@ public:
 				}
 			}
 		}
-		if (!first)
+		if (rInList && !first)
 			writeToAddress32(savedAddr, regs[op.baseReg]);
 	}
 

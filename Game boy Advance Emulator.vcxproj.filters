@@ -102,6 +102,9 @@
     <ClCompile Include="GBA-emulator\Display\VideoCycleCounter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GBA-emulator\Display\disassembler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GBA-emulator\Include\Constants.h">
@@ -318,6 +321,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GBA-emulator\Include\Thumb\ThumbOpcodes\LoadStoreSignExtend.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Display\Disassembler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

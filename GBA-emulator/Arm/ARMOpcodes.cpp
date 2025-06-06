@@ -46,9 +46,6 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b)
 		r.updateMode(CpuModes_t::EUSR);
 	}
 
-	if (debug)
-		std::cout << "push ";
-
 	if (((opCode >> 15) & 1) & ~upDownBit)
 	{
 		a((int&)r[baseReg], r[15] + 8);
@@ -71,8 +68,6 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b)
 					a((int&)r[baseReg], r[i]);
 					b((int&)r[baseReg], r[i]);
 				}
-				if (debug)
-					std::cout << "r" << i << " ";
 			}
 			regList >>= 1;
 		}
@@ -91,8 +86,6 @@ void BlockDataTransferSave(int opCode, function1 a, function2 b)
 					a((int&)r[baseReg], r[14 - i]);
 					b((int&)r[baseReg], r[14 - i]);
 				}
-				if (debug)
-					std::cout << "r" << 14 - i << " ";
 			}
 			regList <<= 1;
 		}
@@ -138,9 +131,6 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b)
 		r.updateMode(CpuModes_t::EUSR);
 	}
 
-	if (debug)
-		std::cout << "pop ";
-
 	for (int i = 0; i < 16; i++)
 	{
 		if (upDownBit)
@@ -149,8 +139,6 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b)
 			{
 				r[i] = a(memAddress, false);
 				b(memAddress, false);
-				if (debug)
-					std::cout << "r" << i << " ";
 			}
 			regList >>= 1;
 		}
@@ -160,8 +148,6 @@ void BlockDataTransferLoadPost(int opCode, function1 a, function2 b)
 			{
 				r[15 - i] = a(memAddress, false);
 				b(memAddress, false);
-				if (debug)
-					std::cout << "r" << 14 - i << " ";
 			}
 			regList <<= 1;
 		}

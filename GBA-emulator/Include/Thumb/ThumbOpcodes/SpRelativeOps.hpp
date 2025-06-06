@@ -55,8 +55,8 @@ public:
 	{
 		const auto op = fromOpcode(opcode);
 		if (op.loadFlag)
-			return std::format("LDR R{}, [SP, #{:x}]", op.destSourceReg, op.immediate << 2);
-		return std::format("STR R{}, [SP, #{:x}]", op.destSourceReg, op.immediate << 2);
+			return std::format("LDR R{}, [SP, #0x{:x}]", op.destSourceReg, op.immediate << 2);
+		return std::format("STR R{}, [SP, #0x{:x}]", op.destSourceReg, op.immediate << 2);
 	}
 };
 

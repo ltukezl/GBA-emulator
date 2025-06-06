@@ -20,7 +20,6 @@ void interruptController(){
 	r.m_cpsr.mode = SUPER;
 
 	r[TRegisters::EProgramCounter] = 0x8;
-
 }
 
 bool timerCountHappened[4] = {};
@@ -53,9 +52,6 @@ void HWInterrupts(uint64_t cycles) {
 	}
 
 	if (InterruptFlagRegister->addr != 0) {
-		if (debug)
-			std::cout << "entered interrupt from 0x" << std::hex << r[TRegisters::EProgramCounter] << " saving LR " << (r.m_cpsr.thumb ? r[PC] + 4 : r[PC]) << " " << std::dec << std::endl;
-		//debug = true;
 		uint32_t prev = r.m_cpsr.val;
 		r.updateMode(CpuModes_t::EIRQ);
 		r[16] = prev;

@@ -146,6 +146,7 @@
     <ClCompile Include="GBA-emulator\cplusplusRewrite\LogicOps.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\MathOps.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\Shifts.cpp" />
+    <ClCompile Include="GBA-emulator\Display\disassembler.cpp" />
     <ClCompile Include="GBA-emulator\Display\Display.cpp" />
     <ClCompile Include="GBA-emulator\Display\MemoryViewer.cpp" />
     <ClCompile Include="GBA-emulator\Display\Sprites\SpriteGenerator.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\HwRegisterTests.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\shifterTests.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\tests\testUtils.h" />
+    <ClInclude Include="GBA-emulator\Include\Display\Disassembler.hpp" />
     <ClInclude Include="GBA-emulator\Include\Display\Display.h" />
     <ClInclude Include="GBA-emulator\Include\Display\MemoryViewer.h" />
     <ClInclude Include="GBA-emulator\Include\Display\PaletteViewer.h" />

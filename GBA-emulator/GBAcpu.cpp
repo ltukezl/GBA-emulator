@@ -5,12 +5,12 @@
 #include <cplusplusRewrite/HwRegisters.h>
 #include <cstdint>
 #include <Display/Display.h>
+#include <Display/Disassembler.hpp>
 #include <DMA/DMA.h>
 #include <filesystem>
 #include <fstream>
 #include <Interrupt/interrupt.h>
 #include <ios>
-#include <iostream>
 #include <Memory/memoryOps.h>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Time.hpp>
@@ -18,16 +18,31 @@
 #include <Thumb/ThumbOpCodes.h>
 #include <Timer/timers.h>
 #include <vector>
+#include <iostream>
+#include <chrono>
+#include <functional>
+
+template <typename Func, typename... Args>
+void benchmark(const std::string& name, Func&& func, Args&&... args)
+{
+	auto start = std::chrono::high_resolution_clock::now();
+
+	// Call the function with forwarded arguments
+	std::forward<Func>(func)(std::forward<Args>(args)...);
+
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double, std::milli> duration = end - start;
+
+	std::cout << name << " took " << duration.count() << " ms\n";
+}
 
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
 #define PALETTE_VIEWER 0
+#define DISASSEMBLER_VIEWER 1
 
 using namespace std;
-
-bool memStatistics = false;
-bool debug = false;
 
 __int64 vBlankCounter = 0;
 __int64 hBlankCounter = 0;
@@ -100,6 +115,10 @@ int main(int argc, char *args[]){
 
 	rawWrite16(IoRAM, 0x130, 0xFFFF); // input register, 0 = pressed down, 1 = released
 
+#if DISASSEMBLER_VIEWER 
+	Disassembler disassembler;
+#endif
+
 	std::string windowName = "paletteWindow";
 	debugView = new Display(1280, 496 * 2, windowName);
 #if MEMORY_VIEWER
@@ -108,6 +127,7 @@ int main(int argc, char *args[]){
 #if PALETTE_VIEWER
 	PaletteViewer paletteViewer;
 #endif
+
 	//Display gameDisplay(240, 160, "game");
 
 #if BIOS_START
@@ -148,8 +168,8 @@ int main(int argc, char *args[]){
 
 	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
-	const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
+	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/program3.bin";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";
@@ -160,36 +180,25 @@ int main(int argc, char *args[]){
 
 	uint64_t vCounterDrawCycles = 0;
 	cycles = 0;
-	debug = false;
 	step = true;
 
 	sf::Clock clock{};
-
+	bool debug = false;
 	while (true){
-		if (debug && !step){
-			continue;
-		}
-		step = true;
-		// mem tests region 0x80011a0
+		uint32_t& ProgramCounter = r[TRegisters::EProgramCounter];
+#if DISASSEMBLER_VIEWER
+		disassembler.display_disassembly(r);
+#endif
 
-		if (r[TRegisters::EProgramCounter] == 0x80003a8){ //0x80011a0, 0x80011e0
-			//debug = true;
-		}
-		//updateInstructionCycleTimings(*r[PC]);
-		uint32_t opCode = r.m_cpsr.thumb ? loadFromAddress16(r[TRegisters::EProgramCounter], true) : loadFromAddress32(r[TRegisters::EProgramCounter], true);
+		uint32_t opCode = r.m_cpsr.thumb ? loadFromAddress16(ProgramCounter, true) : loadFromAddress32(ProgramCounter, true);
 
-		if (debug){
-			cout << hex << r[15] << " opCode: " << (r.m_cpsr.thumb ? opCode & 0xFFFF : opCode) << " ";
-			cout << "r0: " << r[0] << " r1: " << r[1] << " r2: " << r[2] << " r3: " << r[3] << " r4: " << r[4] << " r5: " << r[5] << " r6: " << r[6] << " r7: " << r[7] << " r8: " << r[8] << " r9: " << r[9] << " r10: " << r[10] << " FP (r11): " << r[11] << " IP (r12): " << r[12] << " SP: " << r[13] << " LR: " << r[14] << " CPRS: " << r.m_cpsr.val << " SPRS: " << r[16]<< " ";
+		ProgramCounter += r.m_cpsr.thumb ? 2 : 4;
+		if (r.m_cpsr.thumb)
+		{
+			benchmark("thumb", thumbExecute, opCode);
 		}
-
-		r[TRegisters::EProgramCounter] += r.m_cpsr.thumb ? 2 : 4;
-		r.m_cpsr.thumb ? thumbExecute(opCode) : ARMExecute(opCode);
-
-		if (debug){
-			debugView->handleEvents();
-			cout << endl;
-		}
+		else
+			ARMExecute(opCode);
 
 		cycles = 1;
 
@@ -202,7 +211,6 @@ int main(int argc, char *args[]){
 			if (LCDStatus->LYC == memoryLayout[4][6] && LCDStatus->VcounterIRQEn && InterruptEnableRegister->vCounter){
 				InterruptFlagRegister->vCounter = 1;
 				LCDStatus->vCounter = 1;
-				//debug = true;
 			}
 
 			if (memoryLayout[4][6] > 227)
@@ -216,6 +224,9 @@ int main(int argc, char *args[]){
 			if (InterruptEnableRegister->hBlank && LCDStatus->hIRQEn){
 				InterruptFlagRegister->hBlank = 1;
 			}
+#if DISASSEMBLER_VIEWER
+		disassembler.handleEvents();
+#endif
 		}
 		else if (hBlankCounter > 960)
 			LCDStatus->hblankFlag = 1;
@@ -244,14 +255,6 @@ int main(int argc, char *args[]){
 		startDMA();
 		updateTimers(cycles);
 		HWInterrupts(cycles);
-
-		if (debug){
-			//std::cout << hex << "r0: " << *r[0] << " r1: " << *r[1] << " r2: " << *r[2] << " r3: " << *r[3] << " r4: " << *r[4] << " r5: " << *r[5] << " r6: " << *r[6] << " r7: " << *r[7] << " r8: " << *r[8] << " r9: " << *r[9] << " r10: " << *r[10] << " FP (r11): " << *r[11] << " IP (r12): " << *r[12] << " SP: " << *r[13] << " LR: " << *r[14] << " CPRS: " << cpsr.val << " SPRS: " << *r[16];
-			//std::cout << " cycles " << dec << cycles << std::endl;
-			//std::cout << std::endl;
-		}
-
-		cycles = 0;
 	}
 
 	return 0;
