@@ -78,7 +78,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-fbracket-depth=3072 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -99,7 +99,7 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <SupportJustMyCode>false</SupportJustMyCode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-fbracket-depth=3072 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -116,7 +116,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-fbracket-depth=3072 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>D:\Built libraries\sfml_2_5_1\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -127,7 +127,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalOptions>-fbracket-depth=1024 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-fbracket-depth=3072 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>D:\Built libraries\sfml_2_5_1\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -139,6 +139,7 @@
     <ClCompile Include="GBA-emulator\Arm\ARMOpcodes.cpp" />
     <ClCompile Include="GBA-emulator\CommonOperations\arithmeticOps.cpp" />
     <ClCompile Include="GBA-emulator\CommonOperations\conditions.cpp" />
+    <ClCompile Include="GBA-emulator\CommonOperations\GbaStrings.cpp" />
     <ClCompile Include="GBA-emulator\CommonOperations\logicalOps.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\barrelShifter.cpp" />
     <ClCompile Include="GBA-emulator\cplusplusRewrite\BarrelShifterDecoder.cpp" />
@@ -168,15 +169,21 @@
     <ClCompile Include="GBA-emulator\Display\Sprites\Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\BlockDataTransfer.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\BlockDataTransferLoads.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Branch.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\MRS.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SDDHelper.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferImmediate.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Multiply.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\armopcodes.h" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SingleDataTransferRegister.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Undefop.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\Conditions.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\Swi.hpp" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\arithmeticOps.h" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\conditions.h" />
+    <ClInclude Include="GBA-emulator\Include\CommonOperations\GbaStrings.hpp" />
     <ClInclude Include="GBA-emulator\Include\CommonOperations\logicalOps.h" />
     <ClInclude Include="GBA-emulator\Include\Constants.h" />
     <ClInclude Include="GBA-emulator\cplusplusRewrite\barrelShifter.h" />

@@ -1,17 +1,18 @@
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <string>
 #include <utility>
 
 #include "Arm/armopcodes.h"
 #include "Arm/ArmOpcodes/Branch.hpp"
 #include "Arm/ArmOpcodes/Multiply.hpp"
-#include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
-#include "Arm/ArmOpcodes/SingleDataTransferRegister.hpp"
+
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/logicalOps.h"
+#include "Arm/ArmOpcodes/SDDHelper.hpp"
+#include "Arm/ArmOpcodes/Undefop.hpp"
+#include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
 #include "Constants.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
@@ -168,7 +169,7 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b)
 	int baseReg = (opCode >> 16) & 15;
 	int upDownBit = (opCode >> 23) & 1;
 	int writeBack = (opCode >> 21) & 1;
-	bool usrMode = (opCode >> 20) & 1;
+	bool usrMode = (opCode >> 22) & 1;
 	int regList = opCode & 0xFFFF;
 	int oldBase = r[baseReg];
 	int memAddress = oldBase & ~0x3;
@@ -192,14 +193,13 @@ void BlockDataTransferLoadPre(int opCode, function1 a, function2 b)
 	{
 		if (upDownBit)
 		{
-			if (regList & 1)
+			if (regList & (1 << i))
 			{
 				a(memAddress, false);
 				r[i] = b(memAddress, false);
 				if (i == 15)
 					r[16] = r.m_cpsr.val;
 			}
-			regList >>= 1;
 		}
 		else if (~upDownBit)
 		{
@@ -648,72 +648,50 @@ static void halfDataTransfer(int opCode)
 	}
 }
 
-static uint32_t constexpr reduce_opcode(uint32_t opCode)
+static void null_func(Registers&, const uint32_t) {}
+
+static uint32_t constexpr reduce_opcode(const uint32_t opCode)
 {
-	return ((opCode >> 20) & 0x3F);
+	const uint32_t low_byte = (opCode >> 4) & 0xF;
+	const uint32_t high_byte = (opCode >> 16) & 0xFF0;
+	return low_byte | high_byte;
 }
 
 template<uint32_t opCode>
-auto constexpr populate_func()
+static auto constexpr decode_arm_opcode()
 {
-	if constexpr (SingleDataTransfer::SingleDataTransferIPrS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrS::execute<opCode>;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPrL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPrL::execute<opCode>;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoS::execute<opCode>;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferIPoL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoL::execute<opCode>;
-	}
-	if constexpr (SingleDataTransfer::SingleDataTransferRPrS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferRPrS::execute<opCode>;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferRPrL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferRPrL::execute<opCode>;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferRPoS::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferRPoS::execute<opCode>;
-	}
-	else if constexpr (SingleDataTransfer::SingleDataTransferRPoL::isThisOpcode(opCode))
-	{
-		return &SingleDataTransfer::SingleDataTransferRPoL::execute<opCode>;
-	}
-	else
-	{
-		return &SingleDataTransfer::SingleDataTransferIPoL::execute<opCode>;
-	}
+	if constexpr (UndefOp::isThisOpcode(opCode))
+		return &UndefOp::execute;
+	if constexpr (((opCode >> 26) & 0x3) == 1)
+		return SingleDataTransfer::decode_sdd<opCode>();
+	if constexpr (BlockDataTransfer::isThisOpcode(opCode))
+		return BlockDataTrasnferPreLoad::execute<BlockDataTransfer::mask(opCode)>;
+	if constexpr (branches::ArmBranch::isThisOpcode(opCode))
+		return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
+	return &null_func;
 }
 
-
-template<uint32_t baseOp, typename T>
-consteval void insert_opcodes(T& arr)
+static consteval auto index_to_opcode(const uint32_t opcode)
 {
-	insert_opcodes_impl<baseOp>(arr, std::make_index_sequence<64>{});
+	const uint32_t low_bits = opcode & 0xF;
+	const uint32_t high_bits = opcode & 0xFF0;
+	return (high_bits << 16) | (low_bits << 4);
 }
 
-template<uint32_t baseOp, typename T, std::size_t... Is>
-consteval void insert_opcodes_impl(T& arr, std::index_sequence<Is...>)
+template<typename T, std::size_t... Is>
+consteval void insert_opcodes(T& arr, std::index_sequence<Is...>)
 {
-	((arr[Is] = populate_func<(baseOp + static_cast<uint32_t>(Is) * 0x10'0000)>()), ...);
+	((arr[Is] = decode_arm_opcode<index_to_opcode(Is)>()), ...);
 }
 
-static constexpr std::array<void(*)(Registers&, const uint32_t), 64> m_dispatch_table = { []() consteval
- {
-std::array<void(*)(Registers&, const uint32_t), 64> tmp {};
-constexpr uint32_t start = 0x400'0000;
-insert_opcodes<start>(tmp);
-return tmp;
+static constexpr std::array m_dispatch_table = { []() consteval
+{
+	std::array<void(*)(Registers&, const uint32_t), 0xC00> tmp {};
+	insert_opcodes(tmp, std::make_index_sequence<tmp.size()>{});
+	return tmp;
 }() };
+
+#include <print>
 
 void ARMExecute(int opCode)
 {
@@ -731,8 +709,7 @@ void ARMExecute(int opCode)
 
 		if (branches::ArmBranch::isThisOpcode(opCode))
 		{
-			branches::ArmBranch::execute(r, opCode);
-			// std::println("{}", branches::ArmBranch::disassemble(opCode));
+			m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 			return;
 		}
 
@@ -779,7 +756,8 @@ void ARMExecute(int opCode)
 						BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
 						break;
 					case 11: case 9: //writeback / no writeback, post offset, add offset
-						BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
+						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
+						//BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
 						break;
 					case 3: case 1: //writeback / no writeback, post offset, sub offset
 						BlockDataTransferLoadPre(opCode, decrementBase, loadFromAddress32);

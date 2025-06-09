@@ -64,42 +64,28 @@ namespace SingleDataTransfer {
 		uint32_t executionCondition : 4;
 	};
 
-	constexpr uint32_t fromFields(const uint32_t offset, const uint32_t destinationRegister, const uint32_t baseRegister, const loadStore_t loadBit, const writeBack_t writeBack,
-		const byteWord_t byteTransfer, const upDown_t addOffset, const prePost_t preIndexing, const immediate_t immediateOffset) {
-		SingleDataTransfer_t opcode{};
-		static_assert(sizeof(SingleDataTransfer_t) == sizeof(uint32_t));
-		opcode.offset = offset;
-		opcode.destinationRegister = destinationRegister;
-		opcode.baseRegister = baseRegister;
-		opcode.loadBit = loadBit;
-		opcode.writeBack = writeBack;
-		opcode.byteTransfer = byteTransfer;
-		opcode.addOffset = addOffset;
-		opcode.preIndexing = preIndexing;
-		opcode.immediateOffset = immediateOffset;
-		opcode.unused = 1;
-		opcode.executionCondition = 0xe;
-
-		return std::bit_cast<uint32_t>(opcode);
-	}
-
 	static constexpr SingleDataTransfer_t fromOpcode(const uint32_t opcode)
 	{
 		assert(std::is_trivially_copyable_v<SingleDataTransfer_t>);
 		assert(sizeof(SingleDataTransfer_t) == sizeof(uint32_t));
 		return {
-			.offset = opcode & 0xFFF,
-			.destinationRegister = (opcode >> 12) & 0xF,
-			.baseRegister = (opcode >> 16) & 0xF,
+			.offset = static_cast<uint32_t>(opcode & 0xFFF),
+			.destinationRegister = static_cast<uint32_t>((opcode >> 12) & 0xF),
+			.baseRegister = static_cast<uint32_t>((opcode >> 16) & 0xF),
 			.loadBit = static_cast<loadStore_t>((opcode >> 20) & 0x1),
 			.writeBack = static_cast<writeBack_t>((opcode >> 21) & 0x1),
 			.byteTransfer = static_cast<byteWord_t>((opcode >> 22) & 0x1),
 			.addOffset = static_cast<upDown_t>((opcode >> 23) & 0x1),
 			.preIndexing = static_cast<prePost_t>((opcode >> 24) & 0x1),
 			.immediateOffset = static_cast<immediate_t>((opcode >> 25) & 0x1),
-			.unused = (opcode >> 26) & 0x3,
-			.executionCondition = (opcode >> 28) & 0xF
+			.unused = static_cast<uint32_t>((opcode >> 26) & 0x3),
+			.executionCondition = static_cast<uint32_t>((opcode >> 28) & 0xF)
 		};
+	}
+
+	static constexpr auto mask(const uint32_t opcode)
+	{
+		return opcode & (0x3F << 20);
 	}
 
 	static inline void destinationRegisterBug(const SingleDataTransfer_t& op, Registers& regs)

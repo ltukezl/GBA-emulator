@@ -18,24 +18,6 @@
 #include <Thumb/ThumbOpCodes.h>
 #include <Timer/timers.h>
 #include <vector>
-#include <iostream>
-#include <chrono>
-#include <functional>
-
-template <typename Func, typename... Args>
-void benchmark(const std::string& name, Func&& func, Args&&... args)
-{
-	auto start = std::chrono::high_resolution_clock::now();
-
-	// Call the function with forwarded arguments
-	std::forward<Func>(func)(std::forward<Args>(args)...);
-
-	auto end = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double, std::milli> duration = end - start;
-
-	std::cout << name << " took " << duration.count() << " ms\n";
-}
-
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
@@ -166,11 +148,11 @@ int main(int argc, char *args[]){
 #endif
 	memoryInits();
 
-	//const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
+	////const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
-	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
+	//const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/program3.bin";
+	const std::string game = "GBA-emulator/TestBinaries/program6.bin";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";
 	//const std::string game = "GBA-emulator/TestBinaries/tonc/irq_demo.gba";
@@ -194,9 +176,7 @@ int main(int argc, char *args[]){
 
 		ProgramCounter += r.m_cpsr.thumb ? 2 : 4;
 		if (r.m_cpsr.thumb)
-		{
-			benchmark("thumb", thumbExecute, opCode);
-		}
+			thumbExecute(opCode);
 		else
 			ARMExecute(opCode);
 

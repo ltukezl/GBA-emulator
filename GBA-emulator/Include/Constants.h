@@ -21,8 +21,6 @@ constexpr auto SP = 13;
 constexpr auto LR = 14;
 constexpr auto PC = 15;
 
-static constexpr std::array<const char*, 15> condition_strings = { "EQ", "NE", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "" };
-
 extern bool debug;
 
 using finalImagePalettes = std::array<std::array<Tile::BitmapBit, 240>, 160>;
