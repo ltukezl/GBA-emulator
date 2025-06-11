@@ -5,9 +5,9 @@
 
 using namespace mathOps;
 
-static bool negative(const uint32_t result)
+static bool negative(const int32_t result)
 {
-	return static_cast<int32_t>(result) < 0;
+	return result < 0;
 }
 
 static bool zero(const uint32_t result)
@@ -15,11 +15,9 @@ static bool zero(const uint32_t result)
 	return result == 0;
 }
 
-static bool addCarry(const uint32_t operand1, const uint32_t operand2, const uint32_t carry)
+static bool addCarry(const uint64_t operand1, const uint64_t operand2, const uint32_t carry)
 {
-	const auto a = static_cast<uint64_t>(operand1);
-	const auto b = static_cast<uint64_t>(operand2);
-	const auto c = a + b + carry;
+	const auto c = operand1 + operand2 + carry;
 
 	return (c >> 32) & 1;
 }
@@ -29,9 +27,10 @@ static bool addOverflow(const uint32_t operand1, const uint32_t operand2, const 
 	return static_cast<int32_t>((operand1 ^ result) & (operand2 ^ result)) < 0;
 }
 
-static bool subCarry(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
+static bool subCarry(const uint32_t operand1, const uint32_t operand2, const uint32_t carryf)
 {
-	return operand1 <= operand2;
+	const uint64_t adjust = static_cast<uint64_t>(operand1) + static_cast<uint64_t>(carryf);
+	return static_cast<uint64_t>(operand2) >= adjust;
 }
 
 static bool subOverflow(const uint32_t operand1, const uint32_t operand2, const uint32_t result)
@@ -66,7 +65,7 @@ void Sub::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t ope
 {
 	cpsr.zero = zero(result);
 	cpsr.negative = negative(result);
-	cpsr.carry = subCarry(operand2, operand1, result);
+	cpsr.carry = subCarry(operand2, operand1, 0);
 	cpsr.overflow = subOverflow(operand2, operand1, result);
 }
 
@@ -94,7 +93,7 @@ void Cmp::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t ope
 {
 	cpsr.zero = zero(result);
 	cpsr.negative = negative(result);
-	cpsr.carry = subCarry(operand2, operand1, result);
+	cpsr.carry = subCarry(operand2, operand1, 0);
 	cpsr.overflow = subOverflow(operand2, operand1, result);
 }
 
@@ -228,7 +227,7 @@ void Rsb::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t ope
 {
 	cpsr.zero = zero(result);
 	cpsr.negative = negative(result);
-	cpsr.carry = subCarry(operand2, operand1, result);
+	cpsr.carry = subCarry(operand2, operand1, 0);
 	cpsr.overflow = subOverflow(operand2, operand1, result);
 }
 
@@ -251,14 +250,15 @@ void Adc::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t ope
 
 uint32_t Sbc::calculate(const CPSR_t& cpsr, const uint32_t operand1, const uint32_t operand2)
 {
-	return operand1 - operand2 - !cpsr.carry;
+	return operand1 - operand2 - (cpsr.carry ^ 1);
 }
 
 void Sbc::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t operand1, const uint32_t operand2)
 {
+	const auto notCarry = cpsr.carry ^1;
 	cpsr.zero = zero(result);
 	cpsr.negative = negative(result);
-	cpsr.carry = subCarry(operand2 + !cpsr.carry, operand1, result);
+	cpsr.carry = subCarry(operand2, operand1, notCarry);
 	cpsr.overflow = subOverflow(operand2, operand1, result);
 }
 
