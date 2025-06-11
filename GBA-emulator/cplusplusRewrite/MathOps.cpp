@@ -258,7 +258,7 @@ void Sbc::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t ope
 {
 	cpsr.zero = zero(result);
 	cpsr.negative = negative(result);
-	cpsr.carry = subCarry(operand2, operand1, result);
+	cpsr.carry = subCarry(operand2 + !cpsr.carry, operand1, result);
 	cpsr.overflow = subOverflow(operand2, operand1, result);
 }
 
@@ -271,5 +271,5 @@ uint32_t Neg::calculate(const CPSR_t& cpsr, const uint32_t operand1, const uint3
 
 void Neg::calcConditions(CPSR_t& cpsr, const uint32_t result, const uint32_t operand1, const uint32_t operand2)
 {
-	Rsb::calcConditions(cpsr, result, operand2, 0);
+	Rsb::calcConditions(cpsr, result, 0, operand2);
 }

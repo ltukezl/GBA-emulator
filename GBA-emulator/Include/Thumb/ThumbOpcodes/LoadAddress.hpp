@@ -63,8 +63,8 @@ public:
 	{
 		const auto op = fromOpcode(opcode);
 		if (op.useSP)
-			return std::format("ADD R{}, SP, #{:x}", op.destination, op.immediate << 2);
-		return std::format("ADD R{}, PC, #{:x}", op.destination, op.immediate << 2);
+			return std::format("ADD R{}, SP, #0x{:x}", op.destination, op.immediate << 2);
+		return std::format("ADD R{}, PC, #0x{:x}", op.destination, op.immediate << 2);
 	}
 };
 

@@ -59,8 +59,8 @@ public:
 	{
 		const auto op = fromOpcode(opcode);
 		if (op.signF)
-			return std::format("ADD SP, #-{:x}", op.imm << 2);
-		return std::format("ADD SP, #{:x}", op.imm << 2);
+			return std::format("ADD SP, #-0x{:x}", op.imm << 2);
+		return std::format("ADD SP, #0x{:x}", op.imm << 2);
 	}
 };
 

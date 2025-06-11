@@ -48,7 +48,6 @@ public:
 	static void execute(Registers& regs, const uint16_t opcode)
 	{
 		constexpr auto c_op = fromOpcode(iterOpcode);
-		static_assert(c_op.instruction != 3);
 		const auto op = fromOpcode(opcode);
 		constexpr auto func = m_shifts[c_op.instruction];
 		constexpr auto func_conditions = m_conditions[c_op.instruction];

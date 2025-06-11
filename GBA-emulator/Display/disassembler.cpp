@@ -76,6 +76,8 @@ std::string Disassembler::thumb_disassembly(const uint32_t program_counter, cons
 		return MultipleLoad::disassemble(opcode);
 	else if (MultipleStore::isThisOpcode(opcode))
 		return MultipleStore::disassemble(opcode);
+	else if (Swi::isThisOpcode_thumb(opcode))
+		return Swi::disassemble(opcode);
 	else if (ConditionalBranch::isThisOpcode(opcode))
 		return ConditionalBranch::disassemble(program_counter, opcode);
 	else if (UnconditionalBranch::isThisOpcode(opcode))

@@ -109,7 +109,7 @@ constexpr uint8_t REG_LEN = 17;
 
 class Registers
 {
-private:
+public:
 	TCPUMode m_offset = EArm;
 	std::array<uint32_t*, REG_LEN> const* r;
 	uint32_t m_previousMode = ESYS;

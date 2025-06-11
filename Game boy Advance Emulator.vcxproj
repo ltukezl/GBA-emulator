@@ -76,7 +76,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\tuomo-pc\Desktop\github\json\include;D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>-fbracket-depth=3072 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -94,7 +94,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\tuomo-pc\Desktop\github\json\include;D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <SupportJustMyCode>false</SupportJustMyCode>
@@ -114,7 +114,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\tuomo-pc\Desktop\github\json\include;D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>-fbracket-depth=3072 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -125,7 +125,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\tuomo-pc\Desktop\github\json\include;D:\c sources\SFML-2.5.1\include;$(SolutionDir)\GBA-emulator\include;$(SolutionDir)\GBA-emulator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>-fbracket-depth=3072 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>

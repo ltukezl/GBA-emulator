@@ -45,7 +45,6 @@ public:
 	{
 		constexpr auto c_op = fromOpcode(iterOpcode);
 		const auto op = fromOpcode(opcode);
-		assert(op.condition != 15);
 		constexpr auto condition_f = conditionspp[c_op.condition];
 		if (condition_f(regs))
 		{
