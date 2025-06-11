@@ -63,8 +63,6 @@ public:
 				}
 			}
 		}
-		if (rInList && !first)
-			writeToAddress32(savedAddr, regs[op.baseReg]);
 	}
 
 	static auto createRangeString(uint32_t s, uint32_t e)

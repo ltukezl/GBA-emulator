@@ -43,19 +43,24 @@ public:
 		const auto op = fromOpcode(opcode);
 		if (op.rlist == 0)
 		{
-			regs[EProgramCounter] = (loadFromAddress32(regs[op.baseReg])) & ~1;
+			regs[EProgramCounter] = (loadFromAddress32(regs[op.baseReg]));
 			regs[op.baseReg] += 0x40;
 		}
 		else
 		{
+			const bool rInList = op.rlist & (1 << op.baseReg);
+			uint32_t readAddress = regs[op.baseReg];
 			for (size_t i = 0; i < 8; i++)
 			{
 				if ((op.rlist >> i) & 1)
 				{
-					regs[i] = loadFromAddress32(regs[op.baseReg]);
-					regs[op.baseReg] += 4;
+					regs[i] = loadFromAddress32(readAddress);
+					readAddress += 4;
 				}
 			}
+
+			if (!rInList)
+				regs[op.baseReg] = readAddress;
 		}
 	}
 
