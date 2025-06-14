@@ -45,10 +45,13 @@ public:
 		{
 			regs[EProgramCounter] = (loadFromAddress32(regs[op.baseReg]));
 			regs[op.baseReg] += 0x40;
+			return;
 		}
 		else
 		{
 			const bool rInList = op.rlist & (1 << op.baseReg);
+			const uint32_t bits = std::popcount((op.rlist & ((1ULL << op.baseReg) - 1ULL)));
+			const bool first = bits == 0;
 			uint32_t readAddress = regs[op.baseReg];
 			for (size_t i = 0; i < 8; i++)
 			{

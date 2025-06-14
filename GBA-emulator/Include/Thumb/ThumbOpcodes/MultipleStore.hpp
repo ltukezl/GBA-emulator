@@ -51,6 +51,7 @@ public:
 		{
 			writeToAddress32(regs[op.baseReg], regs[EProgramCounter] + 4);
 			regs[op.baseReg] += 0x40;
+			return;
 		}
 		else
 		{
@@ -63,6 +64,11 @@ public:
 				}
 			}
 		}
+		if (rInList && first)
+		{
+			return;
+		}
+		writeToAddress32(savedAddr, regs[op.baseReg]);
 	}
 
 	static auto createRangeString(uint32_t s, uint32_t e)
