@@ -5,4 +5,6 @@
 
 void thumbExecute(const uint16_t);
 
+void runSingleStepTests();
+
 #endif

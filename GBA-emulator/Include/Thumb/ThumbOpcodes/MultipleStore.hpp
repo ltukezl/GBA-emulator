@@ -55,20 +55,22 @@ public:
 		}
 		else
 		{
+			uint32_t internalReg = regs[op.baseReg];
 			for (size_t i = 0; i < 8; i++)
 			{
 				if (op.rlist & (1 << i))
 				{
-					writeToAddress32(regs[op.baseReg], regs[i]);
-					regs[op.baseReg] += 4;
+					writeToAddress32(internalReg, regs[i]);
+					internalReg += 4;
 				}
 			}
+
+			if (rInList && !first)
+			{
+				writeToAddress32(savedAddr, internalReg);
+			}
+			regs[op.baseReg] = internalReg;
 		}
-		if (rInList && first)
-		{
-			return;
-		}
-		writeToAddress32(savedAddr, regs[op.baseReg]);
 	}
 
 	static auto createRangeString(uint32_t s, uint32_t e)
