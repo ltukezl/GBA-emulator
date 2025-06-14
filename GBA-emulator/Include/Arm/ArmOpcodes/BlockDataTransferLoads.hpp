@@ -23,7 +23,7 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
 
@@ -44,8 +44,6 @@ public:
 			{
 				writebackAddress += offset;
 				regs[i] = loadFromAddress32(writebackAddress, false);
-				if (i == 15)
-					regs[ESavedStatusRegister] = regs.m_cpsr.val;
 			}
 		}
 
@@ -56,7 +54,6 @@ public:
 
 		if (c_op.writeback && !baseInRList)
 			regs[op.baseReg] = writebackAddress;
-			
 	}
 };
 
@@ -76,7 +73,7 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
 
@@ -97,8 +94,6 @@ public:
 			{
 				writebackAddress -= offset;
 				regs[15 - i] = loadFromAddress32(writebackAddress, false);
-				if (i == 15)
-					regs[ESavedStatusRegister] = regs.m_cpsr.val;
 			}
 		}
 
@@ -109,7 +104,6 @@ public:
 
 		if (c_op.writeback && !baseInRList)
 			regs[op.baseReg] = writebackAddress;
-
 	}
 };
 
@@ -129,9 +123,10 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
+		const auto baseOldVal = regs[op.baseReg];
 
 		if (op.rlist == 0)
 		{
@@ -180,7 +175,7 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
 

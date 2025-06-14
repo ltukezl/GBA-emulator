@@ -2,6 +2,7 @@
 #ifndef BLOCKDATATRANSFERSTORES_H
 #define BLOCKDATATRANSFERSTORES_H
 
+#include <bit>
 #include <cstdint>
 
 #include "Arm/ArmOpcodes/BlockDataTransfer.hpp"
@@ -24,37 +25,43 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
+		uint32_t bits = std::popcount((op.rlist & ((1U << op.baseReg) - 1U)));
+		bool first = bits == 0;
+		uint32_t savedAddr = (bits << 2) + regs[op.baseReg];
 
-
-		if (c_op.loadPSR && !pcInRlist)
-		{
-			regs.updateMode(CpuModes_t::EUSR);
-		}
-
-		if (pcInRlist)
-		{
-			regs[op.baseReg] += 4;
-			writeToAddress32(regs[op.baseReg], regs[EProgramCounter] + 8);
-		}
+		regs.updateMode(CpuModes_t::EUSR);
 
 		for (size_t i = 0; i < 15; i++)
 		{
 			if (op.rlist & (1 << i))
 			{
 				writebackAddress += offset;
-				writeToAddress32(writebackAddress, regs[i]);
+				if(i != op.baseReg)
+					writeToAddress32(writebackAddress, regs[i]);
 			}
 		}
 
-		if (c_op.loadPSR && !pcInRlist)
+		if (pcInRlist)
 		{
-			regs.updateMode(currentMode);
+			writebackAddress += offset;
+			writeToAddress32(writebackAddress, regs[EProgramCounter] + 8);
 		}
 
-		if (c_op.writeback)
+		if (!c_op.writeback && baseInRList)
+		{
+			writeToAddress32(savedAddr + 4, regs[op.baseReg]);
+		}
+		else if (c_op.writeback && baseInRList)
+		{
+			writeToAddress32(savedAddr + 4, writebackAddress);
+		}
+
+		regs.updateMode(currentMode);
+
+		if constexpr (c_op.writeback)
 			regs[op.baseReg] = writebackAddress;
 	}
 };
@@ -75,29 +82,28 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
 
-		if (op.rlist == 0)
-		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
-			return;
-		}
 
 		if (c_op.loadPSR && !pcInRlist)
 		{
 			regs.updateMode(CpuModes_t::EUSR);
 		}
 
-		for (size_t i = 0; i < 16; i++)
+		if (pcInRlist)
 		{
-			if ((op.rlist << i) & 0x8000)
+			writebackAddress -= 4;
+			writeToAddress32(regs[op.baseReg], regs[EProgramCounter] + 8);
+		}
+
+		for (size_t i = 0; i < 15; i++)
+		{
+			if (op.rlist & (1 << i))
 			{
 				writebackAddress -= offset;
-				regs[15 - i] = loadFromAddress32(writebackAddress, false);
-				if (i == 15)
-					regs[ESavedStatusRegister] = regs.m_cpsr.val;
+				writeToAddress32(writebackAddress, regs[i]);
 			}
 		}
 
@@ -106,9 +112,8 @@ public:
 			regs.updateMode(currentMode);
 		}
 
-		if (c_op.writeback && !baseInRList)
+		if constexpr (c_op.writeback)
 			regs[op.baseReg] = writebackAddress;
-
 	}
 };
 
@@ -128,28 +133,42 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
+		uint32_t bits = std::popcount((op.rlist & ((1U << op.baseReg) - 1U)));
+		bool first = bits == 0;
+		uint32_t savedAddr = (bits << 2) + regs[op.baseReg];
 
-		if (op.rlist == 0)
-		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
-			return;
-		}
 
 		if (c_op.loadPSR && !pcInRlist)
 		{
 			regs.updateMode(CpuModes_t::EUSR);
 		}
 
-		for (size_t i = 0; i < 16; i++)
+		for (size_t i = 0; i < 15; i++)
 		{
 			if (op.rlist & (1 << i))
 			{
-				regs[i] = loadFromAddress32(writebackAddress, false);
+				if(i != op.baseReg)
+					writeToAddress32(writebackAddress, regs[i]);
 				writebackAddress += offset;
 			}
+		}
+
+		if (pcInRlist)
+		{
+			writeToAddress32(writebackAddress, regs[EProgramCounter] + 8);
+			writebackAddress += 4;
+		}
+
+		if (!c_op.writeback && baseInRList)
+		{
+			writeToAddress32(savedAddr, regs[op.baseReg]);
+		}
+		else if (c_op.writeback && baseInRList)
+		{
+			writeToAddress32(savedAddr, writebackAddress);
 		}
 
 		if (c_op.loadPSR && !pcInRlist)
@@ -157,9 +176,8 @@ public:
 			regs.updateMode(currentMode);
 		}
 
-		if (c_op.writeback && !baseInRList)
+		if constexpr (c_op.writeback)
 			regs[op.baseReg] = writebackAddress;
-
 	}
 };
 
@@ -179,26 +197,28 @@ public:
 		const auto op = BlockDataTransfer::fromOpcode(opcode);
 		const bool baseInRList = op.rlist & (1 << op.baseReg);
 		const bool pcInRlist = (op.rlist & (1 << EProgramCounter));
-		uint32_t writebackAddress = regs[op.baseReg] & ~0x3;
+		uint32_t writebackAddress = regs[op.baseReg];
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
 
-		if (op.rlist == 0)
-		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
-			return;
-		}
 
 		if (c_op.loadPSR && !pcInRlist)
 		{
 			regs.updateMode(CpuModes_t::EUSR);
 		}
 
-		for (size_t i = 0; i < 16; i++)
+		if (pcInRlist)
 		{
-			if ((op.rlist << i) & 0x8000)
+			writeToAddress32(regs[op.baseReg], regs[EProgramCounter] + 8);
+			writebackAddress -= offset;
+		}
+
+		for (size_t i = 0; i < 15; i++)
+		{
+			if ((op.rlist << i) & 0x4000)
+				//if (op.rlist & (1 << i))
 			{
-				regs[15 - i] = loadFromAddress32(writebackAddress, false);
+				writeToAddress32(writebackAddress, regs[14 - i]);
 				writebackAddress -= offset;
 			}
 		}
@@ -208,7 +228,7 @@ public:
 			regs.updateMode(currentMode);
 		}
 
-		if (c_op.writeback && !baseInRList)
+		if constexpr (c_op.writeback)
 			regs[op.baseReg] = writebackAddress;
 	}
 };
