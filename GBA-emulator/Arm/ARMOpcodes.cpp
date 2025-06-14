@@ -13,6 +13,7 @@
 #include "Arm/ArmOpcodes/SDDHelper.hpp"
 #include "Arm/ArmOpcodes/Undefop.hpp"
 #include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
+#include "Arm/ArmOpcodes/BlockDataTransferStores.hpp"
 #include "Constants.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
@@ -665,7 +666,18 @@ static auto constexpr decode_arm_opcode()
 	if constexpr (((opCode >> 26) & 0x3) == 1)
 		return SingleDataTransfer::decode_sdd<opCode>();
 	if constexpr (BlockDataTransfer::isThisOpcode(opCode))
-		return BlockDataTrasnferPreLoad::execute<BlockDataTransfer::mask(opCode)>;
+	{
+		if constexpr (BlockDataTransferPreLoadAdd::isThisOpcode(opCode))
+			return BlockDataTransferPreLoadAdd::execute<BlockDataTransfer::mask(opCode)>;
+		if constexpr (BlockDataTransferPreLoadSub::isThisOpcode(opCode))
+			return BlockDataTransferPreLoadSub::execute<BlockDataTransfer::mask(opCode)>;
+		if constexpr (BlockDataTransferPostLoadAdd::isThisOpcode(opCode))
+			return BlockDataTransferPostLoadAdd::execute<BlockDataTransfer::mask(opCode)>;
+		if constexpr (BlockDataTransferPostLoadSub::isThisOpcode(opCode))
+			return BlockDataTransferPostLoadSub::execute<BlockDataTransfer::mask(opCode)>;
+		if constexpr (BlockDataTransferPostStoreAdd::isThisOpcode(opCode))
+			return BlockDataTransferPostStoreAdd::execute<BlockDataTransfer::mask(opCode)>;
+	}
 	if constexpr (branches::ArmBranch::isThisOpcode(opCode))
 		return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
 	return &null_func;
@@ -750,7 +762,7 @@ void ARMExecute(int opCode)
 				switch (subType)
 				{
 					case 10: case 8: //writeback / no writeback, pre offset, add offset
-						BlockDataTransferSave(opCode, incrementBase, writeToAddress32);
+						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 						break;
 					case 2: case 0: //writeback / no writeback, pre offset, sub offset
 						BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
@@ -760,7 +772,7 @@ void ARMExecute(int opCode)
 						//BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
 						break;
 					case 3: case 1: //writeback / no writeback, post offset, sub offset
-						BlockDataTransferLoadPre(opCode, decrementBase, loadFromAddress32);
+						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 						break;
 				}
 				break;
@@ -775,10 +787,10 @@ void ARMExecute(int opCode)
 						BlockDataTransferSave(opCode, writeToAddress32, decrementBase);
 						break;
 					case 11: case 9: //writeback / no writeback, post offset, add offset
-						BlockDataTransferLoadPost(opCode, loadFromAddress32, incrementBase);
+						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 						break;
 					case 3: case 1: //writeback / no writeback, post offset, sub offset
-						BlockDataTransferLoadPost(opCode, loadFromAddress32, decrementBase);
+						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 						break;
 				}
 				break;

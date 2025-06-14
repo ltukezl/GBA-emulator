@@ -1,5 +1,6 @@
-#ifndef BLOCKDATATRANSFERLOADS_J
-#define BLOCKDATATRANSFERLOADS_J
+#pragma once
+#ifndef BLOCKDATATRANSFERSTORES_H
+#define BLOCKDATATRANSFERSTORES_H
 
 #include <cstdint>
 
@@ -7,13 +8,13 @@
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Memory/memoryOps.h"
 
-class BlockDataTransferPreLoadAdd
+class BlockDataTransferPreStoreAdd
 {
 public:
 	static constexpr bool isThisOpcode(const uint32_t opcode)
 	{
 		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 1) && (opcodeStruct.loadStore == 1) && (opcodeStruct.addOffset == 1);
+		return (opcodeStruct.preIndex == 1) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 1);
 	}
 
 	template<uint32_t iterOpcode>
@@ -27,25 +28,24 @@ public:
 		const auto currentMode = regs.getMode();
 		constexpr uint32_t offset = 4;
 
-		if (op.rlist == 0)
-		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
-			return;
-		}
 
 		if (c_op.loadPSR && !pcInRlist)
 		{
 			regs.updateMode(CpuModes_t::EUSR);
 		}
 
-		for (size_t i = 0; i < 16; i++)
+		if (pcInRlist)
+		{
+			regs[op.baseReg] += 4;
+			writeToAddress32(regs[op.baseReg], regs[EProgramCounter] + 8);
+		}
+
+		for (size_t i = 0; i < 15; i++)
 		{
 			if (op.rlist & (1 << i))
 			{
 				writebackAddress += offset;
-				regs[i] = loadFromAddress32(writebackAddress, false);
-				if (i == 15)
-					regs[ESavedStatusRegister] = regs.m_cpsr.val;
+				writeToAddress32(writebackAddress, regs[i]);
 			}
 		}
 
@@ -54,19 +54,18 @@ public:
 			regs.updateMode(currentMode);
 		}
 
-		if (c_op.writeback && !baseInRList)
+		if (c_op.writeback)
 			regs[op.baseReg] = writebackAddress;
-			
 	}
 };
 
-class BlockDataTransferPreLoadSub
+class BlockDataTransferPreStoreSub
 {
 public:
 	static constexpr bool isThisOpcode(const uint32_t opcode)
 	{
 		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 1) && (opcodeStruct.loadStore == 1) && (opcodeStruct.addOffset == 0);
+		return (opcodeStruct.preIndex == 1) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 0);
 	}
 
 	template<uint32_t iterOpcode>
@@ -113,13 +112,13 @@ public:
 	}
 };
 
-class BlockDataTransferPostLoadAdd
+class BlockDataTransferPostStoreAdd
 {
 public:
 	static constexpr bool isThisOpcode(const uint32_t opcode)
 	{
 		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 0) && (opcodeStruct.loadStore == 1) && (opcodeStruct.addOffset == 1);
+		return (opcodeStruct.preIndex == 0) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 1);
 	}
 
 	template<uint32_t iterOpcode>
@@ -164,13 +163,13 @@ public:
 	}
 };
 
-class BlockDataTransferPostLoadSub
+class BlockDataTransferPostStoreSub
 {
 public:
 	static constexpr bool isThisOpcode(const uint32_t opcode)
 	{
 		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 0) && (opcodeStruct.loadStore == 1) && (opcodeStruct.addOffset == 0);
+		return (opcodeStruct.preIndex == 0) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 0);
 	}
 
 	template<uint32_t iterOpcode>
