@@ -68,7 +68,7 @@ public:
 		const auto baseReg = op.baseReg;
 		const auto writeback = (op.writeback) ? "!" : "";
 		const auto rlist = create_rlist(op.rlist, 16);
-		const auto load_psr = op.loadPSR ? "" : "";
+		const auto load_psr = op.loadPSR ? "^" : "";
 		return std::format("{}{}{}{} R{}{}, {{{}}}{}",opcodeName, increment, preIncrement, condition, baseReg, writeback, rlist, load_psr);
 	}
 

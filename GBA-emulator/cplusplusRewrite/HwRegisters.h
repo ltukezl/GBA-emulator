@@ -29,7 +29,7 @@ enum TRegisters
 	ECPSR,
 };
 
-enum CpuModes_t
+enum class CpuModes_t: uint32_t
 {
 	EUSR = 0x10,
 	EFIQ = 0x11,
@@ -50,7 +50,7 @@ union CPSR_t
 {
 	struct
 	{
-		uint32_t mode : 5;
+		CpuModes_t mode : 5;
 		uint32_t thumb : 1;
 		uint32_t FIQDisable : 1;
 		uint32_t IRQDisable : 1;
@@ -64,7 +64,7 @@ union CPSR_t
 
 	void updateAll(uint32_t newVal)
 	{
-		if (mode == EUSR)
+		if (mode == CpuModes_t::EUSR)
 		{
 			updateFlags(newVal);
 		}
@@ -86,7 +86,7 @@ union CPSR_t
 
 	void saveAll(uint32_t& dest)
 	{
-		if (mode == EUSR)
+		if (mode == CpuModes_t::EUSR)
 		{
 			saveFlags(dest);
 		}
@@ -112,7 +112,7 @@ class Registers
 public:
 	TCPUMode m_offset = EArm;
 	std::array<uint32_t*, REG_LEN> const* r;
-	uint32_t m_previousMode = ESYS;
+	CpuModes_t m_previousMode = CpuModes_t::ESYS;
 
 	std::array<uint32_t, 9> sharedRegs{};
 	std::array<uint32_t, 5> extRegisters = {};
@@ -132,7 +132,7 @@ public:
 
 	/*prepare complete banks for modes*/
 	const std::array<uint32_t*, REG_LEN> usrSys = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
-	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &usrBanked[0], &usrBanked[1], &sharedRegs[8], &sprs_usr };
+	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &usrBanked[0], &usrBanked[1], &sharedRegs[8], &m_cpsr.val };
 
 	const std::array<uint32_t*, REG_LEN> svc = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &svcBanked[0], &svcBanked[1], &sharedRegs[8], &sprs_svc };
@@ -149,8 +149,6 @@ public:
 	const std::array<uint32_t*, REG_LEN> undef = { &sharedRegs[0], &sharedRegs[1], &sharedRegs[2], &sharedRegs[3], &sharedRegs[4], &sharedRegs[5], &sharedRegs[6], &sharedRegs[7],
 	&extRegisters[0], &extRegisters[1], &extRegisters[2], &extRegisters[3], &extRegisters[4], &undBanked[0], &undBanked[1], &sharedRegs[8], &sprs_udf };
 
-public:
-
 	union CPSR_t m_cpsr;
 
 	void updateMode(const CpuModes_t mode)
@@ -160,13 +158,13 @@ public:
 		// FIXME: use returns!!!
 		switch (mode)
 		{
-			case EUSR:    r = &usrSys;  break;
-			case EFIQ:    r = &fiq;     break;
-			case EIRQ:    r = &irq;     break;
-			case ESUPER:  r = &svc;     break;
-			case EABORT:  r = &abt;     break;
-			case EUNDEF:  r = &undef;   break;
-			case ESYS:    r = &usrSys;  break;
+			case CpuModes_t::EUSR:    r = &usrSys;  break;
+			case CpuModes_t::EFIQ:    r = &fiq;     break;
+			case CpuModes_t::EIRQ:    r = &irq;     break;
+			case CpuModes_t::ESUPER:  r = &svc;     break;
+			case CpuModes_t::EABORT:  r = &abt;     break;
+			case CpuModes_t::EUNDEF:  r = &undef;   break;
+			case CpuModes_t::ESYS:    r = &usrSys;  break;
 		}
 	}
 
@@ -193,12 +191,12 @@ public:
 		undBanked.fill(0);
 	};
 
-	Registers(const CpuModes_t mode = ESUPER)
+	Registers(const CpuModes_t mode = CpuModes_t::ESUPER)
 	{
 		reset(mode);
 	};
 
-	Registers(const std::initializer_list<uint32_t> list, const CpuModes_t mode = ESUPER)
+	Registers(const std::initializer_list<uint32_t> list, const CpuModes_t mode = CpuModes_t::ESUPER)
 	{
 		reset(mode);
 		std::copy(list.begin(), list.end(), *r->begin());
