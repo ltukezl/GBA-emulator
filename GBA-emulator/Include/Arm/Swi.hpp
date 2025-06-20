@@ -33,13 +33,13 @@ public:
 	static void execute(Registers& regs, const uint16_t opcode)
 	{
 		const uint32_t prev = regs.m_cpsr.val;
-		regs.updateMode(ESUPER);
+		regs.updateMode(CpuModes_t::ESUPER);
 		regs[ELinkRegisterLR] = regs[EProgramCounter];
 		regs[ESavedStatusRegister] = prev;
 		//svc mode
 		regs.m_cpsr.IRQDisable = 1;
 		regs.m_cpsr.thumb = 0;
-		regs.m_cpsr.mode = ESUPER;
+		regs.m_cpsr.mode = CpuModes_t::ESUPER;
 
 		regs[TRegisters::EProgramCounter] = 0x8;
 	}

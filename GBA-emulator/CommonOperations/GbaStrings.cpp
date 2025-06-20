@@ -26,7 +26,7 @@ std::string create_rlist(const uint32_t rlist, const uint32_t regs)
 
 		// Found the start of a run
 		size_t start = i;
-		while (i < 8 && (rlist & (1 << i)))
+		while (i < regs && (rlist & (1 << i)))
 			++i;
 
 		// Generate string based on run length

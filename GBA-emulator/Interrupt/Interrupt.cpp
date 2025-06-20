@@ -17,7 +17,7 @@ void interruptController(){
 	//svc mode
 	r.m_cpsr.IRQDisable = 1;
 	r.m_cpsr.thumb = 0;
-	r.m_cpsr.mode = SUPER;
+	r.m_cpsr.mode = CpuModes_t::ESUPER;
 
 	r[TRegisters::EProgramCounter] = 0x8;
 }
@@ -60,7 +60,7 @@ void HWInterrupts(uint64_t cycles) {
 		r[TRegisters::EProgramCounter] = 0x18;
 		r.m_cpsr.thumb = 0;
 		r.m_cpsr.IRQDisable = 1;
-		r.m_cpsr.mode = IRQ;
+		r.m_cpsr.mode = CpuModes_t::EIRQ;
 	}
 #endif
 }
