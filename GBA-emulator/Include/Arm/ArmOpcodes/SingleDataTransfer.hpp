@@ -148,7 +148,7 @@ namespace SingleDataTransfer {
 		const auto prePost1 = (op.preIndexing == prePost_t::EPre) ? "" : "]";
 		const auto prePost2 = (op.preIndexing == prePost_t::EPre) ? "]" : "";
 		const auto writeback = (op.writeBack == writeBack_t::EWriteback) ? "!" : "";
-		return std::format("{}{}{} R{}, [R{}{}{}{}{}", ls, condition, bw, op.destinationRegister, op.baseRegister, prePost1, makeExpression(opcode), prePost2, writeback);
+		return std::format("{}{}{} R{}, [R{}{}{}{}{}", ls, bw, condition, op.destinationRegister, op.baseRegister, prePost1, makeExpression(opcode), prePost2, writeback);
 	}
 }
 

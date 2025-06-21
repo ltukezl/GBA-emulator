@@ -6,8 +6,6 @@
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferRegister.hpp"
 
-
-
 namespace SingleDataTransfer
 {
 	static void null_func22(Registers&, const uint32_t) {}
