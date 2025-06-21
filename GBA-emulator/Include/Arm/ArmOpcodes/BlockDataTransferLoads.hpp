@@ -38,7 +38,7 @@ public:
 		// ldm operational data
 		const uint32_t amount_of_transactions = std::popcount(op.rlist);
 		uint32_t internal_base_address = regs[op.baseReg];
-		internal_base_address += op.baseReg == 15 ? 4 : 0;
+		internal_base_address += op.baseReg == EProgramCounter ? 4 : 0;
 		const uint32_t final_writeback_address = c_op.addOffset ? internal_base_address + (amount_of_transactions << 2) : internal_base_address - (amount_of_transactions << 2);
 
 		// internally decrementing ldm is actually always increasing, but arm calculates the new base address.
@@ -46,6 +46,9 @@ public:
 		{
 			internal_base_address -= (amount_of_transactions << 2);
 		}
+		
+		// micro optimization to reduce amount of redundant loops in transfer
+		const size_t rlist_first_reg = std::countr_zero(op.rlist);
 
 		if (c_op.loadPSR && !pcInRlist)
 		{
@@ -56,13 +59,13 @@ public:
 			regs.m_cpsr.val = regs[ESavedStatusRegister];
 		}
 
-		if (c_op.writeback)
+		if constexpr (c_op.writeback)
 			regs[op.baseReg] = final_writeback_address;
 
 		if constexpr ((c_op.preIndex ^ c_op.addOffset) == 1)
 			internal_base_address -= offset;
 
-		for (size_t i = 0; i < 16; i++)
+		for (size_t i = rlist_first_reg; i < 16; i++)
 		{
 			if (op.rlist & (1 << i))
 			{

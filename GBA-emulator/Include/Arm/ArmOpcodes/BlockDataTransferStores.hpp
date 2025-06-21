@@ -9,13 +9,13 @@
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Memory/memoryOps.h"
 
-class BlockDataTransferPreStoreAdd
+class BlockDataTransferStore
 {
 public:
 	static constexpr bool isThisOpcode(const uint32_t opcode)
 	{
 		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 1) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 1);
+		return (opcodeStruct.loadStore == 0);
 	}
 
 	template<uint32_t iterOpcode>
@@ -37,262 +37,51 @@ public:
 		constexpr uint32_t offset = 4;
 
 		// stm operational info
-		// to simplify as pipeline is not accessable 
-		regs[EProgramCounter] += 4;
-		const uint32_t oldBase = regs[op.baseReg];
-		uint32_t writebackAddress = oldBase;
-		// pipeline is again more ahead in here 
-		regs[EProgramCounter] += 4;
+
+		uint32_t writebackAddress = regs[op.baseReg];
+		writebackAddress += op.baseReg == EProgramCounter ? 4 : 0;
 
 		// UB target addresses
-		const uint32_t bits = std::popcount(op.rlist);
-		const bool first = std::countr_zero(op.rlist) == op.baseReg;
-		const uint32_t savedAddr = (bits << 2) + writebackAddress;
-
-		if constexpr (c_op.loadPSR)
-		{
-			regs.updateMode(CpuModes_t::EUSR);
-		}
-
-		for (size_t i = 0; i < 16; i++)
-		{
-			if (op.rlist & (1 << i))
-			{
-				writebackAddress += offset;
-				if (c_op.writeback && (i == op.baseReg) && !first)
-					writeToAddress32(writebackAddress, savedAddr);
-				else if (c_op.writeback && (i == op.baseReg) && first)
-					writeToAddress32(writebackAddress, oldBase);
-				else
-					writeToAddress32(writebackAddress, regs[i]);
-			}
-		}
-
-		// re adjust ppc back in here
-		regs[EProgramCounter] -= 8;
-
-		if (c_op.writeback)
-			regs[op.baseReg] = writebackAddress;
-
-		if constexpr (c_op.loadPSR)
-		{
-			regs.updateMode(currentMode);
-		}
-	}
-};
-
-class BlockDataTransferPreStoreSub
-{
-public:
-	static constexpr bool isThisOpcode(const uint32_t opcode)
-	{
-		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 1) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 0);
-	}
-
-	template<uint32_t iterOpcode>
-	static void execute(Registers& regs, const uint32_t opcode)
-	{
-		//op code preample
-		constexpr auto c_op = BlockDataTransfer::fromOpcode(iterOpcode);
-		const auto op = BlockDataTransfer::fromOpcode(opcode);
-
-		// bug of empty rlist
-		if (op.rlist == 0)
-		{
-			BlockDataTransfer::empty_rlist_bug_stm(regs, op);
-			return;
-		}
-
-		// flags for stm operation
-		const auto currentMode = regs.getMode();
-		constexpr uint32_t offset = 4;
-
-		// stm operational info
-		// to simplify as pipeline is not accessable 
-		regs[EProgramCounter] += 4;
-		const uint32_t oldBase = regs[op.baseReg];
-		uint32_t writebackAddress = oldBase;
-		// pipeline is again more ahead in here 
-		regs[EProgramCounter] += 4;
-
-		// UB target addresses
-		const bool first = std::countr_zero(op.rlist) == op.baseReg;
+		const size_t rlist_first_reg = std::countr_zero(op.rlist);
 
 		const uint32_t transfers = std::popcount(op.rlist);
-		writebackAddress -= (transfers << 2);
-		const uint32_t dec_writeback = writebackAddress;
-
-		if (c_op.loadPSR)
+		const uint32_t savedAddr = c_op.addOffset ? writebackAddress + (transfers << 2) : writebackAddress - (transfers << 2);
+		if constexpr (c_op.addOffset == 0)
 		{
-			regs.updateMode(CpuModes_t::EUSR);
+			writebackAddress -= (transfers << 2);
 		}
 
-		for (size_t i = 0; i < 16; i++)
-		{
-			if (op.rlist & (1 << i))
-			{
-				if (c_op.writeback && (i == op.baseReg) && !first)
-					writeToAddress32(writebackAddress, dec_writeback);
-				else if (c_op.writeback && (i == op.baseReg) && first)
-					writeToAddress32(writebackAddress, oldBase);
-				else
-					writeToAddress32(writebackAddress, regs[i]);
-				writebackAddress += offset;
-			}
-		}
-
-		// re adjust ppc back in here
-		regs[EProgramCounter] -= 8;
-
-		if (c_op.writeback)
-			regs[op.baseReg] = dec_writeback;
-
-		if constexpr (c_op.loadPSR)
-		{
-			regs.updateMode(currentMode);
-		}
-	}
-};
-
-class BlockDataTransferPostStoreAdd
-{
-public:
-	static constexpr bool isThisOpcode(const uint32_t opcode)
-	{
-		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 0) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 1);
-	}
-
-	template<uint32_t iterOpcode>
-	static void execute(Registers& regs, const uint32_t opcode)
-	{
-		//op code preample
-		constexpr auto c_op = BlockDataTransfer::fromOpcode(iterOpcode);
-		const auto op = BlockDataTransfer::fromOpcode(opcode);
-
-		// bug of empty rlist
-		if (op.rlist == 0)
-		{
-			BlockDataTransfer::empty_rlist_bug_stm(regs, op);
-			return;
-		}
-
-		// flags for stm operation
-		const auto currentMode = regs.getMode();
-		constexpr uint32_t offset = 4;
-
-		// stm operational info
-		// to simplify as pipeline is not accessable 
-		regs[EProgramCounter] += 4;
-		const uint32_t oldBase = regs[op.baseReg];
-		uint32_t writebackAddress = oldBase;
-		// pipeline is again more ahead in here 
-		regs[EProgramCounter] += 4;
-
-		// UB target addresses
-		const uint32_t bits = std::popcount(op.rlist);
-		const bool first = std::countr_zero(op.rlist) == op.baseReg;
-		const uint32_t savedAddr = (bits << 2) + writebackAddress;
+		if constexpr ((c_op.preIndex ^ c_op.addOffset) == 1)
+			writebackAddress -= offset;
 
 		if constexpr (c_op.loadPSR)
 		{
 			regs.updateMode(CpuModes_t::EUSR);
 		}
 
-		for (size_t i = 0; i < 16; i++)
-		{
-			if (op.rlist & (1 << i))
-			{
-				if (c_op.writeback && (i == op.baseReg) && !first)
-					writeToAddress32(writebackAddress, savedAddr);
-				else if (c_op.writeback && (i == op.baseReg) && first)
-					writeToAddress32(writebackAddress, oldBase);
-				else
-					writeToAddress32(writebackAddress, regs[i]);
-				writebackAddress += offset;
-			}
-		}
+		// during first transfer the final address hasn't been calculated yet.
+		writebackAddress += offset;
+		writeToAddress32(writebackAddress, regs[rlist_first_reg]);
 
 		// re adjust ppc back in here
-		regs[EProgramCounter] -= 8;
+		regs[EProgramCounter] += 8;
 
-		if (c_op.writeback)
-			regs[op.baseReg] = writebackAddress;
+		if constexpr (c_op.writeback)
+			regs[op.baseReg] = savedAddr;
 
-		if constexpr (c_op.loadPSR)
-		{
-			regs.updateMode(currentMode);
-		}
-	}
-};
-
-class BlockDataTransferPostStoreSub
-{
-public:
-	static constexpr bool isThisOpcode(const uint32_t opcode)
-	{
-		const auto opcodeStruct = BlockDataTransfer::fromOpcode(opcode);
-		return (opcodeStruct.preIndex == 0) && (opcodeStruct.loadStore == 0) && (opcodeStruct.addOffset == 0);
-	}
-
-	template<uint32_t iterOpcode>
-	static void execute(Registers& regs, const uint32_t opcode)
-	{
-		//op code preample
-		constexpr auto c_op = BlockDataTransfer::fromOpcode(iterOpcode);
-		const auto op = BlockDataTransfer::fromOpcode(opcode);
-
-		// bug of empty rlist
-		if (op.rlist == 0)
-		{
-			BlockDataTransfer::empty_rlist_bug_stm(regs, op);
-			return;
-		}
-
-		// flags for stm operation
-		const auto currentMode = regs.getMode();
-		constexpr uint32_t offset = 4;
-
-		// stm operational info
-		// to simplify as pipeline is not accessable 
-		regs[EProgramCounter] += 4;
-		const uint32_t oldBase = regs[op.baseReg];
-		uint32_t writebackAddress = oldBase;
-		// pipeline is again more ahead in here 
-		regs[EProgramCounter] += 4;
-
-		// UB target addresses
-		const bool first = std::countr_zero(op.rlist) == op.baseReg;
-
-		const uint32_t transfers = std::popcount(op.rlist);
-		writebackAddress -= (transfers << 2);
-		const uint32_t dec_writeback = writebackAddress;
-
-		if (c_op.loadPSR)
-		{
-			regs.updateMode(CpuModes_t::EUSR);
-		}
-
-		for (size_t i = 0; i < 16; i++)
+		for (size_t i = rlist_first_reg + 1; i < 16; i++)
 		{
 			if (op.rlist & (1 << i))
 			{
 				writebackAddress += offset;
-				if (c_op.writeback && (i == op.baseReg) && !first)
-					writeToAddress32(writebackAddress, dec_writeback);
-				else if (c_op.writeback && (i == op.baseReg) && first)
-					writeToAddress32(writebackAddress, oldBase);
-				else
-					writeToAddress32(writebackAddress, regs[i]);
+				writeToAddress32(writebackAddress, regs[i]);
 			}
 		}
 
-		// re adjust ppc back in here
-		regs[EProgramCounter] -= 8;
+		if (c_op.writeback && op.baseReg == EProgramCounter)
+			regs[op.baseReg] += 8;
 
-		if (c_op.writeback)
-			regs[op.baseReg] = dec_writeback;
+		regs[EProgramCounter] -= 8;
 
 		if constexpr (c_op.loadPSR)
 		{
