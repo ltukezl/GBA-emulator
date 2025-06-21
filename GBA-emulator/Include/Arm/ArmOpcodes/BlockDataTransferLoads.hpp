@@ -26,7 +26,7 @@ public:
 		// bug of empty rlist
 		if (op.rlist == 0)
 		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
+			BlockDataTransfer::empty_rlist_bug_ldm(regs, op);
 			return;
 		}
 
@@ -87,7 +87,7 @@ public:
 		// bug of empty rlist
 		if (op.rlist == 0)
 		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
+			BlockDataTransfer::empty_rlist_bug_ldm(regs, op);
 			return;
 		}
 
@@ -165,7 +165,7 @@ public:
 		// bug of empty rlist
 		if (op.rlist == 0)
 		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
+			BlockDataTransfer::empty_rlist_bug_ldm(regs, op);
 			return;
 		}
 
@@ -226,7 +226,7 @@ public:
 		// bug of empty rlist
 		if (op.rlist == 0)
 		{
-			BlockDataTransfer::empty_rlist_bug(regs, op);
+			BlockDataTransfer::empty_rlist_bug_ldm(regs, op);
 			return;
 		}
 

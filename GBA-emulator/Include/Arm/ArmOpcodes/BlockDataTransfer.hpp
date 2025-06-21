@@ -51,10 +51,17 @@ public:
 		return (opcodeStruct.reserved == 0b100);
 	}
 
-	static inline void empty_rlist_bug(Registers& regs, const BlockDataTransferOpcode op)
+	static inline void empty_rlist_bug_ldm(Registers& regs, const BlockDataTransferOpcode op)
 	{
 		regs[EProgramCounter] = loadFromAddress32(regs[op.baseReg]);
 		regs[op.baseReg] += 0x40;
+		return;
+	}
+
+	static inline void empty_rlist_bug_stm(Registers& regs, const BlockDataTransferOpcode op)
+	{
+		regs[op.baseReg] -= 0x40;
+		writeToAddress32(regs[op.baseReg], regs[EProgramCounter] + 8);
 		return;
 	}
 
