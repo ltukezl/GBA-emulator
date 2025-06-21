@@ -61,7 +61,7 @@ std::array<unsigned char*, 16> memoryLayout = { []() constexpr {
 }() };
 
 bool isInterrupt() {
-	return r.m_cpsr.mode == SUPER || r.m_cpsr.mode == IRQ;
+	return r.m_cpsr.mode == CpuModes_t::ESUPER || r.m_cpsr.mode == CpuModes_t::EIRQ;
 }
 
 void calculateCycles(uint32_t address, bool isSequental){

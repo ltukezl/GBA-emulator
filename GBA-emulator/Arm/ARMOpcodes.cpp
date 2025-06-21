@@ -21,210 +21,6 @@
 #include "Interrupt/interrupt.h"
 #include "Memory/memoryOps.h"
 
-static void incrementBase(int& baseRegister, bool nullParameter = false)
-{
-	baseRegister += 4;
-}
-
-static void decrementBase(int& baseRegister, bool nullParameter = false)
-{
-	baseRegister -= 4;
-}
-
-template <typename function1, typename function2>
-void BlockDataTransferSave(int opCode, function1 a, function2 b)
-{
-	__int16 baseReg = (opCode >> 16) & 15;
-	int upDownBit = (opCode >> 23) & 1;
-	int writeBack = (opCode >> 21) & 1;
-	int usrMode = (opCode >> 22) & 1;
-	__int16 regList = opCode & 0xFFFF;
-	int oldBase = r[baseReg];
-
-	auto currentMode = r.getMode();
-
-	if (usrMode && !((opCode >> 15) & 1))
-	{
-		r.updateMode(CpuModes_t::EUSR);
-	}
-
-	if (((opCode >> 15) & 1) & ~upDownBit)
-	{
-		a((int&)r[baseReg], r[15] + 8);
-		b((int&)r[baseReg], r[15] + 8);
-	}
-
-	for (int i = 0; i < 15; i++)
-	{
-		if (upDownBit)
-		{
-			if (regList & 1)
-			{
-				if (i == 13 && baseReg == 13)
-				{
-					a((int&)r[baseReg], oldBase);
-					b((int&)r[baseReg], oldBase);
-				}
-				else
-				{
-					a((int&)r[baseReg], r[i]);
-					b((int&)r[baseReg], r[i]);
-				}
-			}
-			regList >>= 1;
-		}
-		//we are pushing from higer registers first
-		else if (~upDownBit)
-		{
-			if (regList & 0x4000)
-			{
-				if (i == 1 && baseReg == 13)
-				{
-					a((int&)r[baseReg], oldBase);
-					b((int&)r[baseReg], oldBase);
-				}
-				else
-				{
-					a((int&)r[baseReg], r[14 - i]);
-					b((int&)r[baseReg], r[14 - i]);
-				}
-			}
-			regList <<= 1;
-		}
-	}
-
-	if (((opCode >> 15) & 1) & upDownBit)
-	{
-		a((int&)r[baseReg], r[15] + 8);
-		b((int&)r[baseReg], r[15] + 8);
-	}
-
-	if (usrMode)
-	{
-		r.updateMode(currentMode);
-	}
-
-	r[baseReg] = writeBack ? r[baseReg] : oldBase;
-}
-
-template <typename function1, typename function2>
-void BlockDataTransferLoadPost(int opCode, function1 a, function2 b)
-{ // not tested for r15
-	int baseReg = (opCode >> 16) & 15;
-	int upDownBit = (opCode >> 23) & 1;
-	int writeBack = (opCode >> 21) & 1;
-	int usrMode = (opCode >> 22) & 1;
-	int regList = opCode & 0xFFFF;
-	int oldBase = r[baseReg];
-	int memAddress = oldBase & ~0x3;
-	bool baseInRList = regList & (1 << baseReg);
-
-	auto currentMode = r.getMode();
-
-	if (regList == 0)
-	{
-		r[PC] = loadFromAddress32(r[baseReg]);
-		r[baseReg] += 0x40;
-		return;
-	}
-
-	if (usrMode && !((opCode >> 15) & 1))
-	{
-		r.updateMode(CpuModes_t::EUSR);
-	}
-
-	for (int i = 0; i < 16; i++)
-	{
-		if (upDownBit)
-		{
-			if (regList & 1)
-			{
-				r[i] = a(memAddress, false);
-				b(memAddress, false);
-			}
-			regList >>= 1;
-		}
-		else if (~upDownBit)
-		{
-			if (regList & 0x8000)
-			{
-				r[15 - i] = a(memAddress, false);
-				b(memAddress, false);
-			}
-			regList <<= 1;
-		}
-	}
-
-	if (usrMode && !((opCode >> 15) & 1))
-	{
-		r.updateMode(currentMode);
-	}
-
-	if (!baseInRList)
-		r[baseReg] = writeBack ? memAddress : oldBase;
-}
-
-template <typename function1, typename function2>
-void BlockDataTransferLoadPre(int opCode, function1 a, function2 b)
-{
-	int baseReg = (opCode >> 16) & 15;
-	int upDownBit = (opCode >> 23) & 1;
-	int writeBack = (opCode >> 21) & 1;
-	bool usrMode = (opCode >> 22) & 1;
-	int regList = opCode & 0xFFFF;
-	int oldBase = r[baseReg];
-	int memAddress = oldBase & ~0x3;
-	bool baseInRList = regList & (1 << baseReg);
-
-	auto currentMode = r.getMode();
-
-	if (regList == 0)
-	{
-		r[PC] = loadFromAddress32(r[baseReg]);
-		r[baseReg] += 0x40;
-		return;
-	}
-
-	if (usrMode && !((opCode >> 15) & 1))
-	{
-		r.updateMode(CpuModes_t::EUSR);
-	}
-
-	for (int i = 0; i < 16; i++)
-	{
-		if (upDownBit)
-		{
-			if (regList & (1 << i))
-			{
-				a(memAddress, false);
-				r[i] = b(memAddress, false);
-				if (i == 15)
-					r[16] = r.m_cpsr.val;
-			}
-		}
-		else if (~upDownBit)
-		{
-			if (regList & 0x8000)
-			{
-				a(memAddress, false);
-				r[15 - i] = b(memAddress, false);
-				if (i == 0)
-					r[16] = r.m_cpsr.val;
-			}
-			regList <<= 1;
-		}
-	}
-
-	if (usrMode && !((opCode >> 15) & 1))
-	{
-		r.updateMode(currentMode);
-	}
-
-	if (!baseInRList)
-		r[baseReg] = writeBack ? memAddress : oldBase;
-}
-
-
 static void singleDataSwap(int opCode)
 {
 	uint32_t rm = opCode & 0xF;
@@ -347,25 +143,25 @@ void updateMode()
 	//std::cout << "switched mode to " << mode << std::endl;
 	switch (r.m_cpsr.mode)
 	{
-		case USR:
+		case CpuModes_t::EUSR:
 			r.updateMode(CpuModes_t::EUSR);
 			break;
-		case FIQ:
+		case CpuModes_t::EFIQ:
 			r.updateMode(CpuModes_t::EFIQ);
 			break;
-		case IRQ:
+		case CpuModes_t::EIRQ:
 			r.updateMode(CpuModes_t::EIRQ);
 			break;
-		case SUPER:
+		case CpuModes_t::ESUPER:
 			r.updateMode(CpuModes_t::ESUPER);
 			break;
-		case ABORT:
+		case CpuModes_t::EABORT:
 			r.updateMode(CpuModes_t::EABORT);
 			break;
-		case UNDEF:
+		case CpuModes_t::EUNDEF:
 			r.updateMode(CpuModes_t::EUNDEF);
 			break;
-		case SYS:
+		case CpuModes_t::ESYS:
 			r.updateMode(CpuModes_t::ESYS);
 			break;
 	}
@@ -667,16 +463,10 @@ static auto constexpr decode_arm_opcode()
 		return SingleDataTransfer::decode_sdd<opCode>();
 	if constexpr (BlockDataTransfer::isThisOpcode(opCode))
 	{
-		if constexpr (BlockDataTransferPreLoadAdd::isThisOpcode(opCode))
-			return BlockDataTransferPreLoadAdd::execute<BlockDataTransfer::mask(opCode)>;
-		if constexpr (BlockDataTransferPreLoadSub::isThisOpcode(opCode))
-			return BlockDataTransferPreLoadSub::execute<BlockDataTransfer::mask(opCode)>;
-		if constexpr (BlockDataTransferPostLoadAdd::isThisOpcode(opCode))
-			return BlockDataTransferPostLoadAdd::execute<BlockDataTransfer::mask(opCode)>;
-		if constexpr (BlockDataTransferPostLoadSub::isThisOpcode(opCode))
-			return BlockDataTransferPostLoadSub::execute<BlockDataTransfer::mask(opCode)>;
-		if constexpr (BlockDataTransferPostStoreAdd::isThisOpcode(opCode))
-			return BlockDataTransferPostStoreAdd::execute<BlockDataTransfer::mask(opCode)>;
+		if constexpr (BlockDataTransferLoad::isThisOpcode(opCode))
+			return BlockDataTransferLoad::execute<BlockDataTransfer::mask(opCode)>;
+		if constexpr (BlockDataTransferStore::isThisOpcode(opCode))
+			return BlockDataTransferStore::execute<BlockDataTransfer::mask(opCode)>;
 	}
 	if constexpr (branches::ArmBranch::isThisOpcode(opCode))
 		return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
@@ -747,7 +537,6 @@ void ARMExecute(int opCode)
 		}
 
 		int opCodeType = (opCode >> 24) & 0xF;
-		int subType;
 		switch (opCodeType)
 		{
 			case 15:
@@ -758,41 +547,10 @@ void ARMExecute(int opCode)
 			case 13: case 12: //co processor data transfer, not used in GBA
 				break;
 			case 9: //block data transfer pre offset. maybe implement S bits
-				subType = (opCode >> 20) & 0xB;
-				switch (subType)
-				{
-					case 10: case 8: //writeback / no writeback, pre offset, add offset
-						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
-						break;
-					case 2: case 0: //writeback / no writeback, pre offset, sub offset
-						BlockDataTransferSave(opCode, decrementBase, writeToAddress32);
-						break;
-					case 11: case 9: //writeback / no writeback, post offset, add offset
-						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
-						//BlockDataTransferLoadPre(opCode, incrementBase, loadFromAddress32);
-						break;
-					case 3: case 1: //writeback / no writeback, post offset, sub offset
-						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
-						break;
-				}
+				m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 				break;
 			case 8: //block data transfer post offset
-				subType = (opCode >> 20) & 0xB;
-				switch (subType)
-				{
-					case 10: case 8: //writeback / no writeback, post offset, add offset
-						BlockDataTransferSave(opCode, writeToAddress32, incrementBase);
-						break;
-					case 2: case 0: //writeback / no writeback, post offset, sub offset
-						BlockDataTransferSave(opCode, writeToAddress32, decrementBase);
-						break;
-					case 11: case 9: //writeback / no writeback, post offset, add offset
-						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
-						break;
-					case 3: case 1: //writeback / no writeback, post offset, sub offset
-						m_dispatch_table[reduce_opcode(opCode)](r, opCode);
-						break;
-				}
+				m_dispatch_table[reduce_opcode(opCode)](r, opCode);
 				break;
 			case 5:// single data transfer, immediate pre offset
 				break;
