@@ -17,5 +17,7 @@ void rorNoCond(int& saveTo, int from, int immidiate);
 
 void ARMExecute(int);
 
+void runSingleStepTests_a();
+
 #endif // ARMOPCODES
 

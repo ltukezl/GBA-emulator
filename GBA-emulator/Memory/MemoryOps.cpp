@@ -199,6 +199,9 @@ void writeToAddress(uint32_t address, uint8_t value){
 	MemoryAddress memDecoder{ address };
 	calculateCycles(memDecoder.address, (previousAddress + 1) == memDecoder.address);
 
+	iwram.write8(memDecoder, value);
+	return;
+
 	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
 		systemROM.write8(memDecoder, value);
 		return;
@@ -271,6 +274,8 @@ void writeToAddress(uint32_t address, uint8_t value){
 void writeToAddress16(uint32_t address, uint16_t value){
 	calculateCycles(address, (previousAddress + 2) == address);
 	MemoryAddress memDecoder{ address };
+	iwram.write16(memDecoder, value);
+	return;
 	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 1;
@@ -339,6 +344,8 @@ void writeToAddress32(uint32_t address, uint32_t value){
 	calculateCycles(address, true);
 	cycles += 1;
 	MemoryAddress memDecoder{ address };
+	iwram.write32(memDecoder, value);
+	return;
 	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
 	uint32_t misalignment = address & 3;
@@ -412,6 +419,8 @@ uint8_t loadFromAddress(uint32_t address, bool free){
 	MemoryAddress memDecoder{ address };
 	uint32_t mask = memDecoder.mask;
 
+	return iwram.read8(memDecoder);
+
 	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
 		return systemROM.read8(r, memDecoder);
 	}
@@ -461,6 +470,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free){
 	uint32_t misalignment = address & 1;
 
 	MemoryAddress memDecoder{ address };
+	return iwram.read16(memDecoder);
 	uint32_t mask = memDecoder.mask;
 	address &= ~0xFF000000;
 	
@@ -512,6 +522,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free){
 	uint32_t misalignment = address & 3;
 
 	MemoryAddress memDecoder{ address };
+	return iwram.read32(r, memDecoder);
 	uint32_t mask = memDecoder.mask;
 
 	if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {

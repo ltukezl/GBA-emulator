@@ -2,11 +2,12 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+#include <cassert>
+#include <nlohmann/json.hpp>
 
 #include "Arm/armopcodes.h"
 #include "Arm/ArmOpcodes/Branch.hpp"
 #include "Arm/ArmOpcodes/Multiply.hpp"
-
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/logicalOps.h"
@@ -14,6 +15,7 @@
 #include "Arm/ArmOpcodes/Undefop.hpp"
 #include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
 #include "Arm/ArmOpcodes/BlockDataTransferStores.hpp"
+#include "Arm/ArmOpcodes/MRS.hpp"
 #include "Constants.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
@@ -21,6 +23,10 @@
 #include "Interrupt/interrupt.h"
 #include "Memory/memoryOps.h"
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7b9b70f (single step test framework)
 static void singleDataSwap(int opCode)
 {
 	uint32_t rm = opCode & 0xF;
@@ -457,6 +463,8 @@ static uint32_t constexpr reduce_opcode(const uint32_t opCode)
 template<uint32_t opCode>
 static auto constexpr decode_arm_opcode()
 {
+	if constexpr (MRS::isThisOpcode(opCode))
+		return &MRS::execute<MRS::mask(opCode)>;
 	if constexpr (UndefOp::isThisOpcode(opCode))
 		return &UndefOp::execute;
 	if constexpr (((opCode >> 26) & 0x3) == 1)
@@ -475,9 +483,10 @@ static auto constexpr decode_arm_opcode()
 
 static consteval auto index_to_opcode(const uint32_t opcode)
 {
+	const uint32_t base = 0;
 	const uint32_t low_bits = opcode & 0xF;
 	const uint32_t high_bits = opcode & 0xFF0;
-	return (high_bits << 16) | (low_bits << 4);
+	return base | (high_bits << 16) | (low_bits << 4);
 }
 
 template<typename T, std::size_t... Is>
@@ -493,7 +502,186 @@ static constexpr std::array m_dispatch_table = { []() consteval
 	return tmp;
 }() };
 
+std::string arm_disassembly(const uint32_t program_counter, const uint32_t opcode)
+{
+	if (MRS::isThisOpcode(opcode))
+		return MRS::disassemble(opcode);
+	if (UndefOp::isThisOpcode(opcode))
+		return UndefOp::disassemble(opcode);
+	if (((opcode >> 26) & 0x3) == 1)
+		return SingleDataTransfer::disassemble(opcode);
+	if (BlockDataTransfer::isThisOpcode(opcode))
+		return BlockDataTransfer::disassemble(opcode);
+	if (branches::ArmBranch::isThisOpcode(opcode))
+		return branches::ArmBranch::disassemble(opcode);
+	return "";
+}
+
 #include <print>
+#include <fstream>
+#include <iostream>
+void runSingleStepTests_a()
+{
+	uint32_t tst_num = 0;
+	Registers registers;
+	const std::string game = "../ARM7TDMI/v1/arm_mrs.json";
+	std::ifstream ifs(game);
+	const auto jf = nlohmann::json::parse(ifs);
+	for (const auto& json : jf)
+	{
+		for (auto& j : json["transactions"])
+		{
+			if (j["addr"] == j["data"])
+				continue;
+			if (j["kind"] == 0 || j["kind"] == 1)
+				writeToAddress32(j["addr"], j["data"]);
+		}
+
+		const auto initials = json["initial"];
+		size_t idx = 0;
+		for (auto& initial_R : initials["R"])
+		{
+			*registers.usrSys[idx] = initial_R.get<uint32_t>();
+			idx++;
+		}
+
+		registers[15] = json["base_addr"][0].get<uint32_t>();
+
+		idx = 0;
+		for (auto& initial_R : initials["R_fiq"])
+		{
+			registers.fiqBanked[idx] = initial_R.get<uint32_t>();
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : initials["R_svc"])
+		{
+			registers.svcBanked[idx] = initial_R.get<uint32_t>();
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : initials["R_abt"])
+		{
+			registers.abtBanked[idx] = initial_R.get<uint32_t>();
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : initials["R_irq"])
+		{
+			registers.irqBanked[idx] = initial_R.get<uint32_t>();
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : initials["R_und"])
+		{
+			registers.undBanked[idx] = initial_R.get<uint32_t>();
+			idx++;
+		}
+
+		registers.m_cpsr.val = initials["CPSR"].get<uint32_t>();
+		registers.updateMode(registers.getMode());
+
+		registers.sprs_usr = 0;
+		registers.sprs_fiq = initials["SPSR"][0].get<uint32_t>();
+		registers.sprs_svc = initials["SPSR"][1].get<uint32_t>();
+		registers.sprs_abt = initials["SPSR"][2].get<uint32_t>();
+		registers.sprs_irq = initials["SPSR"][3].get<uint32_t>();
+		registers.sprs_udf = initials["SPSR"][4].get<uint32_t>();
+
+		uint32_t opcode = initials["pipeline"][0].get<uint32_t>();
+
+		std::cout << tst_num << " " << registers[15] << " " << registers[0] << " " << arm_disassembly(registers[15], opcode) << "\n";
+		int condition = (opcode >> 28) & 0xF;
+
+		if (tst_num == 7)
+			std::cout << "";
+
+		registers[15] += 4;
+		r.m_cpsr.val = registers.m_cpsr.val;
+		if(conditions[condition]())
+			m_dispatch_table[reduce_opcode(opcode)](registers, opcode);
+		registers[15] += 8;
+
+		idx = 0;
+		for (auto& j : json["transactions"])
+		{
+			if (j["kind"] == 2)
+			{
+				const auto val = loadFromAddress32(j["addr"].get<uint32_t>());
+				const auto expected = j["data"].get<uint32_t>();
+				std::println("{} {} {}", j["addr"].get<uint32_t>(), val, expected);
+				assert(val == expected);
+				idx++;
+			}
+		}
+
+
+		const auto finals = json["final"];
+
+		idx = 0;
+		for (auto& initial_R : finals["R"])
+		{
+			const auto i = *registers.usrSys[idx];
+			const auto ex = initial_R.get<uint32_t>();
+			if (*registers.usrSys[idx] != initial_R.get<uint32_t>())
+			{
+				std::cout << idx << " " << *registers.usrSys[idx] << " " << initial_R.get<uint32_t>() << "\n";
+				assert(*registers.usrSys[idx] == initial_R.get<uint32_t>());
+			}
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : finals["R_fiq"])
+		{
+			assert(registers.fiqBanked[idx] == initial_R.get<uint32_t>());
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : finals["R_svc"])
+		{
+			assert(registers.svcBanked[idx] == initial_R.get<uint32_t>());
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : finals["R_abt"])
+		{
+			assert(registers.abtBanked[idx] == initial_R.get<uint32_t>());
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : finals["R_irq"])
+		{
+			assert(registers.irqBanked[idx] == initial_R.get<uint32_t>());
+			idx++;
+		}
+
+		idx = 0;
+		for (auto& initial_R : finals["R_und"])
+		{
+			assert(registers.undBanked[idx] == initial_R.get<uint32_t>());
+			idx++;
+		}
+
+		if (((opcode >> 6) & 0xf) == 0b1101)
+			continue;
+
+		assert(registers.m_cpsr.val == finals["CPSR"].get<uint32_t>());
+		assert(registers.sprs_fiq == finals["SPSR"][0].get<uint32_t>());
+		assert(registers.sprs_svc == finals["SPSR"][1].get<uint32_t>());
+		assert(registers.sprs_abt == finals["SPSR"][2].get<uint32_t>());
+		assert(registers.sprs_irq == finals["SPSR"][3].get<uint32_t>());
+		assert(registers.sprs_udf == finals["SPSR"][4].get<uint32_t>());
+		tst_num++;
+	}
+}
 
 void ARMExecute(int opCode)
 {

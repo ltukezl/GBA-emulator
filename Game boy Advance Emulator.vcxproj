@@ -171,6 +171,7 @@
   <ItemGroup>
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\BlockDataTransfer.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\BlockDataTransferLoads.hpp" />
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\BlockDataTransferStores.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\Branch.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\MRS.hpp" />
     <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\SDDHelper.hpp" />

@@ -347,6 +347,9 @@
     <ClInclude Include="GBA-emulator\Include\CommonOperations\GbaStrings.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GBA-emulator\Include\Arm\ArmOpcodes\BlockDataTransferStores.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="GBA-emulator\TestBinaries\program2.bin">

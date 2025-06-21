@@ -4,20 +4,24 @@
 #include <array>
 #include <cplusplusRewrite/HwRegisters.h>
 #include <cstdint>
-#include <Display/Display.h>
 #include <Display/Disassembler.hpp>
+#include <Display/Display.h>
 #include <DMA/DMA.h>
 #include <filesystem>
 #include <fstream>
 #include <Interrupt/interrupt.h>
 #include <ios>
 #include <Memory/memoryOps.h>
+#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Time.hpp>
 #include <string>
 #include <Thumb/ThumbOpCodes.h>
 #include <Timer/timers.h>
 #include <vector>
+#include <print>
+#include <iostream>
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
@@ -56,6 +60,8 @@ uint8_t WS2Second[2] = { 1, 1 };
 
 Display* debugView;
 
+
+
 static void readFile(const std::string& fileName, std::vector<unsigned char>& input)
 {
 	size_t size = std::filesystem::file_size(fileName);
@@ -82,11 +88,15 @@ static void readFile(const std::string& fileName, std::array<uint8_t, 0x4000>& i
 	}
 }
 
+
+
 /*
 NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in usr mode.
 otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
+	runSingleStepTests_a();
+	return 0;
 #if BIOS_START
 	r.m_cpsr.FIQDisable = 1;
 	r.m_cpsr.IRQDisable = 1;
