@@ -1,6 +1,0 @@
-@startuml
-title MSR class design
-
-class OpCode
-
-@enduml
