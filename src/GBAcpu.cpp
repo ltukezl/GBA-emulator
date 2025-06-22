@@ -2,7 +2,7 @@
 #include "Constants.h"
 #include "Memory/memoryMappedIO.h"
 #include <array>
-#include <cplusplusRewrite/HwRegisters.h>
+#include "cplusplusRewrite/HwRegisters.h"
 #include <cstdint>
 #include <Display/Display.h>
 #include <Display/Disassembler.hpp>

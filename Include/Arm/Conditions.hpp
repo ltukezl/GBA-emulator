@@ -2,7 +2,7 @@
 #define CONDITIONSpp_H
 
 #include <array>
-#include <cplusplusRewrite/HwRegisters.h>
+#include "cplusplusRewrite/HwRegisters.h"
 
 class ConditionChecks
 {
