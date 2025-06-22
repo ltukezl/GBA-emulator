@@ -8,15 +8,15 @@
 class SpriteGenerator {
 private:
 
-	uint32_t manyTiles[32 * 8][32 * 8] = {};
-	
+    uint32_t manyTiles[32 * 8][32 * 8] = {};
+    
 public:
-	std::vector<Sprite*> allSprites;
-	//std::vector<Sprite> spritesPrioQueue[4];
-	Tile objTileset[32][32];
+    std::vector<Sprite*> allSprites;
+    //std::vector<Sprite> spritesPrioQueue[4];
+    Tile objTileset[32][32];
 
-	SpriteGenerator();
-	void updateSpritePriorities();
-	uint8_t* getTileset(bool is8bit);
-	void update();
+    SpriteGenerator();
+    void updateSpritePriorities();
+    uint8_t* getTileset(bool is8bit);
+    void update();
 };

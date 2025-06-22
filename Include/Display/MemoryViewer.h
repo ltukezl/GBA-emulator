@@ -7,19 +7,19 @@
 class MemoryViewer
 {
 public:
-	MemoryViewer();
+    MemoryViewer();
 
-	void renderMemory();
-	void handleEvents();
+    void renderMemory();
+    void handleEvents();
 
 private:
 
-	void createColumnsHeader();
+    void createColumnsHeader();
 
-	sf::Font m_font;
-	sf::Text m_text;
-	std::unique_ptr<sf::RenderWindow> m_display = std::make_unique<sf::RenderWindow>(sf::VideoMode(1000, 800), "Memory Viewer");
-	uint32_t m_memAddressStartOffset = 0;
-	uint32_t m_selectIndex = 0;
-	std::string m_input = "";
+    sf::Font m_font;
+    sf::Text m_text;
+    std::unique_ptr<sf::RenderWindow> m_display = std::make_unique<sf::RenderWindow>(sf::VideoMode(1000, 800), "Memory Viewer");
+    uint32_t m_memAddressStartOffset = 0;
+    uint32_t m_selectIndex = 0;
+    std::string m_input = "";
 };
