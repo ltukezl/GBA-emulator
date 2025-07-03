@@ -5,7 +5,6 @@
 
 #include "Arm/armopcodes.h"
 #include "Constants.h"
-#include "Display/Display.h"
 #include "GBAcpu.h"
 #include "Memory/memoryMappedIO.h"
 #include "Memory/memoryOps.h"
@@ -131,16 +130,6 @@ bool specialWrites(uint32_t mask, uint32_t addr, uint32_t val){
 	else if (mask == 4 && (addr == 0x102 || addr == 0x106 || addr == 0x10A || addr == 0x10D)){
 		return reloadCounter(addr, val);
 	}
-	else if (mask == 5) {
-		debugView->VRAMupdated = true;
-	}
-	else if (mask == 6 && addr < 0x10000){
-		debugView->VRAMupdated = true;
-	}
-	else if (mask == 6 && addr >= 0x10000){
-		debugView->OBJupdated = true;
-	}
-
 	return false;
 }
 
@@ -166,15 +155,11 @@ void DmaIncreasing(uint32_t dmaNumber, MemoryAddress destination, MemoryAddress 
 		vram.m_observer.setAll();
 		paletteram.m_accessed = 1;
 		paletteram.m_accessedPaletteColour.set();
-		debugView->VRAMupdated = true;
-		debugView->OBJupdated = true;
 	}
 		
 	if (destination.mask == EVRAM || source.mask == EOAM)
 	{
 		vram.m_observer.setAll();
-		debugView->VRAMupdated = true;
-		debugView->OBJupdated = true;
 	}
 
 	uint32_t destination_clamped = clampAddress(destination.mask, destination.alignedMasked32b());
@@ -222,8 +207,6 @@ void writeToAddress(uint32_t address, uint8_t value){
 
 	if (memDecoder.mask == 0x6) {
 		vram.write8(memDecoder, value);
-		debugView->VRAMupdated = true;
-		debugView->OBJupdated = true;
 		return;
 	}
 
@@ -298,8 +281,6 @@ void writeToAddress16(uint32_t address, uint16_t value){
 
 	if (memDecoder.mask == 0x6) {
 		vram.write16(memDecoder, value);
-		debugView->VRAMupdated = true;
-		debugView->OBJupdated = true;
 		return;
 	}
 
@@ -366,8 +347,6 @@ void writeToAddress32(uint32_t address, uint32_t value){
 
 	if (memDecoder.mask == 0x6) {
 		vram.write32(memDecoder, value);
-		debugView->OBJupdated = true;
-		debugView->VRAMupdated = true;
 		return;
 	}
 

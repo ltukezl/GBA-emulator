@@ -4,7 +4,6 @@
 #include <array>
 #include "cplusplusRewrite/HwRegisters.h"
 #include <cstdint>
-#include <Display/Display.h>
 #include <Display/Disassembler.hpp>
 #include <DMA/DMA.h>
 #include <filesystem>
@@ -18,6 +17,7 @@
 #include <Thumb/ThumbOpCodes.h>
 #include <Timer/timers.h>
 #include <vector>
+#include <print>
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
@@ -54,8 +54,6 @@ uint8_t WS0Second[2] = { 1, 1 };
 uint8_t WS1Second[2] = { 1, 1 };
 uint8_t WS2Second[2] = { 1, 1 };
 
-Display* debugView;
-
 static void readFile(const std::string& fileName, std::vector<unsigned char>& input)
 {
 	size_t size = std::filesystem::file_size(fileName);
@@ -87,6 +85,8 @@ NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in us
 otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char *args[]){
+	const char* asd = ROOT_PATH"\\arial.ttf";
+	std::println("{}", asd);
 #if BIOS_START
 	r.m_cpsr.FIQDisable = 1;
 	r.m_cpsr.IRQDisable = 1;
@@ -101,8 +101,6 @@ int main(int argc, char *args[]){
 	Disassembler disassembler;
 #endif
 
-	std::string windowName = "paletteWindow";
-	debugView = new Display(1280, 496 * 2, windowName);
 #if MEMORY_VIEWER
 	MemoryViewer memoryViewer;
 #endif
@@ -148,17 +146,17 @@ int main(int argc, char *args[]){
 #endif
 	memoryInits();
 
-	////const std::string game = "GBA-emulator/TestBinaries/FuzzARM.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/arm.gba";
-	const std::string game = "GBA-emulator/TestBinaries/armwrestler-gba-fixed.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/thumb.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/program6.bin";
-	//const std::string game = "GBA-emulator/TestBinaries/tonc/bigmap.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/tonc/obj_demo.gba";
-	//const std::string game = "GBA-emulator/TestBinaries/tonc/irq_demo.gba";
+	////const std::string game = ROOT_PATH"/TestBinaries/FuzzARM.gba";
+	//const std::string game = ROOT_PATH"/TestBinaries/arm.gba";
+	const std::string game = ROOT_PATH"/TestBinaries/armwrestler-gba-fixed.gba";
+	//const std::string game = ROOT_PATH"/TestBinaries/thumb.gba";
+	//const std::string game = ROOT_PATH"/TestBinaries/program6.bin";
+	//const std::string game = ROOT_PATH"/TestBinaries/tonc/bigmap.gba";
+	//const std::string game = ROOT_PATH"/TestBinaries/tonc/obj_demo.gba";
+	//const std::string game = ROOT_PATH"/TestBinaries/tonc/irq_demo.gba";
 
 	readFile(game, GamePak);
-	readFile("GBA-emulator/GBA.BIOS", systemROM.m_memoryArea);
+	readFile("GBA.BIOS", systemROM.m_memoryArea);
 
 	uint64_t vCounterDrawCycles = 0;
 	cycles = 0;
@@ -218,8 +216,6 @@ int main(int argc, char *args[]){
 			if (InterruptEnableRegister->vBlank && LCDStatus->vIRQEn){
 				InterruptFlagRegister->vBlank = 1;
 			}
-			debugView->handleEvents();
-			debugView->updatePalettes();
 #if MEMORY_VIEWER
 			memoryViewer.handleEvents();
 			memoryViewer.renderMemory();

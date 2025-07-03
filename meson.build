@@ -1,8 +1,40 @@
-project('Gba-emulator', 'cpp', default_options : ['cpp_std=c++23'])
+project('Gba-emulator', 'cpp', default_options : ['-std=c++23'])
 
-add_project_arguments(['-std=c++23', '-fbracket-depth=3072'], language : 'cpp')
+add_project_arguments(['-fbracket-depth=3072', '-Wall'], language : 'cpp')
 compiler = meson.get_compiler('cpp')
 
+root_path = meson.current_source_dir().replace('\\', '\\\\') 
+add_project_arguments('-DROOT_PATH="' + root_path + '"', language: 'cpp')
+
+sfml_include = 'D:/SFML-3.0.1/include'
+
+if get_option('buildtype') == 'debug'
+  sfml_dependencies = declare_dependency(
+  include_directories: include_directories(sfml_include),
+  link_args: [
+    '-LD:/SFML-3.0.1/build/lib/Debug',  # Link directory
+    '-lsfml-main-d',
+    '-lsfml-graphics-d',
+    '-lsfml-window-d',
+    '-lsfml-system-d',
+  ]
+)
+
+elif get_option('buildtype') == 'release'
+  add_project_arguments('-O2', language: 'cpp')
+
+  sfml_dependencies = declare_dependency(
+  include_directories: include_directories(sfml_include),
+  link_args: [
+    '-LD:/SFML-3.0.1/build/lib/Release',  # Link directory
+    '-lsfml-main',
+    '-lsfml-graphics',
+    '-lsfml-window',
+    '-lsfml-system',
+    '-lsfml-network',
+  ]
+)
+endif
 
 sources = [
     'src/Gbacpu.cpp',
@@ -13,7 +45,6 @@ sources = [
     'src/Interrupt/Interrupt.cpp',
     'src/DMA/DMA.cpp',
     'src/Display/disassembler.cpp',
-    'src/Display/Display.cpp',
     'src/Display/MemoryViewer.cpp',
     'src/Display/Palette/RgbaPalette.cpp',
     'src/Display/Rendermodes/RenderMode3.cpp',
@@ -38,20 +69,6 @@ sources = [
     'src/Arm/ARMOpcodes.cpp',
 ]
 
-
-sfml_include = 'D:\c sources\SFML-2.5.1\include'
-
-sfml_dependencies = declare_dependency(
-  include_directories: include_directories(sfml_include),
-  link_args: [
-    '-LD:\Built libraries\sfml_2_5_1\lib\Debug',  # Link directory
-    '-lsfml-graphics-d',
-    '-lsfml-window-d',
-    '-lsfml-system-d',
-  ]
-)
-
 incdir = include_directories('include')
-sfml_inc = include_directories('D:\c sources\SFML-2.5.1\include')
 
-executable('Gba-emulator', sources, include_directories : [incdir, sfml_inc], dependencies: sfml_dependencies)
+executable('Gba-emulator', sources, include_directories : [incdir], dependencies: sfml_dependencies)

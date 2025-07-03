@@ -10,7 +10,7 @@ extern RgbaPalette PaletteColours;
 class PaletteViewer {
 public:
     PaletteViewer() {
-        m_font.loadFromFile("GBA-emulator/arial.ttf");
+        m_font.loadFromFile(ROOT_PATH"\\arial.ttf");
         m_text.setFont(m_font);
         m_text.setCharacterSize(15);
 

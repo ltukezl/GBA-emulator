@@ -1,7 +1,6 @@
 #include <cstdint>
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 #include "Memory/memoryMappedIO.h"
-#include "Display/Display.h"
 #include "Memory/memoryOps.h"
 
 void RgbaPalette::updatePalette() {
@@ -23,7 +22,6 @@ void RgbaPalette::updatePalette() {
 		
 	}
 	paletteram.m_accessedPaletteColour.reset();
-	debugView->VRAMupdated = true;
 	paletteram.clearAccess();
 }
 

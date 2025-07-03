@@ -31,11 +31,8 @@
 #include "Thumb/ThumbOpcodes/UnconditionalBranch.hpp"
 #include <Memory/memoryOps.h>
 
-
 Disassembler::Disassembler()
 {
-	m_font.loadFromFile("GBA-emulator/arial.ttf");
-	m_text.setFont(m_font);
 	m_text.setCharacterSize(15);
 	m_text.setFillColor(sf::Color::White);
 }
@@ -169,6 +166,7 @@ void Disassembler::display_disassembly(const Registers& regs)
 
 void Disassembler::handleEvents()
 {
+	/*
 	sf::Event event;
 	static bool once_g = true;
 	while (m_display->pollEvent(event))
@@ -254,4 +252,5 @@ void Disassembler::handleEvents()
 			}
 		}
 	}
+		*/
 }

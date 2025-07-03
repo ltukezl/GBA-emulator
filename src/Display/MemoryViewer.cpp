@@ -5,8 +5,6 @@
 #include "Memory/memoryOps.h"
 
 MemoryViewer::MemoryViewer() {
-	m_font.loadFromFile("GBA-emulator/arial.ttf");
-	m_text.setFont(m_font);
 	m_text.setCharacterSize(15);
 }
 
@@ -91,6 +89,7 @@ void MemoryViewer::renderMemory() {
 }
 
 void MemoryViewer::handleEvents() {
+	/*
 	sf::Event event;
 	while (m_display->pollEvent(event))
 	{
@@ -156,4 +155,5 @@ void MemoryViewer::handleEvents() {
 
 		}
 	}
+	*/
 }

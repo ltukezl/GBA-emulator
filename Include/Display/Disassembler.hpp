@@ -1,6 +1,7 @@
 #ifndef DISASSEMBLER_H
 #define DISASSEMBLER_H
 
+#include <filesystem>
 #include <cstdint>
 #include <memory>
 #include <SFML/Graphics.hpp>
@@ -23,13 +24,13 @@ private:
     std::string thumb_disassembly(const uint32_t program_counter, const uint16_t opcode);
     std::string read_opcodes(const uint32_t program_counter);
 
-    sf::Font m_font;
-    sf::Text m_text;
+    sf::Font m_font {ROOT_PATH"\\arial.ttf"};
+    sf::Text m_text {m_font};
 
     std::string m_input = "";
     uint32_t m_relative_pc_offset = 0;
 
-    std::unique_ptr<sf::RenderWindow> m_display = std::make_unique<sf::RenderWindow>(sf::VideoMode(1000, 800), "Memory Viewer");
+    std::unique_ptr<sf::RenderWindow> m_display = std::make_unique<sf::RenderWindow>(sf::VideoMode(sf::Vector2u(1000, 800)), "Memory Viewer");
 
     bool m_in_focus = false;
     bool m_step = false;
