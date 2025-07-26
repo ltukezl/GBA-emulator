@@ -18,4 +18,3 @@ void rorNoCond(int& saveTo, int from, int immidiate);
 void ARMExecute(int);
 
 #endif // ARMOPCODES
-

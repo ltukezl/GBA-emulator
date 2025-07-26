@@ -24,6 +24,7 @@ constexpr auto PC = 15;
 extern bool debug;
 
 using finalImagePalettes = std::array<std::array<Tile::BitmapBit, 240>, 160>;
-using finalImageColored = std::array<std::array<RgbaPalette::GBAColor, 240>, 160>;
+using finalImageColored =
+    std::array<std::array<RgbaPalette::GBAColor, 240>, 160>;
 
 #endif

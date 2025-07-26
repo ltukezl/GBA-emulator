@@ -1,16 +1,18 @@
 #pragma once
-#include <SFML/Graphics.hpp>
-#include <memory>
 #include <cstring>
+#include <memory>
+#include <SFML/Graphics.hpp>
 
 #include "Memory/memoryMappedIO.h"
 
 extern RgbaPalette PaletteColours;
 
-class PaletteViewer {
+class PaletteViewer
+{
 public:
-    PaletteViewer() {
-        m_font.loadFromFile(ROOT_PATH"\\arial.ttf");
+    PaletteViewer()
+    {
+        m_font.loadFromFile(ROOT_PATH "\\arial.ttf");
         m_text.setFont(m_font);
         m_text.setCharacterSize(15);
 
@@ -21,7 +23,8 @@ public:
         m_paletteSprite.setScale(16.0, 16.0);
     }
 
-    void renderPalettes() {
+    void renderPalettes()
+    {
         m_display->clear(sf::Color::Black);
         PaletteColours.updatePalette();
         m_paletteTexture.update(PaletteColours.getPalette());
@@ -30,12 +33,13 @@ public:
         m_display->display();
     }
 
-    void handleEvents() {
+    void handleEvents()
+    {
         sf::Event event;
-        while (m_display->pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
+        while (m_display->pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
                 m_display->close();
+            }
         }
     }
 
@@ -44,5 +48,7 @@ private:
     sf::Texture m_paletteTexture;
     sf::Font m_font;
     sf::Text m_text;
-    std::unique_ptr<sf::RenderWindow> m_display = std::make_unique<sf::RenderWindow>(sf::VideoMode(512, 512), "PaletteViewer");
+    std::unique_ptr<sf::RenderWindow> m_display =
+        std::make_unique<sf::RenderWindow>(sf::VideoMode(512, 512),
+                                           "PaletteViewer");
 };

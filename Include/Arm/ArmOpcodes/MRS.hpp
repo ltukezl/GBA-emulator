@@ -20,12 +20,12 @@ public:
 
     struct MRSOpcode
     {
-        uint32_t reserved1 : 12;
-        uint32_t destination : 4;
-        uint32_t reserved2 : 6;
-        PSR source_PSR : 1;
-        uint32_t reserved3 : 5;
-        uint32_t condition : 4;
+        uint32_t reserved1: 12;
+        uint32_t destination: 4;
+        uint32_t reserved2: 6;
+        PSR source_PSR: 1;
+        uint32_t reserved3: 5;
+        uint32_t condition: 4;
     };
 
     static constexpr uint16_t mask(const uint32_t opcode)
@@ -48,7 +48,8 @@ public:
     static constexpr bool isThisOpcode(const uint32_t opcode)
     {
         const auto opcodeStruct = fromOpcode(opcode);
-        return (opcodeStruct.reserved1 == 0) && (opcodeStruct.reserved2 == 0) && (opcodeStruct.reserved3 == 0b00010);
+        return (opcodeStruct.reserved1 == 0) && (opcodeStruct.reserved2 == 0) &&
+            (opcodeStruct.reserved3 == 0b00010);
     }
 
     template<uint32_t iterOpcode>
@@ -57,12 +58,9 @@ public:
         constexpr auto c_op = fromOpcode(iterOpcode);
         const auto op = fromOpcode(opcode);
 
-        if constexpr (c_op.source_PSR == PSR::CPSR)
-        {
+        if constexpr (c_op.source_PSR == PSR::CPSR) {
             regs[op.destination] = regs.m_cpsr.val;
-        }
-        else
-        {
+        } else {
             regs[op.destination] = regs[ESavedStatusRegister];
         }
     }
@@ -72,7 +70,8 @@ public:
         const auto op = fromOpcode(opcode);
         const auto condition = condition_strings[op.condition];
         const auto source_reg = op.source_PSR == PSR::CPSR ? "CPSR" : "SPSR";
-        return std::format("MRS{} R{}, {}", condition, op.destination, source_reg);
+        return std::format("MRS{} R{}, {}", condition, op.destination,
+                           source_reg);
     }
 };
 

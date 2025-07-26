@@ -5,23 +5,29 @@
 
 #include "Memory/memoryMappedIO.h"
 
-class RgbaPalette {
+class RgbaPalette
+{
 
 public:
-    //NOTE: breaks for different endianess
-    union GBAColor {
-        struct {
-            uint32_t r : 8;
-            uint32_t g : 8;
-            uint32_t b : 8;
-            uint32_t a : 8;
+    // NOTE: breaks for different endianess
+    union GBAColor
+    {
+        struct
+        {
+            uint32_t r: 8;
+            uint32_t g: 8;
+            uint32_t b: 8;
+            uint32_t a: 8;
         };
         uint32_t rawColor;
 
         bool operator==(GBAColor& other) { return rawColor == other.rawColor; }
     };
 
-    constexpr RgbaPalette(const union ColorPaletteRam* startAddr) : m_colorStartAddress(startAddr) {}
+    constexpr RgbaPalette(const union ColorPaletteRam* startAddr) :
+        m_colorStartAddress(startAddr)
+    {
+    }
     void updatePalette();
     const uint8_t* getPalette();
     GBAColor colorFromIndex(uint32_t index) const;
@@ -36,9 +42,12 @@ private:
 
     static constexpr uint32_t m_paletteStart = 0x500'0000;
     static constexpr uint32_t m_paletteEnd = 0x5FF'FFFF;
-    
-    union PaletteColorArray {
-        std::array<GBAColor, m_colorsWidth * m_colorsLength> paletteColorArray_linear;
-        std::array<std::array<GBAColor, m_colorsLength>, m_colorsWidth> paletteColorArray_2D;
-    }paletteColorArray = {};
+
+    union PaletteColorArray
+    {
+        std::array<GBAColor, m_colorsWidth * m_colorsLength>
+            paletteColorArray_linear;
+        std::array<std::array<GBAColor, m_colorsLength>, m_colorsWidth>
+            paletteColorArray_2D;
+    } paletteColorArray = {};
 };

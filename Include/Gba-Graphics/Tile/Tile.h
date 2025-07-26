@@ -1,7 +1,7 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include <memory>
-#include <array>
 
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 
@@ -9,18 +9,22 @@ class Tile
 {
 public:
 
-    struct BitmapBit {
+    struct BitmapBit
+    {
         uint16_t palette;
         uint16_t index;
     };
 
-    struct GBATile {
-        union {
+    struct GBATile
+    {
+        union
+        {
             std::array<std::array<BitmapBit, 8>, 8> grid;
             std::array<uint8_t, 8 * 8 * 4> linear;
         };
-        
-        GBATile& flipVertical(bool flip) {
+
+        GBATile& flipVertical(bool flip)
+        {
             if (flip) {
                 GBATile tmp = {};
                 std::copy(linear.begin(), linear.end(), tmp.linear.begin());
@@ -33,7 +37,8 @@ public:
             return *this;
         }
 
-        GBATile& flipHorizontal(bool flip) {
+        GBATile& flipHorizontal(bool flip)
+        {
             if (flip) {
                 GBATile tmp = {};
                 std::copy(linear.begin(), linear.end(), tmp.linear.begin());
@@ -45,7 +50,6 @@ public:
             }
             return *this;
         }
-        
     };
 
     Tile() = default;
@@ -56,4 +60,3 @@ private:
     GBATile _tile = {};
     GBATile _tile8bit = {};
 };
-

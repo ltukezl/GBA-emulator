@@ -1,13 +1,13 @@
 #pragma once
 #include <cstdint>
-#include <vector>
 #include <set>
 #include <tuple>
+#include <vector>
 
 #include "Constants.h"
-#include "Memory/memoryMappedIO.h"
-#include "Gba-Graphics/Tile/Tile.h"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
+#include "Gba-Graphics/Tile/Tile.h"
+#include "Memory/memoryMappedIO.h"
 
 class SpriteGenerator;
 
@@ -17,7 +17,7 @@ private:
 
     uint8_t _index;
     SpriteGenerator& _tileset;
-    
+
     std::vector<Tile> tiles;
 
     void create1DSprite();
@@ -37,22 +37,28 @@ public:
     void update();
     ~Sprite();
     uint8_t* getSpriteTiles();
-    void fillToImg(const RgbaPalette& palette, finalImagePalettes& imageBase, const bool tst);
+    void fillToImg(const RgbaPalette& palette,
+                   finalImagePalettes& imageBase,
+                   const bool tst);
 
-    auto operator<(const Sprite& other) {	
-        if (objr2->priority == other.objr2->priority)
+    auto operator<(const Sprite& other)
+    {
+        if (objr2->priority == other.objr2->priority) {
             return _index < other._index;
+        }
         return objr2->priority < other.objr2->priority;
     }
 
-    auto operator>(const Sprite& other) {
-        if (objr2->priority == other.objr2->priority)
+    auto operator>(const Sprite& other)
+    {
+        if (objr2->priority == other.objr2->priority) {
             return _index > other._index;
+        }
         return objr2->priority > other.objr2->priority;
     }
 
-    auto operator==(const Sprite& other) {
+    auto operator==(const Sprite& other)
+    {
         return objr2->priority == other.objr2->priority;
     }
 };
-

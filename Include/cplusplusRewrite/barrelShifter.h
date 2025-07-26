@@ -7,59 +7,75 @@
 
 class Registers;
 
-enum class Rotation : uint32_t{
-	LSL = 0,
-	LSR = 1,
-	ASR = 2,
-	ROR = 3,
+enum class Rotation : uint32_t
+{
+    LSL = 0,
+    LSR = 1,
+    ASR = 2,
+    ROR = 3,
 };
 
-class ImmediateRotater{
+class ImmediateRotater
+{
 public:
 
-	struct ImmediateRotateBits
-	{
-		uint32_t immediate : 8;
-		uint32_t shift : 4;
-		uint32_t : 0;
-	};
+    struct ImmediateRotateBits
+    {
+        uint32_t immediate: 8;
+        uint32_t shift: 4;
+        uint32_t: 0;
+    };
 
-	static uint32_t calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
-	static std::string disassemble(const uint32_t opcode);
+    static uint32_t
+    calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
+    static std::string disassemble(const uint32_t opcode);
 };
 
-
-class RegisterWithImmediateShifter{
+class RegisterWithImmediateShifter
+{
 public:
-	static constexpr std::array m_shifts {shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift, shifts::Ror::shift};
-	static constexpr std::array m_conditions{ shifts::Lsl::calcConditions, shifts::Lsr::calcConditions, shifts::Asr::calcConditions, shifts::Ror::calcConditions };
+    static constexpr std::array m_shifts{shifts::Lsl::shift, shifts::Lsr::shift,
+                                         shifts::Asr::shift,
+                                         shifts::Ror::shift};
+    static constexpr std::array m_conditions{
+        shifts::Lsl::calcConditions, shifts::Lsr::calcConditions,
+        shifts::Asr::calcConditions, shifts::Ror::calcConditions};
 
-	struct registerRotateFields {
-		uint32_t sourceRegister : 4;
-		uint32_t type : 1;
-		Rotation shiftCode : 2;
-		uint32_t shiftAmount : 5;
-		uint32_t : 0;
-	};
+    struct registerRotateFields
+    {
+        uint32_t sourceRegister: 4;
+        uint32_t type: 1;
+        Rotation shiftCode: 2;
+        uint32_t shiftAmount: 5;
+        uint32_t: 0;
+    };
 
-	static uint32_t calculate(Registers& regs, const uint32_t opcode, bool setStatus);
-	static std::string disassemble(const uint32_t opcode);
+    static uint32_t
+    calculate(Registers& regs, const uint32_t opcode, bool setStatus);
+    static std::string disassemble(const uint32_t opcode);
 };
 
-class RegisterWithRegisterShifter{
+class RegisterWithRegisterShifter
+{
 public:
-	static constexpr std::array<decltype(&shifts::Lsl::shift), 4> m_shifts{ shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift, shifts::Ror::shift };
-	static constexpr std::array<decltype(&shifts::Lsl::calcConditions), 4> m_conditions{ shifts::Lsl::calcConditions, shifts::Lsr::calcConditions, shifts::Asr::calcConditions, shifts::Ror::calcConditions };
+    static constexpr std::array<decltype(&shifts::Lsl::shift), 4> m_shifts{
+        shifts::Lsl::shift, shifts::Lsr::shift, shifts::Asr::shift,
+        shifts::Ror::shift};
+    static constexpr std::array<decltype(&shifts::Lsl::calcConditions), 4>
+        m_conditions{shifts::Lsl::calcConditions, shifts::Lsr::calcConditions,
+                     shifts::Asr::calcConditions, shifts::Ror::calcConditions};
 
-	struct RegisterWithRegisterFields {
-		uint32_t sourceRegister : 4;
-		uint32_t type : 1;
-		Rotation shiftCode : 2;
-		uint32_t unused : 1;
-		uint32_t shiftRegister : 5;
-		uint32_t : 0;
-	};
+    struct RegisterWithRegisterFields
+    {
+        uint32_t sourceRegister: 4;
+        uint32_t type: 1;
+        Rotation shiftCode: 2;
+        uint32_t unused: 1;
+        uint32_t shiftRegister: 5;
+        uint32_t: 0;
+    };
 
-	static uint32_t calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
-	static std::string disassemble(const uint32_t opcode);
+    static uint32_t
+    calculate(Registers& regs, const uint32_t opcode, const bool setStatus);
+    static std::string disassemble(const uint32_t opcode);
 };

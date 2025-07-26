@@ -3,10 +3,11 @@
 
 #include "Memory/MemoryAreas/memoryAreas.h"
 
-
-class TilesetMemoryObserver {
+class TilesetMemoryObserver
+{
 public:
-    void setAccessed(const MemoryAddress address) {
+    void setAccessed(const MemoryAddress address)
+    {
         m_tilesetAccessed[address.address / 32] = true;
     }
 
@@ -20,10 +21,7 @@ public:
         return m_tilesetAccessed[address.address / 32];
     }
 
-    void setAll()
-    {
-        m_tilesetAccessed.set();
-    }
+    void setAll() { m_tilesetAccessed.set(); }
 private:
     std::bitset<64 * 32> m_tilesetAccessed;
 };

@@ -24,8 +24,7 @@ public:
         const auto op = BlockDataTransfer::fromOpcode(opcode);
 
         // bug of empty rlist
-        if (op.rlist == 0)
-        {
+        if (op.rlist == 0) {
             BlockDataTransfer::empty_rlist_bug_ldm(regs, op);
             return;
         }
@@ -39,43 +38,41 @@ public:
         const uint32_t amount_of_transactions = std::popcount(op.rlist);
         uint32_t internal_base_address = regs[op.baseReg];
         internal_base_address += op.baseReg == EProgramCounter ? 4 : 0;
-        const uint32_t final_writeback_address = c_op.addOffset ? internal_base_address + (amount_of_transactions << 2) : internal_base_address - (amount_of_transactions << 2);
+        const uint32_t final_writeback_address = c_op.addOffset
+            ? internal_base_address + (amount_of_transactions << 2)
+            : internal_base_address - (amount_of_transactions << 2);
 
-        // internally decrementing ldm is actually always increasing, but arm calculates the new base address.
-        if constexpr (c_op.addOffset == 0)
-        {
+        // internally decrementing ldm is actually always increasing, but arm
+        // calculates the new base address.
+        if constexpr (c_op.addOffset == 0) {
             internal_base_address -= (amount_of_transactions << 2);
         }
-        
+
         // micro optimization to reduce amount of redundant loops in transfer
         const size_t rlist_first_reg = std::countr_zero(op.rlist);
 
-        if (c_op.loadPSR && !pcInRlist)
-        {
+        if (c_op.loadPSR && !pcInRlist) {
             regs.updateMode(CpuModes_t::EUSR);
-        }
-        else if (c_op.loadPSR && pcInRlist)
-        {
+        } else if (c_op.loadPSR && pcInRlist) {
             regs.m_cpsr.val = regs[ESavedStatusRegister];
         }
 
-        if constexpr (c_op.writeback)
+        if constexpr (c_op.writeback) {
             regs[op.baseReg] = final_writeback_address;
+        }
 
-        if constexpr ((c_op.preIndex ^ c_op.addOffset) == 1)
+        if constexpr ((c_op.preIndex ^ c_op.addOffset) == 1) {
             internal_base_address -= offset;
+        }
 
-        for (size_t i = rlist_first_reg; i < 16; i++)
-        {
-            if (op.rlist & (1 << i))
-            {
+        for (size_t i = rlist_first_reg; i < 16; i++) {
+            if (op.rlist & (1 << i)) {
                 internal_base_address += offset;
                 regs[i] = loadFromAddress32(internal_base_address, false);
             }
         }
 
-        if (c_op.loadPSR && !pcInRlist)
-        {
+        if (c_op.loadPSR && !pcInRlist) {
             regs.updateMode(currentMode);
         }
     }

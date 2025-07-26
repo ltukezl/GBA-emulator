@@ -1,6 +1,6 @@
+#include "Memory/memoryMappedIO.h"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 #include "Gba-Graphics/Tile/Tileset.h"
-#include "Memory/memoryMappedIO.h"
 #include "Memory/memoryOps.h"
 
 union DISPCNT* displayCtrl = (DISPCNT*)&IoRAM[0x0];
@@ -17,8 +17,10 @@ union BGoffset* BG3VOFS = (BGoffset*)&IoRAM[0x1E];
 union KEYCNT* keypadInterruptCtrl = (KEYCNT*)&IoRAM[0x132];
 union KEYINPUT* keyInput = (KEYINPUT*)&IoRAM[0x130];
 
-union InterruptEnableRegister_t* InterruptEnableRegister = (InterruptEnableRegister_t*)&IoRAM[0x200];
-union InterruptFlagRegister_t* InterruptFlagRegister = (InterruptFlagRegister_t*)&IoRAM[0x202];
+union InterruptEnableRegister_t* InterruptEnableRegister =
+    (InterruptEnableRegister_t*)&IoRAM[0x200];
+union InterruptFlagRegister_t* InterruptFlagRegister =
+    (InterruptFlagRegister_t*)&IoRAM[0x202];
 union WAITCNT* waitStateControl = (WAITCNT*)&IoRAM[0x204];
 union InterruptMaster_t* InterruptMaster = (InterruptMaster_t*)&IoRAM[0x208];
 

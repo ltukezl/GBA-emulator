@@ -29,67 +29,67 @@
 template<uint16_t op>
 static consteval auto decode_table()
 {
-	if constexpr (AddSubThumb::isThisOpcode(op))
-		return &(AddSubThumb::execute<AddSubThumb::mask(op)>);
-	else if constexpr (MoveShiftedRegister::isThisOpcode(op))
-		return &(MoveShiftedRegister::execute<MoveShiftedRegister::mask(op)>);
-	else if constexpr (MovCmpAddSubImm::isThisOpcode(op))
-		return &(MovCmpAddSubImm::execute<MovCmpAddSubImm::mask(op)>);
-	else if constexpr (AluOps::isThisOpcode(op))
-		return &(AluOps::execute<AluOps::mask(op)>);
-	else if constexpr (HighRegOps::isThisOpcode(op))
-		return &(HighRegOps::execute<HighRegOps::mask(op)>);
-	else if constexpr (PcRelativeLoad::isThisOpcode(op))
-		return &(PcRelativeLoad::execute);
-	else if constexpr (PopRegisters::isThisOpcode(op))
-		return &(PopRegisters::execute);
-	else if constexpr (PushRegisters::isThisOpcode(op))
-		return &(PushRegisters::execute);
-	else if constexpr (LoadStoreReg::isThisOpcode(op))
-		return &(LoadStoreReg::execute<LoadStoreReg::mask(op)>);
-	else if constexpr (LoadStoreImm::isThisOpcode(op))
-		return &(LoadStoreImm::execute<LoadStoreImm::mask(op)>);
-	else if constexpr (SpRelativeOps::isThisOpcode(op))
-		return &(SpRelativeOps::execute<SpRelativeOps::mask(op)>);
-	else if constexpr (AddToSp::isThisOpcode(op))
-		return &(AddToSp::execute<AddToSp::mask(op)>);
-	else if constexpr (LoadStoreHalfword::isThisOpcode(op))
-		return &(LoadStoreHalfword::execute<LoadStoreHalfword::mask(op)>);
-	else if constexpr (LoadStoreSignExtend::isThisOpcode(op))
-		return &(LoadStoreSignExtend::execute<LoadStoreSignExtend::mask(op)>);
-	else if constexpr (LoadAddress::isThisOpcode(op))
-		return &(LoadAddress::execute<LoadAddress::mask(op)>);
-	else if constexpr (MultipleLoad::isThisOpcode(op))
-		return &(MultipleLoad::execute);
-	else if constexpr (MultipleStore::isThisOpcode(op))
-		return &(MultipleStore::execute);
-	else if constexpr (Swi::isThisOpcode_thumb(op))
-		return &(Swi::execute);
-	else if constexpr (UnconditionalBranch::isThisOpcode(op))
-		return &(UnconditionalBranch::execute);
-	else if constexpr (ConditionalBranch::isThisOpcode(op))
-		return &(ConditionalBranch::execute<ConditionalBranch::mask(op)>);
-	else if constexpr (BranchLink::isThisOpcode(op))
-		return &(BranchLink::execute<BranchLink::mask(op)>);
-	else
-		return &(AluOps::execute<AluOps::mask(op)>);
+    if constexpr (AddSubThumb::isThisOpcode(op)) {
+        return &(AddSubThumb::execute<AddSubThumb::mask(op)>);
+    } else if constexpr (MoveShiftedRegister::isThisOpcode(op)) {
+        return &(MoveShiftedRegister::execute<MoveShiftedRegister::mask(op)>);
+    } else if constexpr (MovCmpAddSubImm::isThisOpcode(op)) {
+        return &(MovCmpAddSubImm::execute<MovCmpAddSubImm::mask(op)>);
+    } else if constexpr (AluOps::isThisOpcode(op)) {
+        return &(AluOps::execute<AluOps::mask(op)>);
+    } else if constexpr (HighRegOps::isThisOpcode(op)) {
+        return &(HighRegOps::execute<HighRegOps::mask(op)>);
+    } else if constexpr (PcRelativeLoad::isThisOpcode(op)) {
+        return &(PcRelativeLoad::execute);
+    } else if constexpr (PopRegisters::isThisOpcode(op)) {
+        return &(PopRegisters::execute);
+    } else if constexpr (PushRegisters::isThisOpcode(op)) {
+        return &(PushRegisters::execute);
+    } else if constexpr (LoadStoreReg::isThisOpcode(op)) {
+        return &(LoadStoreReg::execute<LoadStoreReg::mask(op)>);
+    } else if constexpr (LoadStoreImm::isThisOpcode(op)) {
+        return &(LoadStoreImm::execute<LoadStoreImm::mask(op)>);
+    } else if constexpr (SpRelativeOps::isThisOpcode(op)) {
+        return &(SpRelativeOps::execute<SpRelativeOps::mask(op)>);
+    } else if constexpr (AddToSp::isThisOpcode(op)) {
+        return &(AddToSp::execute<AddToSp::mask(op)>);
+    } else if constexpr (LoadStoreHalfword::isThisOpcode(op)) {
+        return &(LoadStoreHalfword::execute<LoadStoreHalfword::mask(op)>);
+    } else if constexpr (LoadStoreSignExtend::isThisOpcode(op)) {
+        return &(LoadStoreSignExtend::execute<LoadStoreSignExtend::mask(op)>);
+    } else if constexpr (LoadAddress::isThisOpcode(op)) {
+        return &(LoadAddress::execute<LoadAddress::mask(op)>);
+    } else if constexpr (MultipleLoad::isThisOpcode(op)) {
+        return &(MultipleLoad::execute);
+    } else if constexpr (MultipleStore::isThisOpcode(op)) {
+        return &(MultipleStore::execute);
+    } else if constexpr (Swi::isThisOpcode_thumb(op)) {
+        return &(Swi::execute);
+    } else if constexpr (UnconditionalBranch::isThisOpcode(op)) {
+        return &(UnconditionalBranch::execute);
+    } else if constexpr (ConditionalBranch::isThisOpcode(op)) {
+        return &(ConditionalBranch::execute<ConditionalBranch::mask(op)>);
+    } else if constexpr (BranchLink::isThisOpcode(op)) {
+        return &(BranchLink::execute<BranchLink::mask(op)>);
+    } else {
+        return &(AluOps::execute<AluOps::mask(op)>);
+    }
 }
 
 template<typename T, std::size_t... Opcodes>
 static consteval auto insert_to_table(T& arr, std::index_sequence<Opcodes...>)
 {
-	((arr[Opcodes] = decode_table<static_cast<uint16_t>(Opcodes) << 6 >()), ...);
+    (arr[Opcodes] = decode_table<static_cast<uint16_t>(Opcodes) << 6 >(), ...);
 }
 
-static constexpr std::array thumb_dispatch = { []() consteval
- {
-	std::array <decltype(&AddSubThumb::execute<0>), 1024> tmp {};
-	insert_to_table(tmp, std::make_index_sequence<tmp.size()>{});
-	return tmp;
-}() };
+static constexpr std::array thumb_dispatch = {[]() consteval {
+    std::array<decltype(&AddSubThumb::execute<0>), 1024> tmp{};
+    insert_to_table(tmp, std::make_index_sequence<tmp.size()>{});
+    return tmp;
+}()};
 
-void thumbExecute(const uint16_t opcode){
-	cycles += 1;
-	thumb_dispatch[opcode >> 6](r, opcode);
+void thumbExecute(const uint16_t opcode)
+{
+    cycles += 1;
+    thumb_dispatch[opcode >> 6](r, opcode);
 }
-

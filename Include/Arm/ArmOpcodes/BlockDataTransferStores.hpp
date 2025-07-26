@@ -21,13 +21,12 @@ public:
     template<uint32_t iterOpcode>
     static void execute(Registers& regs, const uint32_t opcode)
     {
-        //op code preample
+        // op code preample
         constexpr auto c_op = BlockDataTransfer::fromOpcode(iterOpcode);
         const auto op = BlockDataTransfer::fromOpcode(opcode);
 
         // bug of empty rlist
-        if (op.rlist == 0)
-        {
+        if (op.rlist == 0) {
             BlockDataTransfer::empty_rlist_bug_stm(regs, op);
             return;
         }
@@ -45,17 +44,18 @@ public:
         const size_t rlist_first_reg = std::countr_zero(op.rlist);
 
         const uint32_t transfers = std::popcount(op.rlist);
-        const uint32_t savedAddr = c_op.addOffset ? writebackAddress + (transfers << 2) : writebackAddress - (transfers << 2);
-        if constexpr (c_op.addOffset == 0)
-        {
+        const uint32_t savedAddr = c_op.addOffset
+            ? writebackAddress + (transfers << 2)
+            : writebackAddress - (transfers << 2);
+        if constexpr (c_op.addOffset == 0) {
             writebackAddress -= (transfers << 2);
         }
 
-        if constexpr ((c_op.preIndex ^ c_op.addOffset) == 1)
+        if constexpr ((c_op.preIndex ^ c_op.addOffset) == 1) {
             writebackAddress -= offset;
+        }
 
-        if constexpr (c_op.loadPSR)
-        {
+        if constexpr (c_op.loadPSR) {
             regs.updateMode(CpuModes_t::EUSR);
         }
 
@@ -66,25 +66,24 @@ public:
         // re adjust ppc back in here
         regs[EProgramCounter] += 8;
 
-        if constexpr (c_op.writeback)
+        if constexpr (c_op.writeback) {
             regs[op.baseReg] = savedAddr;
+        }
 
-        for (size_t i = rlist_first_reg + 1; i < 16; i++)
-        {
-            if (op.rlist & (1 << i))
-            {
+        for (size_t i = rlist_first_reg + 1; i < 16; i++) {
+            if (op.rlist & (1 << i)) {
                 writebackAddress += offset;
                 writeToAddress32(writebackAddress, regs[i]);
             }
         }
 
-        if (c_op.writeback && op.baseReg == EProgramCounter)
+        if (c_op.writeback && op.baseReg == EProgramCounter) {
             regs[op.baseReg] += 8;
+        }
 
         regs[EProgramCounter] -= 8;
 
-        if constexpr (c_op.loadPSR)
-        {
+        if constexpr (c_op.loadPSR) {
             regs.updateMode(currentMode);
         }
     }

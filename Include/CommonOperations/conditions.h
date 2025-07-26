@@ -19,7 +19,7 @@ int BGT();
 int BLE();
 int noCond();
 
-extern int(*conditions[15])();
+extern int (*conditions[15])();
 extern std::string conditions_s[15];
 
 #endif

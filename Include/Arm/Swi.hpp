@@ -12,15 +12,16 @@ class Swi
 public:
     struct SwiOpcode_thumb
     {
-        uint16_t unused : 8;
-        uint16_t reserved : 8;
+        uint16_t unused: 8;
+        uint16_t reserved: 8;
     };
 
     static constexpr SwiOpcode_thumb fromOpcode_thumb(const uint16_t opcode)
     {
         return {
-            .unused = static_cast<uint16_t>(opcode & 0xFF),             // bits 0�10
-            .reserved = static_cast<uint16_t>((opcode >> 8) & 0xFF)    // bits 12�15
+            .unused = static_cast<uint16_t>(opcode & 0xFF), // bits 0�10
+            .reserved =
+                static_cast<uint16_t>((opcode >> 8) & 0xFF) // bits 12�15
         };
     }
 
@@ -36,7 +37,7 @@ public:
         regs.updateMode(CpuModes_t::ESUPER);
         regs[ELinkRegisterLR] = regs[EProgramCounter];
         regs[ESavedStatusRegister] = prev;
-        //svc mode
+        // svc mode
         regs.m_cpsr.IRQDisable = 1;
         regs.m_cpsr.thumb = 0;
         regs.m_cpsr.mode = CpuModes_t::ESUPER;
@@ -44,10 +45,7 @@ public:
         regs[TRegisters::EProgramCounter] = 0x8;
     }
 
-    static auto disassemble(const uint16_t opcode)
-    {
-        return "SWI";
-    }
+    static auto disassemble(const uint16_t opcode) { return "SWI"; }
 };
 
 #endif

@@ -1,4 +1,4 @@
-project('Gba-emulator', 'cpp', default_options : ['cpp_std=c++23', 'warning_level =1'])
+project('Gba-emulator', 'cpp', default_options : ['cpp_std=c++latest', 'warning_level=1'])
 
 add_project_arguments(['-fbracket-depth=3072'], language : 'cpp')
 compiler = meson.get_compiler('cpp')

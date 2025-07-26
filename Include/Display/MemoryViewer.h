@@ -1,8 +1,8 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <memory>
 #include <cstring>
+#include <memory>
+#include <SFML/Graphics.hpp>
 
 class MemoryViewer
 {
@@ -16,9 +16,11 @@ private:
 
     void createColumnsHeader();
 
-    sf::Font m_font {ROOT_PATH"\\arial.ttf"};
-    sf::Text m_text {m_font};
-    std::unique_ptr<sf::RenderWindow> m_display = std::make_unique<sf::RenderWindow>(sf::VideoMode(sf::Vector2u(1000, 800)), "Memory Viewer");
+    sf::Font m_font{ROOT_PATH "\\arial.ttf"};
+    sf::Text m_text{m_font};
+    std::unique_ptr<sf::RenderWindow> m_display =
+        std::make_unique<sf::RenderWindow>(
+            sf::VideoMode(sf::Vector2u(1000, 800)), "Memory Viewer");
     uint32_t m_memAddressStartOffset = 0;
     uint32_t m_selectIndex = 0;
     std::string m_input = "";

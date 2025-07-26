@@ -1,16 +1,16 @@
 #pragma once
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 #include <vector>
 
 #include "Memory/MemoryAreas/BIOS.h"
 #include "Memory/MemoryAreas/EWRAM.h"
 #include "Memory/MemoryAreas/IWRAM.h"
-#include "Memory/MemoryAreas/PaletteRAM.h"
-#include "Memory/MemoryAreas/VRAM.h"
 #include "Memory/MemoryAreas/OAMRAM.h"
+#include "Memory/MemoryAreas/PaletteRAM.h"
 #include "Memory/MemoryAreas/SRAM.h"
+#include "Memory/MemoryAreas/VRAM.h"
 
 extern BIOS systemROM;
 extern ExternalWorkRAM ewram;
@@ -25,7 +25,10 @@ extern std::array<unsigned char*, 16> memoryLayout;
 
 // create memory for the different memory areas
 
-void DmaIncreasing(uint32_t dmaNumber, MemoryAddress destination, MemoryAddress source, uint32_t size);
+void DmaIncreasing(uint32_t dmaNumber,
+                   MemoryAddress destination,
+                   MemoryAddress source,
+                   uint32_t size);
 
 void rawWrite16(uint8_t* arr, uint32_t addr, uint16_t val);
 void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val);
