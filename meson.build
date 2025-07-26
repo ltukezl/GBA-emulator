@@ -1,6 +1,6 @@
-project('Gba-emulator', 'cpp', default_options : ['-std=c++23'])
+project('Gba-emulator', 'cpp', default_options : ['cpp_std=c++23', 'warning_level =1'])
 
-add_project_arguments(['-fbracket-depth=3072', '-Wall'], language : 'cpp')
+add_project_arguments(['-fbracket-depth=3072'], language : 'cpp')
 compiler = meson.get_compiler('cpp')
 
 root_path = meson.current_source_dir().replace('\\', '\\\\') 
@@ -21,8 +21,6 @@ if get_option('buildtype') == 'debug'
 )
 
 elif get_option('buildtype') == 'release'
-  add_project_arguments('-O2', language: 'cpp')
-
   sfml_dependencies = declare_dependency(
   include_directories: include_directories(sfml_include),
   link_args: [
