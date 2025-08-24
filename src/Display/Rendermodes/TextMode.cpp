@@ -11,6 +11,7 @@ extern RgbaPalette PaletteColours;
 
 void TextMode::draw(uint8_t regOffset)
 {
+    /*
     BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
     uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
     const uint32_t tileStartRow =
@@ -88,10 +89,12 @@ void TextMode::draw(uint8_t regOffset)
             }
         }
     }
+    */
 }
 
 void TextMode::fillImage(finalImagePalettes& imageBase, const uint32_t offset)
 {
+    /*
     BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + offset];
     uint8_t sizeX = bgCnt->hWide ? 64 : 32;
     uint8_t sizeY = bgCnt->vWide ? 64 : 32;
@@ -109,10 +112,12 @@ void TextMode::fillImage(finalImagePalettes& imageBase, const uint32_t offset)
             imageBase[k][i] = clr;
         }
     }
+    */
 }
 
 uint32_t* TextMode::getBG()
 {
+    /*
     for (size_t pixelY = 0; pixelY < 64 * 8; pixelY++) {
         for (size_t pixelX = 0; pixelX < 64 * 8; pixelX++) {
             auto t = background[pixelY][pixelX];
@@ -121,4 +126,5 @@ uint32_t* TextMode::getBG()
         }
     }
     return (uint32_t*)backgroundColored;
+    */
 }

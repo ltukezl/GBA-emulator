@@ -23,5 +23,5 @@ public:
     getTile(const uint32_t index, const uint8_t palette, const bool is8Bit);
 private:
 
-    uint32_t fullTileset[64 * 8][32 * 8] = {};
+    // uint32_t fullTileset[64 * 8][32 * 8] = {};
 };

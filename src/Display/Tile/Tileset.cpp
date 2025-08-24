@@ -6,6 +6,7 @@ extern RgbaPalette PaletteColours;
 
 void Tileset::update()
 {
+    /*
     uint32_t startAddr = 0;
     for (size_t tileY = 0; tileY < 64; tileY++) {
         for (size_t tileX = 0; tileX < 32; tileX++) {
@@ -19,10 +20,12 @@ void Tileset::update()
             startAddr += 32;
         }
     }
+    */
 }
 
 uint8_t* Tileset::getTileset(bool is8bit)
 {
+    /*
     uint32_t startAddr = 0;
     for (size_t tileY = 0; tileY < 64; tileY++) {
         for (size_t tileX = 0; tileX < 32; tileX++) {
@@ -46,6 +49,7 @@ uint8_t* Tileset::getTileset(bool is8bit)
         }
     }
     return (uint8_t*)fullTileset;
+    */
 }
 
 Tile::GBATile Tileset::getTile(const uint8_t y,
@@ -53,11 +57,11 @@ Tile::GBATile Tileset::getTile(const uint8_t y,
                                const uint8_t palette,
                                const bool is8Bit)
 {
-    return tileset.grid[y][x].getTile(is8Bit, palette);
+    // return tileset.grid[y][x].getTile(is8Bit, palette);
 }
 
 Tile::GBATile
 Tileset::getTile(const uint32_t index, const uint8_t palette, const bool is8Bit)
 {
-    return tileset.linear[index].getTile(is8Bit, palette);
+    // return tileset.linear[index].getTile(is8Bit, palette);
 }

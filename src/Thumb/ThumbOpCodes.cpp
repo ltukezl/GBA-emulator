@@ -79,7 +79,8 @@ static consteval auto decode_table()
 template<typename T, std::size_t... Opcodes>
 static consteval auto insert_to_table(T& arr, std::index_sequence<Opcodes...>)
 {
-    (arr[Opcodes] = decode_table<static_cast<uint16_t>(Opcodes) << 6 >(), ...);
+    ((arr[Opcodes] = decode_table<static_cast<uint16_t>(Opcodes) << 6 >()),
+     ...);
 }
 
 static constexpr std::array thumb_dispatch = {[]() consteval {

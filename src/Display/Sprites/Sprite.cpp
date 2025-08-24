@@ -13,6 +13,7 @@ constexpr std::pair<uint8_t, uint8_t> shapes[3][4] = {
 
 uint8_t* Sprite::getSpriteTiles()
 {
+    /*
     uint16_t tilenum = 0;
 
     for (auto& tile: tiles) {
@@ -52,12 +53,14 @@ uint8_t* Sprite::getSpriteTiles()
     }
 
     return (uint8_t*)pixels;
+    */
 }
 
 void Sprite::fillToImg(const RgbaPalette& palette,
                        finalImagePalettes& imageBase,
                        const bool isRender3or4)
 {
+    /*
     if (objr1->isDoubleOrNoDisplay) {
         return;
     }
@@ -89,10 +92,12 @@ void Sprite::fillToImg(const RgbaPalette& palette,
             }
         }
     }
+        */
 }
 
 void Sprite::create1DSprite()
 {
+    /*
     uint16_t size = (sizeX / 8) * (sizeY / 8);
     uint16_t startTile = objr2->tileNumber;
     for (uint16_t i = 0; i < size; i++) {
@@ -100,10 +105,12 @@ void Sprite::create1DSprite()
                                            [(startTile % 1024) % 32]);
         startTile++;
     }
+        */
 }
 
 void Sprite::create2DSprite()
 {
+    /*
     uint16_t startTile = objr2->tileNumber;
 
     for (uint8_t y = 0; y < sizeY / 8; y++) {
@@ -116,10 +123,12 @@ void Sprite::create2DSprite()
         }
         startTile += 32;
     }
+        */
 }
 
 void Sprite::update()
 {
+    /*
     tiles.clear();
     auto dimensions = shapes[objr1->shape][objr1->size];
     sizeX = dimensions.first;
@@ -130,11 +139,13 @@ void Sprite::update()
     } else {
         create2DSprite();
     }
+        */
 }
 
 Sprite::Sprite(SpriteGenerator& tileset, uint32_t address) :
     _index(address / 8), _tileset(tileset)
 {
+    /*
     objr1 = (ObjReg1*)&(memoryLayout[EOAM][address + 0]);
     objr2 = (ObjReg2*)&(memoryLayout[EOAM][address + 4]);
     auto dimensions = shapes[objr1->shape][objr1->size];
@@ -145,10 +156,13 @@ Sprite::Sprite(SpriteGenerator& tileset, uint32_t address) :
     tmpBuffer = (Tile::BitmapBit*)new Tile::BitmapBit[8 * 8 * 32 * 32];
 
     memset(pixels, 0, sizeof(Tile::BitmapBit) * 8 * 8 * 32 * 32);
+    */
 }
 
 Sprite::~Sprite()
 {
+    /*
     delete pixels;
     delete tmpBuffer;
+    */
 }

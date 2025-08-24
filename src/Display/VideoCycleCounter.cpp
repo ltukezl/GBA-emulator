@@ -1,20 +1,29 @@
 #include <cstdint>
 
-class VideoCycleCounter
+#include "Display/GameDisplay.hpp"
+#include "Display/VideoCycleCounter.hpp"
+#include "Memory/memoryMappedIO.h"
+#include "Memory/memoryOps.h"
+
+static inline void updateLYC(uint8_t& LYC)
 {
-public:
-    void increment()
-    {
-        counter++;
-        // LCDStatus->hblankFlag = counter > 960;
-        if (counter == 1232) {
-            counter = 0;
-            //  memoryLayout[4][6]++;
-            // if (memoryLayout[4][6] == 228)
-            // 	memoryLayout[4][6] = 0;
-        }
-        // LCDStatus->hblankFlag = counter > 960;
+    LYC++;
+    LCDStatus->vCounter = (LCDStatus->LYC == LYC);
+    InterruptFlagRegister->vCounter = LCDStatus->VcounterIRQEn &&
+        InterruptEnableRegister->vCounter && LCDStatus->vCounter;
+    if (LYC == 228) {
+        LYC = 0;
     }
-private:
-    uint16_t counter = 0;
-};
+}
+
+void VideoCycleCounter::increment(GameDisplay& disp)
+{
+    auto& LYC = memoryLayout[4][6];
+    m_counter++;
+    if (m_counter == 1232) {
+        m_counter = 0;
+        updateLYC(LYC);
+        disp.drawLine(LYC);
+    }
+    LCDStatus->hblankFlag = m_counter >= 960;
+}

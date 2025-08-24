@@ -8,16 +8,9 @@ class RenderMode3
 {
 private:
     static constexpr uint32_t _scalar = 255 / 31;
-    struct BGPixels
-    {
-        RgbaPalette::GBAColor grid[512][512]; // consider of changing to 160x240
-    };
-    BGPixels* background = nullptr;
-
+    finalImageColored& m_finalBg;
 
 public:
-    RenderMode3();
-    void draw();
-    uint32_t* getBG();
-    void fillToDisplay(finalImageColored& imageBG);
+    RenderMode3(finalImageColored& imageBG) : m_finalBg{imageBG} {}
+    static void draw(finalImageColored& img, const uint32_t line);
 };

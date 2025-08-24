@@ -7,20 +7,25 @@ extern RgbaPalette PaletteColours;
 
 SpriteGenerator::SpriteGenerator()
 {
+    /*
     allSprites.reserve(127);
     for (uint8_t i = 0; i < 127; i++) {
         auto s = new Sprite(*this, i * 8);
         allSprites.push_back(s);
     }
+        */
 }
 
 void SpriteGenerator::updateSpritePriorities()
 {
+    /*
     std::sort(std::begin(allSprites), std::end(allSprites));
+    */
 }
 
 void SpriteGenerator::update()
 {
+    /*
     // for (auto& vec : spritesPrioQueue) {
     // vec.clear();
     //}
@@ -58,4 +63,5 @@ uint8_t* SpriteGenerator::getTileset(bool is8bit)
         }
     }
     return (uint8_t*)manyTiles;
+    */
 }

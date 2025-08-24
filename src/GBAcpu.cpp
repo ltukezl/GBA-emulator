@@ -1,7 +1,3 @@
-#include "Arm/armopcodes.h"
-#include "Constants.h"
-#include "cplusplusRewrite/HwRegisters.h"
-#include "Memory/memoryMappedIO.h"
 #include <array>
 #include <cstdint>
 #include <Display/Disassembler.hpp>
@@ -18,6 +14,15 @@
 #include <Thumb/ThumbOpCodes.h>
 #include <Timer/timers.h>
 #include <vector>
+
+#include "Arm/armopcodes.h"
+#include "Constants.h"
+#include "cplusplusRewrite/HwRegisters.h"
+#include "Display/BGViewer.hpp"
+#include "Display/GameDisplay.hpp"
+#include "Display/VideoCycleCounter.hpp"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
+#include "Memory/memoryMappedIO.h"
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
@@ -53,6 +58,11 @@ uint8_t firstAccessCycles[4] = {1, 1, 1, 1};
 uint8_t WS0Second[2] = {1, 1};
 uint8_t WS1Second[2] = {1, 1};
 uint8_t WS2Second[2] = {1, 1};
+
+VideoCycleCounter g_videoCycleCounter;
+BGViewer g_bgViewer;
+
+extern RgbaPalette PaletteColours;
 
 static void readFile(const std::string& fileName,
                      std::vector<unsigned char>& input)
@@ -110,7 +120,7 @@ int main(int argc, char* args[])
     PaletteViewer paletteViewer;
 #endif
 
-    // Display gameDisplay(240, 160, "game");
+    GameDisplay gameDisplay;
 
 #if BIOS_START
     r.updateMode(CpuModes_t::ESYS);
@@ -151,12 +161,12 @@ int main(int argc, char* args[])
 
     ////const std::string game = ROOT_PATH"/TestBinaries/FuzzARM.gba";
     // const std::string game = ROOT_PATH"/TestBinaries/arm.gba";
-    const std::string game =
-        ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
+    // const std::string game =
+    //    ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
     // const std::string game = ROOT_PATH"/TestBinaries/thumb.gba";
-    // const std::string game = ROOT_PATH"/TestBinaries/program6.bin";
+    const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
     // const std::string game = ROOT_PATH"/TestBinaries/tonc/bigmap.gba";
-    // const std::string game = ROOT_PATH"/TestBinaries/tonc/obj_demo.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/tonc/m3_demo.gba";
     // const std::string game = ROOT_PATH"/TestBinaries/tonc/irq_demo.gba";
 
     readFile(game, GamePak);
@@ -187,22 +197,7 @@ int main(int argc, char* args[])
 
         cycles = 1;
 
-        vCounterDrawCycles += cycles;
-
-        if (vCounterDrawCycles >= 1232) {
-            memoryLayout[4][6]++;
-            vCounterDrawCycles -= 1232;
-
-            if (LCDStatus->LYC == memoryLayout[4][6] &&
-                LCDStatus->VcounterIRQEn && InterruptEnableRegister->vCounter) {
-                InterruptFlagRegister->vCounter = 1;
-                LCDStatus->vCounter = 1;
-            }
-
-            if (memoryLayout[4][6] > 227) {
-                memoryLayout[4][6] = 0;
-            }
-        }
+        g_videoCycleCounter.increment(gameDisplay);
 
         hBlankCounter += cycles;
         if (hBlankCounter >= 1232 && !LCDStatus->vblankFlag) {
@@ -233,6 +228,9 @@ int main(int argc, char* args[])
             paletteViewer.handleEvents();
             paletteViewer.renderPalettes();
 #endif
+            PaletteColours.updatePalette();
+            gameDisplay.draw();
+            g_bgViewer.draw();
         } else if (vBlankCounter > 197120) {
             LCDStatus->vblankFlag = 1;
         }

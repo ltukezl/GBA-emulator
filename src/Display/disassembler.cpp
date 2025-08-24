@@ -1,5 +1,5 @@
 #include <cstdint>
-#include <iostream>
+#include <print>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -148,7 +148,7 @@ void Disassembler::display_disassembly(const Registers& regs)
     }
     m_step = false;
 }
-#include <print>
+
 void Disassembler::handleEvents()
 {
     const auto onClose = [this](const sf::Event::Closed&) {

@@ -480,7 +480,7 @@ static consteval auto index_to_opcode(const uint32_t opcode)
 template<typename T, std::size_t... Is>
 consteval void insert_opcodes(T& arr, std::index_sequence<Is...>)
 {
-    (arr[Is] = decode_arm_opcode<index_to_opcode(Is)>(), ...);
+    ((arr[Is] = decode_arm_opcode<index_to_opcode(Is)>()), ...);
 }
 
 static constexpr std::array m_dispatch_table = {[]() consteval {

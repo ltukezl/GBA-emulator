@@ -30,8 +30,8 @@ public:
     }
     void updatePalette();
     const uint8_t* getPalette();
-    GBAColor colorFromIndex(uint32_t index) const;
-    GBAColor colorFromIndex(uint32_t y, uint32_t x) const;
+    GBAColor colorFromIndex(const uint32_t index) const;
+    GBAColor colorFromIndex(const uint32_t y, const uint32_t x) const;
 
 private:
     static constexpr uint32_t _scalar = 255 / 31;
