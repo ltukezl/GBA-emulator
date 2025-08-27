@@ -37,27 +37,16 @@ auto benchmark(Func&& func, Args&&... args)
 
 void BGViewer::draw()
 {
-    using namespace std::chrono;
 
-    auto start = high_resolution_clock::now();
     auto addr = 0;
-    for (size_t i = 0; i < 32; i++) {
-        for (size_t k = 0; k < 32; k++) {
-            const auto& t =
-                m_tileset.tileset.grid[i][k].create(addr, 0, 0, 0, 0);
-            addr += 32;
+
+    const auto& t = m_tileset.tileset.grid[0][0].create(0x4400, 0, 0, 0, 0);
+
+    for (size_t i = 0; i < 8; i++) {
+        for (size_t k = 0; k < 8; k++) {
+            (*m_pixels)[i][k] = t.grid[i][k];
         }
     }
-    auto end = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(end - start).count();
-
-    std::cout << "Execution time: " << duration << " us" << std::endl;
-
-    // for (size_t i = 0; i < 8; i++) {
-    //     for (size_t k = 0; k < 8; k++) {
-    //         (*m_pixels)[i][k] = t.grid[i][k];
-    //     }
-    // }
 
     m_bg0.update(reinterpret_cast<const uint8_t*>(m_pixels->data()));
 

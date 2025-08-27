@@ -13,31 +13,15 @@ const Tile::GBATile& Tile::create(const uint32_t addr,
                                   const bool flipH,
                                   const bool is8bit)
 {
-    uint32_t startAddr = 0;
-
     if (flipV == false && flipH == false) {
-        /*
-        for (size_t y = 0; y < 8; y++) {
-            uint32_t row = rawLoad32(vram.getMemoryPtr(), startAddr + addr);
-
-            for (size_t pixel = 0; pixel < 8; pixel++) {
-                const uint16_t color = (row & 0xf);
-                m_tile.grid[y][pixel] =
-                    PaletteColours.colorFromIndex(paletteNum, color);
-                row >>= 4;
-            }
-            startAddr += 4;
-        }
-            */
-        m_regular = true;
-        auto tmp = _mm256_loadu_si256(
+        const auto tmp = _mm256_loadu_si256(
             reinterpret_cast<__m256i*>(vram.getMemoryPtr() + addr));
-        auto rot = _mm256_srli_epi64(tmp, 4);
-        auto idx = _mm256_unpacklo_epi8(tmp, rot);
-        auto idx2 = _mm256_unpackhi_epi8(tmp, rot);
-        auto mask = _mm256_set1_epi8(0x0f);
-        auto masked = _mm256_and_si256(idx, mask);
-        auto masked2 = _mm256_and_si256(idx2, mask);
+        const auto rot = _mm256_srli_epi64(tmp, 4);
+        const auto idx = _mm256_unpacklo_epi8(tmp, rot);
+        const auto idx2 = _mm256_unpackhi_epi8(tmp, rot);
+        const auto mask = _mm256_set1_epi8(0x0f);
+        const auto masked = _mm256_and_si256(idx, mask);
+        const auto masked2 = _mm256_and_si256(idx2, mask);
 
         alignas(32) uint8_t out[64];
         _mm256_store_si256(reinterpret_cast<__m256i*>(out), masked);
@@ -59,6 +43,9 @@ const Tile::GBATile& Tile::create(const uint32_t addr,
             m_tile.linear[i + 48] =
                 PaletteColours.colorFromIndex(paletteNum, out[px++]);
         }
+
+        m_regular = true;
+
         return m_tile;
     }
     return m_tile;
