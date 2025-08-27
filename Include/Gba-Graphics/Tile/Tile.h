@@ -19,7 +19,7 @@ public:
         union
         {
             std::array<std::array<RgbaPalette::GBAColor, 8>, 8> grid;
-            std::array<uint8_t, 8 * 8 * 4> linear;
+            std::array<RgbaPalette::GBAColor, 8 * 8> linear;
         };
     };
 

@@ -1,3 +1,4 @@
+#include <immintrin.h>
 #include <iostream>
 
 #include "Gba-Graphics/Tile/Tile.h"
@@ -13,12 +14,11 @@ const Tile::GBATile& Tile::create(const uint32_t addr,
                                   const bool is8bit)
 {
     uint32_t startAddr = 0;
-    std::array<uint8_t, 32 * 32 * 2> local;
-    std::copy(vram.getMemoryPtr() + addr, vram.getMemoryPtr() + addr + 32,
-              local.begin());
+
     if (flipV == false && flipH == false) {
+        /*
         for (size_t y = 0; y < 8; y++) {
-            uint32_t row = rawLoad32(local.data(), startAddr);
+            uint32_t row = rawLoad32(vram.getMemoryPtr(), startAddr + addr);
 
             for (size_t pixel = 0; pixel < 8; pixel++) {
                 const uint16_t color = (row & 0xf);
@@ -28,10 +28,40 @@ const Tile::GBATile& Tile::create(const uint32_t addr,
             }
             startAddr += 4;
         }
+            */
         m_regular = true;
+        auto tmp = _mm256_loadu_si256(
+            reinterpret_cast<__m256i*>(vram.getMemoryPtr() + addr));
+        auto rot = _mm256_srli_epi64(tmp, 4);
+        auto idx = _mm256_unpacklo_epi8(tmp, rot);
+        auto idx2 = _mm256_unpackhi_epi8(tmp, rot);
+        auto mask = _mm256_set1_epi8(0x0f);
+        auto masked = _mm256_and_si256(idx, mask);
+        auto masked2 = _mm256_and_si256(idx2, mask);
+
+        alignas(32) uint8_t out[64];
+        _mm256_store_si256(reinterpret_cast<__m256i*>(out), masked);
+        _mm256_store_si256(reinterpret_cast<__m256i*>(out + 32), masked2);
+        uint8_t px = 0;
+        for (size_t i = 0; i < 16; i++) {
+            m_tile.linear[i] =
+                PaletteColours.colorFromIndex(paletteNum, out[px++]);
+        }
+        for (size_t i = 0; i < 16; i++) {
+            m_tile.linear[i + 32] =
+                PaletteColours.colorFromIndex(paletteNum, out[px++]);
+        }
+        for (size_t i = 0; i < 16; i++) {
+            m_tile.linear[i + 16] =
+                PaletteColours.colorFromIndex(paletteNum, out[px++]);
+        }
+        for (size_t i = 0; i < 16; i++) {
+            m_tile.linear[i + 48] =
+                PaletteColours.colorFromIndex(paletteNum, out[px++]);
+        }
         return m_tile;
     }
-
+    return m_tile;
     /*
     uint32_t startAddr = 0;
     m_fDone = false;

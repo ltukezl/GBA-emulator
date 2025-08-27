@@ -4,7 +4,7 @@ project(
   default_options: ['cpp_std=c++latest', 'warning_level=1'],
 )
 
-add_project_arguments(['-fbracket-depth=3072'], language: 'cpp')
+add_project_arguments(['-fbracket-depth=3072', '-march=native'], language: 'cpp')
 compiler = meson.get_compiler('cpp')
 
 root_path = meson.current_source_dir().replace('\\', '\\\\')
