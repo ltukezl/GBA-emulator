@@ -23,15 +23,16 @@ public:
         };
     };
 
-    Tile() = default;
-    const GBATile& create(const uint32_t addr,
-                          const uint8_t paletteNum,
+    constexpr Tile(const uint32_t idx) : m_idx{idx * 32} {}
+    const GBATile& create(const uint8_t paletteNum,
                           const bool flipV,
                           const bool flipH,
                           const bool is8bit);
 
 private:
     GBATile m_tile = {};
+
+    const uint32_t m_idx;
 
     bool m_regular = false;
     bool m_fDone = false;

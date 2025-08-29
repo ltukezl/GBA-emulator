@@ -1,4 +1,6 @@
 #include "Display/BGViewer.hpp"
+#include "Memory/memoryMappedIO.h"
+#include "Memory/memoryOps.h"
 
 BGViewer::BGViewer()
 {
@@ -40,11 +42,29 @@ void BGViewer::draw()
 
     auto addr = 0;
 
-    const auto& t = m_tileset.tileset.grid[0][0].create(0x4400, 0, 0, 0, 0);
+    BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + 2];
+    BgCnt* bgCnt1 = (BgCnt*)&IoRAM[8 + 2];
+    BgCnt* bgCnt2 = (BgCnt*)&IoRAM[8 + 4];
+    BgCnt* bgCnt3 = (BgCnt*)&IoRAM[8 + 6];
+    uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
+    const uint32_t tileStartRow =
+        bgCnt->is8Bit ? bgCnt->tileBaseBlock * 8 : bgCnt->tileBaseBlock * 512;
+    const uint8_t sizeX = bgCnt->hWide ? 64 : 32;
+    const uint8_t sizeY = bgCnt->vWide ? 64 : 32;
 
-    for (size_t i = 0; i < 8; i++) {
-        for (size_t k = 0; k < 8; k++) {
-            (*m_pixels)[i][k] = t.grid[i][k];
+    for (size_t i = 0; i < 32; i++) {
+        for (size_t k = 0; k < 32; k++) {
+            BgTile* tileCtrl = (BgTile*)&vram[startAddr];
+            const auto& t =
+                m_tileset.tileset.linear[tileStartRow + tileCtrl->tileNumber]
+                    .create(tileCtrl->paletteNum, 0, 0, 0);
+            for (size_t px_y = 0; px_y < 8; px_y++) {
+                for (size_t px_x = 0; px_x < 8; px_x++) {
+                    (*m_pixels)[i * 8 + px_y][k * 8 + px_x] =
+                        t.grid[px_y][px_x];
+                }
+            }
+            startAddr += 2;
         }
     }
 

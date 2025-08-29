@@ -2,6 +2,7 @@
 
 #include "Gba-Graphics/Tile/Tile.h"
 #include <array>
+#include <utility>
 
 class Tileset
 {
@@ -9,9 +10,17 @@ public:
 
     union Tileset_t
     {
-        std::array<std::array<Tile, 32>, 64> grid;
-        std::array<Tile, 64 * 32> linear;
-    } tileset = {};
+        std::array<std::array<Tile, 32>, 32> grid;
+        std::array<Tile, 32 * 32> linear;
+
+        template<std::size_t... I>
+        constexpr Tileset_t(std::index_sequence<I...>) :
+            linear{Tile(static_cast<uint32_t>(I))...}
+        {
+        }
+    };
+
+    Tileset_t tileset{std::make_index_sequence<32 * 32>{}};
 
     void update();
     uint8_t* getTileset(const bool is8bit);

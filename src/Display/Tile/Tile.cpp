@@ -7,15 +7,14 @@
 
 extern RgbaPalette PaletteColours;
 
-const Tile::GBATile& Tile::create(const uint32_t addr,
-                                  const uint8_t paletteNum,
+const Tile::GBATile& Tile::create(const uint8_t paletteNum,
                                   const bool flipV,
                                   const bool flipH,
                                   const bool is8bit)
 {
     if (flipV == false && flipH == false) {
         const auto tmp = _mm256_loadu_si256(
-            reinterpret_cast<__m256i*>(vram.getMemoryPtr() + addr));
+            reinterpret_cast<__m256i*>(vram.getMemoryPtr() + m_idx));
         const auto rot = _mm256_srli_epi64(tmp, 4);
         const auto idx = _mm256_unpacklo_epi8(tmp, rot);
         const auto idx2 = _mm256_unpackhi_epi8(tmp, rot);

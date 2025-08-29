@@ -14,7 +14,7 @@ private:
 public:
     std::vector<Sprite*> allSprites;
     // std::vector<Sprite> spritesPrioQueue[4];
-    Tile objTileset[32][32];
+    // Tile objTileset[32][32];
 
     SpriteGenerator();
     void updateSpritePriorities();
