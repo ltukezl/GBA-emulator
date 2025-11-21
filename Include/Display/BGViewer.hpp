@@ -16,6 +16,8 @@ public:
 
 private:
 
+    void updateBG(const BgCnt* bgCnt, sf::Texture& res);
+
     Tileset m_tileset{};
 
     std::unique_ptr<sf::RenderWindow> m_display =

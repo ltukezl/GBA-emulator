@@ -30,7 +30,10 @@ public:
                           const bool is8bit);
 
 private:
-    GBATile m_tile = {};
+    alignas(32) GBATile m_tile = {};
+    alignas(32) GBATile m_tileV = {};
+    alignas(32) GBATile m_tileH = {};
+    alignas(32) GBATile m_tileHV = {};
 
     const uint32_t m_idx;
 

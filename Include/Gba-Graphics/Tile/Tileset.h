@@ -2,16 +2,18 @@
 
 #include "Gba-Graphics/Tile/Tile.h"
 #include <array>
+#include <mdspan>
 #include <utility>
 
 class Tileset
 {
 public:
 
-    union Tileset_t
+    struct Tileset_t
     {
-        std::array<std::array<Tile, 32>, 32> grid;
-        std::array<Tile, 32 * 32> linear;
+        std::array<Tile, 32 * 64> linear;
+        std::mdspan<Tile, std::extents<std::size_t, 4, 512>> grid{linear.data(),
+                                                                  4, 512};
 
         template<std::size_t... I>
         constexpr Tileset_t(std::index_sequence<I...>) :
@@ -20,7 +22,7 @@ public:
         }
     };
 
-    Tileset_t tileset{std::make_index_sequence<32 * 32>{}};
+    Tileset_t tileset{std::make_index_sequence<32 * 64>{}};
 
     void update();
     uint8_t* getTileset(const bool is8bit);
