@@ -151,99 +151,75 @@ void Disassembler::display_disassembly(const Registers& regs)
 
 void Disassembler::handleEvents()
 {
+    static bool once_g = true;
     const auto onClose = [this](const sf::Event::Closed&) {
-        std::println("tst");
         m_display->close();
     };
 
-    m_display->handleEvents(onClose);
-    /*	sf::Event event;
-    static bool once_g = true;
-    while (m_display->pollEvent(event))
-    {
-            if (event.type == sf::Event::LostFocus)
-            {
-                    m_in_focus = false;
-                    return;
-            }
-            if (event.type == sf::Event::GainedFocus)
-            {
-                    m_in_focus = true;
-            }
-            if (event.type == sf::Event::MouseButtonReleased)
-            {
-                    uint32_t Mx = sf::Mouse::getPosition(*m_display).x;
-                    uint32_t My = sf::Mouse::getPosition(*m_display).y;
-                    if (My < 63)
-                    {
-                            m_input = "";
-                    }
-            }
+    const auto onLostFocus = [this](const sf::Event::FocusLost&) {
+        m_in_focus = false;
+    };
 
-            if (event.type == sf::Event::MouseWheelMoved)
-            {
-                    if (event.mouseWheel.delta <= -1)
-                    {
-                            m_relative_pc_offset += 12;
-                    }
-                    if (event.mouseWheel.delta >= 1)
-                    {
-                            m_relative_pc_offset -= 12;
-                    }
+    const auto onGainFocus = [this](const sf::Event::FocusGained&) {
+        m_in_focus = true;
+    };
+
+    const auto onTextEntered = [this](const sf::Event::TextEntered& event) {
+        if (m_input.size() > 7) {
+        } else if (event.unicode > 0x2f && event.unicode < 0x3a) {
+            m_input += static_cast<char>(event.unicode);
+        } else if (event.unicode > 0x60 && event.unicode < 0x67) {
+            m_input += static_cast<char>(event.unicode);
+        }
+    };
+
+    const auto onMouseWheelMove =
+        [this](const sf::Event::MouseWheelScrolled& event) {
+            if (event.delta <= -1) {
+                m_relative_pc_offset += 12;
             }
-
-            if (event.type == sf::Event::Closed)
-                    m_display->close();
-
-            if (event.type == sf::Event::TextEntered)
-            {
-                    if (m_input.size() > 7) {}
-                    else if (event.text.unicode > 0x2f && event.text.unicode <
-    0x3a)
-                    {
-                            m_input += static_cast<char>(event.text.unicode);
-                    }
-                    else if (event.text.unicode > 0x60 && event.text.unicode <
-    0x67)
-                    {
-                            m_input += static_cast<char>(event.text.unicode);
-                    }
+            if (event.delta >= 1) {
+                m_relative_pc_offset -= 12;
             }
+        };
 
-            if (event.type == sf::Event::KeyPressed)
-            {
-                    if (event.key.code == sf::Keyboard::Enter)
-                    {
-                            m_relative_pc_offset = std::stoul(m_input, nullptr,
-    16); m_input = "";
-                    }
+    const auto onMouseRelease = [this](const sf::Event::MouseButtonReleased) {
+        uint32_t My = sf::Mouse::getPosition(*m_display).y;
+        if (My < 63) {
+            m_input = "";
+        }
+    };
 
-                    if (event.key.code == sf::Keyboard::Backspace)
-                    {
-                            if (m_input.size() > 0)
-                            {
-                                    m_input = m_input.substr(0, m_input.size() -
-    1);
-                            }
-                    }
+    const auto onKeyEntered = [this](const sf::Event::KeyPressed& event) {
+        if (event.code == sf::Keyboard::Key::Enter) {
+            m_relative_pc_offset = std::stoul(m_input, nullptr, 16);
+            m_input = "";
+        }
 
-                    if (event.key.code == sf::Keyboard::G)
-                    {
-                            if (once_g)
-                                    once_g = false;
-                            m_step = true;
-                    }
+        if (event.code == sf::Keyboard::Key::Backspace) {
+            if (m_input.size() > 0) {
+                m_input = m_input.substr(0, m_input.size() - 1);
             }
+        }
 
-            else if (event.type == sf::Event::KeyReleased)
-            {
-                    if (event.key.code == sf::Keyboard::G)
-                    {
-                            if (!once_g)
-                                    once_g = true;
-                            m_step = false;
-                    }
+        if (event.code == sf::Keyboard::Key::G) {
+            if (once_g) {
+                once_g = false;
             }
-    }
-            */
+            m_step = true;
+        }
+    };
+
+    const auto onKeyReleased = [this](const sf::Event::KeyReleased& event) {
+        if (event.code == sf::Keyboard::Key::G) {
+            if (!once_g) {
+                once_g = true;
+            }
+            m_step = false;
+        }
+    };
+
+    m_display->handleEvents(onClose, onLostFocus, onGainFocus, onMouseWheelMove,
+                            onTextEntered, onMouseRelease, onKeyEntered,
+                            onKeyReleased);
 }

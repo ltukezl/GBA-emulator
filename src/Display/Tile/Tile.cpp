@@ -17,8 +17,13 @@ const Tile::GBATile& Tile::create(const uint8_t paletteNum,
                                   const bool flipV,
                                   const bool is8bit)
 {
-    if (!vram.m_observer.checkAccessed(m_idx)) {
-
+    const auto wholeCurrentPalette =
+        _mm256_loadu_si256(reinterpret_cast<__m256i*>(
+            paletteram.getMemoryPtr() + 16 * paletteNum));
+    const auto vcmp = _mm256_cmpeq_epi32(wholeCurrentPalette, m_lastPalette);
+    const uint32_t cmp_mask = _mm256_movemask_epi8(vcmp);
+    const bool result = (cmp_mask == 0xffff'ffff);
+    if (!vram.m_observer.checkAccessed(m_idx) and result) {
         if (flipV == true && flipH == false) {
             return m_tileV;
         } else if (flipV == false && flipH == true) {
@@ -29,6 +34,7 @@ const Tile::GBATile& Tile::create(const uint8_t paletteNum,
 
         return m_tile;
     }
+    m_lastPalette = wholeCurrentPalette;
     vram.m_observer.clearAccessed(m_idx);
     const auto tmp = _mm256_loadu_si256(
         reinterpret_cast<__m256i*>(vram.getMemoryPtr() + m_idx));

@@ -27,6 +27,8 @@ public:
             RenderMode3::draw(*m_bgLayer2.pixels, LYC);
         }
     }
+
+    void handleEvents();
 private:
     std::unique_ptr<sf::RenderWindow> m_display =
         std::make_unique<sf::RenderWindow>(

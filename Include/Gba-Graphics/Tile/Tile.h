@@ -36,6 +36,7 @@ private:
     alignas(32) GBATile m_tileHV = {};
 
     const uint32_t m_idx;
+    __m256i m_lastPalette;
 
     bool m_regular = false;
     bool m_fDone = false;

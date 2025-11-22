@@ -165,9 +165,9 @@ int main(int argc, char* args[])
     //    ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
     // const std::string game = ROOT_PATH"/TestBinaries/thumb.gba";
     const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
-    // const std::string game = ROOT_PATH"/TestBinaries/tonc/bigmap.gba";
-    // const std::string game = ROOT_PATH "/TestBinaries/tonc/m3_demo.gba";
-    // const std::string game = ROOT_PATH"/TestBinaries/tonc/irq_demo.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
+    //  const std::string game = ROOT_PATH "/TestBinaries/tonc/m3_demo.gba";
+    //  const std::string game = ROOT_PATH"/TestBinaries/tonc/irq_demo.gba";
 
     readFile(game, GamePak);
     readFile("GBA.BIOS", systemROM.m_memoryArea);
@@ -208,6 +208,7 @@ int main(int argc, char* args[])
             }
 #if DISASSEMBLER_VIEWER
             disassembler.handleEvents();
+            gameDisplay.handleEvents();
 #endif
         } else if (hBlankCounter > 960) {
             LCDStatus->hblankFlag = 1;
