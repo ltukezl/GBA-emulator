@@ -19,7 +19,7 @@ const Tile::GBATile& Tile::create(const uint8_t paletteNum,
 {
     const auto wholeCurrentPalette =
         _mm256_loadu_si256(reinterpret_cast<__m256i*>(
-            paletteram.getMemoryPtr() + 16 * paletteNum));
+            paletteram.getMemoryPtr() + 32 * paletteNum));
     const auto vcmp = _mm256_cmpeq_epi32(wholeCurrentPalette, m_lastPalette);
     const uint32_t cmp_mask = _mm256_movemask_epi8(vcmp);
     const bool result = (cmp_mask == 0xffff'ffff);
