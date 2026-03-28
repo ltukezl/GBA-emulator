@@ -14,7 +14,6 @@
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/logicalOps.h"
-#include "Constants.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
 #include "GBAcpu.h"
@@ -184,14 +183,10 @@ void MSR(uint32_t opCode)
 }
 
 void mrs(int& saveTo, int operand1, int operand2)
-{
-    saveTo = r.m_cpsr.val;
-}
+{ saveTo = r.m_cpsr.val; }
 
 void mrs2(int& saveTo, int operand1, int operand2)
-{
-    saveTo = r[16];
-}
+{ saveTo = r[16]; }
 
 void (*dataOperations[0x20])(int&, int, int) = {
     And,  Ands, Eor,  Eors, Sub,  Subs, Rsb, Rsbs, Add, Adds, Adc,
@@ -479,17 +474,13 @@ static consteval auto index_to_opcode(const uint32_t opcode)
 
 template<typename T, std::size_t... Is>
 consteval void insert_opcodes(T& arr, std::index_sequence<Is...>)
-{
-    ((arr[Is] = decode_arm_opcode<index_to_opcode(Is)>()), ...);
-}
+{ ((arr[Is] = decode_arm_opcode<index_to_opcode(Is)>()), ...); }
 
 static constexpr std::array m_dispatch_table = {[]() consteval {
     std::array<void (*)(Registers&, const uint32_t), 0xC00> tmp{};
     insert_opcodes(tmp, std::make_index_sequence<tmp.size()>{});
     return tmp;
 }()};
-
-#include <print>
 
 void ARMExecute(int opCode)
 {

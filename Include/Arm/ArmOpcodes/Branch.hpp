@@ -85,7 +85,9 @@ public:
 
     static constexpr BxOP fromOpcode(const uint32_t opcode)
     {
-        return std::bit_cast<BxOP>(opcode);
+        return {.rn = static_cast<uint32_t>((opcode >> 0x00) & 0xF),
+                .unused = static_cast<uint32_t>((opcode >> 0x04) & 0xFFFFFF),
+                .condition = static_cast<uint32_t>((opcode >> 0x1C) & 0xF)};
     }
 
     static constexpr bool isThisOpcode(const uint32_t opcode)

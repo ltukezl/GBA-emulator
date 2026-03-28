@@ -1,11 +1,8 @@
 #pragma once
 
 #include <array>
-#include <bit>
 #include <cstdint>
-#include <format>
 
-#include "Constants.h"
 #include "cplusplusRewrite/HwRegisters.h"
 
 class MultiplyAccumulate
@@ -27,27 +24,17 @@ public:
 
     static constexpr MultiplyAccumulateOpcode fromOpcode(const uint32_t opcode)
     {
-        return std::bit_cast<MultiplyAccumulateOpcode>(opcode);
-    }
-
-    static constexpr uint32_t fromFields(const uint32_t operand1,
-                                         const uint32_t operand2,
-                                         const uint32_t destinationLow,
-                                         const uint32_t destinationHigh,
-                                         const bool setCond,
-                                         const bool accumulate,
-                                         const bool sign)
-    {
-        MultiplyAccumulateOpcode opcode{};
-        opcode.operand1 = operand1;
-        opcode.operand2 = operand2;
-        opcode.destinationLow = destinationLow;
-        opcode.destinationHigh = destinationHigh;
-        opcode.cond = setCond;
-        opcode.accumulate = accumulate;
-        opcode.sign = sign;
-
-        return std::bit_cast<uint32_t>(opcode);
+        return {.operand1 = static_cast<uint32_t>((opcode >> 0x00) & 0xF),
+                .reserved1 = static_cast<uint32_t>((opcode >> 0x04) & 0xF),
+                .operand2 = static_cast<uint32_t>((opcode >> 0x08) & 0xF),
+                .destinationLow = static_cast<uint32_t>((opcode >> 0x0C) & 0xF),
+                .destinationHigh =
+                    static_cast<uint32_t>((opcode >> 0x10) & 0xF),
+                .setCondition = static_cast<uint32_t>((opcode >> 0x14) & 0x1),
+                .accumulate = static_cast<uint32_t>((opcode >> 0x15) & 0x1),
+                .sign = static_cast<uint32_t>((opcode >> 0x16) & 0x1),
+                .reserved2 = static_cast<uint32_t>((opcode >> 0x17) & 0x1F),
+                .cond = static_cast<uint32_t>((opcode >> 0x1C) & 0xF)};
     }
 
     static constexpr bool isThisOpcode(const uint32_t opcode)
@@ -123,25 +110,15 @@ public:
 
     static constexpr MultiplyLongOp fromOpcode(const uint32_t opcode)
     {
-        return std::bit_cast<MultiplyLongOp>(opcode);
-    }
-
-    static constexpr uint32_t fromFields(const uint32_t operand1,
-                                         const uint32_t operand2,
-                                         const uint32_t operand3,
-                                         const uint32_t destination,
-                                         const bool setCond,
-                                         const bool accumulate)
-    {
-        MultiplyLongOp opcode{};
-        opcode.operand1 = operand1;
-        opcode.operand2 = operand2;
-        opcode.operand3 = operand3;
-        opcode.destination = destination;
-        opcode.cond = setCond;
-        opcode.accumulate = accumulate;
-
-        return std::bit_cast<uint32_t>(opcode);
+        return {.operand1 = static_cast<uint32_t>((opcode >> 0x00) & 0xF),
+                .reserved1 = static_cast<uint32_t>((opcode >> 0x04) & 0xF),
+                .operand2 = static_cast<uint32_t>((opcode >> 0x08) & 0xF),
+                .operand3 = static_cast<uint32_t>((opcode >> 0x0C) & 0xF),
+                .destination = static_cast<uint32_t>((opcode >> 0x10) & 0xF),
+                .setCondition = static_cast<uint32_t>((opcode >> 0x14) & 0x1),
+                .accumulate = static_cast<uint32_t>((opcode >> 0x15) & 0x1),
+                .reserved2 = static_cast<uint32_t>((opcode >> 0x16) & 0x3F),
+                .cond = static_cast<uint32_t>((opcode >> 0x1C) & 0xF)};
     }
 
     static constexpr bool isThisOpcode(const uint32_t opcode)

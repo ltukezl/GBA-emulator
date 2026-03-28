@@ -2,7 +2,6 @@
 #ifndef BLOCKDATATRANSFERSTORES_H
 #define BLOCKDATATRANSFERSTORES_H
 
-#include <bit>
 #include <cstdint>
 
 #include "Arm/ArmOpcodes/BlockDataTransfer.hpp"
