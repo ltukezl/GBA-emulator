@@ -330,6 +330,60 @@ void dataProcessingImmediate(int opCode)
     }
 }
 
+static void null_func(Registers&, const uint32_t) {}
+
+static uint32_t constexpr reduce_opcode(const uint32_t opCode)
+{
+    const uint32_t low_byte = (opCode >> 4) & 0xF;
+    const uint32_t high_byte = (opCode >> 16) & 0xFF0;
+    return low_byte | high_byte;
+}
+
+template<uint32_t opCode>
+static auto constexpr decode_arm_opcode()
+{
+    if constexpr (UndefOp::isThisOpcode(opCode)) {
+        return &UndefOp::execute;
+    }
+    if constexpr (((opCode >> 26) & 0x3) == 0) {
+        return HalfDataTransfer::decode_hdd<opCode>();
+    }
+    if constexpr (((opCode >> 26) & 0x3) == 1) {
+        return SingleDataTransfer::decode_sdd<opCode>();
+    }
+    if constexpr (BlockDataTransfer::isThisOpcode(opCode)) {
+        if constexpr (BlockDataTransferLoad::isThisOpcode(opCode)) {
+            return BlockDataTransferLoad::execute<BlockDataTransfer::mask(
+                opCode)>;
+        }
+        if constexpr (BlockDataTransferStore::isThisOpcode(opCode)) {
+            return BlockDataTransferStore::execute<BlockDataTransfer::mask(
+                opCode)>;
+        }
+    }
+    if constexpr (branches::ArmBranch::isThisOpcode(opCode)) {
+        return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
+    }
+    return &null_func;
+}
+
+static consteval auto index_to_opcode(const uint32_t opcode)
+{
+    const uint32_t low_bits = opcode & 0xF;
+    const uint32_t high_bits = opcode & 0xFF0;
+    return (high_bits << 16) | (low_bits << 4);
+}
+
+template<typename T, std::size_t... Is>
+consteval void insert_opcodes(T& arr, std::index_sequence<Is...>)
+{ ((arr[Is] = decode_arm_opcode<index_to_opcode(Is)>()), ...); }
+
+static constexpr std::array m_dispatch_table = {[]() consteval {
+    std::array<void (*)(Registers&, const uint32_t), 0xC00> tmp{};
+    insert_opcodes(tmp, std::make_index_sequence<tmp.size()>{});
+    return tmp;
+}()};
+
 static void halfDataTransfer(int opCode)
 {
     int pFlag = (opCode >> 24) & 1;
@@ -368,19 +422,7 @@ static void halfDataTransfer(int opCode)
                     calculated += uFlag ? r[offset] : -r[offset];
                 }
             } else {
-                if (pFlag) {
-                    calculated += uFlag ? r[offset] : -r[offset];
-                }
-                if (shFlag == 1) {
-                    writeToAddress16(calculated, r[rd]);
-                } else if (shFlag == 2) {
-                    writeToAddress(calculated, signExtend<8>(r[rd]));
-                } else {
-                    writeToAddress16(calculated, signExtend<16>(r[rd]));
-                }
-                if (!pFlag) {
-                    calculated += uFlag ? r[offset] : -r[offset];
-                }
+                m_dispatch_table[reduce_opcode(opCode)](r, opCode);
             }
             r[rn] = (wFlag || !pFlag) ? calculated : r[rn];
             break;
@@ -430,57 +472,6 @@ static void halfDataTransfer(int opCode)
             break;
     }
 }
-
-static void null_func(Registers&, const uint32_t) {}
-
-static uint32_t constexpr reduce_opcode(const uint32_t opCode)
-{
-    const uint32_t low_byte = (opCode >> 4) & 0xF;
-    const uint32_t high_byte = (opCode >> 16) & 0xFF0;
-    return low_byte | high_byte;
-}
-
-template<uint32_t opCode>
-static auto constexpr decode_arm_opcode()
-{
-    if constexpr (UndefOp::isThisOpcode(opCode)) {
-        return &UndefOp::execute;
-    }
-    if constexpr (((opCode >> 26) & 0x3) == 1) {
-        return SingleDataTransfer::decode_sdd<opCode>();
-    }
-    if constexpr (BlockDataTransfer::isThisOpcode(opCode)) {
-        if constexpr (BlockDataTransferLoad::isThisOpcode(opCode)) {
-            return BlockDataTransferLoad::execute<BlockDataTransfer::mask(
-                opCode)>;
-        }
-        if constexpr (BlockDataTransferStore::isThisOpcode(opCode)) {
-            return BlockDataTransferStore::execute<BlockDataTransfer::mask(
-                opCode)>;
-        }
-    }
-    if constexpr (branches::ArmBranch::isThisOpcode(opCode)) {
-        return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
-    }
-    return &null_func;
-}
-
-static consteval auto index_to_opcode(const uint32_t opcode)
-{
-    const uint32_t low_bits = opcode & 0xF;
-    const uint32_t high_bits = opcode & 0xFF0;
-    return (high_bits << 16) | (low_bits << 4);
-}
-
-template<typename T, std::size_t... Is>
-consteval void insert_opcodes(T& arr, std::index_sequence<Is...>)
-{ ((arr[Is] = decode_arm_opcode<index_to_opcode(Is)>()), ...); }
-
-static constexpr std::array m_dispatch_table = {[]() consteval {
-    std::array<void (*)(Registers&, const uint32_t), 0xC00> tmp{};
-    insert_opcodes(tmp, std::make_index_sequence<tmp.size()>{});
-    return tmp;
-}()};
 
 void ARMExecute(int opCode)
 {

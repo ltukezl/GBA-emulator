@@ -3,11 +3,12 @@
 
 #include <cassert>
 
+#include "Arm/ArmOpcodes/HalfDataTransferRegister.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferRegister.hpp"
 
 namespace SingleDataTransfer {
-static void null_func22(Registers&, const uint32_t) {}
+static void null_func_sdd(Registers&, const uint32_t) {}
 
 template<uint32_t opCode>
 static consteval decltype(&SingleDataTransferIPrS::execute<0>) decode_sdd()
@@ -30,9 +31,44 @@ static consteval decltype(&SingleDataTransferIPrS::execute<0>) decode_sdd()
     } else if constexpr (SingleDataTransferRPoL::isThisOpcode(opCode)) {
         return &SingleDataTransferRPoL::execute<mask(opCode)>;
     } else {
-        return &null_func22;
+        return &null_func_sdd;
     }
 }
 } // namespace SingleDataTransfer
+
+namespace HalfDataTransfer {
+static void null_func_hdd(Registers&, const uint32_t) {}
+
+template<uint32_t opCode>
+static consteval decltype(&HalfDataTransferPrS::execute<0>) decode_hdd()
+{
+    /*
+        if constexpr (HalfDataTransferIPrS::isThisOpcode(opCode)) {
+            return &HalfDataTransferIPrS::execute<mask(opCode)>;
+        } else if constexpr (HalfDataTransferIPrL::isThisOpcode(opCode)) {
+            return &HalfDataTransferIPrL::execute<mask(opCode)>;
+        } else if constexpr (HalfDataTransferIPoS::isThisOpcode(opCode)) {
+            return &HalfDataTransferIPoS::execute<mask(opCode)>;
+        } else if constexpr (HalfDataTransferIPoL::isThisOpcode(opCode)) {
+            return &HalfDataTransferIPoL::execute<mask(opCode)>;
+        }
+            */
+    if constexpr (HalfDataTransferPrS::isThisOpcode(opCode)) {
+        return &HalfDataTransferPrS::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferPoS::isThisOpcode(opCode)) {
+        return &HalfDataTransferPoS::execute<mask(opCode)>;
+    }
+    /*
+    else if constexpr (HalfDataTransferRPoS::isThisOpcode(opCode)) {
+        return &HalfDataTransferRPoS::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferRPoL::isThisOpcode(opCode)) {
+        return &HalfDataTransferRPoL::execute<mask(opCode)>;
+    }
+    */
+    else {
+        return &null_func_hdd;
+    }
+}
+} // namespace HalfDataTransfer
 
 #endif
