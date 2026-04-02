@@ -163,7 +163,26 @@ public:
             regs[op.baseRegister] = calculated;
         }
 
-        regs[op.destinationRegister] = loadOperation(load_address, false);
+        uint32_t loaded_value = loadOperation(load_address, false);
+        if constexpr (c_op.signOrUnsign == 1 &&
+                      c_op.HForByte == byteWord_t::EByte) {
+            if (loaded_value & 0x80) { // sign bit on
+                loaded_value |= 0xFFFFFF00;
+            }
+        } else if constexpr (c_op.signOrUnsign == 1 &&
+                             c_op.HForByte == byteWord_t::EHWord) {
+            if (load_address & 1) {
+                loaded_value &= 0xFFFF;
+                if (loaded_value & 0x80) { // sign bit on
+                    loaded_value |= 0xFFFFFF00;
+                }
+            } else {
+                if (loaded_value & 0x8000) { // sign bit on
+                    loaded_value |= 0xFFFF0000;
+                }
+            }
+        }
+        regs[op.destinationRegister] = loaded_value;
     }
 };
 
@@ -210,7 +229,26 @@ public:
             calculated += 4;
         }
         regs[op.baseRegister] = calculated;
-        regs[op.destinationRegister] = loadOperation(load_address, false);
+        uint32_t loaded_value = loadOperation(load_address, false);
+        if constexpr (c_op.signOrUnsign == 1 &&
+                      c_op.HForByte == byteWord_t::EByte) {
+            if (loaded_value & 0x80) { // sign bit on
+                loaded_value |= 0xFFFFFF00;
+            }
+        } else if constexpr (c_op.signOrUnsign == 1 &&
+                             c_op.HForByte == byteWord_t::EHWord) {
+            if (load_address & 1) {
+                loaded_value &= 0xFFFF;
+                if (loaded_value & 0x80) { // sign bit on
+                    loaded_value |= 0xFFFFFF00;
+                }
+            } else {
+                if (loaded_value & 0x8000) { // sign bit on
+                    loaded_value |= 0xFFFF0000;
+                }
+            }
+        }
+        regs[op.destinationRegister] = loaded_value;
     }
 };
 

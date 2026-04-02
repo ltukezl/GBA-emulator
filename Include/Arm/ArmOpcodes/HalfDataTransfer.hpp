@@ -27,8 +27,8 @@ enum class writeBack_t : uint32_t
 
 enum class byteWord_t : uint32_t
 {
-    EHWord,
-    EByte
+    EByte,
+    EHWord
 };
 
 enum class upDown_t : uint32_t
@@ -91,7 +91,7 @@ static constexpr HalfDataTransfer_t fromOpcode(const uint32_t opcode)
 }
 
 static constexpr auto mask(const uint32_t opcode)
-{ return opcode & (0x3F << 20); }
+{ return ((opcode & (0x3F << 20)) | (opcode & (0xF << 4))); }
 
 static inline void destinationRegisterBug(const HalfDataTransfer_t& op,
                                           Registers& regs)
