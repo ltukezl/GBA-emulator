@@ -87,22 +87,31 @@ public:
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto storeOperation = memStoreOp<c_op>();
-        regs[15] += 4;
         uint32_t offset = regs[op.regOrOffset];
+        uint32_t calculated = regs[op.baseRegister];
+        uint32_t value_to_write = regs[op.destinationRegister];
+
+        if (op.regOrOffset == 15) {
+            offset += 4;
+        }
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
+        if (op.destinationRegister == 15) {
+            value_to_write += 8;
+        }
+
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
 
-        uint32_t calculated = regs[op.baseRegister];
-
-        regs[15] += 4;
-        const auto value_to_write = regs[op.destinationRegister];
         storeOperation(calculated, value_to_write);
+
+        calculated += offset;
+
         if (op.baseRegister == 15) {
             calculated += 4;
         }
-        calculated += offset;
-        regs[15] -= 8;
         regs[op.baseRegister] = calculated;
     }
 };
@@ -130,23 +139,31 @@ public:
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto loadOperation = HalfDataTransfer::memLoadOp<c_op>();
-        regs[15] += 4;
         uint32_t offset = regs[op.regOrOffset];
+        uint32_t calculated = regs[op.baseRegister];
+
+        if (op.regOrOffset == 15) {
+            offset += 4;
+        }
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
 
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
 
-        uint32_t calculated = regs[op.baseRegister];
-        regs[15] -= 4;
+        const uint32_t load_address = calculated + offset;
         calculated += offset;
 
         if constexpr (c_op.writeBack == writeBack_t::EWriteback) {
+            if (op.baseRegister == 15) {
+                calculated += 4;
+            }
             regs[op.baseRegister] = calculated;
         }
 
-        regs[op.destinationRegister] = loadOperation(calculated, false);
-        // destinationRegisterBug(op, regs);
+        regs[op.destinationRegister] = loadOperation(load_address, false);
     }
 };
 
@@ -173,19 +190,26 @@ public:
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto loadOperation = memLoadOp<c_op>();
-        regs[15] += 4;
         uint32_t offset = regs[op.regOrOffset];
+        uint32_t calculated = regs[op.baseRegister];
+
+        if (op.regOrOffset == 15) {
+            offset += 4;
+        }
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
+
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
-        const uint32_t load_address = regs[op.baseRegister];
-        uint32_t calculated = regs[op.baseRegister];
-        if (op.baseRegister == 15) {
-            calculated += 8;
-        }
+        const uint32_t load_address = calculated;
+
         calculated += offset;
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
         regs[op.baseRegister] = calculated;
-        regs[15] -= 4;
         regs[op.destinationRegister] = loadOperation(load_address, false);
     }
 };
