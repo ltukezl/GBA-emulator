@@ -32,27 +32,35 @@ public:
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto storeOperation = memStoreOp<c_op>();
-        regs[15] += 4;
+
         uint32_t offset = regs[op.regOrOffset];
+        uint32_t calculated = regs[op.baseRegister];
+        auto val_to_write = regs[op.destinationRegister];
+
+        if (op.regOrOffset == 15) {
+            offset += 4;
+        }
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
+        if (op.destinationRegister == 15) {
+            val_to_write += 8;
+        }
 
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
-        regs[15] += 4;
-        const auto val_to_write = regs[op.destinationRegister];
-        uint32_t calculated = regs[op.baseRegister];
-        calculated += offset;
-        if (op.baseRegister == 15) {
-            calculated += 4;
-        }
 
-        regs[15] -= 8;
-        if constexpr (c_op.writeBack == writeBack_t::EWriteback) {
-            regs[op.baseRegister] = calculated;
-        }
+        calculated += offset;
 
         storeOperation(calculated, val_to_write);
-        // destinationRegisterBug(op, regs);
+
+        if constexpr (c_op.writeBack == writeBack_t::EWriteback) {
+            if (op.baseRegister == 15) {
+                calculated += 4;
+            }
+            regs[op.baseRegister] = calculated;
+        }
     }
 };
 
@@ -119,10 +127,10 @@ public:
     template<uint32_t opcode_iter>
     static void execute(Registers& regs, const uint32_t opcode)
     {
-        regs[15] += 4;
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto loadOperation = HalfDataTransfer::memLoadOp<c_op>();
+        regs[15] += 4;
         uint32_t offset = regs[op.regOrOffset];
 
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
