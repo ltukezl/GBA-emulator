@@ -40,7 +40,7 @@ namespace HalfDataTransfer {
 static void null_func_hdd(Registers&, const uint32_t) {}
 
 template<uint32_t opCode>
-static consteval decltype(&HalfDataTransferPrS::execute<0>) decode_hdd()
+static consteval decltype(&HalfDataTransferRPrS::execute<0>) decode_hdd()
 {
     /*
         if constexpr (HalfDataTransferIPrS::isThisOpcode(opCode)) {
@@ -53,18 +53,16 @@ static consteval decltype(&HalfDataTransferPrS::execute<0>) decode_hdd()
             return &HalfDataTransferIPoL::execute<mask(opCode)>;
         }
             */
-    if constexpr (HalfDataTransferPrS::isThisOpcode(opCode)) {
-        return &HalfDataTransferPrS::execute<mask(opCode)>;
-    } else if constexpr (HalfDataTransferPoS::isThisOpcode(opCode)) {
-        return &HalfDataTransferPoS::execute<mask(opCode)>;
-    }
-    /*
-    else if constexpr (HalfDataTransferRPoS::isThisOpcode(opCode)) {
+    if constexpr (HalfDataTransferRPrS::isThisOpcode(opCode)) {
+        return &HalfDataTransferRPrS::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferRPoS::isThisOpcode(opCode)) {
         return &HalfDataTransferRPoS::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferRPrL::isThisOpcode(opCode)) {
+        return &HalfDataTransferRPrL::execute<mask(opCode)>;
     } else if constexpr (HalfDataTransferRPoL::isThisOpcode(opCode)) {
         return &HalfDataTransferRPoL::execute<mask(opCode)>;
     }
-    */
+
     else {
         return &null_func_hdd;
     }

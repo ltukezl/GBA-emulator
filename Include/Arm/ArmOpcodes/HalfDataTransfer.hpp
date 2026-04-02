@@ -7,7 +7,7 @@
 #include <format>
 #include <type_traits>
 
-#include "cplusplusRewrite/BarrelShifterDecoder.h"
+#include "CommonOperations/GbaStrings.hpp"
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Memory/memoryOps.h"
 
@@ -55,7 +55,8 @@ struct HalfDataTransfer_t
     uint32_t constant1: 1;
     byteWord_t HForByte: 1;
     uint32_t signOrUnsign: 1;
-    uint32_t constant2: 5;
+    uint32_t constant2: 1;
+    uint32_t offset2: 4;
     uint32_t destinationRegister: 4;
     uint32_t baseRegister: 4;
     loadStore_t loadBit: 1;
@@ -76,7 +77,8 @@ static constexpr HalfDataTransfer_t fromOpcode(const uint32_t opcode)
         .constant1 = static_cast<uint32_t>((opcode >> 0x04) & 0x1),
         .HForByte = static_cast<byteWord_t>((opcode >> 0x05) & 0x1),
         .signOrUnsign = static_cast<uint32_t>((opcode >> 0x06) & 0x1),
-        .constant2 = static_cast<uint32_t>((opcode >> 0x07) & 0x1F),
+        .constant2 = static_cast<uint32_t>((opcode >> 0x07) & 0x1),
+        .offset2 = static_cast<uint32_t>((opcode >> 0x08) & 0xF),
         .destinationRegister = static_cast<uint32_t>((opcode >> 0x0C) & 0xF),
         .baseRegister = static_cast<uint32_t>((opcode >> 0x10) & 0xF),
         .loadBit = static_cast<loadStore_t>((opcode >> 0x14) & 0x1),
@@ -99,17 +101,16 @@ static inline void destinationRegisterBug(const HalfDataTransfer_t& op,
     }
 }
 
-/*
 template<HalfDataTransfer_t op>
 static consteval auto memLoadOp()
 {
-    if constexpr (op.byteTransfer == byteWord_t::EWord) {
-        return &loadFromAddress32;
+    if constexpr (op.HForByte == byteWord_t::EHWord) {
+        return &loadFromAddress16;
     } else {
         return &loadFromAddress;
     }
 }
-*/
+
 template<HalfDataTransfer_t op>
 static consteval auto memStoreOp()
 {
@@ -121,10 +122,33 @@ static consteval auto memStoreOp()
 }
 
 static auto makeExpression(const uint32_t opcode)
-{ return ""; }
+{
+    const auto op = fromOpcode(opcode);
+    const auto sign = op.addOffset == upDown_t::ESubstract ? "-" : "";
+    if (op.type == 1) {
+        if (op.regOrOffset) {
+            return std::format(", {}#0x{:x}", sign, op.regOrOffset);
+        }
+        return std::format("");
+    } else {
+        return std::format(", {}R{}", sign, op.regOrOffset);
+    }
+}
 
 static auto disassemble(const uint32_t opcode)
-{ return ""; }
+{
+    const auto op = fromOpcode(opcode);
+    const auto ls = (op.loadBit == loadStore_t::ELoad) ? "LDR" : "STR";
+    const auto condition = condition_strings[op.executionCondition];
+    const auto is_signed = op.signOrUnsign ? "S" : "";
+    const auto bw = (op.HForByte == byteWord_t::EByte) ? "B" : "H";
+    const auto prePost1 = (op.preIndexing == prePost_t::EPre) ? "" : "]";
+    const auto prePost2 = (op.preIndexing == prePost_t::EPre) ? "]" : "";
+    const auto writeback = (op.writeBack == writeBack_t::EWriteback) ? "!" : "";
+    return std::format("{}{}{}{} R{}, [R{}{}{}{}{}", ls, is_signed, bw,
+                       condition, op.destinationRegister, op.baseRegister,
+                       prePost1, makeExpression(opcode), prePost2, writeback);
+}
 } // namespace HalfDataTransfer
 
 #endif
