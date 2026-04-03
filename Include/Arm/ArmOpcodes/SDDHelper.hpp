@@ -3,6 +3,7 @@
 
 #include <cassert>
 
+#include "Arm/ArmOpcodes/HalfDataTransferImmediate.hpp"
 #include "Arm/ArmOpcodes/HalfDataTransferRegister.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferRegister.hpp"
@@ -42,18 +43,16 @@ static void null_func_hdd(Registers&, const uint32_t) {}
 template<uint32_t opCode>
 static consteval decltype(&HalfDataTransferRPrS::execute<0>) decode_hdd()
 {
-    /*
-        if constexpr (HalfDataTransferIPrS::isThisOpcode(opCode)) {
-            return &HalfDataTransferIPrS::execute<mask(opCode)>;
-        } else if constexpr (HalfDataTransferIPrL::isThisOpcode(opCode)) {
-            return &HalfDataTransferIPrL::execute<mask(opCode)>;
-        } else if constexpr (HalfDataTransferIPoS::isThisOpcode(opCode)) {
-            return &HalfDataTransferIPoS::execute<mask(opCode)>;
-        } else if constexpr (HalfDataTransferIPoL::isThisOpcode(opCode)) {
-            return &HalfDataTransferIPoL::execute<mask(opCode)>;
-        }
-            */
-    if constexpr (HalfDataTransferRPrS::isThisOpcode(opCode)) {
+
+    if constexpr (HalfDataTransferIPrS::isThisOpcode(opCode)) {
+        return &HalfDataTransferIPrS::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferIPrL::isThisOpcode(opCode)) {
+        return &HalfDataTransferIPrL::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferIPoS::isThisOpcode(opCode)) {
+        return &HalfDataTransferIPoS::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferIPoL::isThisOpcode(opCode)) {
+        return &HalfDataTransferIPoL::execute<mask(opCode)>;
+    } else if constexpr (HalfDataTransferRPrS::isThisOpcode(opCode)) {
         return &HalfDataTransferRPrS::execute<mask(opCode)>;
     } else if constexpr (HalfDataTransferRPoS::isThisOpcode(opCode)) {
         return &HalfDataTransferRPoS::execute<mask(opCode)>;

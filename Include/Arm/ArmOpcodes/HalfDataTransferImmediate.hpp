@@ -1,8 +1,7 @@
-#ifndef HDTR_H
-#define HDTR_H
+#ifndef HDTRI_H
+#define HDTRI_H
 #include <cstdint>
 
-#include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
 #include "HalfDataTransfer.hpp"
 #include "Include/Arm/ArmOpcodes/SingleDataTransfer.hpp"
@@ -13,14 +12,14 @@ namespace HalfDataTransfer {
 // PRE FUNCS STORE
 // ----------
 
-class HalfDataTransferRPrS
+class HalfDataTransferIPrS
 {
 public:
 
     static constexpr bool isThisOpcode(const uint32_t opcode)
     {
         const auto op = fromOpcode(opcode);
-        return (op.unused == 0) && (op.type == 0) &&
+        return (op.unused == 0) && (op.type == 1) &&
             (op.loadBit == loadStore_t::EStore) &&
             (op.preIndexing == prePost_t::EPre) && (op.constant1 == 1) &&
             (op.constant2 == 1);
@@ -33,13 +32,11 @@ public:
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto storeOperation = memStoreOp<c_op>();
 
-        uint32_t offset = regs[op.regOrOffset];
+        uint32_t offset = (op.offset2 << 4) | (op.regOrOffset & 0xF);
+
         uint32_t calculated = regs[op.baseRegister];
         auto val_to_write = regs[op.destinationRegister];
 
-        if (op.regOrOffset == 15) {
-            offset += 4;
-        }
         if (op.baseRegister == 15) {
             calculated += 4;
         }
@@ -79,14 +76,14 @@ public:
 // POST FUNCS STORE
 // ---------------
 
-class HalfDataTransferRPoS
+class HalfDataTransferIPoS
 {
 public:
 
     static constexpr bool isThisOpcode(const uint32_t opcode)
     {
         const auto op = fromOpcode(opcode);
-        return (op.unused == 0) && (op.type == 0) &&
+        return (op.unused == 0) && (op.type == 1) &&
             (op.loadBit == loadStore_t::EStore) &&
             (op.preIndexing == prePost_t::EPost) && (op.constant1 == 1) &&
             (op.constant2 == 1);
@@ -98,13 +95,10 @@ public:
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto storeOperation = memStoreOp<c_op>();
-        uint32_t offset = regs[op.regOrOffset];
+        uint32_t offset = (op.offset2 << 4) | (op.regOrOffset & 0xF);
         uint32_t calculated = regs[op.baseRegister];
         uint32_t value_to_write = regs[op.destinationRegister];
 
-        if (op.regOrOffset == 15) {
-            offset += 4;
-        }
         if (op.baseRegister == 15) {
             calculated += 4;
         }
@@ -144,14 +138,14 @@ public:
 // PRE FUNCS LOAD
 // ---------------
 
-class HalfDataTransferRPrL
+class HalfDataTransferIPrL
 {
 public:
 
     static constexpr bool isThisOpcode(const uint32_t opcode)
     {
         const auto op = fromOpcode(opcode);
-        return (op.unused == 0) && (op.type == 0) &&
+        return (op.unused == 0) && (op.type == 1) &&
             (op.loadBit == loadStore_t::ELoad) &&
             (op.preIndexing == prePost_t::EPre) && (op.constant1 == 1) &&
             (op.constant2 == 1);
@@ -163,12 +157,9 @@ public:
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto loadOperation = HalfDataTransfer::memLoadOp<c_op>();
-        uint32_t offset = regs[op.regOrOffset];
+        uint32_t offset = (op.offset2 << 4) | (op.regOrOffset & 0xF);
         uint32_t calculated = regs[op.baseRegister];
 
-        if (op.regOrOffset == 15) {
-            offset += 4;
-        }
         if (op.baseRegister == 15) {
             calculated += 4;
         }
@@ -214,14 +205,14 @@ public:
 // POST FUNCS LOAD
 // ---------------
 
-class HalfDataTransferRPoL
+class HalfDataTransferIPoL
 {
 public:
 
     static constexpr bool isThisOpcode(const uint32_t opcode)
     {
         const auto op = fromOpcode(opcode);
-        return (op.unused == 0) && (op.type == 0) &&
+        return (op.unused == 0) && (op.type == 1) &&
             (op.loadBit == loadStore_t::ELoad) &&
             (op.preIndexing == prePost_t::EPost) && (op.constant1 == 1) &&
             (op.constant2 == 1);
@@ -233,12 +224,9 @@ public:
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto loadOperation = memLoadOp<c_op>();
-        uint32_t offset = regs[op.regOrOffset];
+        uint32_t offset = (op.offset2 << 4) | (op.regOrOffset & 0xF);
         uint32_t calculated = regs[op.baseRegister];
 
-        if (op.regOrOffset == 15) {
-            offset += 4;
-        }
         if (op.baseRegister == 15) {
             calculated += 4;
         }

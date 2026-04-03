@@ -127,7 +127,8 @@ static auto makeExpression(const uint32_t opcode)
     const auto sign = op.addOffset == upDown_t::ESubstract ? "-" : "";
     if (op.type == 1) {
         if (op.regOrOffset) {
-            return std::format(", {}#0x{:x}", sign, op.regOrOffset);
+            return std::format(", {}#0x{:x}", sign,
+                               (op.offset2 << 4) | op.regOrOffset);
         }
         return std::format("");
     } else {
