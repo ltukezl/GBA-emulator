@@ -384,95 +384,6 @@ static constexpr std::array m_dispatch_table = {[]() consteval {
     return tmp;
 }()};
 
-static void halfDataTransfer(int opCode)
-{
-    int pFlag = (opCode >> 24) & 1;
-    int uFlag = (opCode >> 23) & 1;
-    int func = (opCode >> 22) & 1;
-    int wFlag = (opCode >> 21) & 1;
-    int lFlag = (opCode >> 20) & 1;
-    int shFlag = (opCode >> 5) & 3;
-    int rn = (opCode >> 16) & 0xF;
-    int rd = (opCode >> 12) & 0xF;
-    int offset = ((opCode >> 4) & 0xF0) | (opCode & 0xF);
-    offset += (rn == 15) ? 8 : 0;
-    int calculated = (rd == 15) ? (r[rn] + 8) : r[rn];
-
-    switch (func) {
-        case 0:
-            if (lFlag) {
-                if (pFlag) {
-                    calculated += uFlag ? r[offset] : -r[offset];
-                }
-                if (shFlag == 1) {
-                    r[rd] = loadFromAddress16(calculated);
-                } else if (shFlag == 2) {
-                    r[rd] = signExtend<8>(loadFromAddress(calculated));
-                } else if (calculated & 1) {
-                    r[rd] = loadFromAddress16(calculated);
-                    if (r[rd] & 0x80) { // sign bit on
-                        r[rd] |= 0xFFFFFF00;
-                    } else {
-                        r[rd] &= 0xFFFF;
-                    }
-                } else {
-                    r[rd] = signExtend<16>(loadFromAddress16(calculated));
-                }
-                if (!pFlag) {
-                    calculated += uFlag ? r[offset] : -r[offset];
-                }
-            } else {
-                m_dispatch_table[reduce_opcode(opCode)](r, opCode);
-            }
-            r[rn] = (wFlag || !pFlag) ? calculated : r[rn];
-            break;
-        case 1:
-            if (lFlag) {
-                if (pFlag) {
-                    calculated += uFlag ? offset : -offset;
-                }
-                if (shFlag == 1) {
-                    r[rd] = loadFromAddress16(calculated);
-                } else if (shFlag == 2) {
-                    r[rd] = signExtend<8>(loadFromAddress(calculated));
-                } else {
-                    uint32_t res = loadFromAddress16(calculated);
-                    res = signExtend<16>(res);
-                    if (calculated & 1) {
-                        if (res & 0x80) { // sign bit on
-                            res |= 0xFFFFFF00;
-                        } else {
-                            res &= 0xFFFF;
-                        }
-                    }
-                    r[rd] = res;
-                }
-                if (!pFlag) {
-                    calculated += uFlag ? offset : offset;
-                }
-                if (rn != rd) {
-                    r[rn] = (wFlag || !pFlag) ? calculated : r[rn];
-                }
-            } else {
-                if (pFlag) {
-                    calculated += uFlag ? offset : -offset;
-                }
-                if (shFlag == 1) {
-                    writeToAddress16(calculated, r[rd]);
-                } else if (shFlag == 2) {
-                    writeToAddress(calculated, signExtend<8>(r[rd]));
-                } else {
-                    writeToAddress16(calculated, signExtend<16>(r[rd]));
-                }
-                if (!pFlag) {
-                    calculated += uFlag ? offset : -offset;
-                }
-                r[rn] = (wFlag || !pFlag) ? calculated : r[rn];
-            }
-            break;
-    }
-}
-
 void ARMExecute(int opCode)
 {
     int condition = (opCode >> 28) & 0xF;
@@ -555,7 +466,7 @@ void ARMExecute(int opCode)
                            (((opCode >> 4) & 0xFF) == 9)) {
                     singleDataSwap(opCode);
                 } else {
-                    halfDataTransfer(opCode);
+                    m_dispatch_table[reduce_opcode(opCode)](r, opCode);
                 }
                 break;
         }
