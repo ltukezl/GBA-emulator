@@ -390,7 +390,7 @@ void ARMExecute(int opCode)
     cycles += 1;
     // units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr,
     // Registers());
-    if (conditions[condition]()) // condition true
+    if (conditions[condition](r)) // condition true
     {
         if (((opCode >> 26) & 0x3) == 1) {
             m_dispatch_table[reduce_opcode(opCode)](r, opCode);

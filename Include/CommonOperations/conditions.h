@@ -3,6 +3,8 @@
 
 #include <string>
 
+class Registers;
+
 int BEQ();
 int BNE();
 int BCS();
@@ -19,7 +21,7 @@ int BGT();
 int BLE();
 int noCond();
 
-extern int (*conditions[15])();
+extern int (*conditions[15])(const Registers& reg);
 extern std::string conditions_s[15];
 
 #endif
