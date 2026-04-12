@@ -127,9 +127,7 @@ public:
 
         calculated += offset;
 
-        if (op.baseRegister == 15) {
-            calculated += 4;
-        }
+        calculated += (op.baseRegister == 15) ? 4 : 0;
         regs[op.baseRegister] = calculated;
     }
 };

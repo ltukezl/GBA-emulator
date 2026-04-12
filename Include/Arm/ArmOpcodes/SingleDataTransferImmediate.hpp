@@ -28,20 +28,30 @@ public:
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto storeOperation = memStoreOp<c_op>();
         uint32_t offset = op.offset;
+        uint32_t calculated = regs[op.baseRegister];
+        auto val_to_write = regs[op.destinationRegister];
+
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
+        if (op.destinationRegister == 15) {
+            val_to_write += 8;
+        }
+
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
 
-        uint32_t calculated = regs[op.baseRegister];
         calculated += offset;
-        calculated += (op.baseRegister == 15) ? 4 : 0;
+
+        storeOperation(calculated, val_to_write);
 
         if constexpr (c_op.writeBack == writeBack_t::EWriteback) {
+            if (op.baseRegister == 15) {
+                calculated += 4;
+            }
             regs[op.baseRegister] = calculated;
         }
-
-        storeOperation(calculated, regs[op.destinationRegister]);
-        destinationRegisterBug(op, regs);
     }
 };
 
@@ -68,16 +78,24 @@ public:
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto storeOperation = memStoreOp<c_op>();
         uint32_t offset = op.offset;
+        uint32_t calculated = regs[op.baseRegister];
+        uint32_t value_to_write = regs[op.destinationRegister];
+
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
+        if (op.destinationRegister == 15) {
+            value_to_write += 8;
+        }
+
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
 
-        uint32_t calculated = regs[op.baseRegister];
-        storeOperation(calculated, regs[op.destinationRegister]);
+        storeOperation(calculated, value_to_write);
         calculated += offset;
         calculated += (op.baseRegister == 15) ? 4 : 0;
         regs[op.baseRegister] = calculated;
-        destinationRegisterBug(op, regs);
     }
 };
 
@@ -104,19 +122,27 @@ public:
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto loadOperation = memLoadOp<c_op>();
         uint32_t offset = op.offset;
+        uint32_t calculated = regs[op.baseRegister];
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
+
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
 
-        uint32_t calculated = regs[op.baseRegister];
+        const uint32_t load_address = calculated + offset;
         calculated += offset;
-        calculated += (op.baseRegister == 15) ? 4 : 0;
 
         if constexpr (c_op.writeBack == writeBack_t::EWriteback) {
+            if (op.baseRegister == 15) {
+                calculated += 4;
+            }
             regs[op.baseRegister] = calculated;
         }
 
-        regs[op.destinationRegister] = loadOperation(calculated, false);
+        uint32_t loaded_value = loadOperation(load_address, false);
+        regs[op.destinationRegister] = loaded_value;
     }
 };
 
@@ -143,17 +169,25 @@ public:
         constexpr auto c_op = fromOpcode(opcode_iter);
         constexpr auto loadOperation = memLoadOp<c_op>();
         uint32_t offset = op.offset;
+        uint32_t calculated = regs[op.baseRegister];
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
+
         if constexpr (c_op.addOffset == upDown_t::ESubstract) {
             offset = -offset;
         }
+        const uint32_t load_address = calculated;
 
-        uint32_t calculated = regs[op.baseRegister];
-        const auto ret = loadOperation(calculated, false);
         calculated += offset;
-        calculated += (op.baseRegister == 15) ? 4 : 0;
+
+        if (op.baseRegister == 15) {
+            calculated += 4;
+        }
         regs[op.baseRegister] = calculated;
-        regs[op.destinationRegister] = ret;
-        destinationRegisterBug(op, regs);
+
+        const auto loaded_value = loadOperation(load_address, false);
+        regs[op.destinationRegister] = loaded_value;
     }
 };
 
