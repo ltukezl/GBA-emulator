@@ -7,8 +7,6 @@ void BGViewer::updateBG(const BgCnt* bgCnt, sf::Texture& res)
     uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
     const uint32_t tileStartRow =
         bgCnt->is8Bit ? bgCnt->tileBaseBlock * 8 : bgCnt->tileBaseBlock * 512;
-    const uint8_t sizeX = bgCnt->hWide ? 64 : 32;
-    const uint8_t sizeY = bgCnt->vWide ? 64 : 32;
 
     for (size_t i = 0; i < 32; i++) {
         for (size_t k = 0; k < 32; k++) {

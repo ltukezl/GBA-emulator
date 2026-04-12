@@ -7,13 +7,7 @@
 class RenderMode4
 {
 private:
-    struct BGPixels
-    {
-        RgbaPalette::GBAColor grid[512][512]; // consider of changing to 160x240
-    } m_background;
 
 public:
-    void draw();
-    uint32_t* getBG();
-    void fillImage(finalImagePalettes& imageBase);
+    static void draw(finalImageColored& img, const uint32_t line);
 };

@@ -6,6 +6,7 @@
 
 #include "Gba-Graphics/BGLayer/BGLayer.hpp"
 #include "Gba-Graphics/Rendermodes/RenderMode3.h"
+#include "Gba-Graphics/Rendermodes/RenderMode4.h"
 #include "Memory/memoryOps.h"
 
 class GameDisplay
@@ -25,6 +26,9 @@ public:
     {
         if (displayCtrl->bgMode == 3) {
             RenderMode3::draw(*m_bgLayer2.pixels, LYC);
+        }
+        if (displayCtrl->bgMode == 4) {
+            RenderMode4::draw(*m_bgLayer2.pixels, LYC);
         }
     }
 
