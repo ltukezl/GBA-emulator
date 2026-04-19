@@ -9,87 +9,107 @@
 extern Tileset tileset;
 extern RgbaPalette PaletteColours;
 
-void TextMode::draw(uint8_t regOffset)
+void TextMode::draw(finalImageColored& img,
+                    const uint8_t regOffset,
+                    const uint32_t line,
+                    const bool first)
 {
-    /*
+    if (line >= 160) {
+        return;
+    }
+
     BgCnt* bgCnt = (BgCnt*)&IoRAM[8 + regOffset];
     uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
     const uint32_t tileStartRow =
-        bgCnt->is8Bit ? bgCnt->tileBaseBlock * 8 : bgCnt->tileBaseBlock * 16;
+        bgCnt->is8Bit ? bgCnt->tileBaseBlock * 256 : bgCnt->tileBaseBlock * 512;
     const uint8_t sizeX = bgCnt->hWide ? 64 : 32;
     const uint8_t sizeY = bgCnt->vWide ? 64 : 32;
 
+    size_t scan_pixel = 0;
+
+    for (size_t tile_ctrl = 0; tile_ctrl < 30; tile_ctrl++) {
+        const auto tile_ctrl0 =
+            (BgTile*)&vram[startAddr + tile_ctrl * 2 + ((line / 8) * 64)];
+        const auto tile_num = tile_ctrl0->tileNumber + tileStartRow;
+        const auto palette_num = tile_ctrl0->paletteNum;
+        const auto& tile = tileset.tileset.linear[tile_num].create(
+            palette_num, false, false, false);
+        for (size_t x = 0; x < 8; x++) {
+            img[line][scan_pixel] = tile.grid[line % 8][x];
+            scan_pixel++;
+        }
+    }
+
+    /*
     for (size_t i = 0; i < 32; i++) {
         for (size_t k = 0; k < 32; k++) {
             BgTile* tileCtrl = (BgTile*)&vram[startAddr];
             auto t = tileset.getTile(tileStartRow + tileCtrl->tileNumber / 32,
                                      tileCtrl->tileNumber % 32,
                                      tileCtrl->paletteNum, bgCnt->is8Bit);
-            backgroundTiles[i][k] =
-                t.flipVertical(tileCtrl->VerticalFlip)
-                    .flipHorizontal(tileCtrl->horizontalFlip);
+            // backgroundTiles[i][k] =
+            //     t.flipVertical(tileCtrl->VerticalFlip)
+            //         .flipHorizontal(tileCtrl->horizontalFlip);
             startAddr += 2;
         }
     }
 
-    if (bgCnt->hWide) {
-        for (size_t i = 0; i < 32; i++) {
-            for (size_t k = 0; k < 32; k++) {
-                BgTile* tileCtrl = (BgTile*)&vram[startAddr];
-                backgroundTiles[i][k + 32] =
-                    tileset
-                        .getTile(tileStartRow + tileCtrl->tileNumber / 32,
-                                 tileCtrl->tileNumber % 32,
-                                 tileCtrl->paletteNum, bgCnt->is8Bit)
-                        .flipVertical(tileCtrl->VerticalFlip)
-                        .flipHorizontal(tileCtrl->horizontalFlip);
-                startAddr += 2;
-            }
-        }
-    }
-    if (bgCnt->vWide) {
-        for (size_t i = 0; i < 32; i++) {
-            for (size_t k = 0; k < 32; k++) {
-                BgTile* tileCtrl = (BgTile*)&vram[startAddr];
-                backgroundTiles[i + 32][k] =
-                    tileset
-                        .getTile(tileStartRow + tileCtrl->tileNumber / 32,
-                                 tileCtrl->tileNumber % 32,
-                                 tileCtrl->paletteNum, bgCnt->is8Bit)
-                        .flipVertical(tileCtrl->VerticalFlip)
-                        .flipHorizontal(tileCtrl->horizontalFlip);
-                startAddr += 2;
-            }
-        }
-    }
-    if (bgCnt->vWide && bgCnt->hWide) {
-        for (size_t i = 0; i < 32; i++) {
-            for (size_t k = 0; k < 32; k++) {
-                BgTile* tileCtrl = (BgTile*)&vram[startAddr];
-                backgroundTiles[i + 32][k + 32] =
-                    tileset
-                        .getTile(tileStartRow + tileCtrl->tileNumber / 32,
-                                 tileCtrl->tileNumber % 32,
-                                 tileCtrl->paletteNum, bgCnt->is8Bit)
-                        .flipVertical(tileCtrl->VerticalFlip)
-                        .flipHorizontal(tileCtrl->horizontalFlip);
-                startAddr += 2;
-            }
-        }
-    }
-
-    for (size_t tileY = 0; tileY < sizeY; tileY++) {
-        for (size_t pixelY = 0; pixelY < 8; pixelY++) {
-            for (size_t tileX = 0; tileX < sizeX; tileX++) {
-                for (size_t pixelX = 0; pixelX < 8; pixelX++) {
-                    auto& tile =
-                        backgroundTiles[tileY][tileX].grid[pixelY][pixelX];
-                    background[8 * tileY + pixelY][8 * tileX + pixelX] = tile;
+        if (bgCnt->hWide) {
+            for (size_t i = 0; i < 32; i++) {
+                for (size_t k = 0; k < 32; k++) {
+                    BgTile* tileCtrl = (BgTile*)&vram[startAddr];
+                    backgroundTiles[i][k + 32] =
+                        tileset
+                            .getTile(tileStartRow + tileCtrl->tileNumber /
+   32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit)
+                            .flipVertical(tileCtrl->VerticalFlip)
+                            .flipHorizontal(tileCtrl->horizontalFlip);
+                    startAddr += 2;
                 }
             }
         }
-    }
-    */
+        if (bgCnt->vWide) {
+            for (size_t i = 0; i < 32; i++) {
+                for (size_t k = 0; k < 32; k++) {
+                    BgTile* tileCtrl = (BgTile*)&vram[startAddr];
+                    backgroundTiles[i + 32][k] =
+                        tileset
+                            .getTile(tileStartRow + tileCtrl->tileNumber /
+   32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit)
+                            .flipVertical(tileCtrl->VerticalFlip)
+                            .flipHorizontal(tileCtrl->horizontalFlip);
+                    startAddr += 2;
+                }
+            }
+        }
+        if (bgCnt->vWide && bgCnt->hWide) {
+            for (size_t i = 0; i < 32; i++) {
+                for (size_t k = 0; k < 32; k++) {
+                    BgTile* tileCtrl = (BgTile*)&vram[startAddr];
+                    backgroundTiles[i + 32][k + 32] =
+                        tileset
+                            .getTile(tileStartRow + tileCtrl->tileNumber /
+   32, tileCtrl->tileNumber % 32, tileCtrl->paletteNum, bgCnt->is8Bit)
+                            .flipVertical(tileCtrl->VerticalFlip)
+                            .flipHorizontal(tileCtrl->horizontalFlip);
+                    startAddr += 2;
+                }
+            }
+        }
+
+        for (size_t tileY = 0; tileY < sizeY; tileY++) {
+            for (size_t pixelY = 0; pixelY < 8; pixelY++) {
+                for (size_t tileX = 0; tileX < sizeX; tileX++) {
+                    for (size_t pixelX = 0; pixelX < 8; pixelX++) {
+                        auto& tile =
+                            backgroundTiles[tileY][tileX].grid[pixelY][pixelX];
+                        background[8 * tileY + pixelY][8 * tileX + pixelX] =
+       tile;
+                    }
+                }
+            }
+        }
+        */
 }
 
 void TextMode::fillImage(finalImagePalettes& imageBase, const uint32_t offset)

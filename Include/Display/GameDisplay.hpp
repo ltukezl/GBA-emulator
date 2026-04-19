@@ -7,6 +7,7 @@
 #include "Gba-Graphics/BGLayer/BGLayer.hpp"
 #include "Gba-Graphics/Rendermodes/RenderMode3.h"
 #include "Gba-Graphics/Rendermodes/RenderMode4.h"
+#include "Gba-Graphics/Rendermodes/TextMode.h"
 #include "Memory/memoryOps.h"
 
 class GameDisplay
@@ -24,6 +25,9 @@ public:
 
     void drawLine(uint8_t& LYC)
     {
+        if (displayCtrl->bgMode == 0) {
+            TextMode::draw(*m_bgLayer2.pixels, 0, LYC, true);
+        }
         if (displayCtrl->bgMode == 3) {
             RenderMode3::draw(*m_bgLayer2.pixels, LYC);
         }

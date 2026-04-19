@@ -8,11 +8,11 @@
 class TextMode
 {
 
-    Tile::GBATile backgroundTiles[64][64] = {};
-    Tile::BitmapBit background[64 * 8][64 * 8] = {};
-    uint32_t backgroundColored[64 * 8][64 * 8] = {};
 public:
-    void draw(uint8_t regOffset);
+    static void draw(finalImageColored& img,
+                     const uint8_t regOffset,
+                     const uint32_t line,
+                     const bool first);
     void fillImage(finalImagePalettes& imageBase, const uint32_t offset);
     uint32_t* getBG();
 };
