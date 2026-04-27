@@ -96,6 +96,8 @@ usr mode. otherwise gba starts from addrs 0 in svc mode
 */
 int main(int argc, char* args[])
 {
+    // ARMExecute(0);
+    // return 0;
     const char* asd = ROOT_PATH "\\arial.ttf";
     std::println("{}", asd);
 #if BIOS_START
@@ -159,20 +161,19 @@ int main(int argc, char* args[])
 #endif
     memoryInits();
 
-    ////const std::string game = ROOT_PATH"/TestBinaries/FuzzARM.gba";
-    // const std::string game = ROOT_PATH"/TestBinaries/arm.gba";
-    // const std::string game =
-    //    ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
-    // const std::string game = ROOT_PATH"/TestBinaries/thumb.gba";
-    const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
-    // const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
-    //  const std::string game = ROOT_PATH "/TestBinaries/tonc/m3_demo.gba";
-    //  const std::string game = ROOT_PATH"/TestBinaries/tonc/irq_demo.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/FuzzARM.gba";
+    //       const std::string game = ROOT_PATH "/TestBinaries/arm.gba";
+    //  const std::string game =
+    //     ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
+    //       const std::string game = ROOT_PATH"/TestBinaries/thumb.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
+    //   const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
+    //    const std::string game = ROOT_PATH "/TestBinaries/tonc/m3_demo.gba";
+    const std::string game = ROOT_PATH "/TestBinaries/tonc/irq_demo.gba";
 
     readFile(game, GamePak);
     readFile("GBA.BIOS", systemROM.m_memoryArea);
 
-    uint64_t vCounterDrawCycles = 0;
     cycles = 0;
     step = true;
 
@@ -203,6 +204,7 @@ int main(int argc, char* args[])
         if (hBlankCounter >= 1232 && !LCDStatus->vblankFlag) {
             hBlankCounter -= 1232;
             LCDStatus->hblankFlag = 0;
+            PaletteColours.updatePalette();
             if (InterruptEnableRegister->hBlank && LCDStatus->hIRQEn) {
                 InterruptFlagRegister->hBlank = 1;
             }
@@ -229,7 +231,6 @@ int main(int argc, char* args[])
             paletteViewer.handleEvents();
             paletteViewer.renderPalettes();
 #endif
-            PaletteColours.updatePalette();
             gameDisplay.draw();
             g_bgViewer.draw();
         } else if (vBlankCounter > 197120) {
