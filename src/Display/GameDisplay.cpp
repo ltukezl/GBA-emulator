@@ -2,8 +2,7 @@
 
 void GameDisplay::draw()
 {
-    m_game_texture.update(
-        reinterpret_cast<uint8_t*>(&(*m_bgLayer2.pixels)[0][0]));
+    m_game_texture.update(reinterpret_cast<uint8_t*>(&(*m_game_pixels)[0][0]));
     m_game_sprite.setTexture(m_game_texture);
     m_display->clear(sf::Color::Black);
     m_display->draw(m_game_sprite);
@@ -17,7 +16,7 @@ void GameDisplay::handleEvents()
         m_display->close();
     };
 
-    const auto onKeyEntered = [this](const sf::Event::KeyPressed& event) {
+    const auto onKeyEntered = [](const sf::Event::KeyPressed& event) {
         if (event.code == sf::Keyboard::Key::Down) {
             keyInput->btn_down = 0;
         }
@@ -59,7 +58,7 @@ void GameDisplay::handleEvents()
         }
     };
 
-    const auto onKeyReleased = [this](const sf::Event::KeyReleased& event) {
+    const auto onKeyReleased = [](const sf::Event::KeyReleased& event) {
         if (event.code == sf::Keyboard::Key::Down) {
             keyInput->btn_down = 1;
         }

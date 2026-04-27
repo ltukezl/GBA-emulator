@@ -8,7 +8,7 @@
 #include "Gba-Graphics/BGLayer/BGLayer.hpp"
 #include "Gba-Graphics/Rendermodes/RenderMode3.h"
 #include "Gba-Graphics/Rendermodes/RenderMode4.h"
-#include "Gba-Graphics/Rendermodes/TextMode.h"
+#include "Gba-Graphics/Rendermodes/RenderMode5.h"
 #include "Memory/memoryOps.h"
 
 class GameDisplay
@@ -16,8 +16,9 @@ class GameDisplay
 public:
     GameDisplay()
     {
+        m_game_pixels = std::make_unique<finalImageColored>();
         m_game_texture.update(
-            reinterpret_cast<uint8_t*>(&(*m_bgLayer2.pixels)[0][0]));
+            reinterpret_cast<uint8_t*>(&(*m_game_pixels)[0][0]));
     }
 
     void draw();
@@ -27,14 +28,17 @@ public:
         if (LYC == 0) {}
         if (displayCtrl->bgMode == 0) {
             std::sort(m_all_bg_layers.begin(), m_all_bg_layers.end());
-            TextMode::draw(*m_bgLayer2.pixels, 0, LYC, true);
-            TextMode::draw(*m_bgLayer2.pixels, 2, LYC, true);
-            //  TextMode::draw(*m_bgLayer2.pixels, 4, LYC, true);
-            //  TextMode::draw(*m_bgLayer2.pixels, 6, LYC, true);
+            for (auto& bg_layer: m_all_bg_layers) {
+                if (bg_layer.is_enabled()) {
+                    bg_layer.draw_text_mode(*m_game_pixels, LYC, false);
+                }
+            }
         } else if (displayCtrl->bgMode == 3) {
-            RenderMode3::draw(*m_bgLayer2.pixels, LYC);
+            RenderMode3::draw(*m_game_pixels, LYC);
         } else if (displayCtrl->bgMode == 4) {
-            RenderMode4::draw(*m_bgLayer2.pixels, LYC);
+            RenderMode4::draw(*m_game_pixels, LYC);
+        } else if (displayCtrl->bgMode == 5) {
+            RenderMode5::draw(*m_game_pixels, LYC);
         }
     }
 
@@ -49,14 +53,15 @@ private:
     sf::Sprite m_game_sprite{m_game_texture};
 
     std::array<BGLayer, 4> m_all_bg_layers{
-        {{1, reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[8]))},
-         {2, reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[10]))},
-         {3, reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[12]))},
-         {4,
+        {{0, reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[8]))},
+         {1, reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[10]))},
+         {2, reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[12]))},
+         {3,
           reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[14]))}},
     };
 
     BGLayer& m_bgLayer2 = m_all_bg_layers[1];
+    std::unique_ptr<finalImageColored> m_game_pixels;
 };
 
 #endif
