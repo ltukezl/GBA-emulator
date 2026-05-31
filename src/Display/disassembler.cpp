@@ -7,6 +7,12 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
+#include "Arm/ArmOpcodes/BlockDataTransferStores.hpp"
+#include "Arm/ArmOpcodes/Branch.hpp"
+#include "Arm/ArmOpcodes/Multiply.hpp"
+#include "Arm/ArmOpcodes/SDDHelper.hpp"
+#include "Arm/ArmOpcodes/Undefop.hpp"
 #include "Arm/Swi.hpp"
 #include "Display/Disassembler.hpp"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
@@ -83,6 +89,29 @@ std::string Disassembler::thumb_disassembly(const uint32_t program_counter,
     } else {
         return BranchLink::disassemble(program_counter, opcode);
     }
+}
+
+std::string Disassembler::arm_disassembly(const uint32_t program_counter,
+                                          const uint32_t opCode)
+{
+    if (UndefOp::isThisOpcode(opCode)) {
+        return UndefOp::disassemble(opCode);
+    }
+    if (((opCode >> 26) & 0x3) == 0) {
+        return HalfDataTransfer::disassemble(opCode);
+    }
+    if (((opCode >> 26) & 0x3) == 1) {
+        return SingleDataTransfer::disassemble(opCode);
+    }
+    if (BlockDataTransfer::isThisOpcode(opCode)) {
+        if (BlockDataTransferLoad::isThisOpcode(opCode)) {
+            return BlockDataTransfer::disassemble(opCode);
+        }
+    }
+    if (branches::ArmBranch::isThisOpcode(opCode)) {
+        return branches::ArmBranch::disassemble(opCode);
+    }
+    return UndefOp::disassemble(opCode);
 }
 
 void Disassembler::Show_Registers(const Registers& regs)

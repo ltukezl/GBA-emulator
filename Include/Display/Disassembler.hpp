@@ -2,7 +2,6 @@
 #define DISASSEMBLER_H
 
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Font.hpp>
@@ -17,12 +16,17 @@ public:
     Disassembler();
     void display_disassembly(const Registers& regs);
     void handleEvents();
+    static std::string thumb_disassembly(const uint32_t program_counter,
+                                         const uint16_t opcode);
+
+    static std::string arm_disassembly(const uint32_t program_counter,
+                                       const uint32_t opcode);
+
 
 private:
     void display(const Registers& regs);
     void Show_Registers(const Registers& regs);
-    std::string thumb_disassembly(const uint32_t program_counter,
-                                  const uint16_t opcode);
+
     std::string read_opcodes(const uint32_t program_counter);
 
     sf::Font m_font{ROOT_PATH "\\arial.ttf"};

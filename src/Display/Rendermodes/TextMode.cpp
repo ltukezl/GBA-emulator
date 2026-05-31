@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <iostream>
 
 #include "Gba-Graphics/Rendermodes/TextMode.h"
 #include "Gba-Graphics/Tile/Tileset.h"
@@ -33,8 +32,18 @@ void TextMode::draw(finalImageColored& img,
         const auto tile_num = tile_ctrl0->tileNumber + tileStartRow;
         const auto palette_num = tile_ctrl0->paletteNum;
         const auto& tile = tileset.tileset.linear[tile_num].create(
-            palette_num, false, false, false);
+            palette_num, tile_ctrl0->VerticalFlip, tile_ctrl0->horizontalFlip,
+            false);
         for (size_t x = 0; x < 8; x++) {
+            const auto back_drop_color =
+                PaletteColours.colorFromIndex(palette_num, 0);
+
+            if (img[line][scan_pixel].rawColor != 1 &&
+                tile.grid[line % 8][x].rawColor == back_drop_color.rawColor) {
+                scan_pixel++;
+                continue;
+            }
+
             img[line][scan_pixel] = tile.grid[line % 8][x];
             scan_pixel++;
         }
