@@ -4,11 +4,10 @@
 #include <utility>
 
 #include "Arm/armopcodes.h"
-#include "Arm/ArmOpcodes/Branch.hpp"
-#include "Arm/ArmOpcodes/Multiply.hpp"
-
 #include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
 #include "Arm/ArmOpcodes/BlockDataTransferStores.hpp"
+#include "Arm/ArmOpcodes/Branch.hpp"
+#include "Arm/ArmOpcodes/Multiply.hpp"
 #include "Arm/ArmOpcodes/SDDHelper.hpp"
 #include "Arm/ArmOpcodes/Undefop.hpp"
 #include "CommonOperations/arithmeticOps.h"
@@ -16,21 +15,10 @@
 #include "CommonOperations/logicalOps.h"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
+#include "Display/Disassembler.hpp"
 #include "GBAcpu.h"
 #include "Interrupt/interrupt.h"
 #include "Memory/memoryOps.h"
-
-static void singleDataSwap(int opCode)
-{
-    uint32_t rm = opCode & 0xF;
-    uint32_t rd = (opCode >> 12) & 0xF;
-    uint32_t rn = (opCode >> 16) & 0xF;
-    bool byteFlag = (opCode >> 22) & 1;
-
-    uint32_t tmp = byteFlag ? loadFromAddress(r[rn]) : loadFromAddress32(r[rn]);
-    byteFlag ? writeToAddress(r[rn], r[rm]) : writeToAddress32(r[rn], r[rm]);
-    r[rd] = tmp;
-}
 
 void lslCond(int& saveTo, int from, int immidiate)
 {
@@ -364,6 +352,7 @@ static auto constexpr decode_arm_opcode()
     if constexpr (branches::ArmBranch::isThisOpcode(opCode)) {
         return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
     }
+
     return &null_func;
 }
 
@@ -384,12 +373,233 @@ static constexpr std::array m_dispatch_table = {[]() consteval {
     return tmp;
 }()};
 
+#include "Arm/json.hpp"
+#include <fstream>
+#include <iostream>
+#include <print>
+
+void write_initial_memory_transactions(const auto& json)
+{
+    for (const auto& j: json["transactions"]) {
+        if (j["addr"] == j["data"]) {
+            continue;
+        }
+        if (j["kind"] == 0 || j["kind"] == 1) {
+            if (j["size"] == 4) {
+                writeToAddress32(j["addr"].template get<uint32_t>() & ~3,
+                                 j["data"]);
+            } else if (j["size"] == 2) {
+                writeToAddress16(j["addr"].template get<uint32_t>() & ~1,
+                                 j["data"]);
+            } else if (j["size"] == 1) {
+                writeToAddress(j["addr"].template get<uint32_t>(), j["data"]);
+            }
+        }
+    }
+}
+
+void write_cpu_registers(auto& dst, const auto& values)
+{
+    size_t idx = 0;
+    for (const auto& initial_R: values) {
+        dst[idx] = initial_R.template get<uint32_t>();
+        idx++;
+    }
+}
+
+void setup_cpu_registers(auto& registers, const auto& json)
+{
+    const auto& initials = json["initial"];
+    size_t idx = 0;
+    for (auto& initial_R: initials["R"]) {
+        *registers.usrSys[idx] = initial_R.template get<uint32_t>();
+        idx++;
+    }
+
+    registers[15] = json["base_addr"][0].template get<uint32_t>();
+
+    write_cpu_registers(registers.fiqBanked, initials["R_fiq"]);
+    write_cpu_registers(registers.svcBanked, initials["R_svc"]);
+    write_cpu_registers(registers.abtBanked, initials["R_abt"]);
+    write_cpu_registers(registers.irqBanked, initials["R_irq"]);
+    write_cpu_registers(registers.undBanked, initials["R_und"]);
+
+    registers.m_cpsr.val = initials["CPSR"].template get<uint32_t>();
+    registers.updateMode(registers.getMode());
+
+    registers.sprs_usr = 0;
+    registers.sprs_fiq = initials["SPSR"][0].template get<uint32_t>();
+    registers.sprs_svc = initials["SPSR"][1].template get<uint32_t>();
+    registers.sprs_abt = initials["SPSR"][2].template get<uint32_t>();
+    registers.sprs_irq = initials["SPSR"][3].template get<uint32_t>();
+    registers.sprs_udf = initials["SPSR"][4].template get<uint32_t>();
+}
+
+void execute_instruction(auto& registers, const auto& json, const bool failed)
+{
+    const auto& initials = json["initial"];
+    uint32_t opcode = initials["pipeline"][0].template get<uint32_t>();
+
+    int condition = (opcode >> 28) & 0xF;
+
+    registers[15] += 4;
+    if (conditions[condition](registers)) {
+        std::cout << " " << registers[15] << " " << registers[0] << " "
+                  << Disassembler::arm_disassembly(registers[15], opcode)
+                  << "\n";
+        const auto func = m_dispatch_table[reduce_opcode(opcode)];
+        if (failed) {
+            std::println("opcode {} ({:x}), reduced {} ({:x})", opcode, opcode,
+                         reduce_opcode(opcode), reduce_opcode(opcode));
+        }
+        func(registers, opcode);
+    }
+    registers[15] += 8;
+}
+
+bool validate_final_register_bank(const auto& registers,
+                                  const auto& final_values,
+                                  const std::string_view register_name)
+{
+    size_t idx = 0;
+    for (const auto& initial_R: final_values) {
+        const auto i = registers[idx];
+        const auto ex = initial_R.template get<uint32_t>();
+        if (i != ex) {
+            std::println("from {} register {} got {} expected {}",
+                         register_name, idx, i, ex);
+            return true;
+        }
+        idx++;
+    }
+    return false;
+}
+
+bool validate_result(const auto& registers, const auto& json)
+{
+    const auto& finals = json["final"];
+
+    bool failed = false;
+    size_t idx = 0;
+    for (auto& initial_R: finals["R"]) {
+        const auto i = *registers.usrSys[idx];
+        const auto ex = initial_R.template get<uint32_t>();
+        if (i != ex) {
+            std::println(
+                "from usrSys register {} got {} (0x{:x}) expected {} (0x{:x})",
+                idx, i, i, ex, ex);
+            failed = true;
+        }
+        idx++;
+    }
+
+    failed |= validate_final_register_bank(registers.fiqBanked, finals["R_fiq"],
+                                           "R_fiq");
+    failed |= validate_final_register_bank(registers.svcBanked, finals["R_svc"],
+                                           "R_svc");
+    failed |= validate_final_register_bank(registers.abtBanked, finals["R_abt"],
+                                           "R_abt");
+    failed |= validate_final_register_bank(registers.irqBanked, finals["R_irq"],
+                                           "R_irq");
+    failed |= validate_final_register_bank(registers.undBanked, finals["R_und"],
+                                           "R_und");
+
+    if (registers.m_cpsr.val != finals["CPSR"].template get<uint32_t>()) {
+        std::println("m_cpsr register failed got: {} expected {}",
+                     registers.m_cpsr.val,
+                     finals["CPSR"].template get<uint32_t>());
+        failed = true;
+    }
+    if (registers.sprs_fiq != finals["SPSR"][0].template get<uint32_t>()) {
+        std::println("sprs_fiq register failed got: {} expected {}",
+                     registers.sprs_fiq,
+                     finals["SPSR"][0].template get<uint32_t>());
+        failed = true;
+    }
+    if (registers.sprs_svc != finals["SPSR"][1].template get<uint32_t>()) {
+        std::println("sprs_svc register failed got: {} expected {}",
+                     registers.sprs_svc,
+                     finals["SPSR"][1].template get<uint32_t>());
+        failed = true;
+    }
+    if (registers.sprs_abt != finals["SPSR"][2].template get<uint32_t>()) {
+        std::println("sprs_abt register failed got: {} expected {}",
+                     registers.sprs_abt,
+                     finals["SPSR"][2].template get<uint32_t>());
+        failed = true;
+    }
+    if (registers.sprs_irq != finals["SPSR"][3].template get<uint32_t>()) {
+        std::println("sprs_irq register failed got: {} expected {}",
+                     registers.sprs_irq,
+                     finals["SPSR"][3].template get<uint32_t>());
+        failed = true;
+    }
+    if (registers.sprs_udf != finals["SPSR"][4].template get<uint32_t>()) {
+        std::println("sprs_udf register failed got: {} expected {}",
+                     registers.sprs_udf,
+                     finals["SPSR"][4].template get<uint32_t>());
+        failed = true;
+    }
+
+    return failed;
+}
+
+bool validate_memory_regions_final(const auto& json)
+{
+    for (auto& j: json["transactions"]) {
+        if (j["kind"] == 2) {
+            uint32_t val = 0;
+            if (j["size"] == 4) {
+                val =
+                    loadFromAddress32(j["addr"].template get<uint32_t>() & ~3);
+            } else if (j["size"] == 2) {
+                val =
+                    loadFromAddress16(j["addr"].template get<uint32_t>() & ~1);
+            } else if (j["size"] == 1) {
+                val = loadFromAddress(j["addr"].template get<uint32_t>());
+            }
+            const auto expected = j["data"].template get<uint32_t>();
+
+            if (val != expected) {
+                std::println("from {} got {} expected {}",
+                             j["addr"].template get<uint32_t>(), val, expected);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void runSingleStepTests_a()
+{
+    Registers registers;
+    bool failed = false;
+    const std::string game = "../ARM7TDMI/v1/arm_swp.json";
+    std::ifstream ifs(game);
+    const auto jf = nlohmann::json::parse(ifs);
+    for (const auto& json: jf) {
+
+        write_initial_memory_transactions(json);
+        setup_cpu_registers(registers, json);
+        execute_instruction(registers, json, failed);
+        failed |= validate_memory_regions_final(json);
+        failed |= validate_result(registers, json);
+        if (failed) {
+            write_initial_memory_transactions(json);
+            setup_cpu_registers(registers, json);
+            execute_instruction(registers, json, failed);
+            validate_memory_regions_final(json);
+            validate_result(registers, json);
+            return;
+        }
+    }
+}
+
 void ARMExecute(int opCode)
 {
     int condition = (opCode >> 28) & 0xF;
     cycles += 1;
-    // units[ProcessingUnits::EDataProcessing] = new DataProcessingOpcode(cpsr,
-    // Registers());
+
     if (conditions[condition](r)) // condition true
     {
         if (((opCode >> 26) & 0x3) == 1) {
@@ -464,7 +674,7 @@ void ARMExecute(int opCode)
                     registerRotate(opCode); //<-
                 } else if ((((opCode >> 23) & 0x1F) == 2) &&
                            (((opCode >> 4) & 0xFF) == 9)) {
-                    singleDataSwap(opCode);
+                    m_dispatch_table[reduce_opcode(opCode)](r, opCode);
                 } else {
                     m_dispatch_table[reduce_opcode(opCode)](r, opCode);
                 }

@@ -35,9 +35,7 @@ public:
     }
 
     static constexpr auto mask(const uint32_t opcode)
-    {
-        return opcode & (1 << 24);
-    }
+    { return opcode & (1 << 24); }
 
     static constexpr bool isThisOpcode(const uint32_t opcode)
     {
@@ -99,8 +97,11 @@ public:
     static void execute(Registers& regs, const uint32_t opcode)
     {
         const auto op = fromOpcode(opcode);
-        regs.m_cpsr.thumb = regs[op.rn] & 1;
-        regs[TRegisters::EProgramCounter] = regs[op.rn] & ~1;
+        uint32_t jump_address = regs[op.rn];
+        const uint32_t to_thumb = regs[op.rn] & 1;
+
+        regs.m_cpsr.thumb = to_thumb;
+        regs[TRegisters::EProgramCounter] = jump_address & 0xFFFFFFFE;
     }
 
     static auto disassemble(const uint32_t opcode)

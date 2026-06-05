@@ -97,6 +97,12 @@ std::string Disassembler::arm_disassembly(const uint32_t program_counter,
     if (UndefOp::isThisOpcode(opCode)) {
         return UndefOp::disassemble(opCode);
     }
+    if (branches::ArmBranchAndExhange::isThisOpcode(opCode)) {
+        return branches::ArmBranchAndExhange::disassemble(opCode);
+    }
+    if (Swap::isThisOpcode(opCode)) {
+        return Swap::disassemble(opCode);
+    }
     if (((opCode >> 26) & 0x3) == 0) {
         return HalfDataTransfer::disassemble(opCode);
     }

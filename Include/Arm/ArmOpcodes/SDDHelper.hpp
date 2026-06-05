@@ -3,10 +3,12 @@
 
 #include <cassert>
 
+#include "Arm/ArmOpcodes/Branch.hpp"
 #include "Arm/ArmOpcodes/HalfDataTransferImmediate.hpp"
 #include "Arm/ArmOpcodes/HalfDataTransferRegister.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferRegister.hpp"
+#include "Arm/ArmOpcodes/swp.hpp"
 
 namespace SingleDataTransfer {
 static void null_func_sdd(Registers&, const uint32_t) {}
@@ -44,7 +46,9 @@ template<uint32_t opCode>
 static consteval decltype(&HalfDataTransferRPrS::execute<0>) decode_hdd()
 {
 
-    if constexpr (HalfDataTransferIPrS::isThisOpcode(opCode)) {
+    if constexpr (Swap::isThisOpcode(opCode)) {
+        return &Swap::execute<Swap::mask(opCode)>;
+    } else if constexpr (HalfDataTransferIPrS::isThisOpcode(opCode)) {
         return &HalfDataTransferIPrS::execute<mask(opCode)>;
     } else if constexpr (HalfDataTransferIPrL::isThisOpcode(opCode)) {
         return &HalfDataTransferIPrL::execute<mask(opCode)>;
@@ -63,7 +67,7 @@ static consteval decltype(&HalfDataTransferRPrS::execute<0>) decode_hdd()
     }
 
     else {
-        return &null_func_hdd;
+        return &branches::ArmBranchAndExhange::execute;
     }
 }
 } // namespace HalfDataTransfer

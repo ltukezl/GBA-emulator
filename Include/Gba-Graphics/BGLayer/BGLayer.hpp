@@ -14,12 +14,12 @@ public:
     {
     }
 
-    bool operator<(const BGLayer& other) const noexcept
+    auto operator<=>(const BGLayer& other) const noexcept
     {
-        if (m_reg->priority == other.m_reg->priority) {
-            return m_bg < other.m_bg;
+        if (auto cmp = m_reg->priority <=> other.m_reg->priority; cmp != 0) {
+            return cmp;
         }
-        return m_reg->priority < other.m_reg->priority;
+        return m_bg <=> other.m_bg;
     }
 
     void draw_text_mode(finalImageColored& img,
