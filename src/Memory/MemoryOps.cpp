@@ -107,9 +107,7 @@ void rawWrite32(uint8_t* arr, uint32_t addr, uint32_t val)
 }
 
 uint8_t rawLoad8(uint8_t* arr, uint32_t addr)
-{
-    return arr[addr];
-}
+{ return arr[addr]; }
 
 uint16_t rawLoad16(uint8_t* arr, uint32_t addr)
 {
@@ -200,6 +198,8 @@ void DmaIncreasing(uint32_t dmaNumber,
 void writeToAddress(uint32_t address, uint8_t value)
 {
     MemoryAddress memDecoder{address};
+    iwram.write8(memDecoder, value);
+    return;
     calculateCycles(memDecoder.address,
                     (previousAddress + 1) == memDecoder.address);
 
@@ -290,7 +290,8 @@ void writeToAddress16(uint32_t address, uint16_t value)
     uint32_t mask = memDecoder.mask;
     address &= ~0xFF000000;
     uint32_t misalignment = address & 1;
-
+    vram.write16(memDecoder, value);
+    return;
     if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
         systemROM.write16(memDecoder, value);
         return;
@@ -359,6 +360,8 @@ void writeToAddress32(uint32_t address, uint32_t value)
     uint32_t mask = memDecoder.mask;
     address &= ~0xFF000000;
     uint32_t misalignment = address & 3;
+    iwram.write32(memDecoder, value);
+    return;
 
     if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
         systemROM.write32(memDecoder, value);
@@ -431,6 +434,7 @@ uint8_t loadFromAddress(uint32_t address, bool free)
 
     MemoryAddress memDecoder{address};
     uint32_t mask = memDecoder.mask;
+    return iwram.read8(memDecoder);
 
     if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
         return systemROM.read8(r, memDecoder);
@@ -486,6 +490,7 @@ uint32_t loadFromAddress16(uint32_t address, bool free)
     MemoryAddress memDecoder{address};
     uint32_t mask = memDecoder.mask;
     address &= ~0xFF000000;
+    return iwram.read16(memDecoder);
 
     if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
         return systemROM.read16(r, memDecoder);
@@ -539,6 +544,7 @@ uint32_t loadFromAddress32(uint32_t address, bool free)
 
     MemoryAddress memDecoder{address};
     uint32_t mask = memDecoder.mask;
+    return iwram.read32(r, memDecoder);
 
     if (memDecoder.mask == ESystemROM_L || memDecoder.mask == ESystemROM_H) {
         return systemROM.read32(r, memDecoder);
