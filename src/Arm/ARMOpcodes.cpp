@@ -7,6 +7,7 @@
 #include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
 #include "Arm/ArmOpcodes/BlockDataTransferStores.hpp"
 #include "Arm/ArmOpcodes/Branch.hpp"
+#include "Arm/ArmOpcodes/DataProcessingImmediate.hpp"
 #include "Arm/ArmOpcodes/Multiply.hpp"
 #include "Arm/ArmOpcodes/SDDHelper.hpp"
 #include "Arm/ArmOpcodes/Undefop.hpp"
@@ -333,6 +334,10 @@ static auto constexpr decode_arm_opcode()
     if constexpr (UndefOp::isThisOpcode(opCode)) {
         return &UndefOp::execute;
     }
+    if constexpr (DataProcessingImmediate::isThisOpcode(opCode)) {
+        return &DataProcessingImmediate::execute<DataProcessingImmediate::mask(
+            opCode)>;
+    }
     if constexpr (((opCode >> 26) & 0x3) == 0) {
         return HalfDataTransfer::decode_hdd<opCode>();
     }
@@ -377,6 +382,8 @@ static constexpr std::array m_dispatch_table = {[]() consteval {
 #include <fstream>
 #include <iostream>
 #include <print>
+
+uint32_t tst_num = 0;
 
 void write_initial_memory_transactions(const auto& json)
 {
@@ -444,15 +451,16 @@ void execute_instruction(auto& registers, const auto& json, const bool failed)
 
     registers[15] += 4;
     if (conditions[condition](registers)) {
-        std::cout << " " << registers[15] << " " << registers[0] << " "
-                  << Disassembler::arm_disassembly(registers[15], opcode)
+        if (failed) {
+            std::println("\n\nopcode {} ({:x}), reduced {} ({:x})", opcode,
+                         opcode, reduce_opcode(opcode), reduce_opcode(opcode));
+        }
+        std::cout << tst_num << " " << registers[15] << " " << registers[0]
+                  << " " << Disassembler::arm_disassembly(registers[15], opcode)
                   << "\n";
         const auto func = m_dispatch_table[reduce_opcode(opcode)];
-        if (failed) {
-            std::println("opcode {} ({:x}), reduced {} ({:x})", opcode, opcode,
-                         reduce_opcode(opcode), reduce_opcode(opcode));
-        }
         func(registers, opcode);
+        tst_num++;
     }
     registers[15] += 8;
 }
@@ -475,13 +483,35 @@ bool validate_final_register_bank(const auto& registers,
     return false;
 }
 
+void print_cprs(const auto got, const auto expected, const auto str)
+{
+    std::println("{} register failed got: {} (0x{:x}) expected {} (0x{:x})",
+                 str, got, got, expected, expected);
+    CPSR_t val_one;
+    CPSR_t val_two;
+    val_one.val = got;
+    val_two.val = expected;
+    std::println("zero {} expected {}", static_cast<uint32_t>(val_one.zero),
+                 static_cast<uint32_t>(val_two.zero));
+    std::println("carry {} expected {}", static_cast<uint32_t>(val_one.carry),
+                 static_cast<uint32_t>(val_two.carry));
+    std::println("negative {} expected {}",
+                 static_cast<uint32_t>(val_one.negative),
+                 static_cast<uint32_t>(val_two.negative));
+    std::println("overflow {} expected {}",
+                 static_cast<uint32_t>(val_one.overflow),
+                 static_cast<uint32_t>(val_two.overflow));
+    std::println("mode {} expected {}", static_cast<uint32_t>(val_one.mode),
+                 static_cast<uint32_t>(val_two.mode));
+}
+
 bool validate_result(const auto& registers, const auto& json)
 {
     const auto& finals = json["final"];
 
     bool failed = false;
     size_t idx = 0;
-    for (auto& initial_R: finals["R"]) {
+    for (const auto& initial_R: finals["R"]) {
         const auto i = *registers.usrSys[idx];
         const auto ex = initial_R.template get<uint32_t>();
         if (i != ex) {
@@ -505,15 +535,13 @@ bool validate_result(const auto& registers, const auto& json)
                                            "R_und");
 
     if (registers.m_cpsr.val != finals["CPSR"].template get<uint32_t>()) {
-        std::println("m_cpsr register failed got: {} expected {}",
-                     registers.m_cpsr.val,
-                     finals["CPSR"].template get<uint32_t>());
+        print_cprs(registers.m_cpsr.val,
+                   finals["CPSR"].template get<uint32_t>(), "m_cpsr");
         failed = true;
     }
     if (registers.sprs_fiq != finals["SPSR"][0].template get<uint32_t>()) {
-        std::println("sprs_fiq register failed got: {} expected {}",
-                     registers.sprs_fiq,
-                     finals["SPSR"][0].template get<uint32_t>());
+        print_cprs(registers.sprs_fiq,
+                   finals["SPSR"][0].template get<uint32_t>(), "sprs_fiq");
         failed = true;
     }
     if (registers.sprs_svc != finals["SPSR"][1].template get<uint32_t>()) {
@@ -546,7 +574,7 @@ bool validate_result(const auto& registers, const auto& json)
 
 bool validate_memory_regions_final(const auto& json)
 {
-    for (auto& j: json["transactions"]) {
+    for (const auto& j: json["transactions"]) {
         if (j["kind"] == 2) {
             uint32_t val = 0;
             if (j["size"] == 4) {
@@ -574,7 +602,7 @@ void runSingleStepTests_a()
 {
     Registers registers;
     bool failed = false;
-    const std::string game = "../ARM7TDMI/v1/arm_swp.json";
+    const std::string game = "../ARM7TDMI/v1/arm_data_proc_immediate.json";
     std::ifstream ifs(game);
     const auto jf = nlohmann::json::parse(ifs);
     for (const auto& json: jf) {
@@ -597,6 +625,9 @@ void runSingleStepTests_a()
 
 void ARMExecute(int opCode)
 {
+    runSingleStepTests_a();
+    return;
+
     int condition = (opCode >> 28) & 0xF;
     cycles += 1;
 
