@@ -62,6 +62,9 @@ union CPSR_t
     };
     uint32_t val;
 
+    CPSR_t(const uint32_t value) : val{value} {}
+    CPSR_t() = default;
+
     void updateAll(uint32_t newVal)
     {
         if (mode == CpuModes_t::EUSR) {
@@ -187,9 +190,7 @@ public:
     auto getMode() const { return static_cast<CpuModes_t>(m_cpsr.mode); }
 
     auto getPreviousMode() const
-    {
-        return static_cast<CpuModes_t>(m_previousMode);
-    }
+    { return static_cast<CpuModes_t>(m_previousMode); }
 
     void reset(const CpuModes_t mode)
     {

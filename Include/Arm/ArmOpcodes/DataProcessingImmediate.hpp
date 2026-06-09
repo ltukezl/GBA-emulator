@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <format>
 
+#include "arm/ArmOpcodes/Msr_imm.hpp"
 #include "CommonOperations/GbaStrings.hpp"
 #include "cplusplusRewrite/BarrelShifter.h"
 #include "cplusplusRewrite/HwRegisters.h"
@@ -66,6 +67,10 @@ public:
     template<uint32_t opcode_iter>
     static void execute(Registers& regs, const uint32_t opcode)
     {
+        if (MsrImmediate::isThisOpcode(opcode)) {
+            MsrImmediate::execute(regs, opcode);
+            return;
+        }
         const auto op = fromOpcode(opcode);
         constexpr auto c_op = fromOpcode(opcode_iter);
         uint32_t result = 0;
@@ -209,7 +214,19 @@ public:
         const auto operation = math_strings[op.operation];
         const auto condition = condition_strings[op.cond];
         const auto is_signed = op.set_sign ? "S" : "";
-        return std::format("{}{} R{}, #{}", operation, is_signed, op.rd,
-                           ImmediateRotater::disassemble(opcode));
+
+        if (op.operation == 0b1111 || op.operation == 0b1101) {
+            return std::format("{}{}{} R{}, #{}", operation, condition,
+                               is_signed, op.rd,
+                               ImmediateRotater::disassemble(opcode));
+        } else if (op.operation == 0b1000 || op.operation == 0b1001 ||
+                   op.operation == 0b1010 || op.operation == 0b1011) {
+            return std::format("{}{} R{}, #{}", operation, condition, op.rn,
+                               ImmediateRotater::disassemble(opcode));
+        } else {
+            return std::format("{}{}{} R{}, R{}, #{}", operation, condition,
+                               is_signed, op.rd, op.rn,
+                               ImmediateRotater::disassemble(opcode));
+        }
     }
 };

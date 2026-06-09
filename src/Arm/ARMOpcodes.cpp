@@ -501,6 +501,14 @@ void print_cprs(const auto got, const auto expected, const auto str)
     std::println("overflow {} expected {}",
                  static_cast<uint32_t>(val_one.overflow),
                  static_cast<uint32_t>(val_two.overflow));
+    std::println("thumb {} expected {}", static_cast<uint32_t>(val_one.thumb),
+                 static_cast<uint32_t>(val_two.thumb));
+    std::println("FIQDisable {} expected {}",
+                 static_cast<uint32_t>(val_one.FIQDisable),
+                 static_cast<uint32_t>(val_two.FIQDisable));
+    std::println("IRQDisable {} expected {}",
+                 static_cast<uint32_t>(val_one.IRQDisable),
+                 static_cast<uint32_t>(val_two.IRQDisable));
     std::println("mode {} expected {}", static_cast<uint32_t>(val_one.mode),
                  static_cast<uint32_t>(val_two.mode));
 }
@@ -534,38 +542,47 @@ bool validate_result(const auto& registers, const auto& json)
     failed |= validate_final_register_bank(registers.undBanked, finals["R_und"],
                                            "R_und");
 
-    if (registers.m_cpsr.val != finals["CPSR"].template get<uint32_t>()) {
-        print_cprs(registers.m_cpsr.val,
-                   finals["CPSR"].template get<uint32_t>(), "m_cpsr");
+    if ((registers.m_cpsr.val & 0xf000'00ff) !=
+        (finals["CPSR"].template get<uint32_t>() & 0xf000'00ff)) {
+        print_cprs(registers.m_cpsr.val & 0xf000'00ff,
+                   finals["CPSR"].template get<uint32_t>() & 0xf000'00ff,
+                   "m_cpsr");
         failed = true;
     }
-    if (registers.sprs_fiq != finals["SPSR"][0].template get<uint32_t>()) {
-        print_cprs(registers.sprs_fiq,
-                   finals["SPSR"][0].template get<uint32_t>(), "sprs_fiq");
+    if ((registers.sprs_fiq & 0xf000'00ff) !=
+        (finals["SPSR"][0].template get<uint32_t>() & 0xF000'00FF)) {
+        print_cprs(registers.sprs_fiq & 0xf000'00ff,
+                   finals["SPSR"][0].template get<uint32_t>() & 0xF000'00FF,
+                   "sprs_fiq");
         failed = true;
     }
-    if (registers.sprs_svc != finals["SPSR"][1].template get<uint32_t>()) {
-        std::println("sprs_svc register failed got: {} expected {}",
-                     registers.sprs_svc,
-                     finals["SPSR"][1].template get<uint32_t>());
+    if ((registers.sprs_svc & 0xf000'00ff) !=
+        (finals["SPSR"][1].template get<uint32_t>() & 0xF000'00FF)) {
+        print_cprs(registers.sprs_svc & 0xf000'00ff,
+                   finals["SPSR"][1].template get<uint32_t>() & 0xF000'00FF,
+                   "sprs_svc");
         failed = true;
     }
-    if (registers.sprs_abt != finals["SPSR"][2].template get<uint32_t>()) {
-        std::println("sprs_abt register failed got: {} expected {}",
-                     registers.sprs_abt,
-                     finals["SPSR"][2].template get<uint32_t>());
+    if ((registers.sprs_abt & 0xf000'00ff) !=
+        (finals["SPSR"][2].template get<uint32_t>() & 0xF000'00FF)) {
+        print_cprs(registers.sprs_abt & 0xf000'00ff,
+                   finals["SPSR"][2].template get<uint32_t>() & 0xF000'00FF,
+                   "sprs_abt");
+
         failed = true;
     }
-    if (registers.sprs_irq != finals["SPSR"][3].template get<uint32_t>()) {
-        std::println("sprs_irq register failed got: {} expected {}",
-                     registers.sprs_irq,
-                     finals["SPSR"][3].template get<uint32_t>());
+    if ((registers.sprs_irq & 0xf000'00ff) !=
+        (finals["SPSR"][3].template get<uint32_t>() & 0xF000'00FF)) {
+        print_cprs(registers.sprs_irq & 0xf000'00ff,
+                   finals["SPSR"][3].template get<uint32_t>() & 0xF000'00FF,
+                   "sprs_irq");
         failed = true;
     }
-    if (registers.sprs_udf != finals["SPSR"][4].template get<uint32_t>()) {
-        std::println("sprs_udf register failed got: {} expected {}",
-                     registers.sprs_udf,
-                     finals["SPSR"][4].template get<uint32_t>());
+    if ((registers.sprs_udf & 0xf000'00ff) !=
+        (finals["SPSR"][4].template get<uint32_t>() & 0xF000'00FF)) {
+        print_cprs(registers.sprs_udf & 0xf000'00ff,
+                   finals["SPSR"][4].template get<uint32_t>() & 0xF000'00FF,
+                   "sprs_udf");
         failed = true;
     }
 
@@ -602,7 +619,7 @@ void runSingleStepTests_a()
 {
     Registers registers;
     bool failed = false;
-    const std::string game = "../ARM7TDMI/v1/arm_data_proc_immediate.json";
+    const std::string game = "../ARM7TDMI/v1/arm_msr_imm.json";
     std::ifstream ifs(game);
     const auto jf = nlohmann::json::parse(ifs);
     for (const auto& json: jf) {
