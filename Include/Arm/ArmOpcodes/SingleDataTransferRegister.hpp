@@ -47,14 +47,14 @@ public:
 
         calculated += offset;
 
+        storeOperation(calculated, val_to_write);
+
         if constexpr (c_op.writeBack == writeBack_t::EWriteback) {
             if (op.baseRegister == 15) {
                 calculated += 4;
             }
             regs[op.baseRegister] = calculated;
         }
-
-        storeOperation(calculated, val_to_write);
     }
 };
 

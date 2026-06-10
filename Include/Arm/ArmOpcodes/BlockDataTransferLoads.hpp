@@ -48,6 +48,9 @@ public:
             internal_base_address -= (amount_of_transactions << 2);
         }
 
+        // maybe wrong????
+        internal_base_address &= 0xFFFF'FFFC;
+
         // micro optimization to reduce amount of redundant loops in transfer
         const size_t rlist_first_reg = std::countr_zero(op.rlist);
 
