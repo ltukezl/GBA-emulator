@@ -1,8 +1,11 @@
 #pragma once
 
 #include <array>
+#include <bit>
 #include <cstdint>
+#include <format>
 
+#include "CommonOperations/GbaStrings.hpp"
 #include "cplusplusRewrite/HwRegisters.h"
 
 class MultiplyAccumulate
@@ -43,27 +46,49 @@ public:
         return (opcodeStruct.reserved1 == 9) && (opcodeStruct.reserved2 == 1);
     }
 
+    static constexpr auto mask(const uint32_t opcode)
+    { return opcode & (7 << 20); }
+
+    template<uint32_t iterOpcode>
     static void execute(Registers& regs, const uint32_t opcode)
     {
         const auto op = fromOpcode(opcode);
+        constexpr auto c_op = fromOpcode(iterOpcode);
+
+        uint64_t operand1 = regs[op.operand1];
+        uint64_t operand2 = regs[op.operand2];
+        uint64_t operand3 = regs[op.destinationHigh];
+        uint64_t operand4 = regs[op.destinationLow];
+
+        if (op.operand1 == 15) {
+            operand1 += 8;
+        }
+        if (op.operand2 == 15) {
+            operand2 += 8;
+        }
+        if (op.destinationHigh == 15) {
+            operand3 += 8;
+        }
+        if (op.destinationLow == 15) {
+            operand4 += 8;
+        }
+
         uint64_t result = 0;
 
-        if (op.sign) {
+        if constexpr (c_op.sign) {
             const auto op1 =
-                static_cast<int64_t>(static_cast<int32_t>(regs[op.operand1]));
+                static_cast<int64_t>(static_cast<int32_t>(operand1));
             const auto op2 =
-                static_cast<int64_t>(static_cast<int32_t>(regs[op.operand2]));
+                static_cast<int64_t>(static_cast<int32_t>(operand2));
             result = std::bit_cast<uint64_t>(op1 * op2);
         } else {
-            const auto op1 = static_cast<uint64_t>(regs[op.operand1]);
-            const auto op2 = static_cast<uint64_t>(regs[op.operand2]);
+            const auto op1 = static_cast<uint64_t>(operand1);
+            const auto op2 = static_cast<uint64_t>(operand2);
             result = op1 * op2;
         }
 
-        if (op.accumulate) {
-            uint64_t current = static_cast<uint64_t>(regs[op.destinationHigh])
-                    << 32 |
-                static_cast<uint64_t>(regs[op.destinationLow]);
+        if constexpr (c_op.accumulate) {
+            uint64_t current = (operand3 << 32) | operand4;
             result += current;
         }
 
@@ -72,7 +97,7 @@ public:
         regs[op.destinationLow] = loPart;
         regs[op.destinationHigh] = hiPart;
 
-        if (op.setCondition) {
+        if constexpr (c_op.setCondition) {
             regs.m_cpsr.zero = result ? 0 : 1;
             regs.m_cpsr.negative = ((result >> 63) & 1);
         }
@@ -127,13 +152,33 @@ public:
         return (opcodeStruct.reserved1 == 9) && (opcodeStruct.reserved2 == 0);
     }
 
+    static constexpr auto mask(const uint32_t opcode)
+    { return opcode & (3 << 20); }
+
+    template<uint32_t iterOpcode>
     static void execute(Registers& regs, const uint32_t opcode)
     {
         const auto op = fromOpcode(opcode);
-        uint64_t result = regs[op.operand1] * regs[op.operand2];
-        result += op.accumulate ? regs[op.operand3] : 0;
+        constexpr auto c_op = fromOpcode(iterOpcode);
+
+        uint64_t operand1 = regs[op.operand1];
+        uint64_t operand2 = regs[op.operand2];
+        uint64_t accumulate_base = regs[op.operand3];
+
+        if (op.operand1 == 15) {
+            operand1 += 8;
+        }
+        if (op.operand2 == 15) {
+            operand2 += 8;
+        }
+        if (op.operand3 == 15) {
+            accumulate_base += 8;
+        }
+
+        uint64_t result = operand1 * operand2;
+        result += c_op.accumulate ? accumulate_base : 0;
         regs[op.destination] = result;
-        if (op.setCondition) {
+        if constexpr (c_op.setCondition) {
             regs.m_cpsr.zero = result ? 0 : 1;
             regs.m_cpsr.negative = ((result >> 31) & 1);
         }

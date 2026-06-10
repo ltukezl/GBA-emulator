@@ -1,13 +1,13 @@
 #ifndef SDT_H
 #define SDT_H
 
-#include <bit>
 #include <cassert>
 #include <Constants.h>
 #include <cstdint>
 #include <format>
 #include <type_traits>
 
+#include "CommonOperations/GbaStrings.hpp"
 #include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Memory/memoryOps.h"
@@ -83,8 +83,12 @@ static constexpr SingleDataTransfer_t fromOpcode(const uint32_t opcode)
 }
 
 static constexpr auto mask(const uint32_t opcode)
+{ return opcode & (0x3F << 20); }
+
+static constexpr bool isThisOpcode(const uint32_t opcode)
 {
-    return opcode & (0x3F << 20);
+    const auto opcodeStruct = fromOpcode(opcode);
+    return (opcodeStruct.unused == 1);
 }
 
 static inline void destinationRegisterBug(const SingleDataTransfer_t& op,

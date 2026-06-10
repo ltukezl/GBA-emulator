@@ -16,6 +16,8 @@
 #include "Arm/ArmOpcodes/Undefop.hpp"
 #include "Arm/Swi.hpp"
 #include "Display/Disassembler.hpp"
+#include "Include/Arm/ArmOpcodes/SingleDataTransfer.hpp"
+#include "Include/Arm/ArmOpcodes/swp.hpp"
 #include "Thumb/ThumbOpcodes/AddSubstract.hpp"
 #include "Thumb/ThumbOpcodes/AddToSp.hpp"
 #include "Thumb/ThumbOpcodes/AluOps.hpp"
@@ -95,33 +97,50 @@ std::string Disassembler::thumb_disassembly(const uint32_t program_counter,
 std::string Disassembler::arm_disassembly(const uint32_t program_counter,
                                           const uint32_t opCode)
 {
-    if (DataProcessingImmediate::isThisOpcode(opCode)) {
-        return DataProcessingImmediate::disassemble(opCode);
-    }
     if (UndefOp::isThisOpcode(opCode)) {
         return UndefOp::disassemble(opCode);
     }
-    if (branches::ArmBranchAndExhange::isThisOpcode(opCode)) {
-        return branches::ArmBranchAndExhange::disassemble(opCode);
-    }
-    if (Swap::isThisOpcode(opCode)) {
-        return Swap::disassemble(opCode);
-    }
-    if (((opCode >> 26) & 0x3) == 0) {
-        return HalfDataTransfer::disassemble(opCode);
-    }
-    if (((opCode >> 26) & 0x3) == 1) {
+    if (SingleDataTransfer::isThisOpcode(opCode)) {
         return SingleDataTransfer::disassemble(opCode);
     }
     if (BlockDataTransfer::isThisOpcode(opCode)) {
-        if (BlockDataTransferLoad::isThisOpcode(opCode)) {
-            return BlockDataTransfer::disassemble(opCode);
-        }
+
+        return BlockDataTransfer::disassemble(opCode);
     }
+
     if (branches::ArmBranch::isThisOpcode(opCode)) {
         return branches::ArmBranch::disassemble(opCode);
     }
-    return UndefOp::disassemble(opCode);
+    if (DataProcessingImmediate::isThisOpcode(opCode)) {
+        return DataProcessingImmediate::disassemble(opCode);
+    }
+
+    if (MultiplyAccumulate::isThisOpcode(opCode)) {
+        return MultiplyAccumulate::disassemble(opCode);
+    }
+
+    if (MultiplyLong::isThisOpcode(opCode)) {
+        return MultiplyLong::disassemble(opCode);
+    }
+
+    if (branches::ArmBranch::isThisOpcode(opCode)) {
+        return branches::ArmBranch::disassemble(opCode);
+    }
+
+    if (branches::ArmBranchAndExhange::isThisOpcode(opCode)) {
+        return branches::ArmBranchAndExhange::disassemble(opCode);
+    }
+
+    if (Swap::isThisOpcode(opCode)) {
+        return Swap::disassemble(opCode);
+    }
+
+    // -- decoding correct this much
+    if (((opCode >> 26) & 0x3) == 0) {
+        return HalfDataTransfer::disassemble(opCode);
+    }
+
+    return "ASDFASDF";
 }
 
 void Disassembler::Show_Registers(const Registers& regs)

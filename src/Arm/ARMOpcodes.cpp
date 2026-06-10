@@ -14,10 +14,10 @@
 #include "CommonOperations/arithmeticOps.h"
 #include "CommonOperations/conditions.h"
 #include "CommonOperations/logicalOps.h"
-#include "cplusplusRewrite/BarrelShifterDecoder.h"
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Display/Disassembler.hpp"
 #include "GBAcpu.h"
+#include "Include/Arm/ArmOpcodes/SingleDataTransfer.hpp"
 #include "Interrupt/interrupt.h"
 #include "Memory/memoryOps.h"
 
@@ -151,26 +151,6 @@ void msr2(int& saveTo, int operand1, int operand2)
     updateMode();
 }
 
-void MSR(uint32_t opCode)
-{
-    bool SPSR = (opCode >> 22) & 1;
-    CPSR_t tmp_cpsr{};
-    uint8_t rotate = (opCode >> 8) & 0xF;
-    uint32_t imm = opCode & 0xFF;
-    uint32_t shiftedImm = RORnoCond(imm, rotate);
-    shiftedImm = RORnoCond(shiftedImm, rotate);
-    tmp_cpsr.val = shiftedImm;
-
-    if (SPSR) {
-        r[16] = shiftedImm;
-    } else {
-        r.m_cpsr.zero = tmp_cpsr.zero;
-        r.m_cpsr.overflow = tmp_cpsr.overflow;
-        r.m_cpsr.carry = tmp_cpsr.carry;
-        r.m_cpsr.negative = tmp_cpsr.negative;
-    }
-}
-
 void mrs(int& saveTo, int operand1, int operand2)
 { saveTo = r.m_cpsr.val; }
 
@@ -293,32 +273,6 @@ void registerRotate(int opCode)
     }
 }
 
-void dataProcessingImmediate(int opCode)
-{
-    int rd = (opCode >> 12) & 0xF; // destination
-    int rs = (opCode >> 16) & 0xF; // first operand
-    int operand1 = r[rs];
-    if (rs == TRegisters::EProgramCounter) {
-        operand1 += 4;
-    }
-    bool conditions = (opCode >> 20) & 1;
-    int operationID = (opCode >> 20) & 0x1F;
-    int operation = (opCode >> 21) & 0xF;
-
-    const bool isLogicalOp = (operation == 0b0000) || (operation == 0b0001) ||
-        (operation == 0b1000) || (operation == 0b1001) ||
-        (operation == 0b1100) || (operation == 0b1101) ||
-        (operation == 0b1110) || (operation == 0b1111);
-    const auto func = BarrelShifterDecoder::decode(opCode);
-    const uint32_t result = func(r, opCode, conditions && isLogicalOp);
-    dataOperations[operationID]((int&)r[rd], operand1, result);
-
-    if (rd == 15 && conditions) {
-        r.m_cpsr.val = r[16];
-        updateMode();
-    }
-}
-
 static void null_func(Registers&, const uint32_t) {}
 
 static uint32_t constexpr reduce_opcode(const uint32_t opCode)
@@ -334,14 +288,7 @@ static auto constexpr decode_arm_opcode()
     if constexpr (UndefOp::isThisOpcode(opCode)) {
         return &UndefOp::execute;
     }
-    if constexpr (DataProcessingImmediate::isThisOpcode(opCode)) {
-        return &DataProcessingImmediate::execute<DataProcessingImmediate::mask(
-            opCode)>;
-    }
-    if constexpr (((opCode >> 26) & 0x3) == 0) {
-        return HalfDataTransfer::decode_hdd<opCode>();
-    }
-    if constexpr (((opCode >> 26) & 0x3) == 1) {
+    if constexpr (SingleDataTransfer::isThisOpcode(opCode)) {
         return SingleDataTransfer::decode_sdd<opCode>();
     }
     if constexpr (BlockDataTransfer::isThisOpcode(opCode)) {
@@ -354,8 +301,26 @@ static auto constexpr decode_arm_opcode()
                 opCode)>;
         }
     }
+
     if constexpr (branches::ArmBranch::isThisOpcode(opCode)) {
         return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
+    }
+    if constexpr (DataProcessingImmediate::isThisOpcode(opCode)) {
+        return &DataProcessingImmediate::execute<DataProcessingImmediate::mask(
+            opCode)>;
+    }
+
+    if constexpr (MultiplyAccumulate::isThisOpcode(opCode)) {
+        return &MultiplyAccumulate::execute<MultiplyAccumulate::mask(opCode)>;
+    }
+
+    if constexpr (MultiplyLong::isThisOpcode(opCode)) {
+        return &MultiplyLong::execute<MultiplyLong::mask(opCode)>;
+    }
+
+    // -- decoding correct this much
+    if constexpr (((opCode >> 26) & 0x3) == 0) {
+        return HalfDataTransfer::decode_hdd<opCode>();
     }
 
     return &null_func;
@@ -542,46 +507,46 @@ bool validate_result(const auto& registers, const auto& json)
     failed |= validate_final_register_bank(registers.undBanked, finals["R_und"],
                                            "R_und");
 
-    if ((registers.m_cpsr.val & 0xf000'00ff) !=
-        (finals["CPSR"].template get<uint32_t>() & 0xf000'00ff)) {
-        print_cprs(registers.m_cpsr.val & 0xf000'00ff,
-                   finals["CPSR"].template get<uint32_t>() & 0xf000'00ff,
+    if ((registers.m_cpsr.val & 0xC000'00ff) !=
+        (finals["CPSR"].template get<uint32_t>() & 0xC000'00ff)) {
+        print_cprs(registers.m_cpsr.val & 0xC000'00ff,
+                   finals["CPSR"].template get<uint32_t>() & 0xC000'00ff,
                    "m_cpsr");
         failed = true;
     }
-    if ((registers.sprs_fiq & 0xf000'00ff) !=
-        (finals["SPSR"][0].template get<uint32_t>() & 0xF000'00FF)) {
-        print_cprs(registers.sprs_fiq & 0xf000'00ff,
-                   finals["SPSR"][0].template get<uint32_t>() & 0xF000'00FF,
+    if ((registers.sprs_fiq & 0xC000'00ff) !=
+        (finals["SPSR"][0].template get<uint32_t>() & 0xC000'00FF)) {
+        print_cprs(registers.sprs_fiq & 0xC000'00ff,
+                   finals["SPSR"][0].template get<uint32_t>() & 0xC000'00FF,
                    "sprs_fiq");
         failed = true;
     }
-    if ((registers.sprs_svc & 0xf000'00ff) !=
-        (finals["SPSR"][1].template get<uint32_t>() & 0xF000'00FF)) {
-        print_cprs(registers.sprs_svc & 0xf000'00ff,
-                   finals["SPSR"][1].template get<uint32_t>() & 0xF000'00FF,
+    if ((registers.sprs_svc & 0xC000'00ff) !=
+        (finals["SPSR"][1].template get<uint32_t>() & 0xC000'00FF)) {
+        print_cprs(registers.sprs_svc & 0xC000'00ff,
+                   finals["SPSR"][1].template get<uint32_t>() & 0xC000'00FF,
                    "sprs_svc");
         failed = true;
     }
-    if ((registers.sprs_abt & 0xf000'00ff) !=
-        (finals["SPSR"][2].template get<uint32_t>() & 0xF000'00FF)) {
-        print_cprs(registers.sprs_abt & 0xf000'00ff,
-                   finals["SPSR"][2].template get<uint32_t>() & 0xF000'00FF,
+    if ((registers.sprs_abt & 0xC000'00ff) !=
+        (finals["SPSR"][2].template get<uint32_t>() & 0xC000'00FF)) {
+        print_cprs(registers.sprs_abt & 0xC000'00ff,
+                   finals["SPSR"][2].template get<uint32_t>() & 0xC000'00FF,
                    "sprs_abt");
 
         failed = true;
     }
-    if ((registers.sprs_irq & 0xf000'00ff) !=
-        (finals["SPSR"][3].template get<uint32_t>() & 0xF000'00FF)) {
-        print_cprs(registers.sprs_irq & 0xf000'00ff,
-                   finals["SPSR"][3].template get<uint32_t>() & 0xF000'00FF,
+    if ((registers.sprs_irq & 0xC000'00ff) !=
+        (finals["SPSR"][3].template get<uint32_t>() & 0xC000'00FF)) {
+        print_cprs(registers.sprs_irq & 0xC000'00ff,
+                   finals["SPSR"][3].template get<uint32_t>() & 0xC000'00FF,
                    "sprs_irq");
         failed = true;
     }
-    if ((registers.sprs_udf & 0xf000'00ff) !=
-        (finals["SPSR"][4].template get<uint32_t>() & 0xF000'00FF)) {
-        print_cprs(registers.sprs_udf & 0xf000'00ff,
-                   finals["SPSR"][4].template get<uint32_t>() & 0xF000'00FF,
+    if ((registers.sprs_udf & 0xC000'00ff) !=
+        (finals["SPSR"][4].template get<uint32_t>() & 0xC000'00FF)) {
+        print_cprs(registers.sprs_udf & 0xC000'00ff,
+                   finals["SPSR"][4].template get<uint32_t>() & 0xC000'00FF,
                    "sprs_udf");
         failed = true;
     }
@@ -619,7 +584,7 @@ void runSingleStepTests_a()
 {
     Registers registers;
     bool failed = false;
-    const std::string game = "../ARM7TDMI/v1/arm_msr_imm.json";
+    const std::string game = "../ARM7TDMI/v1/arm_mull_mlal.json";
     std::ifstream ifs(game);
     const auto jf = nlohmann::json::parse(ifs);
     for (const auto& json: jf) {
@@ -662,20 +627,20 @@ void ARMExecute(int opCode)
         }
 
         if (branches::ArmBranchAndExhange::isThisOpcode(opCode)) {
-            branches::ArmBranchAndExhange::execute(r, opCode);
+            m_dispatch_table[reduce_opcode(opCode)](r, opCode);
             // std::println("{}",
             // branches::ArmBranchAndExhange::disassemble(opCode));
             return;
         }
 
         if (MultiplyAccumulate::isThisOpcode(opCode)) {
-            MultiplyAccumulate::execute(r, opCode);
+            m_dispatch_table[reduce_opcode(opCode)](r, opCode);
             // std::println("{}", MultiplyAccumulate::disassemble(opCode));
             return;
         }
 
         if (MultiplyLong::isThisOpcode(opCode)) {
-            MultiplyLong::execute(r, opCode);
+            m_dispatch_table[reduce_opcode(opCode)](r, opCode);
             // std::println("{}", MultiplyLong::disassemble(opCode));
             return;
         }
@@ -701,16 +666,10 @@ void ARMExecute(int opCode)
                 break;
             case 3:
             case 2: // data processing, immediate check msr?
-                if ((((opCode >> 12) & 0x3FF) == 0x28F) &&
-                    (((opCode >> 23) & 0x3) == 2) &&
-                    (((opCode >> 26) & 0x3) == 0)) {
-                    MSR(opCode); //<-
-                    // units[ProcessingUnits::EDataProcessing]->execute(opCode);
-                } else {
-                    dataProcessingImmediate(opCode);
-                    // units[ProcessingUnits::EDataProcessing]->execute(opCode);
-                }
+
+                m_dispatch_table[reduce_opcode(opCode)](r, opCode);
                 break;
+
             case 1:
             case 0: // data prceossing, multiply, data transfer, branch and
                     // exhange
