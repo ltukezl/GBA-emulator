@@ -1,7 +1,6 @@
 #ifndef MRS_H
 #define MRS_H
 
-#include <bit>
 #include <cstdint>
 #include <format>
 
@@ -28,11 +27,6 @@ public:
         uint32_t condition: 4;
     };
 
-    static constexpr uint16_t mask(const uint32_t opcode)
-    {
-        return opcode & (0x1 << 22);
-    }
-
     static constexpr MRSOpcode fromOpcode(const uint32_t opcode)
     {
         return {
@@ -48,20 +42,23 @@ public:
     static constexpr bool isThisOpcode(const uint32_t opcode)
     {
         const auto opcodeStruct = fromOpcode(opcode);
-        return (opcodeStruct.reserved1 == 0) && (opcodeStruct.reserved2 == 0) &&
+        return (opcodeStruct.reserved1 == 0) &&
+            (opcodeStruct.reserved2 == 0b00'1111) &&
             (opcodeStruct.reserved3 == 0b00010);
     }
 
-    template<uint32_t iterOpcode>
     static void execute(Registers& regs, const uint32_t opcode)
     {
-        constexpr auto c_op = fromOpcode(iterOpcode);
         const auto op = fromOpcode(opcode);
 
-        if constexpr (c_op.source_PSR == PSR::CPSR) {
+        if (op.source_PSR == PSR::CPSR) {
             regs[op.destination] = regs.m_cpsr.val;
         } else {
             regs[op.destination] = regs[ESavedStatusRegister];
+        }
+
+        if (op.destination == 15) {
+            regs[op.destination] -= 4;
         }
     }
 

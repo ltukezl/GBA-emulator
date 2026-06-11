@@ -1,7 +1,6 @@
 #ifndef BRANCH_H
 #define BRANCH_H
 
-#include <bit>
 #include <cstdint>
 #include <format>
 

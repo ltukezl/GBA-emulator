@@ -5,6 +5,7 @@
 #include <format>
 
 #include "Arm/ArmOpcodes/Branch.hpp"
+#include "arm/ArmOpcodes/Mrs.hpp"
 #include "arm/ArmOpcodes/Msr_imm.hpp"
 #include "CommonOperations/GbaStrings.hpp"
 #include "cplusplusRewrite/BarrelShifter.h"
@@ -90,6 +91,9 @@ public:
     {
         if (MsrImmediate::isThisOpcode(opcode)) {
             MsrImmediate::execute(regs, opcode);
+            return;
+        } else if (MRS::isThisOpcode(opcode)) {
+            MRS::execute(regs, opcode);
             return;
         } else if (branches::ArmBranchAndExhange::isThisOpcode(opcode)) {
             branches::ArmBranchAndExhange::execute(regs, opcode);
@@ -241,6 +245,8 @@ public:
     {
         if (branches::ArmBranchAndExhange::isThisOpcode(opcode)) {
             return branches::ArmBranchAndExhange::disassemble(opcode);
+        } else if (MRS::isThisOpcode(opcode)) {
+            return MRS::disassemble(opcode);
         }
 
         const auto op = fromOpcode(opcode);
