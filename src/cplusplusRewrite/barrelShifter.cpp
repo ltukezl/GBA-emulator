@@ -97,9 +97,12 @@ uint32_t RegisterWithRegisterShifter::calculate(Registers& registers,
     const auto registerRotateFields =
         std::bit_cast<RegisterWithRegisterFields>(opcode);
     uint32_t operand = registers[registerRotateFields.sourceRegister];
-    operand += (registerRotateFields.sourceRegister == 15) ? 4 : 0;
+    operand += (registerRotateFields.sourceRegister == 15) ? 8 : 0;
 
-    const uint32_t shiftAmount = registers[registerRotateFields.shiftRegister];
+    uint32_t shiftAmount = registers[registerRotateFields.shiftRegister];
+    if (registerRotateFields.shiftRegister == 15) {
+        shiftAmount += 4;
+    }
     const uint32_t result =
         m_shifts[static_cast<uint32_t>(registerRotateFields.shiftCode)](
             operand, shiftAmount);
@@ -114,7 +117,7 @@ uint32_t RegisterWithRegisterShifter::calculate(Registers& registers,
 std::string RegisterWithRegisterShifter::disassemble(const uint32_t opcode)
 {
     const auto op = std::bit_cast<RegisterWithRegisterFields>(opcode);
-    return std::format(", R{}, {} {}", op.sourceRegister,
+    return std::format(", R{}, {} R{}", op.sourceRegister,
                        shift_strings[static_cast<uint32_t>(op.shiftCode)],
                        op.shiftRegister);
 }

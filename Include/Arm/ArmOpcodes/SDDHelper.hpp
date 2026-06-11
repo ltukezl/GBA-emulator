@@ -3,7 +3,6 @@
 
 #include <cassert>
 
-#include "Arm/ArmOpcodes/Branch.hpp"
 #include "Arm/ArmOpcodes/HalfDataTransferImmediate.hpp"
 #include "Arm/ArmOpcodes/HalfDataTransferRegister.hpp"
 #include "Arm/ArmOpcodes/SingleDataTransferImmediate.hpp"
@@ -67,7 +66,7 @@ static consteval decltype(&HalfDataTransferRPrS::execute<0>) decode_hdd()
     }
 
     else {
-        return &branches::ArmBranchAndExhange::execute;
+        return &null_func_hdd;
     }
 }
 } // namespace HalfDataTransfer

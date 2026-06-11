@@ -10,7 +10,7 @@
 #include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
 #include "Arm/ArmOpcodes/BlockDataTransferStores.hpp"
 #include "Arm/ArmOpcodes/Branch.hpp"
-#include "Arm/ArmOpcodes/DataProcessingImmediate.hpp"
+#include "Arm/ArmOpcodes/DataProcessing.hpp"
 #include "Arm/ArmOpcodes/Multiply.hpp"
 #include "Arm/ArmOpcodes/SDDHelper.hpp"
 #include "Arm/ArmOpcodes/Undefop.hpp"
@@ -111,8 +111,8 @@ std::string Disassembler::arm_disassembly(const uint32_t program_counter,
     if (branches::ArmBranch::isThisOpcode(opCode)) {
         return branches::ArmBranch::disassemble(opCode);
     }
-    if (DataProcessingImmediate::isThisOpcode(opCode)) {
-        return DataProcessingImmediate::disassemble(opCode);
+    if (DataProcessing::isThisOpcode(opCode)) {
+        return DataProcessing::disassemble(opCode);
     }
 
     if (MultiplyAccumulate::isThisOpcode(opCode)) {

@@ -98,6 +98,9 @@ public:
     {
         const auto op = fromOpcode(opcode);
         uint32_t jump_address = regs[op.rn];
+        if (op.rn == 15) {
+            jump_address += 4;
+        }
         const uint32_t to_thumb = regs[op.rn] & 1;
 
         regs.m_cpsr.thumb = to_thumb;

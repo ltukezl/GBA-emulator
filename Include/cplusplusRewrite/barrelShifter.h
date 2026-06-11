@@ -71,7 +71,7 @@ public:
         uint32_t type: 1;
         Rotation shiftCode: 2;
         uint32_t unused: 1;
-        uint32_t shiftRegister: 5;
+        uint32_t shiftRegister: 4;
         uint32_t: 0;
     };
 
