@@ -167,9 +167,10 @@ int main(int argc, char* args[])
     //     ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
     //       const std::string game = ROOT_PATH"/TestBinaries/thumb.gba";
     // const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
-    //   const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
-    //    const std::string game = ROOT_PATH "/TestBinaries/tonc/m3_demo.gba";
-    const std::string game = ROOT_PATH "/TestBinaries/tonc/irq_demo.gba";
+    const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/tonc/irq_demo.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/tonc/240pee_mb.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/tonc/prio_demo.gba";
 
     readFile(game, GamePak);
     readFile("GBA.BIOS", systemROM.m_memoryArea);

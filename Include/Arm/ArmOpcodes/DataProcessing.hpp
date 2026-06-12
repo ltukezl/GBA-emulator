@@ -5,9 +5,9 @@
 #include <format>
 
 #include "Arm/ArmOpcodes/Branch.hpp"
-#include "arm/ArmOpcodes/Mrs.hpp"
-#include "arm/ArmOpcodes/Msr_imm.hpp"
-#include "arm/ArmOpcodes/Msr_reg.hpp"
+#include "Arm/ArmOpcodes/Mrs.hpp"
+#include "Arm/ArmOpcodes/Msr_imm.hpp"
+#include "Arm/ArmOpcodes/Msr_reg.hpp"
 #include "CommonOperations/GbaStrings.hpp"
 #include "cplusplusRewrite/BarrelShifter.h"
 #include "cplusplusRewrite/HwRegisters.h"
@@ -118,7 +118,7 @@ public:
 
         uint32_t& dest = regs[op.rd];
 
-        const auto barrel_shifter_func = [c_op]() constexpr {
+        const auto barrel_shifter_func = []() constexpr {
             if constexpr (c_op.reserved == 1) {
                 return ImmediateRotater::calculate;
             } else if constexpr ((c_op.reserved == 0) &&
