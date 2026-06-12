@@ -2,6 +2,7 @@
 #define HWREGS_H
 
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <initializer_list>
 
@@ -173,6 +174,12 @@ public:
 
     void updateMode(const CpuModes_t mode)
     {
+        if (mode != CpuModes_t::EABORT && mode != CpuModes_t::EFIQ &&
+            mode != CpuModes_t::EIRQ && mode != CpuModes_t::ESUPER &&
+            mode != CpuModes_t::ESYS && mode != CpuModes_t::EUNDEF &&
+            mode != CpuModes_t::EUSR) {
+            return;
+        }
         m_previousMode = m_cpsr.mode;
         m_cpsr.mode = mode;
         // FIXME: use returns!!!

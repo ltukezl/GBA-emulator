@@ -7,7 +7,7 @@
 #include "Arm/ArmOpcodes/BlockDataTransferLoads.hpp"
 #include "Arm/ArmOpcodes/BlockDataTransferStores.hpp"
 #include "Arm/ArmOpcodes/Branch.hpp"
-#include "Arm/ArmOpcodes/DataProcessingImmediate.hpp"
+#include "Arm/ArmOpcodes/DataProcessing.hpp"
 #include "Arm/ArmOpcodes/Multiply.hpp"
 #include "Arm/ArmOpcodes/SDDHelper.hpp"
 #include "Arm/ArmOpcodes/Undefop.hpp"
@@ -288,6 +288,10 @@ static auto constexpr decode_arm_opcode()
     if constexpr (UndefOp::isThisOpcode(opCode)) {
         return &UndefOp::execute;
     }
+    if constexpr (DataProcessing::isThisOpcode(opCode)) {
+        return &DataProcessing::execute<DataProcessing::mask(opCode)>;
+    }
+
     if constexpr (SingleDataTransfer::isThisOpcode(opCode)) {
         return SingleDataTransfer::decode_sdd<opCode>();
     }
@@ -304,10 +308,6 @@ static auto constexpr decode_arm_opcode()
 
     if constexpr (branches::ArmBranch::isThisOpcode(opCode)) {
         return branches::ArmBranch::execute<branches::ArmBranch::mask(opCode)>;
-    }
-    if constexpr (DataProcessingImmediate::isThisOpcode(opCode)) {
-        return &DataProcessingImmediate::execute<DataProcessingImmediate::mask(
-            opCode)>;
     }
 
     if constexpr (MultiplyAccumulate::isThisOpcode(opCode)) {
@@ -427,7 +427,11 @@ void execute_instruction(auto& registers, const auto& json, const bool failed)
         func(registers, opcode);
         tst_num++;
     }
-    registers[15] += 8;
+    if (registers.m_cpsr.thumb == 1) {
+        registers[15] += 4;
+    } else {
+        registers[15] += 8;
+    }
 }
 
 bool validate_final_register_bank(const auto& registers,
@@ -507,46 +511,47 @@ bool validate_result(const auto& registers, const auto& json)
     failed |= validate_final_register_bank(registers.undBanked, finals["R_und"],
                                            "R_und");
 
-    if ((registers.m_cpsr.val & 0xC000'00ff) !=
-        (finals["CPSR"].template get<uint32_t>() & 0xC000'00ff)) {
-        print_cprs(registers.m_cpsr.val & 0xC000'00ff,
-                   finals["CPSR"].template get<uint32_t>() & 0xC000'00ff,
+    const uint32_t status_mask = 0xF000'00FF;
+    if ((registers.m_cpsr.val & status_mask) !=
+        (finals["CPSR"].template get<uint32_t>() & status_mask)) {
+        print_cprs(registers.m_cpsr.val & status_mask,
+                   finals["CPSR"].template get<uint32_t>() & status_mask,
                    "m_cpsr");
         failed = true;
     }
-    if ((registers.sprs_fiq & 0xC000'00ff) !=
-        (finals["SPSR"][0].template get<uint32_t>() & 0xC000'00FF)) {
-        print_cprs(registers.sprs_fiq & 0xC000'00ff,
-                   finals["SPSR"][0].template get<uint32_t>() & 0xC000'00FF,
+    if ((registers.sprs_fiq & status_mask) !=
+        (finals["SPSR"][0].template get<uint32_t>() & status_mask)) {
+        print_cprs(registers.sprs_fiq & status_mask,
+                   finals["SPSR"][0].template get<uint32_t>() & status_mask,
                    "sprs_fiq");
         failed = true;
     }
-    if ((registers.sprs_svc & 0xC000'00ff) !=
-        (finals["SPSR"][1].template get<uint32_t>() & 0xC000'00FF)) {
-        print_cprs(registers.sprs_svc & 0xC000'00ff,
-                   finals["SPSR"][1].template get<uint32_t>() & 0xC000'00FF,
+    if ((registers.sprs_svc & status_mask) !=
+        (finals["SPSR"][1].template get<uint32_t>() & status_mask)) {
+        print_cprs(registers.sprs_svc & status_mask,
+                   finals["SPSR"][1].template get<uint32_t>() & status_mask,
                    "sprs_svc");
         failed = true;
     }
-    if ((registers.sprs_abt & 0xC000'00ff) !=
-        (finals["SPSR"][2].template get<uint32_t>() & 0xC000'00FF)) {
-        print_cprs(registers.sprs_abt & 0xC000'00ff,
-                   finals["SPSR"][2].template get<uint32_t>() & 0xC000'00FF,
+    if ((registers.sprs_abt & status_mask) !=
+        (finals["SPSR"][2].template get<uint32_t>() & status_mask)) {
+        print_cprs(registers.sprs_abt & status_mask,
+                   finals["SPSR"][2].template get<uint32_t>() & status_mask,
                    "sprs_abt");
 
         failed = true;
     }
-    if ((registers.sprs_irq & 0xC000'00ff) !=
-        (finals["SPSR"][3].template get<uint32_t>() & 0xC000'00FF)) {
-        print_cprs(registers.sprs_irq & 0xC000'00ff,
-                   finals["SPSR"][3].template get<uint32_t>() & 0xC000'00FF,
+    if ((registers.sprs_irq & status_mask) !=
+        (finals["SPSR"][3].template get<uint32_t>() & status_mask)) {
+        print_cprs(registers.sprs_irq & status_mask,
+                   finals["SPSR"][3].template get<uint32_t>() & status_mask,
                    "sprs_irq");
         failed = true;
     }
-    if ((registers.sprs_udf & 0xC000'00ff) !=
-        (finals["SPSR"][4].template get<uint32_t>() & 0xC000'00FF)) {
-        print_cprs(registers.sprs_udf & 0xC000'00ff,
-                   finals["SPSR"][4].template get<uint32_t>() & 0xC000'00FF,
+    if ((registers.sprs_udf & status_mask) !=
+        (finals["SPSR"][4].template get<uint32_t>() & status_mask)) {
+        print_cprs(registers.sprs_udf & status_mask,
+                   finals["SPSR"][4].template get<uint32_t>() & status_mask,
                    "sprs_udf");
         failed = true;
     }
@@ -584,7 +589,7 @@ void runSingleStepTests_a()
 {
     Registers registers;
     bool failed = false;
-    const std::string game = "../ARM7TDMI/v1/arm_mull_mlal.json";
+    const std::string game = "../ARM7TDMI/v1/arm_msr_reg.json";
     std::ifstream ifs(game);
     const auto jf = nlohmann::json::parse(ifs);
     for (const auto& json: jf) {

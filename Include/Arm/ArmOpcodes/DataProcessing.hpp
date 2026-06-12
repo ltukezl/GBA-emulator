@@ -7,6 +7,7 @@
 #include "Arm/ArmOpcodes/Branch.hpp"
 #include "arm/ArmOpcodes/Mrs.hpp"
 #include "arm/ArmOpcodes/Msr_imm.hpp"
+#include "arm/ArmOpcodes/Msr_reg.hpp"
 #include "CommonOperations/GbaStrings.hpp"
 #include "cplusplusRewrite/BarrelShifter.h"
 #include "cplusplusRewrite/HwRegisters.h"
@@ -91,6 +92,9 @@ public:
     {
         if (MsrImmediate::isThisOpcode(opcode)) {
             MsrImmediate::execute(regs, opcode);
+            return;
+        } else if (MsrReg::isThisOpcode(opcode)) {
+            MsrReg::execute(regs, opcode);
             return;
         } else if (MRS::isThisOpcode(opcode)) {
             MRS::execute(regs, opcode);
