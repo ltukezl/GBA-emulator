@@ -25,9 +25,15 @@ public:
 
     void drawLine(uint8_t& LYC)
     {
-        if (LYC == 0) {}
+        if (LYC == 0) {
+            for (auto& row: *m_game_pixels) {
+                const RgbaPalette::GBAColor clr{1};
+                row.fill(clr);
+            }
+        }
         if (displayCtrl->bgMode == 0) {
-            std::sort(m_all_bg_layers.begin(), m_all_bg_layers.end());
+            std::sort(m_all_bg_layers.begin(), m_all_bg_layers.end(),
+                      std::greater<>());
             for (auto& bg_layer: m_all_bg_layers) {
                 if (bg_layer.is_enabled()) {
                     bg_layer.draw_text_mode(*m_game_pixels, LYC, false);

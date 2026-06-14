@@ -6,7 +6,7 @@
 using namespace mathOps;
 
 static bool negative(const int32_t result)
-{ return result < 0; }
+{ return (result & 0x80000000U) != 0U; }
 
 static bool zero(const uint32_t result)
 { return result == 0; }
@@ -318,17 +318,20 @@ uint32_t Rsc::calculate(const CPSR_t& cpsr,
                         const uint32_t operand2)
 { return operand2 - operand1 + static_cast<uint32_t>(cpsr.carry) - 1; }
 
+// def get_CV_sub_C(Op1, Op2, C, Result):
+//     C = 1 if (int(Op2) + 1 - C <= Op1) else 0
+//     V = (((Op1 ^ Op2) & (~Op2 ^ Result)) >> 31)
+//     return C, V
 void Rsc::calcConditions(CPSR_t& cpsr,
                          const uint32_t result,
-                         const uint32_t operand1,
-                         const uint32_t operand2)
+                         const uint32_t operand2,
+                         const uint32_t operand1)
 {
     const auto notCarry = cpsr.carry ^ 1;
-    const uint32_t rhs = operand1 + notCarry;
     cpsr.zero = zero(result);
     cpsr.negative = negative(result);
-    cpsr.carry = subCarry(operand1, operand2, notCarry);
-    cpsr.overflow = subOverflow(rhs, operand2, result);
+    cpsr.carry = subCarry(operand2, operand1, notCarry);
+    cpsr.overflow = subOverflow(operand2, operand1, result);
 }
 
 //------------
