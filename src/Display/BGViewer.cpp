@@ -4,9 +4,15 @@
 
 void BGViewer::updateBG(const BgCnt* bgCnt, sf::Texture& res)
 {
+    for (auto& row: *m_pixels) {
+        const RgbaPalette::GBAColor clr{0};
+        row.fill(clr);
+    }
     uint32_t startAddr = bgCnt->bgBaseblock * 0x800;
     const uint32_t tileStartRow =
-        bgCnt->is8Bit ? bgCnt->tileBaseBlock * 8 : bgCnt->tileBaseBlock * 512;
+        bgCnt->is8Bit ? bgCnt->tileBaseBlock * 256 : bgCnt->tileBaseBlock * 512;
+    const bool sizeX = bgCnt->hWide;
+    const bool sizeY = bgCnt->vWide;
 
     for (size_t i = 0; i < 32; i++) {
         for (size_t k = 0; k < 32; k++) {
@@ -14,7 +20,7 @@ void BGViewer::updateBG(const BgCnt* bgCnt, sf::Texture& res)
             const auto& t =
                 m_tileset.tileset.linear[tileStartRow + tileCtrl->tileNumber]
                     .create(tileCtrl->paletteNum, tileCtrl->VerticalFlip,
-                            tileCtrl->horizontalFlip, 0);
+                            tileCtrl->horizontalFlip, bgCnt->is8Bit);
             for (size_t px_y = 0; px_y < 8; px_y++) {
                 for (size_t px_x = 0; px_x < 8; px_x++) {
                     (*m_pixels)[i * 8 + px_y][k * 8 + px_x] =
@@ -22,6 +28,26 @@ void BGViewer::updateBG(const BgCnt* bgCnt, sf::Texture& res)
                 }
             }
             startAddr += 2;
+        }
+    }
+
+    if (sizeX) {
+        for (size_t i = 0; i < 32; i++) {
+            for (size_t k = 0; k < 32; k++) {
+                BgTile* tileCtrl = (BgTile*)&vram[startAddr];
+                const auto& t =
+                    m_tileset.tileset
+                        .linear[tileStartRow + tileCtrl->tileNumber]
+                        .create(tileCtrl->paletteNum, tileCtrl->VerticalFlip,
+                                tileCtrl->horizontalFlip, bgCnt->is8Bit);
+                for (size_t px_y = 0; px_y < 8; px_y++) {
+                    for (size_t px_x = 0; px_x < 8; px_x++) {
+                        (*m_pixels)[i * 8 + px_y][256 + k * 8 + px_x] =
+                            t.grid[px_y][px_x];
+                    }
+                }
+                startAddr += 2;
+            }
         }
     }
 

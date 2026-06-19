@@ -30,6 +30,9 @@ public:
                           const bool is8bit);
 
 private:
+
+    const Tile::GBATile& create_8bit(const bool flipH, const bool flipV);
+
     alignas(32) GBATile m_tile = {};
     alignas(32) GBATile m_tileV = {};
     alignas(32) GBATile m_tileH = {};

@@ -7,9 +7,40 @@
 
 extern RgbaPalette PaletteColours;
 
-static bool implies(const bool req, const bool done)
+const Tile::GBATile& Tile::create_8bit(const bool flipH, const bool flipV)
 {
-    return ((req == done) and (req != false));
+    const auto tile_addr = vram.getMemoryPtr() + m_idx * 2;
+    for (size_t i = 0; i < 64; i++) {
+        m_tile.linear[i] = PaletteColours.colorFromIndex(tile_addr[i]);
+    }
+
+    for (size_t k = 0; k < 8; k++) {
+        for (size_t i = 0; i < 8; i++) {
+            m_tileV.grid[k][7 - i] = m_tile.grid[k][i];
+        }
+    }
+
+    for (size_t k = 0; k < 8; k++) {
+        for (size_t i = 0; i < 8; i++) {
+            m_tileH.grid[7 - k][i] = m_tile.grid[k][i];
+        }
+    }
+
+    for (size_t k = 0; k < 8; k++) {
+        for (size_t i = 0; i < 8; i++) {
+            m_tileHV.grid[7 - k][7 - i] = m_tile.grid[k][i];
+        }
+    }
+
+    if (flipV == false && flipH == false) {
+        return m_tile;
+    } else if (flipV == true && flipH == false) {
+        return m_tileV;
+    } else if (flipV == false && flipH == true) {
+        return m_tileH;
+    } else {
+        return m_tileHV;
+    }
 }
 
 const Tile::GBATile& Tile::create(const uint8_t paletteNum,
@@ -17,23 +48,25 @@ const Tile::GBATile& Tile::create(const uint8_t paletteNum,
                                   const bool flipV,
                                   const bool is8bit)
 {
+    if (is8bit) {
+        return create_8bit(flipH, flipV);
+    }
     const auto wholeCurrentPalette =
         _mm256_loadu_si256(reinterpret_cast<__m256i*>(
             paletteram.getMemoryPtr() + 32 * paletteNum));
     const auto vcmp = _mm256_cmpeq_epi32(wholeCurrentPalette, m_lastPalette);
     const uint32_t cmp_mask = _mm256_movemask_epi8(vcmp);
     const bool result = (cmp_mask == 0xffff'ffff);
-    if (!vram.m_observer.checkAccessed(m_idx) and result) {
-        if (flipV == true && flipH == false) {
-            return m_tileV;
-        } else if (flipV == false && flipH == true) {
-            return m_tileH;
-        } else if (flipV == true && flipH == true) {
-            return m_tileHV;
-        }
-
-        return m_tile;
-    }
+    // if (!vram.m_observer.checkAccessed(m_idx) and result) {
+    //     if (flipV == true && flipH == false) {
+    //         return m_tileV;
+    //     } else if (flipV == false && flipH == true) {
+    //         return m_tileH;
+    //     } else if (flipV == true && flipH == true) {
+    //         return m_tileHV;
+    //     }
+    //     return m_tile;
+    // }
     m_lastPalette = wholeCurrentPalette;
     vram.m_observer.clearAccessed(m_idx);
     const auto tmp = _mm256_loadu_si256(

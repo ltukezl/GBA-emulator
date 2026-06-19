@@ -33,7 +33,7 @@ void TextMode::draw(finalImageColored& img,
         const auto palette_num = tile_ctrl0->paletteNum;
         const auto& tile = tileset.tileset.linear[tile_num].create(
             palette_num, tile_ctrl0->VerticalFlip, tile_ctrl0->horizontalFlip,
-            false);
+            bgCnt->is8Bit);
         for (size_t x = 0; x < 8; x++) {
             const auto back_drop_color =
                 PaletteColours.colorFromIndex(palette_num, 0);

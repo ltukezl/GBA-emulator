@@ -21,6 +21,9 @@ public:
         };
         uint32_t rawColor;
 
+        GBAColor(uint32_t clr) : rawColor{clr} {}
+        GBAColor() = default;
+
         bool operator==(GBAColor& other) { return rawColor == other.rawColor; }
     };
 
