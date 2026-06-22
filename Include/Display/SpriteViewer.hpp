@@ -16,6 +16,9 @@ public:
 
 private:
 
+    std::array<sf::Texture, 127> m_textures;
+    std::vector<sf::Sprite> m_sprites;
+
     sf::Texture sprite0{sf::Vector2u(64, 64), true};
     sf::Sprite gameSprite0{sprite0};
 
