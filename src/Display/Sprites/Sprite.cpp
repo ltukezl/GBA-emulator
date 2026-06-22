@@ -28,18 +28,20 @@ const auto& Sprite::create1DSprite(SpriteTileset_t& sprite_tiles)
     const auto dimensions = shapes[objr1->shape][objr1->size];
 
     const uint32_t tile_start = objr2->tileNumber;
-    for (size_t i = 0; i < dimensions.first * dimensions.second; i++) {
-        const auto& tile = sprite_tiles.linear[tile_start + i].create(
-            16 + objr2->paletteNumber, false, false, false);
-        const uint32_t y_offset = (i / 8);
-        const uint32_t x_offset = (i % (dimensions.first));
 
-        std::cout << y_offset << " " << x_offset << "\n";
+    uint32_t i = 0;
+    for (size_t major_y = 0; major_y < dimensions.second; major_y++) {
+        for (size_t major_x = 0; major_x < dimensions.first; major_x++) {
+            const auto& tile = sprite_tiles.linear[tile_start + i].create(
+                16 + objr2->paletteNumber, false, false, objr1->colorMode);
 
-        for (size_t x = 0; x < 8; x++) {
-            for (size_t y = 0; y < 8; y++) {
-                m_pixels[y_offset * 8 + y][x_offset * 8 + x] = tile.grid[y][x];
+            for (size_t x = 0; x < 8; x++) {
+                for (size_t y = 0; y < 8; y++) {
+                    m_pixels[major_y * 8 + y][major_x * 8 + x] =
+                        tile.grid[y][x];
+                }
             }
+            i++;
         }
     }
 
