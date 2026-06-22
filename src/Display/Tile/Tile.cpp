@@ -69,11 +69,22 @@ const Tile::GBATile& Tile::create(const uint8_t paletteNum,
     // }
     m_lastPalette = wholeCurrentPalette;
     vram.m_observer.clearAccessed(m_idx);
+    // load row of nibble offsets
+    // AB CD EF GH XX XX XX XX
     const auto tmp = _mm256_loadu_si256(
         reinterpret_cast<__m256i*>(vram.getMemoryPtr() + m_idx));
+
+    // shift nibbles
+    //  XA BC DE FG HX XX XX XX
     const auto rot = _mm256_srli_epi64(tmp, 4);
+
+    // merge the two nibbles of vectors
+    //  XA AB XC CD XD EF XG GH
     const auto idx = _mm256_unpacklo_epi8(tmp, rot);
     const auto idx2 = _mm256_unpackhi_epi8(tmp, rot);
+
+    // Mask nibbles and gather the values
+    // 0A 0B 0C 0D 0E 0F 0G 0H
     const auto mask = _mm256_set1_epi8(0x0f);
     const auto masked = _mm256_and_si256(idx, mask);
     const auto masked2 = _mm256_and_si256(idx2, mask);

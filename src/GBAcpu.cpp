@@ -20,14 +20,17 @@
 #include "cplusplusRewrite/HwRegisters.h"
 #include "Display/BGViewer.hpp"
 #include "Display/GameDisplay.hpp"
+#include "Display/SpriteViewer.hpp"
 #include "Display/VideoCycleCounter.hpp"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
+#include "Gba-Graphics/Sprites/SpriteSet.h"
 #include "Memory/memoryMappedIO.h"
 
 #define BIOS_START 0
 #define MEMORY_VIEWER 0
 #define PALETTE_VIEWER 0
 #define DISASSEMBLER_VIEWER 1
+#define SPRITE_VIEWER 1
 
 using namespace std;
 
@@ -90,6 +93,8 @@ static void readFile(const std::string& fileName,
     }
 }
 
+SpriteSet spriteset;
+
 /*
 NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in
 usr mode. otherwise gba starts from addrs 0 in svc mode
@@ -98,6 +103,7 @@ int main(int argc, char* args[])
 {
     // ARMExecute(0);
     // return 0;
+
     const char* asd = ROOT_PATH "\\arial.ttf";
     std::println("{}", asd);
 #if BIOS_START
@@ -118,8 +124,13 @@ int main(int argc, char* args[])
 #if MEMORY_VIEWER
     MemoryViewer memoryViewer;
 #endif
+
 #if PALETTE_VIEWER
     PaletteViewer paletteViewer;
+#endif
+
+#if SPRITE_VIEWER
+    SpriteViewer spriteViewer{spriteset};
 #endif
 
     GameDisplay gameDisplay;
@@ -162,15 +173,15 @@ int main(int argc, char* args[])
     memoryInits();
 
     // const std::string game = ROOT_PATH "/TestBinaries/FuzzARM.gba";
-    //       const std::string game = ROOT_PATH "/TestBinaries/arm.gba";
-    //  const std::string game =
-    //     ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
+    //        const std::string game = ROOT_PATH "/TestBinaries/arm.gba";
+    // const std::string game =
+    //    ROOT_PATH "/TestBinaries/armwrestler-gba-fixed.gba";
     //       const std::string game = ROOT_PATH"/TestBinaries/thumb.gba";
-    // const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
-    const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
+    const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
+    // const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
     // const std::string game = ROOT_PATH "/TestBinaries/tonc/irq_demo.gba";
     // const std::string game = ROOT_PATH "/TestBinaries/tonc/240pee_mb.gba";
-    // const std::string game = ROOT_PATH "/TestBinaries/tonc/prio_demo.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/castlevania.gba";
 
     readFile(game, GamePak);
     readFile("GBA.BIOS", systemROM.m_memoryArea);
@@ -231,6 +242,10 @@ int main(int argc, char* args[])
 #if PALETTE_VIEWER
             paletteViewer.handleEvents();
             paletteViewer.renderPalettes();
+#endif
+
+#if SPRITE_VIEWER
+            spriteViewer.display();
 #endif
             gameDisplay.draw();
             g_bgViewer.draw();

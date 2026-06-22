@@ -1,102 +1,33 @@
 #include <iostream>
 
 #include "Gba-Graphics/Sprites/Sprite.h"
-#include "Gba-Graphics/Sprites/SpriteGenerator.h"
+#include "Gba-Graphics/Sprites/SpriteSet.h"
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Memory/memoryMappedIO.h"
 #include "Memory/memoryOps.h"
+
+extern RgbaPalette PaletteColours;
 
 constexpr std::pair<uint8_t, uint8_t> shapes[3][4] = {
     {{8, 8}, {16, 16}, {32, 32}, {64, 64}},
     {{16, 8}, {32, 8}, {32, 16}, {64, 32}},
     {{8, 16}, {8, 32}, {16, 32}, {32, 64}}};
 
-uint8_t* Sprite::getSpriteTiles()
+const auto& Sprite::create1DSprite(SpriteTileset_t& sprite_tiles)
 {
-    /*
-    uint16_t tilenum = 0;
+    ObjReg1* objr1 = reinterpret_cast<ObjReg1*>(oamRam.getMemoryPtr());
+    ObjReg2* objr2 = reinterpret_cast<ObjReg2*>(oamRam.getMemoryPtr() + 2);
+    auto dimensions = shapes[objr1->shape][objr1->size];
 
-    for (auto& tile: tiles) {
-        auto& t = tile.getTile(objr1->colorMode, 16 + objr2->paletteNumber);
-        for (uint8_t y = 0; y < 8; y++) {
-            auto yPOS =
-                (tilenum / (sizeX / 8)) * 8 * 8 * (sizeX / 8) + y * sizeX;
-            for (uint8_t x = 0; x < 8; x++) {
-                auto xPOS = ((8 * tilenum) % sizeX + x);
-                auto tt = t.grid[y][x];
-                pixels[yPOS + xPOS] = tt;
-            }
-        }
-        tilenum++;
-    }
+    const auto tile = sprite_tiles.linear[512].create(16, false, false, false);
 
-    if (objr1->RotOrScale == 0) {
-        if (objr1->parameter & (1 << 3)) { // horizontal flip
-            memcpy(tmpBuffer, pixels, sizeof(uint8_t) * sizeX * 8 * sizeY * 8);
-            for (uint16_t y = 0; y < sizeY; y++) {
-                for (uint16_t x = 0; x < sizeX; x++) {
-                    pixels[sizeX * y + sizeX - x - 1] =
-                        tmpBuffer[sizeX * y + x];
-                }
-            }
-        }
-        if (objr1->parameter & (1 << 4)) { // vertical flip
-
-            memcpy(tmpBuffer, pixels, sizeof(uint8_t) * sizeX * 8 * sizeY * 8);
-            for (uint16_t y = 0; y < sizeY; y++) {
-                for (uint16_t x = 0; x < sizeX; x++) {
-                    pixels[sizeX * y + x] =
-                        tmpBuffer[sizeX * (sizeY - y - 1) + x];
-                }
-            }
+    for (size_t x = 0; x < 8; x++) {
+        for (size_t y = 0; y < 8; y++) {
+            m_pixels[y][x] = tile.grid[y][x];
         }
     }
 
-    return (uint8_t*)pixels;
-    */
-}
-
-void Sprite::fillToImg(const RgbaPalette& palette,
-                       finalImagePalettes& imageBase,
-                       const bool isRender3or4)
-{
-    /*
-    if (objr1->isDoubleOrNoDisplay) {
-        return;
-    }
-    getSpriteTiles();
-    auto asd = 0;
-    for (size_t k = 0; k < sizeY; k++) {
-        for (size_t i = 0; i < sizeX; i++) {
-            if ((objr1->xCoord + i) >= 240 || (objr1->xCoord + i) < 0) {
-                asd++;
-                continue;
-            }
-            if ((objr1->yCoord + k) >= 160) {
-                asd++;
-                continue;
-            }
-
-            auto xpos = (objr1->xCoord + i);
-            auto ypos = (objr1->yCoord + k);
-            auto paletteInfo = pixels[asd++];
-            if (paletteInfo.index == 0) {
-                continue;
-            }
-            if (isRender3or4) {
-                auto tmp = reinterpret_cast<finalImageColored*>(&imageBase);
-                (*tmp)[ypos][xpos] = palette.colorFromIndex(paletteInfo.palette,
-                                                            paletteInfo.index);
-            } else {
-                imageBase[ypos][xpos] = paletteInfo;
-            }
-        }
-    }
-        */
-}
-
-void Sprite::create1DSprite()
-{
+    // const auto& tile = m_tileset
     /*
     uint16_t size = (sizeX / 8) * (sizeY / 8);
     uint16_t startTile = objr2->tileNumber;
@@ -106,9 +37,10 @@ void Sprite::create1DSprite()
         startTile++;
     }
         */
+    return m_pixels;
 }
 
-void Sprite::create2DSprite()
+const auto& Sprite::create2DSprite(SpriteTileset_t& sprite_tiles)
 {
     /*
     uint16_t startTile = objr2->tileNumber;
@@ -124,45 +56,20 @@ void Sprite::create2DSprite()
         startTile += 32;
     }
         */
+    return m_pixels;
 }
 
-void Sprite::update()
+const sprite_t& Sprite::create(SpriteTileset_t& sprite_tiles)
 {
-    /*
-    tiles.clear();
-    auto dimensions = shapes[objr1->shape][objr1->size];
-    sizeX = dimensions.first;
-    sizeY = dimensions.second;
+    uint8_t* object_data_address = vram.getMemoryPtr() + 0x10000;
+    if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4 ||
+        displayCtrl->bgMode == 5) {
+        object_data_address += 0x4000;
+    }
 
     if (displayCtrl->objectVRAMmap) {
-        create1DSprite();
+        return create1DSprite(sprite_tiles);
     } else {
-        create2DSprite();
+        return create2DSprite(sprite_tiles);
     }
-        */
-}
-
-Sprite::Sprite(SpriteGenerator& tileset, uint32_t address) :
-    _index(address / 8), _tileset(tileset)
-{
-    /*
-    objr1 = (ObjReg1*)&(memoryLayout[EOAM][address + 0]);
-    objr2 = (ObjReg2*)&(memoryLayout[EOAM][address + 4]);
-    auto dimensions = shapes[objr1->shape][objr1->size];
-    sizeX = dimensions.first;
-    sizeY = dimensions.second;
-
-    pixels = (Tile::BitmapBit*)new Tile::BitmapBit[8 * 8 * 32 * 32];
-    tmpBuffer = (Tile::BitmapBit*)new Tile::BitmapBit[8 * 8 * 32 * 32];
-
-    memset(pixels, 0, sizeof(Tile::BitmapBit) * 8 * 8 * 32 * 32);
-    */
-}
-
-Sprite::~Sprite()
-{
-    /*
-    delete pixels;
-    delete tmpBuffer;
-    */
 }

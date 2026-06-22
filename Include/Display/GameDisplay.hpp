@@ -66,7 +66,6 @@ private:
           reinterpret_cast<BgCnt*>(reinterpret_cast<uint16_t*>(&IoRAM[14]))}},
     };
 
-    BGLayer& m_bgLayer2 = m_all_bg_layers[1];
     std::unique_ptr<finalImageColored> m_game_pixels;
 };
 

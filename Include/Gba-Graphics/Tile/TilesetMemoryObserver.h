@@ -7,21 +7,15 @@ class TilesetMemoryObserver
 {
 public:
     void setAccessed(const MemoryAddress address)
-    {
-        m_tilesetAccessed[address.address / 32] = true;
-    }
+    { m_tilesetAccessed[address.address / 32] = true; }
 
     void clearAccessed(const MemoryAddress address)
-    {
-        m_tilesetAccessed[address.address / 32] = false;
-    }
+    { m_tilesetAccessed[address.address / 32] = false; }
 
     bool checkAccessed(const MemoryAddress address)
-    {
-        return m_tilesetAccessed[address.address / 32];
-    }
+    { return m_tilesetAccessed[address.address / 32]; }
 
     void setAll() { m_tilesetAccessed.set(); }
 private:
-    std::bitset<64 * 32> m_tilesetAccessed;
+    std::bitset<96 * 32> m_tilesetAccessed;
 };

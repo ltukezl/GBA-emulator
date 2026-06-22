@@ -4,12 +4,14 @@ project(
   default_options: ['cpp_std=c++latest', 'warning_level=1'],
 )
 
-add_project_arguments(['-fbracket-depth=3072', '-march=native'], language: 'cpp')
+add_project_arguments(
+  ['-fbracket-depth=3072', '-march=native'],
+  language: 'cpp',
+)
 compiler = meson.get_compiler('cpp')
 
 root_path = meson.current_source_dir().replace('\\', '\\\\')
 add_project_arguments('-DROOT_PATH="' + root_path + '"', language: 'cpp')
-
 sfml_include = 'D:/SFML-3.0.1/include'
 
 if get_option('buildtype') == 'debug'
@@ -56,7 +58,7 @@ sources = [
   'src/Display/Rendermodes/RenderMode5.cpp',
   'src/Display/Rendermodes/TextMode.cpp',
   'src/Display/Sprites/Sprite.cpp',
-  'src/Display/Sprites/SpriteGenerator.cpp',
+  'src/Display/Sprites/SpriteViewer.cpp',
   'src/Display/Tile/Tile.cpp',
   'src/Display/Tile/Tileset.cpp',
   'src/Display/BGViewer.cpp',
