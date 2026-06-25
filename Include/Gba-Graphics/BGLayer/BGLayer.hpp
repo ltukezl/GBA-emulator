@@ -3,8 +3,11 @@
 
 #include <cstdint>
 
+#include "Gba-Graphics/GBADrawable.hpp"
 #include "Gba-Graphics/Rendermodes/TextMode.h"
 #include "Memory/memoryMappedIO.h"
+
+class Sprite;
 
 class BGLayer
 {
@@ -14,7 +17,7 @@ public:
     {
     }
 
-    auto operator<=>(const BGLayer& other) const noexcept
+    auto operator<=>(const BGLayer& other) const
     {
         if (auto cmp = m_reg->priority <=> other.m_reg->priority; cmp != 0) {
             return cmp;
@@ -22,12 +25,14 @@ public:
         return m_bg <=> other.m_bg;
     }
 
+    auto operator<=>(const Sprite& other) const { return false; }
+
     void draw_text_mode(finalImageColored& img,
                         const uint32_t line,
-                        const bool first)
+                        const bool first) const
     { TextMode::draw(img, 2 * m_bg, line, false); }
 
-    bool is_enabled()
+    bool is_enabled() const
     {
         if (m_bg == 0) {
             return displayCtrl->bg0Display;
@@ -41,6 +46,7 @@ public:
         if (m_bg == 3) {
             return displayCtrl->bg3Display;
         }
+        return false;
     }
 
 private:
