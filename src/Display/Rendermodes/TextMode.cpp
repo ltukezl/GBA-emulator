@@ -38,8 +38,7 @@ void TextMode::draw(finalImageColored& img,
             const auto back_drop_color =
                 PaletteColours.colorFromIndex(palette_num, 0);
 
-            if (img[line][scan_pixel].rawColor != 1 &&
-                tile.grid[line % 8][x].rawColor == back_drop_color.rawColor) {
+            if (tile.grid[line % 8][x].rawColor == back_drop_color.rawColor) {
                 scan_pixel++;
                 continue;
             }

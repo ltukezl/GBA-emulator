@@ -15,6 +15,7 @@
 #include "Memory/memoryOps.h"
 
 extern SpriteSet spriteset;
+extern RgbaPalette PaletteColours;
 
 class GameDisplay
 {
@@ -42,9 +43,12 @@ public:
     {
         if (LYC == 0) {
             for (auto& row: *m_game_pixels) {
-                const RgbaPalette::GBAColor clr{1};
+                const RgbaPalette::GBAColor clr{0};
                 row.fill(clr);
             }
+        }
+        if (LYC >= 160) {
+            return;
         }
         if (displayCtrl->bgMode == 0) {
             auto comparison_func = [](const auto& a, const auto& b) {
@@ -63,6 +67,11 @@ public:
                     if (bg_layer->is_enabled()) {
                         bg_layer->draw_text_mode(*m_game_pixels, LYC, false);
                     }
+                }
+            }
+            for (auto& px: (*m_game_pixels)[LYC]) {
+                if (px.a == 0) {
+                    px = PaletteColours.colorFromIndex(0, 0);
                 }
             }
         } else if (displayCtrl->bgMode == 3) {
