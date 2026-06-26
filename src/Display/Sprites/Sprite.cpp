@@ -1,11 +1,8 @@
-#include <iostream>
-
 #include "Gba-Graphics/Sprites/Sprite.h"
 #include "Gba-Graphics/Sprites/SpriteSet.h"
 #include "Gba-Graphics/Tile/Tile.h"
 #include "Memory/memoryMappedIO.h"
 #include "Memory/memoryOps.h"
-#include <iostream>
 
 extern RgbaPalette PaletteColours;
 
@@ -45,16 +42,6 @@ const auto& Sprite::create1DSprite(SpriteTileset_t& sprite_tiles)
         }
     }
 
-    // const auto& tile = m_tileset
-    /*
-    uint16_t size = (sizeX / 8) * (sizeY / 8);
-    uint16_t startTile = objr2->tileNumber;
-    for (uint16_t i = 0; i < size; i++) {
-        tiles.push_back(_tileset.objTileset[(startTile % 1024) / 32]
-                                           [(startTile % 1024) % 32]);
-        startTile++;
-    }
-        */
     return m_pixels;
 }
 
@@ -79,15 +66,23 @@ const auto& Sprite::create2DSprite(SpriteTileset_t& sprite_tiles)
 
 const sprite_t& Sprite::create(SpriteTileset_t& sprite_tiles)
 {
-    uint8_t* object_data_address = vram.getMemoryPtr() + 0x10000;
-    if (displayCtrl->bgMode == 3 || displayCtrl->bgMode == 4 ||
-        displayCtrl->bgMode == 5) {
-        object_data_address += 0x4000;
-    }
-
     if (displayCtrl->objectVRAMmap) {
         return create1DSprite(sprite_tiles);
     } else {
         return create2DSprite(sprite_tiles);
     }
+}
+
+bool Sprite::is_enabled() const
+{
+    const ObjReg1* objr =
+        reinterpret_cast<const ObjReg1*>(oamRam.getMemoryPtr() + m_index * 8);
+    return objr->isDoubleOrNoDisplay;
+}
+
+uint32_t Sprite::get_priority() const
+{
+    const ObjReg2* objr = reinterpret_cast<const ObjReg2*>(
+        oamRam.getMemoryPtr() + m_index * 8 + 4);
+    return objr->priority;
 }

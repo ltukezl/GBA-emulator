@@ -21,9 +21,13 @@ void VideoCycleCounter::increment(GameDisplay& disp)
     auto& LYC = memoryLayout[4][6];
     m_counter++;
     if (m_counter == 1232) {
+        m_draw_frame = LYC == 160;
         m_counter = 0;
         updateLYC(LYC);
         disp.drawLine(LYC);
+    } else {
+        m_draw_frame = false;
     }
+
     LCDStatus->hblankFlag = m_counter >= 960;
 }

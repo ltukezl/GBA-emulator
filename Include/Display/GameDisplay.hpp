@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include <array>
+#include <iostream>
 #include <memory>
 #include <SFML/Graphics.hpp>
 #include <variant>
@@ -11,7 +12,6 @@
 #include "Gba-Graphics/Rendermodes/RenderMode4.h"
 #include "Gba-Graphics/Rendermodes/RenderMode5.h"
 #include "Gba-Graphics/Sprites/SpriteSet.h"
-#include "Include/Gba-Graphics/GBADrawable.hpp"
 #include "Memory/memoryOps.h"
 
 extern SpriteSet spriteset;
@@ -48,12 +48,11 @@ public:
         }
         if (displayCtrl->bgMode == 0) {
             auto comparison_func = [](const auto& a, const auto& b) {
-                std::visit(
+                return std::visit(
                     [](const auto a, const auto b) {
-                        return *a < *b;
+                        return *a > *b;
                     },
                     a, b);
-                return false;
             };
 
             std::sort(m_all_drawables.begin(), m_all_drawables.end(),

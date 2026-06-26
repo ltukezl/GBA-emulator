@@ -3,11 +3,9 @@
 
 #include <cstdint>
 
-#include "Gba-Graphics/GBADrawable.hpp"
 #include "Gba-Graphics/Rendermodes/TextMode.h"
+#include "Gba-Graphics/Sprites/Sprite.h"
 #include "Memory/memoryMappedIO.h"
-
-class Sprite;
 
 class BGLayer
 {
@@ -25,7 +23,13 @@ public:
         return m_bg <=> other.m_bg;
     }
 
-    auto operator<=>(const Sprite& other) const { return false; }
+    auto operator<=>(const Sprite& other) const
+    {
+        if (auto cmp = m_reg->priority <=> other.get_priority(); cmp != 0) {
+            return cmp;
+        }
+        return std::strong_ordering::greater;
+    }
 
     void draw_text_mode(finalImageColored& img,
                         const uint32_t line,

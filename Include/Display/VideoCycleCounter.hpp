@@ -8,6 +8,7 @@ class VideoCycleCounter
 {
 public:
     void increment(GameDisplay& disp);
-private:
+    bool m_draw_frame = false;
     uint16_t m_counter = 0;
+private:
 };

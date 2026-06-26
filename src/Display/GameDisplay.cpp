@@ -2,9 +2,8 @@
 
 void GameDisplay::draw()
 {
-    m_game_texture.update(reinterpret_cast<uint8_t*>(&(*m_game_pixels)[0][0]));
-    m_game_sprite.setTexture(m_game_texture);
     m_display->clear(sf::Color::Black);
+    m_game_texture.update(reinterpret_cast<uint8_t*>(&(*m_game_pixels)[0][0]));
     m_display->draw(m_game_sprite);
     m_display->display();
 }

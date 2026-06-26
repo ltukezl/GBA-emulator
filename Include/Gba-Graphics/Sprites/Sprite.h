@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 
-#include "Gba-Graphics/GBADrawable.hpp"
 #include "Memory/memoryMappedIO.h"
 
 using sprite_t = std::array<std::array<RgbaPalette::GBAColor, 64>, 64>;
@@ -24,7 +23,18 @@ public:
 
     const uint32_t m_index;
 
+    uint32_t get_priority() const;
+
+    bool is_enabled() const;
+
     constexpr Sprite(const uint32_t idx) : m_index{idx} {}
-    auto operator<=>(const Sprite& other) const { return false; }
-    auto operator<=>(const BGLayer& other) const { return false; }
+    auto operator<=>(const Sprite& other) const
+    {
+        if (auto cmp = get_priority() <=> other.get_priority(); cmp != 0) {
+            return cmp;
+        }
+        return m_index <=> other.m_index;
+    }
+    auto operator<=>(const BGLayer& other) const
+    { return std::strong_ordering::less; }
 };

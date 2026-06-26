@@ -180,7 +180,7 @@ int main(int argc, char* args[])
     const std::string game = ROOT_PATH "/TestBinaries/program6.bin";
     // const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
     // const std::string game = ROOT_PATH "/TestBinaries/tonc/irq_demo.gba";
-    // const std::string game = ROOT_PATH "/TestBinaries/tonc/240pee_mb.gba";
+    // const std::string game = ROOT_PATH "/TestBinaries/tonc/prio_demo.gba";
     // const std::string game = ROOT_PATH "/TestBinaries/castlevania.gba";
 
     readFile(game, GamePak);
@@ -210,19 +210,22 @@ int main(int argc, char* args[])
 
         cycles = 1;
 
+        PaletteColours.updatePalette();
         g_videoCycleCounter.increment(gameDisplay);
+        if (g_videoCycleCounter.m_draw_frame) {
+            gameDisplay.handleEvents();
+            gameDisplay.draw();
+        }
 
         hBlankCounter += cycles;
         if (hBlankCounter >= 1232 && !LCDStatus->vblankFlag) {
             hBlankCounter -= 1232;
             LCDStatus->hblankFlag = 0;
-            PaletteColours.updatePalette();
             if (InterruptEnableRegister->hBlank && LCDStatus->hIRQEn) {
                 InterruptFlagRegister->hBlank = 1;
             }
 #if DISASSEMBLER_VIEWER
             disassembler.handleEvents();
-            gameDisplay.handleEvents();
 #endif
         } else if (hBlankCounter > 960) {
             LCDStatus->hblankFlag = 1;
@@ -247,7 +250,6 @@ int main(int argc, char* args[])
 #if SPRITE_VIEWER
             spriteViewer.display();
 #endif
-            gameDisplay.draw();
             g_bgViewer.draw();
         } else if (vBlankCounter > 197120) {
             LCDStatus->vblankFlag = 1;
