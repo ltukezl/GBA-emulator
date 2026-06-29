@@ -2,8 +2,6 @@
 #include <cstdint>
 
 #include "Constants.h"
-#include "Gba-Graphics/Tile/Tile.h"
-#include "Gba-Graphics/Tile/Tileset.h"
 
 class TextMode
 {

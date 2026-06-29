@@ -29,4 +29,3 @@ union TIMERCNT* TIMERCNT;
 union DMAcontrol* DMAcontrol;
 
 RgbaPalette PaletteColours((ColorPaletteRam*)&(memoryLayout[5][0]));
-Tileset tileset;

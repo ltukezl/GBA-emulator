@@ -24,12 +24,17 @@ public:
         GBAColor(uint32_t clr) : rawColor{clr} {}
         GBAColor() = default;
 
-        bool operator==(GBAColor& other) { return rawColor == other.rawColor; }
+        bool operator==(const GBAColor& other) const
+        { return rawColor == other.rawColor; }
     };
 
     constexpr RgbaPalette(const union ColorPaletteRam* startAddr) :
         m_colorStartAddress(startAddr)
     {
+        for (size_t i = 0;
+             i < paletteColorArray.paletteColorArray_linear.size(); i++) {
+            paletteColorArray.paletteColorArray_linear[i].a = 255;
+        }
     }
     void updatePalette();
     const uint8_t* getPalette();

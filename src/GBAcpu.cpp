@@ -24,6 +24,7 @@
 #include "Display/VideoCycleCounter.hpp"
 #include "Gba-Graphics/Palette/RgbaPalette.h"
 #include "Gba-Graphics/Sprites/SpriteSet.h"
+#include "Gba-Graphics/Tile/Tileset.h"
 #include "Memory/memoryMappedIO.h"
 
 #define BIOS_START 0
@@ -62,8 +63,10 @@ uint8_t WS0Second[2] = {1, 1};
 uint8_t WS1Second[2] = {1, 1};
 uint8_t WS2Second[2] = {1, 1};
 
+SpriteSet spriteset;
+Tileset tileset{};
 VideoCycleCounter g_videoCycleCounter;
-BGViewer g_bgViewer;
+BGViewer g_bgViewer{tileset};
 
 extern RgbaPalette PaletteColours;
 
@@ -92,8 +95,6 @@ static void readFile(const std::string& fileName,
         return;
     }
 }
-
-SpriteSet spriteset;
 
 /*
 NOTE *r[PC] = 0x08000000 can be used to skip bios check but needs to start in
@@ -181,7 +182,7 @@ int main(int argc, char* args[])
     // const std::string game = ROOT_PATH "/TestBinaries/tonc/bigmap.gba";
     // const std::string game = ROOT_PATH "/TestBinaries/tonc/irq_demo.gba";
     // const std::string game = ROOT_PATH "/TestBinaries/tonc/prio_demo.gba";
-    // const std::string game = ROOT_PATH "/TestBinaries/castlevania.gba";
+    //  const std::string game = ROOT_PATH "/TestBinaries/castlevania.gba";
 
     readFile(game, GamePak);
     readFile("GBA.BIOS", systemROM.m_memoryArea);

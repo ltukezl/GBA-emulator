@@ -34,11 +34,11 @@ void TextMode::draw(finalImageColored& img,
         const auto& tile = tileset.tileset.linear[tile_num].create(
             palette_num, tile_ctrl0->VerticalFlip, tile_ctrl0->horizontalFlip,
             bgCnt->is8Bit);
+        const auto back_drop_color =
+            PaletteColours.colorFromIndex(palette_num, 0);
         for (size_t x = 0; x < 8; x++) {
-            const auto back_drop_color =
-                PaletteColours.colorFromIndex(palette_num, 0);
 
-            if (tile.grid[line % 8][x].rawColor == back_drop_color.rawColor) {
+            if (tile.grid[line % 8][x] == back_drop_color) {
                 scan_pixel++;
                 continue;
             }

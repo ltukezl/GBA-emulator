@@ -1,4 +1,6 @@
+
 #include "Display/BGViewer.hpp"
+#include "Gba-Graphics/Tile/Tileset.h"
 #include "Memory/memoryMappedIO.h"
 #include "Memory/memoryOps.h"
 
@@ -54,7 +56,7 @@ void BGViewer::updateBG(const BgCnt* bgCnt, sf::Texture& res)
     res.update(reinterpret_cast<const uint8_t*>(m_pixels->data()));
 }
 
-BGViewer::BGViewer()
+BGViewer::BGViewer(Tileset& tileset) : m_tileset{tileset}
 {
     gameSprite0.setPosition(sf::Vector2f(512 * 0, 0));
     gameSprite1.setPosition(sf::Vector2f(512 * 1, 0));

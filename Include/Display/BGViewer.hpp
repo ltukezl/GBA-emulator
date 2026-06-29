@@ -4,13 +4,16 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 
-#include "Gba-Graphics/Tile/Tileset.h"
+#include "Gba-Graphics/Palette/RgbaPalette.h"
+
+class Tileset;
+union BgCnt;
 
 class BGViewer
 {
 public:
 
-    BGViewer();
+    BGViewer(Tileset& tileset);
 
     void draw();
 
@@ -18,7 +21,7 @@ private:
 
     void updateBG(const BgCnt* bgCnt, sf::Texture& res);
 
-    Tileset m_tileset{};
+    Tileset& m_tileset;
 
     std::unique_ptr<sf::RenderWindow> m_display =
         std::make_unique<sf::RenderWindow>(
